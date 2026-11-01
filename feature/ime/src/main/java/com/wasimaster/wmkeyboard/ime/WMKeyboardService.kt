@@ -18260,12 +18260,13 @@ open class WMKeyboardService : InputMethodService() {
             // is: what the buffer held is anchor letters, not a spelling, so
             // "the word as the user left it" cannot be read off it and the
             // pair it would teach is between two things nobody typed.
-            if (corrected != null || gluedToWord || state.composer.isTransliterating ||
+            if (corrected != null || gluedToWord ||
+                (state.composer.isTransliterating && !isVietnameseTransliterator(state)) ||
                 state.layouts.ambiguousKeys
             ) {
                 null
             } else {
-                r.finish(typed)?.let { resolveRevision(it) }
+                r.finish(fieldWord)?.let { resolveRevision(it) }
             }
         }
         // A fragment typed into a word being followed in the field commits
@@ -18372,7 +18373,7 @@ open class WMKeyboardService : InputMethodService() {
                 caseTrusted = composingCaseTrusted && corrected == null,
                 origin = if (duetGestures != null) WordOrigin.DUET else WordOrigin.TYPED,
                 replaces = replaces,
-                typed = typed,
+                typed = fieldWord,
                 taps = taps,
                 keys = tapKeys,
                 unspelled = duetGestures?.complete == false,
