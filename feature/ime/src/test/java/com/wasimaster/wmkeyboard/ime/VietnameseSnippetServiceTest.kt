@@ -2,11 +2,11 @@ package com.wasimaster.wmkeyboard.ime
 
 import com.wasimaster.wmkeyboard.core.layout.Key
 import com.wasimaster.wmkeyboard.core.layout.KeyAction
-import com.wasimaster.wmkeyboard.core.input.composer.ComposerType
+import com.wasimaster.wmkeyboard.core.script.ComposerType
 import com.wasimaster.wmkeyboard.core.input.composer.composerFor
-import com.wasimaster.wmkeyboard.core.language.LanguageRegistry
-import com.wasimaster.wmkeyboard.core.language.ScriptId
-import com.wasimaster.wmkeyboard.core.language.ScriptRegistry
+import com.wasimaster.wmkeyboard.core.script.LanguageRegistry
+import com.wasimaster.wmkeyboard.core.script.ScriptId
+import com.wasimaster.wmkeyboard.core.script.ScriptRegistry
 import com.wasimaster.wmkeyboard.core.settings.KeyboardSettings
 import com.wasimaster.wmkeyboard.core.settings.VietnameseSettings
 import com.wasimaster.wmkeyboard.core.snippets.Snippet

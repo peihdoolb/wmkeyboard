@@ -4586,6 +4586,202 @@ class SuggestionEngine(
     }
 
     /**
+     * Determines autocorrect for Vietnamese composed words and Telex/VNI keystrokes.
+     *
+     * Respects dictionary knowledge, phonotactic syllabic constraints, adjacent key slips,
+     * deletions of accidental keystrokes, transpositions, bigram frequency boosts, and the
+     * author's confidence gate and learning memory.
+     */
+    fun decideVietnameseCorrection(
+        typed: String,
+        composed: String,
+        touch: List<TouchPoint?>? = null,
+        timingMultiplier: Double = 1.0,
+        previousWord: String? = null,
+        keys: KeySets? = null,
+        isSyllable: ((String) -> Boolean)? = null,
+        composeBuffer: (String) -> String,
+    ): CorrectionDecision {
+        if (typed.isEmpty() || composed.isEmpty()) return NO_CORRECTION
+        val lowerComposed = composed.lowercase()
+        val lowerTyped = typed.lowercase()
+        if (lowerComposed.length < 2) return NO_CORRECTION
+        if (skipAllCapsAutocorrect && isAllCaps(composed)) return NO_CORRECTION
+
+        // A known Vietnamese word (with real tone or accent) is protected unless shadowed.
+        val known = inDictionaries(lowerComposed) || userLexicon.isEstablished(lowerComposed, learnedWordMinCount)
+        if (known && !accentShadowed(lowerComposed, touch) && !typoShadowed(lowerComposed, touch, keys)) {
+            return NO_CORRECTION
+        }
+
+        // First, check if standard decideCorrection (e.g. mark restoration) produces a valid fix.
+        val standardDecision = decideCorrection(
+            composed,
+            touch = touch,
+            timingMultiplier = timingMultiplier,
+            previousWord = previousWord,
+            keys = keys,
+        )
+        if (standardDecision.apply != null) {
+            return standardDecision
+        }
+
+        // Generate typo mutation candidates from both raw keystrokes (Telex slips) and composed word.
+        val candidateMutations = LinkedHashMap<String, Double>()
+
+        fun consider(cand: String, cost: Double) {
+            val lower = cand.lowercase()
+            if (lower == lowerComposed) return
+            if (suppressed(lower)) return
+            if (!inDictionaries(lower) && !userLexicon.contains(lower)) return
+            if (isSyllable != null && !isSyllable(lower)) return
+            val existing = candidateMutations[lower]
+            if (existing == null || cost < existing) {
+                candidateMutations[lower] = cost
+            }
+        }
+
+        standardDecision.offer?.let { consider(it, FuzzyBeamSearch.COST_SUB_ADJACENT) }
+
+        // A. Single adjacent key substitution in raw keystrokes (e.g. "trid" -> "tris" -> "trí", "yueej" -> "tueej" -> "tuệ")
+        for (i in lowerTyped.indices) {
+            val orig = lowerTyped[i]
+            val neighbors = proximity.neighborsOf(orig)
+            for (adj in neighbors) {
+                if (adj == orig) continue
+                val mutated = StringBuilder(lowerTyped).apply { setCharAt(i, adj) }.toString()
+                val cand = composeBuffer(mutated)
+                consider(cand, FuzzyBeamSearch.COST_SUB_ADJACENT)
+            }
+        }
+
+        // B. Single character deletion in raw keystrokes (e.g. "xinhc" -> "xinh", "ddanng" -> "đang")
+        if (lowerTyped.length >= 3) {
+            for (i in lowerTyped.indices) {
+                val mutated = lowerTyped.removeRange(i, i + 1)
+                val cand = composeBuffer(mutated)
+                val cost = if (i > 0 && lowerTyped[i] == lowerTyped[i - 1]) {
+                    FuzzyBeamSearch.COST_DELETE_DOUBLED
+                } else {
+                    FuzzyBeamSearch.COST_DELETION
+                }
+                consider(cand, cost)
+            }
+        }
+
+        // C. Single adjacent transposition in raw keystrokes (e.g. "tieegns" -> "tieengs" -> "tiếng")
+        if (lowerTyped.length >= 3) {
+            val chars = lowerTyped.toCharArray()
+            for (i in 0 until chars.size - 1) {
+                val tmp = chars[i]
+                chars[i] = chars[i + 1]
+                chars[i + 1] = tmp
+                val mutated = String(chars)
+                val cand = composeBuffer(mutated)
+                consider(cand, FuzzyBeamSearch.COST_TRANSPOSITION)
+                chars[i + 1] = chars[i]
+                chars[i] = tmp
+            }
+        }
+
+        // D. Single adjacent key substitution directly in composed word (e.g. "yuệ" -> "tuệ")
+        for (i in lowerComposed.indices) {
+            val orig = lowerComposed[i]
+            val neighbors = proximity.neighborsOf(orig)
+            for (adj in neighbors) {
+                if (adj == orig) continue
+                val cand = StringBuilder(lowerComposed).apply { setCharAt(i, adj) }.toString()
+                consider(cand, FuzzyBeamSearch.COST_SUB_ADJACENT)
+            }
+        }
+
+        // E. Ranked fuzzy walk candidates for lowerComposed
+        val ranked = rankedFor(lowerComposed, FuzzyBeamSearch.AUTOCORRECT_K / 2, touch, keys)
+        for (c in ranked) {
+            if (c.edits <= 1 && c.completedChars == 0) {
+                consider(c.word, c.editCost)
+            }
+        }
+
+        if (candidateMutations.isEmpty()) return standardDecision
+
+        class ViCandidate(
+            val word: String,
+            val score: Double,
+            val editCost: Double,
+            val hasBigram: Boolean,
+        )
+
+        val scored = ArrayList<ViCandidate>(candidateMutations.size)
+        val prev = previousWord?.lowercase()
+        for ((word, editCost) in candidateMutations) {
+            val penalty = correctionStats.penalty(lowerComposed, word)
+            if (penalty == CorrectionStats.Penalty.BLOCKED || penalty == CorrectionStats.Penalty.PROBATION) {
+                continue
+            }
+            val dictScore = dictionaryScore(word)
+            val userScore = if (userLexicon.contains(word)) {
+                flatScore(userLexicon.frequencyOf(word), USER_WORD_WEIGHT)
+            } else {
+                Double.NEGATIVE_INFINITY
+            }
+            val baseScore = maxOf(dictScore, userScore) - editCost
+            val bigramCount = if (prev != null) {
+                seedBigrams.count(prev, word) + userLexicon.bigramCount(prev, word)
+            } else {
+                0
+            }
+            val bigramBoost = if (bigramCount > 0) ln(1.0 + bigramCount).coerceAtMost(3.0) else 0.0
+            val penalizedScore = if (penalty == CorrectionStats.Penalty.PENALIZED) baseScore - PAIR_PENALTY else baseScore
+            val totalScore = penalizedScore + bigramBoost
+            scored.add(ViCandidate(word, totalScore, editCost, bigramCount > 0))
+        }
+
+        if (scored.isEmpty()) return standardDecision
+        scored.sortWith(compareByDescending<ViCandidate> { it.score }.thenBy { it.word })
+
+        val top = scored.first()
+        val runnerUp = scored.getOrNull(1)
+
+        val effectiveConfidence = (
+            autocorrectConfidence *
+                (if (adaptiveConfidence) correctionStats.confidenceMultiplier() else 1.0) *
+                timingMultiplier
+            ).coerceIn(MIN_AUTOCORRECT_CONFIDENCE, MAX_AUTOCORRECT_CONFIDENCE)
+        val gate = ln(effectiveConfidence)
+
+        val margin = if (runnerUp != null) {
+            top.score - runnerUp.score
+        } else {
+            top.score - SOLO_RUNNER_UP_SCORE
+        }
+
+        val appliedWord = when {
+            top.hasBigram -> top.word
+            margin >= gate -> top.word
+            else -> null
+        }
+
+        return if (appliedWord != null) {
+            val fixed = matchCase(composed, appliedWord)
+            val ordinary = CorrectionDecision(
+                apply = fixed,
+                certainty = if (runnerUp != null) {
+                    (top.score / (top.score + runnerUp.score.coerceAtLeast(0.01))).coerceIn(0.5, 1.0)
+                } else {
+                    1.0
+                },
+                complexity = complexityOfEdit(lowerComposed, appliedWord),
+            )
+            withTaughtFix(composed, lowerComposed, previousWord, ordinary)
+        } else {
+            val offeredWord = matchCase(composed, top.word)
+            val ordinary = CorrectionDecision(offer = offeredWord)
+            withTaughtFix(composed, lowerComposed, previousWord, ordinary)
+        }
+    }
+
+    /**
      * The capital a word list gives [lower], as a correction (#481): "haus"
      * commits as "Haus". Only a word typed with no capital at all is asked
      * about, so one the user shifted themselves is never touched.

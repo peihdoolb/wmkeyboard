@@ -18186,10 +18186,15 @@ open class WMKeyboardService : InputMethodService() {
             // for their other languages does not say they want marks added.
             vietnameseComposed != null && autocorrect && state.settings.vietnamese.restoreMarks &&
                 state.allowsTypingIntelligence && !gluedToWord -> {
-                val decision = suggestionEngine?.decideCorrection(
-                    vietnameseComposed,
+                val decision = suggestionEngine?.decideVietnameseCorrection(
+                    typed = typed,
+                    composed = vietnameseComposed,
+                    touch = taps,
                     timingMultiplier = timingMultiplier(),
                     previousWord = previousWord,
+                    keys = composingKeyFrame(),
+                    isSyllable = { com.wasimaster.wmkeyboard.core.input.composer.VietnameseOrthography.isSyllable(it) },
+                    composeBuffer = { state.composer.composeBuffer(it) },
                 ) ?: SuggestionEngine.NO_CORRECTION
                 val orthographyFix = if (decision.apply == null) {
                     com.wasimaster.wmkeyboard.core.input.composer.VietnameseOrthography.correctSyllable(vietnameseComposed)

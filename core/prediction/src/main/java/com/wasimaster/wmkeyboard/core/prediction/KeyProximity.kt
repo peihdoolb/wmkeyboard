@@ -105,6 +105,38 @@ class KeyProximity private constructor(
         }
     }
 
+    /** Returns characters physically adjacent to [c] on this layout, with standard QWERTY fallback. */
+    fun neighborsOf(c: Char): String =
+        neighbors[c] ?: neighbors[c.lowercaseChar()] ?: when (c.lowercaseChar()) {
+            'q' -> "wa"
+            'w' -> "qeas"
+            'e' -> "wrsd"
+            'r' -> "etdf"
+            't' -> "ryfg"
+            'y' -> "tugh"
+            'u' -> "yijh"
+            'i' -> "uojk"
+            'o' -> "ipkl"
+            'p' -> "ol"
+            'a' -> "qwsz"
+            's' -> "awedxz"
+            'd' -> "serfcx"
+            'f' -> "drtgvc"
+            'g' -> "ftyhbv"
+            'h' -> "gyujnb"
+            'j' -> "huikmn"
+            'k' -> "jiolm"
+            'l' -> "kop"
+            'z' -> "asx"
+            'x' -> "zsdc"
+            'c' -> "xdfv"
+            'v' -> "cfgb"
+            'b' -> "vghn"
+            'n' -> "bhjm"
+            'm' -> "njk"
+            else -> ""
+        }
+
     /**
      * Which hand reaches [c]: [LEFT], [RIGHT], or [UNKNOWN] for a character
      * this layout does not draw.

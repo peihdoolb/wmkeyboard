@@ -60,12 +60,16 @@ class VietnameseAutocorrectServiceTest {
                 insert("tiếng", 9000)
                 insert("nghiêng", 6000)
                 insert("nguyễn", 7000)
+                insert("trí", 6500)
+                insert("tri", 5000)
+                insert("tuệ", 6000)
             }
         } else {
             Trie()
         },
         BengaliPhoneticIndex(emptyList()),
         UserLexicon(null),
+        seedBigrams = com.wasimaster.wmkeyboard.core.prediction.SeedBigrams.load("trí tuệ 100\n".byteInputStream()),
     )
 
     /**
@@ -237,5 +241,23 @@ class VietnameseAutocorrectServiceTest {
         space(service)
 
         assertEquals("tieng ngiêng ", editor.text.toString())
+    }
+
+    /**
+     * Typo slips on Telex keys (e.g. "trid" for "trí", "yueej" for "tuệ")
+     * are corrected via keyboard proximity and bigram context.
+     */
+    @Test
+    fun `telex typos with adjacent slips and bigrams are autocorrected on commit`() {
+        val editor = RecordingEditor()
+        val service = keyboardOn(editor)
+
+        type(service, "trid")
+        space(service)
+        assertEquals("trí ", editor.text.toString())
+
+        type(service, "yueej")
+        space(service)
+        assertEquals("trí tuệ ", editor.text.toString())
     }
 }
