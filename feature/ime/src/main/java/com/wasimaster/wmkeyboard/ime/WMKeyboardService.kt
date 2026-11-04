@@ -18194,13 +18194,12 @@ open class WMKeyboardService : InputMethodService() {
                     previousWord = previousWord,
                     keys = composingKeyFrame(),
                     isSyllable = { com.wasimaster.wmkeyboard.core.input.composer.VietnameseOrthography.isSyllable(it) },
+                    correctSyllable = { com.wasimaster.wmkeyboard.core.input.composer.VietnameseOrthography.correctSyllable(it) },
                     composeBuffer = { state.composer.composeBuffer(it) },
                 ) ?: SuggestionEngine.NO_CORRECTION
-                val orthographyFix = if (decision.apply == null) {
-                    com.wasimaster.wmkeyboard.core.input.composer.VietnameseOrthography.correctSyllable(vietnameseComposed)
-                        ?.takeIf { suggestionEngine?.inDictionaries(it) == true }
-                } else null
-                val fix = (decision.apply ?: orthographyFix)
+                val orthographyFix = com.wasimaster.wmkeyboard.core.input.composer.VietnameseOrthography.correctSyllable(vietnameseComposed)
+                    ?.takeIf { suggestionEngine?.inDictionaries(it) == true }
+                val fix = (orthographyFix ?: decision.apply)
                 corrected = fix?.takeIf { it != vietnameseComposed && !declinedHere }
                 offered = decision.offer?.takeIf { it != vietnameseComposed && !declinedHere }
                 obviousness = if (orthographyFix != null) 1.0 else decision.obviousness

@@ -4600,6 +4600,7 @@ class SuggestionEngine(
         previousWord: String? = null,
         keys: KeySets? = null,
         isSyllable: ((String) -> Boolean)? = null,
+        correctSyllable: ((String) -> String?)? = null,
         composeBuffer: (String) -> String,
     ): CorrectionDecision {
         if (typed.isEmpty() || composed.isEmpty()) return NO_CORRECTION
@@ -4642,6 +4643,7 @@ class SuggestionEngine(
         }
 
         standardDecision.offer?.let { consider(it, FuzzyBeamSearch.COST_SUB_ADJACENT) }
+        correctSyllable?.invoke(lowerComposed)?.let { consider(it, 0.0) }
 
         // A. Single adjacent key substitution in raw keystrokes (e.g. "trid" -> "tris" -> "trí", "yueej" -> "tueej" -> "tuệ")
         for (i in lowerTyped.indices) {

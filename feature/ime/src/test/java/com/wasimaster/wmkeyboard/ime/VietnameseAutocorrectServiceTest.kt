@@ -63,6 +63,11 @@ class VietnameseAutocorrectServiceTest {
                 insert("trí", 6500)
                 insert("tri", 5000)
                 insert("tuệ", 6000)
+                insert("gà", 6200)
+                insert("ghim", 5500)
+                insert("ghe", 5600)
+                insert("ghế", 6300)
+                insert("gì", 7500)
             }
         } else {
             Trie()
@@ -259,5 +264,42 @@ class VietnameseAutocorrectServiceTest {
         type(service, "yueej")
         space(service)
         assertEquals("trí tuệ ", editor.text.toString())
+    }
+
+    /**
+     * Vietnamese orthography rule for 'g' vs 'gh':
+     * 1. 'gh' before i, e, ê: gim -> ghim, ge -> ghe, gees -> ghế
+     * 2. 'g' before other vowels (a, o, ô, u, ư...): ghaf -> gà
+     * 3. 'gì' is protected and preserved.
+     */
+    @Test
+    fun `orthography rules for g and gh are autocorrected on commit`() {
+        val editor = RecordingEditor()
+        val service = keyboardOn(editor)
+
+        // Rule 2: g before a (ghaf -> gà)
+        type(service, "ghaf")
+        space(service)
+        assertEquals("gà ", editor.text.toString())
+
+        // Rule 1: gh before i (gim -> ghim)
+        type(service, "gim")
+        space(service)
+        assertEquals("gà ghim ", editor.text.toString())
+
+        // Rule 1: gh before e (ge -> ghe)
+        type(service, "ge")
+        space(service)
+        assertEquals("gà ghim ghe ", editor.text.toString())
+
+        // Rule 1: gh before ê (gees -> ghế)
+        type(service, "gees")
+        space(service)
+        assertEquals("gà ghim ghe ghế ", editor.text.toString())
+
+        // Legitimate 'gì' is not modified
+        type(service, "gif")
+        space(service)
+        assertEquals("gà ghim ghe ghế gì ", editor.text.toString())
     }
 }

@@ -120,6 +120,21 @@ object VietnameseOrthography {
         if (nucleus == "uơ" && (onset !in UO_ONSETS || coda.isNotEmpty())) return false
         // Sắc and nặng are the only tones a stop coda can carry.
         if (coda in STOP_CODAS && tone != null && tone != ACUTE && tone != DOT) return false
+
+        // Orthographic onset-nucleus constraints:
+        // 1. "gh" is only written before front vowels: i, e, ê.
+        if (onset == "gh" && !nucleus.startsWith("i") && !nucleus.startsWith("e") && !nucleus.startsWith("\u00ea")) return false
+        // 2. "g" is written before all other vowels: a, ă, â, o, ô, ơ, u, ư.
+        // It cannot precede e or ê, and precedes i only in legitimate "gi" words (base "gi" or "gin").
+        if (onset == "g") {
+            if (nucleus.startsWith("e") || nucleus.startsWith("\u00ea")) return false
+            if (nucleus.startsWith("i") && base != "gi" && base != "gin") return false
+        }
+        // 3. "ngh" is only written before: i, e, ê, y.
+        if (onset == "ngh" && !nucleus.startsWith("i") && !nucleus.startsWith("e") && !nucleus.startsWith("\u00ea") && !nucleus.startsWith("y")) return false
+        // 4. "ng" is never written before: i, e, ê, y.
+        if (onset == "ng" && (nucleus.startsWith("i") || nucleus.startsWith("e") || nucleus.startsWith("\u00ea") || nucleus.startsWith("y"))) return false
+
         return true
     }
 
@@ -287,8 +302,16 @@ object VietnameseOrthography {
 
         if (onset == "ng" && (nucleus.startsWith("e") || nucleus.startsWith("\u00ea") || nucleus.startsWith("i") || nucleus.startsWith("y"))) {
             newOnset = "ngh"
-        } else if (onset == "g" && (nucleus.startsWith("e") || nucleus.startsWith("\u00ea") || nucleus.startsWith("i"))) {
-            newOnset = "gh"
+        } else if (onset == "ngh" && (!nucleus.startsWith("e") && !nucleus.startsWith("\u00ea") && !nucleus.startsWith("i") && !nucleus.startsWith("y"))) {
+            newOnset = "ng"
+        } else if (onset == "gh" && (!nucleus.startsWith("e") && !nucleus.startsWith("\u00ea") && !nucleus.startsWith("i"))) {
+            newOnset = "g"
+        } else if (onset == "g") {
+            if (nucleus.startsWith("e") || nucleus.startsWith("\u00ea")) {
+                newOnset = "gh"
+            } else if (nucleus.startsWith("i") && base != "gi" && base != "gin") {
+                newOnset = "gh"
+            }
         }
 
         if (coda in STOP_CODAS && tone != null && tone != ACUTE && tone != DOT) {
@@ -303,7 +326,13 @@ object VietnameseOrthography {
                 candidateBase
             }
             if (isSyllable(candidate)) {
-                return if (clean[0].isUpperCase()) candidate.replaceFirstChar { it.uppercaseChar() } else candidate
+                return if (clean.all { it.isUpperCase() }) {
+                    candidate.uppercase()
+                } else if (clean[0].isUpperCase()) {
+                    candidate.replaceFirstChar { it.uppercaseChar() }
+                } else {
+                    candidate
+                }
             }
         }
         return null
