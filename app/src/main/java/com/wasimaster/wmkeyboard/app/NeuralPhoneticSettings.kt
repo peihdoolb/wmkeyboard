@@ -199,11 +199,19 @@ private fun XlitModelRow(
         highlightKey = title,
         swipeActions = if (here) listOf(deleteSwipeAction(deleteLabel) { confirmDelete = true }) else emptyList(),
         onClick = when {
-            missing -> download
+            missing && !offlineBuild -> download
             here -> ({ confirmDelete = true })
             else -> null
         },
-    )
+    )    // For a phone that cannot download (#998): the pack's three files, fetched
+    // elsewhere and imported here, checked as the download checks them.
+    if (missing) {
+        OfflineImportRow(
+            subtitle = stringResource(R.string.offline_import_xlit_subtitle),
+            links = remember(pack) { pack.parts.mapNotNull { part -> IndicXlitModels.url(part)?.let { OfflineLink(part.fileName, it) } } },
+            onImported = { downloads.refresh(context) },
+        )
+    }
 }
 
 /**

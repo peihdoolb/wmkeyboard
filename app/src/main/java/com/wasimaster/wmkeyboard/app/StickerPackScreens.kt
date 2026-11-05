@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -59,6 +60,7 @@ import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.AutoAwesome
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Delete
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.FileOpen
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.MoreVert
+import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Public
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Share
 import com.wasimaster.wmkeyboard.core.stickers.CustomSticker
 import com.wasimaster.wmkeyboard.core.stickers.StickerAddResult
@@ -105,6 +107,9 @@ internal fun StickerPacksScreen(onNavigate: (String) -> Unit) {
     var newPackName by remember { mutableStateOf<String?>(null) }
     var confirmDelete by remember { mutableStateOf<StickerPack?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
+    // The pack the community publish dialog is open for.
+    var publishing by remember { mutableStateOf<StickerPack?>(null) }
+    publishing?.let { PublishStickerPackDialog(it) { publishing = null } }
 
     // CreateDocument cannot carry a payload, so the pack waiting to be written
     // is parked here between launching the picker and its result.
@@ -177,6 +182,7 @@ internal fun StickerPacksScreen(onNavigate: (String) -> Unit) {
                             pendingExport = pack
                             exportLauncher.launch(StickerPackFile.fileName(pack))
                         },
+                        onPublish = { publishing = pack }.takeIf { pack.stickers.isNotEmpty() },
                         onDelete = { confirmDelete = pack },
                     )
                 }
@@ -308,6 +314,8 @@ private fun StickerPackRow(
     fileFor: (CustomSticker) -> File?,
     onOpen: () -> Unit,
     onExport: () -> Unit,
+    /** Null for an empty pack, which the community repository would refuse. */
+    onPublish: (() -> Unit)?,
     onDelete: () -> Unit,
 ) {
     val loader = rememberMediaImageLoader()
@@ -372,6 +380,14 @@ private fun StickerPackRow(
                         ),
                     )
                 }
+                if (onPublish != null) {
+                    IconButton(onClick = onPublish) {
+                        Icon(
+                            Icons.Outlined.Public,
+                            contentDescription = stringResource(R.string.community_publish_sticker_pack_desc, pack.name),
+                        )
+                    }
+                }
                 IconButton(onClick = onDelete) {
                     Icon(
                         Icons.Outlined.Delete,
@@ -415,6 +431,8 @@ internal fun StickerPackScreen(
     // sticker that went meanwhile leaves the selection with it.
     var picked by remember { mutableStateOf<Set<String>>(emptySet()) }
     var confirmBulk by remember { mutableStateOf(false) }
+    // The selection on its way to another pack (#1061): true moves it, false copies it.
+    var sending by remember { mutableStateOf<Boolean?>(null) }
 
     val pickLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickMultipleVisualMedia(MAX_PICK),
@@ -460,6 +478,7 @@ internal fun StickerPackScreen(
     val selected = pack?.stickers.orEmpty().mapNotNullTo(HashSet()) { it.id.takeIf { id -> id in picked } }
     val selecting = selected.isNotEmpty()
     BackHandler(enabled = selecting) { picked = emptySet() }
+    val elsewhere = store.packs().filter { it.id != packId }
     if (selecting && pack != null) {
         RegisterDock {
             StickerSelectionBar(
@@ -468,6 +487,8 @@ internal fun StickerPackScreen(
                 onClear = { picked = emptySet() },
                 onSelectAll = { picked = pack.stickers.mapTo(HashSet()) { it.id } },
                 onDelete = { confirmBulk = true },
+                onMove = { sending = true }.takeIf { elsewhere.isNotEmpty() },
+                onCopy = { sending = false }.takeIf { elsewhere.isNotEmpty() },
             )
         }
     }
@@ -590,6 +611,45 @@ internal fun StickerPackScreen(
         }
     }
 
+    sending?.let { move ->
+        val count = selected.size
+        AlertDialog(
+            onDismissRequest = { sending = null },
+            title = {
+                val title = if (move) R.plurals.import_stickers_move_title else R.plurals.import_stickers_copy_title
+                Text(pluralStringResource(title, count, count))
+            },
+            text = {
+                LazyColumn {
+                    items(elsewhere.size) { at ->
+                        val target = elsewhere[at]
+                        TextButton(
+                            onClick = {
+                                val sent = if (move) {
+                                    store.moveStickers(packId, selected, target.id)
+                                } else {
+                                    store.copyStickers(packId, selected, target.id)
+                                }
+                                if (sent < count) message = context.getString(R.string.import_sticker_pack_full)
+                                picked = emptySet()
+                                sending = null
+                                revision++
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(target.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { sending = null }) {
+                    Text(stringResource(CommonR.string.common_cancel))
+                }
+            },
+        )
+    }
     if (confirmBulk) {
         val count = selected.size
         AlertDialog(

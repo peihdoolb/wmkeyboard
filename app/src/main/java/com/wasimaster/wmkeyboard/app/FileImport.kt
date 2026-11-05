@@ -57,6 +57,7 @@ import com.wasimaster.wmkeyboard.core.input.imported.ConvertedMethod
 import com.wasimaster.wmkeyboard.core.input.imported.InputMethodImport
 import com.wasimaster.wmkeyboard.core.input.imported.SourceFile
 import com.wasimaster.wmkeyboard.core.keyman.KeymanImport
+import com.wasimaster.wmkeyboard.core.layout.ClinkLayouts
 import com.wasimaster.wmkeyboard.core.layout.ForeignLayouts
 import com.wasimaster.wmkeyboard.core.prediction.AospCombined
 import com.wasimaster.wmkeyboard.core.prediction.AospDictionary
@@ -121,6 +122,11 @@ import com.wasimaster.wmkeyboard.core.theme.FlexUnsupported
 import com.wasimaster.wmkeyboard.core.theme.GboardResult
 import com.wasimaster.wmkeyboard.core.theme.GboardTheme
 import com.wasimaster.wmkeyboard.core.theme.HeliUnsupported
+import com.wasimaster.wmkeyboard.core.theme.ClinkTheme
+import com.wasimaster.wmkeyboard.core.theme.ClinkThemeResult
+import com.wasimaster.wmkeyboard.core.theme.ClinkUnsupported
+import com.wasimaster.wmkeyboard.core.theme.KineticaTheme
+import com.wasimaster.wmkeyboard.core.theme.KineticaUnsupported
 import com.wasimaster.wmkeyboard.core.theme.MultilingTheme
 import com.wasimaster.wmkeyboard.core.theme.MultilingThemeResult
 import com.wasimaster.wmkeyboard.core.theme.MultilingUnsupported
@@ -132,6 +138,8 @@ import com.wasimaster.wmkeyboard.core.theme.withExtractedImages
 import com.wasimaster.wmkeyboard.core.theme.withFreshIds
 import com.wasimaster.wmkeyboard.core.util.MultilingExport
 import com.wasimaster.wmkeyboard.core.util.firstJsonDocument
+import com.wasimaster.wmkeyboard.core.util.MAX_BACKUP_BYTES
+import com.wasimaster.wmkeyboard.core.util.MAX_IMPORT_BYTES
 import com.wasimaster.wmkeyboard.core.util.readCapped
 import com.wasimaster.wmkeyboard.core.util.requireInputStream
 import com.wasimaster.wmkeyboard.core.util.runCancellable
@@ -219,6 +227,11 @@ object WMFileTypes {
         // extension at all, so they are recognised by their contents alone.
         DesktopLayouts.KLC_EXTENSION,
         DesktopLayouts.KEYLAYOUT_EXTENSION,
+        // Clink's theme and layout files, claimed for the same reason again.
+        // Clink is an iOS keyboard, so nothing on the phone competes for them:
+        // they arrive from its repositories or from someone moving over.
+        ClinkTheme.FILE_EXTENSION,
+        ClinkLayouts.FILE_EXTENSION,
     )
 
     /**
@@ -305,7 +318,7 @@ object WMFileTypes {
 
         /**
          * Another keyboard's whole backup: HeliBoard, LeanType, FUTO,
-         * FlorisBoard, CleverKeys or AnySoftKeyboard, already read and
+         * FlorisBoard, CleverKeys, AnySoftKeyboard or Kinetica, already read and
          * converted. Not a [Config]: nothing in it is ours, and the dialog for
          * it is a list of everything inside to tick or leave rather than one
          * question.
@@ -423,6 +436,9 @@ object WMFileTypes {
         /** A HeliBoard or LeanType colour theme, already converted. */
         data class HeliThemeFile(val result: HeliResult.Converted) : Opened
 
+        /** A theme from the iOS keyboard Clink (`.clinktheme`), already converted. */
+        data class ClinkThemeFile(val result: ClinkThemeResult.Converted) : Opened
+
         /** A layout from FlorisBoard's JSON or a Keyman touch layout, already converted. */
         data class ForeignLayout(val converted: ConvertedLayout) : Opened
 
@@ -514,8 +530,9 @@ object WMFileTypes {
                 val input = if (gzipped) java.util.zip.GZIPInputStream(raw, 32 * 1024) else raw
                 // Capped on what comes *out*: a few megabytes of gzip inflate
                 // to far more, and this is the one read where the file's own
-                // size says nothing about what it costs to hold.
-                input.readCapped()
+                // size says nothing about what it costs to hold. One of our own
+                // backups gets their ceiling, since the export has none (#1078).
+                input.readCapped(if (looksLikeOwnBackup(head, name)) MAX_BACKUP_BYTES else MAX_IMPORT_BYTES)
             }
         }.getOrNull() ?: return Opened.Unreadable
         // UTF-16 is read as such: MSKLC saves every `.klc` that way.
@@ -541,6 +558,11 @@ object WMFileTypes {
     }
 
     /** Up to [FileSniff.HEAD_BYTES] of [input]: enough for every header sniff. */
+    /** A backup names its format in its first few bytes, and usually in its file name. */
+    private fun looksLikeOwnBackup(head: ByteArray, name: String): Boolean =
+        name.endsWith(ConfigBackup.FILE_EXTENSION, ignoreCase = true) ||
+            head.decodeToString().contains(ConfigBackup.FORMAT)
+
     private fun readHead(input: java.io.InputStream): ByteArray {
         val buffer = ByteArray(FileSniff.HEAD_BYTES)
         var read = 0
@@ -626,6 +648,12 @@ object WMFileTypes {
         // Not ours, but its first line is as good as a tag: no other format
         // can start with Gboard's own header comment.
         GboardDictionary.read(text)?.let { return Opened.GboardDictionaryFile(it) }
+        // Kinetica's backup names itself on its first line, and its tab-split
+        // records would otherwise read as a table of snippets further down.
+        // It is a whole backup: its theme is one item of it.
+        if (KineticaTheme.looksLikeBackup(text)) {
+            ForeignBackups.readText(text)?.let { return Opened.ForeignBackupFile(it) }
+        }
         // This app's kaomoji export carries its format tag; the plain lists the
         // kaomoji screen also reads are any text, and stay with the editor.
         if (text.contains("\"${KaomojiFiles.FORMAT}\"")) {
@@ -641,6 +669,15 @@ object WMFileTypes {
         // may be added after this line: these checks are what stop the branch
         // claiming every JSON file, and a second untagged one would have
         // nothing left to be told apart by.
+        // Clink's theme and layout files are untagged JSON that this app's
+        // theme decoder would also take (a Clink theme has an `id` and a
+        // `name`), so they are told apart first, by the keys only they use.
+        if (ClinkTheme.looksLikeClinkTheme(text)) {
+            (ClinkTheme.read(text) as? ClinkThemeResult.Converted)?.let { return Opened.ClinkThemeFile(it) }
+        }
+        if (ClinkLayouts.looksLikeClinkLayout(text)) {
+            ClinkLayouts.read(text)?.let { return Opened.ForeignLayout(it) }
+        }
         if (name.endsWith(".${ThemeCodec.FILE_EXTENSION}", ignoreCase = true) || looksLikeThemeExport(text)) {
             ThemeCodec.decode(text)?.let { return Opened.Theme(it) }
         }
@@ -666,6 +703,12 @@ object WMFileTypes {
         // AOSP's `.combined` word list opens with its own header line.
         val firstLine = text.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() && !it.startsWith("#") }
         if (firstLine != null && AospCombined.looksLikeCombined(firstLine)) {
+            val inspection = CustomDictionaries.inspect(listOf(CustomDictionaries.ImportFile(name, text.toByteArray())))
+            (inspection as? CustomDictionaries.Inspection.Found)?.let { return Opened.Dictionaries(it.dictionaries) }
+        }
+        // SwiftKey's learned words have nothing but their file name to go by:
+        // the words inside are any word list, which otherwise opens as text.
+        if (CustomDictionaries.isSwiftKeyVocabulary(name)) {
             val inspection = CustomDictionaries.inspect(listOf(CustomDictionaries.ImportFile(name, text.toByteArray())))
             (inspection as? CustomDictionaries.Inspection.Found)?.let { return Opened.Dictionaries(it.dictionaries) }
         }
@@ -903,7 +946,7 @@ object WMFileTypes {
         manifest.contains("\"${IconPackFile.FORMAT}\"") -> Opened.Icons
         manifest.contains("\"${StickerPackFile.FORMAT}\"") -> Opened.Stickers
         manifest.contains("\"${PluginFile.FORMAT}\"") -> Opened.Plugin
-        manifest.contains("\"${SoundPackFile.FORMAT}\"") -> Opened.SoundPack
+        SoundPackFile.recognises(manifest) -> Opened.SoundPack
         else -> Opened.Unrecognized
     }
 
@@ -1099,6 +1142,8 @@ internal fun ImportFileDialog(
      * has nothing left to be asked.
      */
     onImported: () -> Unit = {},
+    /** Offered when the file cannot be opened, by a caller that can pick again. */
+    onChooseAnother: (() -> Unit)? = null,
     onClose: () -> Unit,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -1134,6 +1179,21 @@ internal fun ImportFileDialog(
             title = { Text(stringResource(R.string.import_progress_reading)) },
             text = { CircularProgressIndicator() },
             confirmButton = {},
+        )
+        return
+    }
+
+    if (state == WMFileTypes.Opened.Unreadable && onChooseAnother != null) {
+        AlertDialog(
+            onDismissRequest = onClose,
+            title = { Text(stringResource(R.string.import_unreadable_title)) },
+            text = { Text(stringResource(R.string.import_unreadable_body)) },
+            confirmButton = {
+                TextButton(onClick = onChooseAnother) { Text(stringResource(R.string.import_choose_another)) }
+            },
+            dismissButton = {
+                TextButton(onClick = onClose) { Text(stringResource(CommonR.string.common_cancel)) }
+            },
         )
         return
     }
@@ -1814,6 +1874,23 @@ private fun rememberProposal(
                     val stored = result.theme.copy(id = "custom_${System.currentTimeMillis()}")
                     repository.upsertCustomTheme(stored)
                     context.getString(R.string.import_heli_done, stored.name, result.coloursUsed, result.coloursRead)
+                },
+            )
+        }
+
+        is WMFileTypes.Opened.ClinkThemeFile -> {
+            val result = state.result
+            ImportProposal(
+                titleRes = R.string.import_name_title,
+                titleArg = result.theme.familyName ?: result.theme.name,
+                body = context.getString(R.string.import_clink_file_body),
+                repairs = result.dropped.map { clinkDroppedLine(context, it) },
+                apply = {
+                    // Saved, not switched to, like every converted theme. A
+                    // light-and-dark pair is a family, so its variant needs an id too.
+                    val stored = result.theme.withFreshIds("custom_${System.currentTimeMillis()}")
+                    repository.upsertCustomTheme(stored)
+                    context.getString(R.string.import_clink_done, stored.familyName ?: stored.name)
                 },
             )
         }
@@ -2663,6 +2740,19 @@ internal fun heliDroppedLine(context: android.content.Context, dropped: HeliUnsu
             HeliUnsupported.DERIVED_COLOURS -> R.string.import_heli_dropped_derived
             HeliUnsupported.UNUSED_COLOURS -> R.string.import_heli_dropped_unused
             HeliUnsupported.LOW_CONTRAST_FALLBACK -> R.string.import_floris_dropped_contrast
+        },
+    )
+
+/** One line of the "what the app changed" list of a Clink theme import. */
+internal fun clinkDroppedLine(context: android.content.Context, dropped: ClinkUnsupported): String =
+    context.getString(dropped.messageRes)
+
+/** One line of the "what the app changed" list of a Kinetica theme import. */
+internal fun kineticaDroppedLine(context: android.content.Context, dropped: KineticaUnsupported): String =
+    context.getString(
+        when (dropped) {
+            KineticaUnsupported.RAINBOW_TRAIL -> R.string.import_kinetica_dropped_rainbow
+            KineticaUnsupported.LIT_KEYS -> R.string.import_kinetica_dropped_lit_keys
         },
     )
 

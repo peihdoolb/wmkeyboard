@@ -43,6 +43,7 @@ The **App** group holds twelve rows:
 
 - **Version** shows the build, build type and store channel as its subtitle ("Standard build (release · Play Store)", "Standard build (release · F-Droid)", or "Offline build (release)" for the GitHub build with no internet permission), with the build number after "code," and the version name as the row's trailing value. It navigates nowhere, but it isn't quite inert. Tap it seven times and you get [the hidden mini game](/reference/easter-eggs/#find-the-hidden-mini-game), with a toast counting you down from the fourth tap.
 - **What's new** opens the release notes of the version you have installed, on every build. See [Reading what changed](#reading-what-changed).
+- **New settings** brings back the bar that walks through the settings the latest update added, with their gold borders, after you've closed it. On a first install there is nothing to show yet. See [Seeing what an update added](/reference/settings/#seeing-what-an-update-added).
 - **Licence** shows "MIT, © 2026 Wasi Master" and opens the app's own MIT licence text in full underneath it, monospaced and horizontally scrollable.
 - **Source code** opens the GitHub repository directly in your browser; unlike the Share rows further down, this one navigates immediately rather than opening a share sheet.
 - **Short app name** is a switch, off by default. Turn it on and your app drawer and home screen call the app **WMK** instead of **WM Keyboard**, so a narrow launcher grid doesn't cut the name short. See [Changing the name under the icon](#changing-the-name-under-the-icon).
@@ -135,6 +136,12 @@ That button is on GitHub builds only. An F-Droid build has a page to send you to
 
 The notes for the version you already have are a different matter, and every build has them. After an update, from any store, the app posts an **Updated to** notification; tapping it opens that version's notes over whatever screen the app shows. The same dialog is behind **What's new** in the App group above and behind the button on the **Updated to** card. These notes ship inside the app, so they open offline and send nothing. Only a build cut before its notes were written has none inside, and that one reads them from the version's tag on GitHub instead.
 
+### Being asked for a rating
+
+A copy installed from the Play Store may show Play's own rating card when you open the settings app. It needs 500 words typed on this phone and 7 days since the install, and it asks again after 120 days at the soonest. It never appears over the keyboard or while an update prompt is open. With [typing statistics](/reference/settings/statistics/) off, no words are counted, so it may never appear.
+
+Play decides whether the card really shows, and it may skip it. The app isn't told what you chose, or whether you saw it at all. F-Droid and GitHub builds never ask.
+
 ### What a GitHub build checks before it installs
 
 Downloading an APK and handing it to Android is the one thing in this app that replaces the app, so here is exactly what's checked, and in what order:
@@ -222,7 +229,7 @@ The F-Droid build lists fewer: it leaves out the entries for ML Kit, the local L
 
 **Data packs you can download** covers the frequency wordlists, offensive word lists, emoji keyword dictionaries and Noto Animated Emoji served from the WM Keyboard data repository, plus the CJK-specific conversion data: CC-CEDICT, mozc, rime-cantonese & CC-Canto, a Chinese stroke code table, and the Unicode Unihan database. Ten rows in all, since the AOSP dictionaries have their own. A build other than F-Droid's <Flavor edition="google" /> adds two more for downloads only it can make: the sticker editor's own U²-Net-P background remover (Apache-2.0) and the on-device AI models (Apache-2.0, or Google's Gemma Terms of Use for Gemma 3). A caption underneath notes these keep their upstream licences whether or not they're actually installed on your device.
 
-**Online services** lists what each network tool talks to and under what terms: Brave Search, Tavily, KLIPY & GIPHY, Wikipedia, Google Translate, Open-Meteo, Frankfurter & ExchangeRate-API, Coinbase & the other coin-price sources, the Free Dictionary API, Wiktionary & kaikki.org, Datamuse, Hugging Face, and the bring-your-own-key AI providers (Anthropic, OpenAI, Google AI, xAI, DeepSeek, Brave Answers, and whichever OpenAI-compatible service you point the escape hatch at). None of their code or data ships inside the app; see [Network policy](/privacy/network/) for what each one actually sends and when.
+**Online services** lists what each network tool talks to and under what terms: Brave Search, Tavily, KLIPY & GIPHY, Wikipedia, Google Translate, Open-Meteo, Frankfurter & ExchangeRate-API, Coinbase & the other coin-price sources, the Free Dictionary API, Urban Dictionary, Wiktionary & kaikki.org, Datamuse, Hugging Face, and the bring-your-own-key AI providers (Anthropic, OpenAI, Google AI, xAI, DeepSeek, Brave Answers, and whichever OpenAI-compatible service you point the escape hatch at). None of their code or data ships inside the app; see [Network policy](/privacy/network/) for what each one actually sends and when.
 
 ## Diagnosing a problem
 

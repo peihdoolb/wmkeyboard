@@ -747,6 +747,15 @@ class SnippetStore(private val storageFile: File?) {
         snippet.expansions().size + childrenOf(snippet).size
 
     /**
+     * While true no trigger matches, of any kind, since every route asks [index]:
+     * a keyboard mode that wants them off. The snippets themselves are untouched.
+     */
+    @Volatile
+    var triggersPaused: Boolean = false
+
+    private val noTriggers by lazy { SnippetIndex.of(emptyList(), MultiExpandMode.CHIPS_ONLY) }
+
+    /**
      * Tells the store what the app is set to do with a snippet that has several
      * expansions. Throws the index away, since it partitions on the answer.
      */
@@ -972,7 +981,7 @@ class SnippetStore(private val storageFile: File?) {
     /** Ids of the patterns the app stopped for taking too long. */
     fun stoppedPatterns(): Set<Long> = index().stopped()
 
-    private fun index(): SnippetIndex = lookup ?: build()
+    private fun index(): SnippetIndex = if (triggersPaused) noTriggers else lookup ?: build()
 
     @Synchronized
     private fun build(): SnippetIndex =

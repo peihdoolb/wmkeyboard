@@ -36,6 +36,15 @@
          taken only while its engine is running. -->
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- Sync with the copy in a private space or work profile (#1017) goes
+         over 127.0.0.1, which Android 17 closes between profiles for every
+         app. Declared so that the user can open it again with
+         `adb shell pm grant`: no app can be granted this otherwise, and
+         nothing ever asks for it. Without it, before Android 17, the link
+         works as it is. -->
+    <uses-permission
+        android:name="android.permission.INTERACT_ACROSS_USERS"
+        tools:ignore="ProtectedPermissions" />
     <!-- Only used by the optional camera tool (photo into the chat). -->
     <uses-permission android:name="android.permission.CAMERA" />
     <!-- Only used by the optional voice input tool; audio goes to the
@@ -109,7 +118,21 @@
          app write its own media without any permission, so this is capped. -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28" />
+        android:maxSdkVersion="29" />
+
+    <!-- The keyboard's file manager, which keeps the tools that pick a file
+         (gallery, Send files, AI chat, KDE Connect, the scanners) inside the
+         keyboard instead of sending the user to Android's picker. Browsing
+         arbitrary files takes this grant from Android 11; on Android 7 to 10
+         the storage pair above and below does the same, and Android 10 needs
+         requestLegacyExternalStorage on the application to go with it. A special
+         grant on a system Settings screen, asked for only when a pick opens
+         the manager, after a disclosure. Refused, every pick still works through
+         Android's picker. Not in a Play build: src/play removes it, and
+         ChannelFeatures.FILE_MANAGER keeps the picks on Android's picker there. -->
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
 
     <!-- The optional "User screenshots" clipboard setting, and the gallery
          tool's grid of photos and videos (#708). Photos and videos are two
@@ -230,6 +253,9 @@
     <queries>
         <!-- Zalo, for sending native transparent photo stickers via Intent -->
         <package android:name="com.zing.zalo" />
+        <!-- The password manager the WM Pass tool types logins from. Its certificate is checked. -->
+        <package android:name="com.wasimaster.wmpass" />
+        <provider android:authorities="com.wasimaster.wmpass.keyboard" />
         <!-- AnkiDroid, its provider and its note editor, for the Look up card's
              Add to Anki (#765). -->
         <package android:name="com.ichi2.anki" />
@@ -247,6 +273,11 @@
              entry API 30+ hides it from PackageManager and the smart home tool
              would offer a Google Home row on a phone that cannot use one. -->
         <package android:name="com.google.android.apps.chromecast.app" />
+        <!-- Speech recognisers, so the phone's recognizer can be any app's
+             recognition service and not only the default (#993). -->
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
         <!-- Speech synthesisers, for the vocabulary card's speaker button when
              Wiktionary has no recording (or the network is not to be used). -->
         <intent>
@@ -327,6 +358,7 @@
         android:backupAgent="com.wasimaster.wmkeyboard.app.WMBackupAgent"
         android:fullBackupOnly="true"
         android:usesCleartextTraffic="true"
+        android:requestLegacyExternalStorage="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -416,6 +448,19 @@
                 <data android:scheme="wmkeyboard" android:host="ha-auth" />
                 <!-- SmartThings' sign-in, through the hosted /st/ page: SmartThingsAuth.REDIRECT_URI. -->
                 <data android:scheme="wmkeyboard" android:host="st-auth" />
+            </intent-filter>
+
+            <!--
+                 Clink's "Open in Clink" links, clink://community/<id>, on its
+                 community page. Clink is an iPhone keyboard, so nothing else
+                 on Android answers them. Following one opens a preview of the
+                 item; its file still comes from Clink. Parsed by ClinkCommunity.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="clink" android:host="community" />
             </intent-filter>
 
             <!--
@@ -662,6 +707,14 @@
                 <data android:pathPattern=".*\\..*\\.wastickers" />
                 <data android:pathPattern=".*\\..*\\..*\\.wastickers" />
                 <data android:pathPattern=".*\\..*\\..*\\..*\\.wastickers" />
+                <data android:pathPattern=".*\\.clinktheme" />
+                <data android:pathPattern=".*\\..*\\.clinktheme" />
+                <data android:pathPattern=".*\\..*\\..*\\.clinktheme" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.clinktheme" />
+                <data android:pathPattern=".*\\.clinklayout" />
+                <data android:pathPattern=".*\\..*\\.clinklayout" />
+                <data android:pathPattern=".*\\..*\\..*\\.clinklayout" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.clinklayout" />
                 <data android:pathPattern=".*\\.kcf" />
                 <data android:pathPattern=".*\\..*\\.kcf" />
                 <data android:pathPattern=".*\\..*\\..*\\.kcf" />
@@ -737,6 +790,14 @@
                 <data android:pathPattern=".*\\..*\\.wastickers" />
                 <data android:pathPattern=".*\\..*\\..*\\.wastickers" />
                 <data android:pathPattern=".*\\..*\\..*\\..*\\.wastickers" />
+                <data android:pathPattern=".*\\.clinktheme" />
+                <data android:pathPattern=".*\\..*\\.clinktheme" />
+                <data android:pathPattern=".*\\..*\\..*\\.clinktheme" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.clinktheme" />
+                <data android:pathPattern=".*\\.clinklayout" />
+                <data android:pathPattern=".*\\..*\\.clinklayout" />
+                <data android:pathPattern=".*\\..*\\..*\\.clinklayout" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.clinklayout" />
                 <data android:pathPattern=".*\\.kcf" />
                 <data android:pathPattern=".*\\..*\\.kcf" />
                 <data android:pathPattern=".*\\..*\\..*\\.kcf" />
@@ -838,6 +899,28 @@
              the addon links are, and is safe to be for the same reason: it
              fetches nothing until the dialog it opens is confirmed.
         -->
+        <!-- "Save to notes" in other apps' share sheets (#997): text as a
+             note, a link as a read-later note with the page's text. Never
+             rename the alias; the Notes tool's page switches it off and on,
+             and share targets are remembered by component name. -->
+        <activity
+            android:name="com.wasimaster.wmkeyboard.app.NoteShareActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <activity-alias
+            android:name="com.wasimaster.wmkeyboard.app.NoteShareAlias"
+            android:exported="true"
+            android:label="@string/notes_share_label"
+            android:targetActivity="com.wasimaster.wmkeyboard.app.NoteShareActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
+
         <activity
             android:name="com.wasimaster.wmkeyboard.app.ImportLinkActivity"
             android:enableOnBackInvokedCallback="true"
@@ -1067,6 +1150,37 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <!--
+             A launcher's own add-a-shortcut list (#970), the only route a
+             secondary launcher has: lists the tools with a panel and hands back
+             a shortcut to the activity below.
+        -->
+        <activity
+            android:name="com.wasimaster.wmkeyboard.app.ToolShortcutPickerActivity"
+            android:exported="true"
+            android:label="@string/home_shortcut_picker_title"
+            android:theme="@style/Theme.WMKeyboard">
+            <intent-filter>
+                <action android:name="android.intent.action.CREATE_SHORTCUT" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <!--
+             A keyboard tool on the home screen (#970): Add to home screen on a
+             tool's page pins a shortcut here. A text box of its own brings the
+             keyboard up with the tool's panel open, so a level or a compass
+             works like an app. Exported for the launchers that pin through the
+             old install-shortcut broadcast; the extra is checked against the
+             tools with a panel and nothing else is read.
+        -->
+        <activity
+            android:name="com.wasimaster.wmkeyboard.app.ToolShortcutActivity"
+            android:enableOnBackInvokedCallback="true"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:taskAffinity="com.wasimaster.wmkeyboard.tool"
+            android:theme="@style/Theme.WMKeyboard"
+            android:windowSoftInputMode="stateAlwaysVisible|adjustResize" />
+        <!--
              The AI chat as a sheet over the app the user was in (#697). Opened
              by the floating AI button with the screen's text, and by "Ask AI"
              in the text selection menu with the selected text. Either way the
@@ -1074,6 +1188,16 @@
              anything is sent. From the button it starts its own task afresh
              each time, so closing it lands back in the app it was opened over.
         -->
+        <!--
+             WM Pass's "Use a place from WM Keyboard". Exported for WM Pass to
+             start for a result; the activity itself answers only WM Pass,
+             checked by its signing certificate.
+        -->
+        <activity
+            android:name="com.wasimaster.wmkeyboard.app.PlaceShareActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:theme="@style/Theme.WMKeyboard.Sheet" />
         <activity
             android:name="com.wasimaster.wmkeyboard.app.AskAiActivity"
             android:enableOnBackInvokedCallback="true"
@@ -1349,6 +1473,25 @@
                 android:resource="@xml/clipboard_file_paths" />
         </provider>
 
+        <!-- What the keyboard's file manager picks, read by the tool that asked
+             the way it reads a pick from Android's picker. Not exported, and it
+             grants nothing: only this process can reach it. LocalFilesProvider
+             says why, and src/play removes it. -->
+        <provider
+            android:name="com.wasimaster.wmkeyboard.core.files.LocalFilesProvider"
+            android:authorities="${applicationId}.localfiles"
+            android:exported="false" />
+
+        <!-- Same trampoline pattern for the file manager's storage pair, on
+             Android 7 to 10. From Android 11 it asks through SpecialAccessActivity. -->
+        <activity
+            android:name="com.wasimaster.wmkeyboard.app.FilesPermissionActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
         <!--
              directBootAware: the keyboard has to run before the user has ever
              unlocked the phone — that is the screen where they type the PIN
@@ -1418,6 +1561,28 @@
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/screen_context_service" />
+        </service>
+
+        <!--
+             The app launcher's split-screen helper. Presses the system's
+             split-screen switch when the user opens an app in split screen
+             from the launcher, on phones where the keyboard's own split
+             launch opens full screen. Reads only whether split screen is
+             already up. Off until the user enables it in Settings ›
+             Accessibility, behind its own disclosure. Same process as the
+             keyboard, which calls it directly. See SplitScreenHelperService.
+        -->
+        <service
+            android:name="com.wasimaster.wmkeyboard.core.accessibility.SplitScreenHelperService"
+            android:exported="true"
+            android:label="@string/split_screen_helper_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/split_screen_helper_service" />
         </service>
 
         <!-- Notification listener with two jobs, both user-visible. The
@@ -1499,6 +1664,13 @@
             android:name="com.wasimaster.wmkeyboard.core.plugins.PluginReminderReceiver"
             android:exported="false" />
 
+        <!-- The to-do list's reminders and their Done button (#995). Not
+             exported, and not direct-boot aware: the list stays locked until
+             the first unlock, which re-arms (TodoReminders.rearmOnStart). -->
+        <receiver
+            android:name="com.wasimaster.wmkeyboard.core.todo.TodoReminderReceiver"
+            android:exported="false" />
+
         <!-- Plays an alarm or a timer while it rings, and only then. -->
         <service
             android:name="com.wasimaster.wmkeyboard.core.clock.ClockRingService"
@@ -1554,6 +1726,7 @@
                 <action android:name="com.wasimaster.wmkeyboard.action.ADD_WORD" />
                 <action android:name="com.wasimaster.wmkeyboard.action.BLOCK_WORD" />
                 <action android:name="com.wasimaster.wmkeyboard.action.BACKUP_NOW" />
+                <action android:name="com.wasimaster.wmkeyboard.action.EXPORT_DATA" />
                 <action android:name="com.wasimaster.wmkeyboard.action.PAUSE_BACKUP" />
                 <action android:name="com.wasimaster.wmkeyboard.action.RESUME_BACKUP" />
                 <action android:name="com.wasimaster.wmkeyboard.action.PAUSE_SYNC" />

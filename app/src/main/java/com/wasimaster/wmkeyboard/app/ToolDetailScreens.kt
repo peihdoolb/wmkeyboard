@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.app
 
+import com.wasimaster.wmkeyboard.core.netlog.InternetPermission
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -29,6 +30,7 @@ import com.wasimaster.wmkeyboard.core.settings.SearchResultTap
 import com.wasimaster.wmkeyboard.core.settings.LauncherOpenMode
 import com.wasimaster.wmkeyboard.core.settings.MAX_SEARCH_RESULTS
 import com.wasimaster.wmkeyboard.ime.AppLaunchModes
+import com.wasimaster.wmkeyboard.core.accessibility.SplitScreenHelperService
 import com.wasimaster.wmkeyboard.core.endpoints.ServiceEndpoint
 import com.wasimaster.wmkeyboard.core.media.hasNotificationAccess
 import com.wasimaster.wmkeyboard.core.notify.DownloadKeys
@@ -99,6 +101,7 @@ import com.wasimaster.wmkeyboard.core.handwriting.HandwritingModels
 import com.wasimaster.wmkeyboard.core.handwriting.InkPackImports
 import com.wasimaster.wmkeyboard.core.icons.IconSlots
 import com.wasimaster.wmkeyboard.core.util.runCancellable
+import com.wasimaster.wmkeyboard.ime.KeyboardAutomation
 import com.wasimaster.wmkeyboard.ime.WMKeyboardService
 import com.wasimaster.wmkeyboard.ime.ui.SlotIcon
 import com.wasimaster.wmkeyboard.core.settings.GifContentFilter
@@ -107,6 +110,8 @@ import com.wasimaster.wmkeyboard.core.grammar.LanguageToolChecker
 import com.wasimaster.wmkeyboard.core.settings.GrammarDialect
 import com.wasimaster.wmkeyboard.core.settings.GrammarLintKind
 import com.wasimaster.wmkeyboard.core.settings.MediaGridSpacingRange
+import com.wasimaster.wmkeyboard.core.settings.HandwritingPenWidthRange
+import com.wasimaster.wmkeyboard.core.settings.InkFade
 import com.wasimaster.wmkeyboard.core.settings.MediaPanelExtraHeightRange
 import com.wasimaster.wmkeyboard.core.settings.MediaPerRowRange
 import com.wasimaster.wmkeyboard.core.settings.MediaSendMode
@@ -428,6 +433,9 @@ private fun WordStepsGroup(repository: SettingsRepository, settings: LiveSetting
     }
 }
 
+/** The tools whose Add to home screen opens their screen in this app, not the keyboard. */
+private val ScreenShortcutTools = setOf(ToolbarTool.CLOCK, ToolbarTool.NOTES, ToolbarTool.TODO)
+
 @Composable
 internal fun ToolDetailSettings(
     repository: SettingsRepository,
@@ -485,6 +493,12 @@ internal fun ToolDetailSettings(
                 default = usable && tool in SettingsDefaults.enabledTools,
             ) { scope.launch { repository.setToolEnabled(tool, it) } }
         }
+        // Any tool with a panel can go on the home screen (#970). The clock,
+        // notes and to-do list pin their own screens instead, further down.
+        item(
+            visible = KeyboardAutomation.panelTool(tool.name) != null && tool !in ScreenShortcutTools,
+            level = SettingLevel.STANDARD,
+        ) { ToolHomeScreenShortcutRow(tool) }
     }
     when (tool) {
         ToolbarTool.KDE_CONNECT ->
@@ -581,7 +595,11 @@ internal fun ToolDetailSettings(
         }
         ToolbarTool.APP_LAUNCHER -> {
             val launcherContext = LocalContext.current
-            val splitSupported = remember { AppLaunchModes.splitSupported(launcherContext) }
+            // Re-read on resume: turning the helper on in Settings ›
+            // Accessibility is what brings split screen in below Android 12L.
+            val splitHelperOn = rememberGrantState { SplitScreenHelperService.isEnabled(it) }
+            val askSplitHelper = rememberDisclosedSpecialAccess(SpecialAccess.SPLIT_SCREEN)
+            val splitSupported = remember(splitHelperOn) { AppLaunchModes.splitSupported(launcherContext) }
             // What decides which rows the group holds; each row reads its own value.
             val recentsOn = settings.watch { it.launcher.recentsEnabled }
             val drilldown = settings.watch { it.launcher.activityDrilldown }
@@ -618,6 +636,21 @@ internal fun ToolDetailSettings(
                         selected = if (openModes.any { it.first == openMode }) openMode else LauncherOpenMode.NORMAL,
                         default = SettingsDefaults.launcher.openMode,
                     ) { scope.launch { repository.setLauncherOpenMode(it) } }
+                }
+                item(
+                    visible = ChannelFeatures.SPLIT_SCREEN_HELPER && AppLaunchModes.splitHelperApplies,
+                    level = SettingLevel.ADVANCED,
+                ) {
+                    NavRow(
+                        R.string.tooldetail_launcher_split_helper_title,
+                        subtitle = stringResource(
+                            if (splitHelperOn) {
+                                R.string.tooldetail_launcher_split_helper_on_subtitle
+                            } else {
+                                R.string.tooldetail_launcher_split_helper_off_subtitle
+                            },
+                        ),
+                    ) { askSplitHelper() }
                 }
                 item(visible = splitSupported, level = SettingLevel.ADVANCED) {
                     val count = settings.watch { it.launcher.combos.size }
@@ -824,7 +857,7 @@ internal fun ToolDetailSettings(
                     R.string.expander_grid_columns_title,
                     subtitle = stringResource(R.string.expander_grid_columns_subtitle),
                     value = settings.watch { it.suggestionStrip.snippetGridColumns }.toFloat(),
-                    range = 1f..4f,
+                    range = 1f..6f,
                     display = { it.roundToInt().toString() },
                     info = stringResource(R.string.expander_grid_columns_info),
                     default = SettingsDefaults.suggestionStrip.snippetGridColumns.toFloat(),
@@ -1546,7 +1579,7 @@ internal fun ToolDetailSettings(
                         default = SettingsDefaults.incognitoPausesLearning,
                     ) { scope.launch { repository.setIncognitoPausesLearning(it) } }
                 }
-                item(level = SettingLevel.ADVANCED) {
+                item {
                     ToggleSetting(
                         R.string.tooldetail_incognito_clipboard_title,
                         stringResource(R.string.tooldetail_incognito_clipboard_subtitle),
@@ -1955,6 +1988,54 @@ internal fun ToolDetailSettings(
                         default = SettingsDefaults.handwritingCommitDelayMs.toFloat(),
                     ) { scope.launch { repository.setHandwritingCommitDelayMs(it.roundToInt()) } }
                 }
+                item(level = SettingLevel.STANDARD) {
+                    val penFormat = stringResource(R.string.tooldetail_handwriting_pen_width_value)
+                    SliderSetting(
+                        R.string.tooldetail_handwriting_pen_width_title,
+                        value = settings.watch { it.handwritingInk.penWidthDp },
+                        range = HandwritingPenWidthRange.start..HandwritingPenWidthRange.endInclusive,
+                        display = { penFormat.format(it.roundToInt()) },
+                        default = SettingsDefaults.handwritingInk.penWidthDp,
+                    ) { scope.launch { repository.setHandwritingPenWidth(it) } }
+                }
+                item(level = SettingLevel.STANDARD) {
+                    ColorSetting(
+                        R.string.tooldetail_handwriting_pen_color_title,
+                        subtitle = stringResource(R.string.tooldetail_handwriting_pen_color_subtitle),
+                        color = settings.watch { it.handwritingInk.penColor },
+                        fallback = 0xFF6750A4L,
+                    ) { color -> scope.launch { repository.setHandwritingPenColor(color) } }
+                }
+                item(level = SettingLevel.STANDARD) {
+                    ChoiceSetting(
+                        R.string.tooldetail_handwriting_ink_fade_title,
+                        subtitle = stringResource(R.string.tooldetail_handwriting_ink_fade_subtitle),
+                        options = listOf(
+                            InkFade.DISSOLVE to stringResource(R.string.tooldetail_handwriting_ink_fade_dissolve),
+                            InkFade.FADE to stringResource(R.string.tooldetail_handwriting_ink_fade_fade),
+                            InkFade.SHRINK to stringResource(R.string.tooldetail_handwriting_ink_fade_shrink),
+                            InkFade.RISE to stringResource(R.string.tooldetail_handwriting_ink_fade_rise),
+                            InkFade.NONE to stringResource(R.string.tooldetail_handwriting_ink_fade_none),
+                        ),
+                        selected = settings.watch { it.handwritingInk.fade },
+                        default = SettingsDefaults.handwritingInk.fade,
+                    ) { fade -> scope.launch { repository.setHandwritingInkFade(fade) } }
+                }
+                item(level = SettingLevel.STANDARD) {
+                    val none = stringResource(R.string.langemoji_panel_height_none)
+                    val taller = stringResource(R.string.langemoji_panel_height_value)
+                    SliderSetting(
+                        R.string.tooldetail_handwriting_height_title,
+                        subtitle = stringResource(R.string.tooldetail_handwriting_height_subtitle),
+                        value = settings.watch { it.handwritingInk.panelExtraHeightDp }.toFloat(),
+                        range = MediaPanelExtraHeightRange.first.toFloat()..MediaPanelExtraHeightRange.last.toFloat(),
+                        display = {
+                            val dp = it.roundToInt()
+                            if (dp == 0) none else taller.format(dp)
+                        },
+                        default = SettingsDefaults.handwritingInk.panelExtraHeightDp.toFloat(),
+                    ) { scope.launch { repository.setHandwritingPanelExtraHeight(it.roundToInt()) } }
+                }
                 // The canvas and the keys around it are a panel layout (#568),
                 // edited where the trackpad's are.
                 item(level = SettingLevel.ADVANCED) {
@@ -2066,9 +2147,18 @@ internal fun ToolDetailSettings(
             // later in every build that can fetch its models, NLLB on 64-bit
             // phones with the memory for it.
             val onDevice = OfflineTranslation.available
+            if (offlineBuild) {
+                StateBanner(
+                    stringResource(
+                        if (onDevice) R.string.tooldetail_translate_offline_import_info else R.string.tooldetail_translate_offline_build_info,
+                    ),
+                    tone = if (onDevice) BannerTone.INFO else BannerTone.WARNING,
+                )
+            }
             SettingsGroup(stringResource(R.string.tooldetail_options_group)) {
                 item { TranslateLanguageSetting(repository, settings) }
-                if (onDevice) {
+                // The offline build has only the device to choose.
+                if (onDevice && !offlineBuild) {
                     item(level = SettingLevel.STANDARD) {
                         val context = LocalContext.current
                         ChoiceSetting(
@@ -2890,6 +2980,7 @@ internal fun ToolDetailSettings(
                     )
                 }
             }
+            SymbolCategoriesGroup(repository, settings)
         }
         ToolbarTool.CALCULATOR -> SettingsGroup(stringResource(R.string.tooldetail_options_group)) {
             item {
@@ -3283,6 +3374,7 @@ internal fun ToolDetailSettings(
         ToolbarTool.VOCABULARY -> VocabularyToolSettings(repository, settings, onNavigate)
         ToolbarTool.NOTES -> NotesToolSettings(repository, settings, onNavigate)
         ToolbarTool.TODO -> TodoToolSettings(repository, settings, onNavigate)
+        ToolbarTool.WM_PASS -> Unit
         ToolbarTool.LOCATION -> LocationToolSettings(repository, settings)
         ToolbarTool.CLOCK -> ClockToolSettings(onNavigate)
         ToolbarTool.MUSIC_ID -> MusicToolSettings(repository, settings, onNavigate)
@@ -4010,7 +4102,8 @@ internal fun TextFieldSetting(
  * One API-key input. Saves as you type (it's a paste, in practice). The
  * user's key always beats any key baked into the build via
  * local.properties — leaving the field blank falls back to the built-in
- * key when the build has one.
+ * key when the build has one. [wmPassTitle], the service the key is for,
+ * adds the WM Pass button that fills the field from WM Pass or saves it there.
  */
 @Composable
 internal fun ApiKeyField(
@@ -4018,19 +4111,22 @@ internal fun ApiKeyField(
     value: String,
     builtInAvailable: Boolean,
     emptyHint: String,
+    wmPassTitle: String? = null,
     onSave: suspend (String) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     var text by remember(label) { mutableStateOf(value) }
+    fun type(next: String) {
+        text = next
+        scope.launch { onSave(next) }
+    }
     HighlightableRow(label) {
         OutlinedTextField(
             value = text,
-            onValueChange = {
-                text = it
-                scope.launch { onSave(it) }
-            },
+            onValueChange = ::type,
             label = { Text(label) },
             singleLine = true,
+            trailingIcon = wmPassTitle?.let { title -> { WmPassKeyButton(title, text, onFill = ::type) } },
             supportingText = {
                 Text(
                     when {
@@ -4403,7 +4499,7 @@ private fun HandwritingModelManager(settings: LiveSettings) {
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
                                     }
-                                    else -> TextButton(onClick = {
+                                    else -> if (!offlineBuild) TextButton(onClick = {
                                         if (!current()) return@TextButton
                                         statuses[language.tag] = "downloading"
                                         progress[language.tag] = HandwritingDownloadProgress()
@@ -4445,7 +4541,7 @@ private fun HandwritingModelManager(settings: LiveSettings) {
                 )
             }
         }
-        item(level = SettingLevel.ADVANCED) {
+        item(level = offlineImportLevel) {
             OfflineImportRow(
                 subtitle = stringResource(R.string.offline_import_handwriting_subtitle),
                 links = importLinks,
@@ -4561,7 +4657,7 @@ private fun OcrPackManager(settings: LiveSettings) {
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
                                     }
-                                    else -> TextButton(onClick = {
+                                    else -> if (!offlineBuild) TextButton(onClick = {
                                         when (decide()) {
                                             MeteredDecision.ALLOWED -> OcrPacks.start(filesDir, pack)
                                             MeteredDecision.ASK -> askFor = pack
@@ -4582,7 +4678,7 @@ private fun OcrPackManager(settings: LiveSettings) {
                 )
             }
         }
-        item(level = SettingLevel.ADVANCED) {
+        item(level = offlineImportLevel) {
             val links = packs.flatMap { (pack, languages) ->
                 val names = languages.joinToString(", ") { it.displayName }
                 if (pack == PaddleOcrModel.PACK) {

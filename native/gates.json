@@ -6,6 +6,11 @@
       "name": "libwm_engine_jni.so",
       "dir": "core/language/src/main/jniLibs",
       "fdroidBuild": "native/wm-engine-jni/build.sh"
+    },
+    {
+      "name": "libwmlouis.so",
+      "dir": "core/language/src/main/jniLibs",
+      "fdroidBuild": "native/louis-jni/build.sh"
     }
   ],
   "gates": [
@@ -84,10 +89,35 @@
       "play": "split",
       "libraries": [
         { "name": "libwmsherpa.so", "dir": "core/voice/src/onnx/jniLibs", "fdroidBuild": "native/sherpa-onnx-jni/build.sh" },
-        { "name": "libwmxlit.so", "dir": "core/voice/src/onnx/jniLibs", "fdroidBuild": "native/indicxlit-jni/build.sh" }
+        { "name": "libwmxlit.so", "dir": "core/voice/src/onnx/jniLibs", "fdroidBuild": "native/indicxlit-jni/build.sh" },
+        {
+          "name": "libwmnikud.so",
+          "dir": "core/voice/src/onnx/jniLibs",
+          "fdroidBuild": "native/nikud-jni/build.sh"
+        }
       ],
       "maven": [
         { "name": "libonnxruntime.so", "module": "com.microsoft.onnxruntime:onnxruntime-android", "catalog": "onnxruntime-android" }
+      ]
+    },
+    {
+      "id": "kiwi",
+      "property": "kiwi",
+      "doc": "`:feature:kiwi`: the Kiwi morphological analyser behind Korean spacing correction (`:core:input`), upstream's prebuilt library, about 18 MB. Upstream builds for arm64 and x86-64 only, so armeabi-v7a holds an empty stand-in that bundletool's same-ABI rule asks for and KoreanSpacing never loads. Not built here from source, so not in F-Droid's build.",
+      "play": "split",
+      "google": true,
+      "libraries": [
+        { "name": "libKiwiJava.so", "dir": "core/input/src/kiwi/jniLibs" }
+      ]
+    },
+    {
+      "id": "webrtc",
+      "property": "webrtc",
+      "doc": "`:feature:webrtc`: the WebRTC library behind PairDrop in Send files (`:feature:ime`), about 12 MB per ABI and off until PairDrop is switched on. Its Java API stays in the base; only the library moves. A prebuilt binary, so not in F-Droid's build.",
+      "play": "split",
+      "google": true,
+      "maven": [
+        { "name": "libjingle_peerconnection_so.so", "module": "io.github.webrtc-sdk:android", "catalog": "webrtc-android" }
       ]
     },
     {

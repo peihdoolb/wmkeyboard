@@ -52,9 +52,13 @@ class CjkComposerTest {
         assertSame(StrokeComposer, composerFor(han, ComposerType.STROKE))
         assertSame(T9PinyinComposer, composerFor(han, ComposerType.T9_PINYIN))
         assertSame(ZhuyinComposer, composerFor(han, ComposerType.ZHUYIN))
+        assertSame(T9ZhuyinComposer, composerFor(han, ComposerType.T9_ZHUYIN))
         assertSame(CangjieComposer, composerFor(han, ComposerType.CANGJIE))
         assertSame(CangjieQuickComposer, composerFor(han, ComposerType.CANGJIE_QUICK))
+        assertSame(WubiComposer, composerFor(han, ComposerType.WUBI))
         assertSame(JyutpingComposer, composerFor(han, ComposerType.JYUTPING))
+        assertSame(RomanizedCantoneseComposer.YALE, composerFor(han, ComposerType.YALE))
+        assertSame(RomanizedCantoneseComposer.CANTONESE_PINYIN, composerFor(han, ComposerType.CANTONESE_PINYIN))
     }
 
     /**
@@ -196,6 +200,32 @@ class CjkComposerTest {
         assertEquals("ｶﾞ", Kana.toHalfWidthKatakana("ガ"))
         assertEquals("ﾊﾟ", Kana.toHalfWidthKatakana("パ"))
         assertEquals("ｳﾞ", Kana.toHalfWidthKatakana("ヴ"))
+    }
+
+    @Test
+    fun `kana variant key reaches kana spelled in romaji`() {
+        // Godan's 小゛゜ key: the romaji keys collapse into the marked kana.
+        assertEquals("が", Kana.cycleLastKana("ka"))
+        assertEquals("hiが", Kana.cycleLastKana("hika"))
+        assertEquals("ば", Kana.cycleLastKana("ha"))
+        assertEquals("っ", Kana.cycleLastKana("tsu"))
+        assertEquals("ぁ", Kana.cycleLastKana("a"))
+        assertEquals("きや", Kana.cycleLastKana("kya"))
+        // A doubled consonant only read as っ because of what followed it.
+        assertEquals("っが", Kana.cycleLastKana("kka"))
+        // Kana typed as kana swaps in place, as it always did.
+        assertEquals("が", Kana.cycleLastKana("か"))
+        assertEquals("か", Kana.cycleLastKana("が"))
+        assertEquals("づ", Kana.cycleLastKana("っ"))
+        assertEquals("ガ", Kana.cycleLastKana("カ"))
+        // In front of a caret inside the reading, not at its end.
+        assertEquals("がな", Kana.cycleLastKana("かな", end = 1))
+        assertEquals("がna", Kana.cycleLastKana("kana", end = 2))
+        // Nothing to cycle: no kana yet, or one with no other form.
+        assertEquals(null, Kana.cycleLastKana("k"))
+        assertEquals(null, Kana.cycleLastKana("na"))
+        assertEquals(null, Kana.cycleLastKana("n"))
+        assertEquals(null, Kana.cycleLastKana(""))
     }
 
     @Test
@@ -1075,5 +1105,43 @@ class CjkComposerTest {
         assertTrue(!JapaneseComposer.buffersChar('。', ""))
         assertTrue(!JapaneseComposer.buffersChar('「', "ka"))
         assertEquals("にほん。", JapaneseComposer.composeBuffer("nihon。"))
+    }
+
+    // #1106: a pinyin reading is edited where the caret is, like a Japanese one.
+
+    @Test
+    fun `pinyin edits a reading in place and keypads do not`() {
+        assertTrue(PinyinComposer.editsReadingInPlace)
+        assertTrue(JyutpingComposer.editsReadingInPlace)
+        assertTrue(!T9PinyinComposer.editsReadingInPlace)
+        assertTrue(!StrokeComposer.editsReadingInPlace)
+    }
+
+    @Test
+    fun `a caret in a pinyin reading maps to the letter it sits after`() {
+        // `mmbxjn`, the caret put between the j and the n.
+        assertEquals(5, PinyinComposer.bufferIndex("mmbxjn", 5))
+        assertEquals(5, PinyinComposer.previewOffset("mmbxjn", 5))
+        assertEquals(0, PinyinComposer.bufferIndex("mmbxjn", 0))
+    }
+
+    @Test
+    fun `localizing takes Traditional text to the region's forms and only then`() {
+        HanVariant.twVariants = HanPhraseTable.parse(sequenceOf("裏\t裡", "爲\t為"))
+        CjkConfig.traditionalOutput = true
+        try {
+            HanVariant.region = HanVariant.HanRegion.GENERIC
+            assertEquals("裏面", HanVariant.localize("裏面"))
+            HanVariant.region = HanVariant.HanRegion.TAIWAN
+            assertEquals("裡面", HanVariant.localize("裏面"))
+            assertEquals("裡面", HanVariant.localize(HanVariant.localize("裏面")))
+            assertEquals("因為", HanVariant.localize("因爲"))
+            CjkConfig.traditionalOutput = false
+            assertEquals("裏面", HanVariant.localize("裏面"))
+        } finally {
+            CjkConfig.traditionalOutput = false
+            HanVariant.region = HanVariant.HanRegion.GENERIC
+            HanVariant.twVariants = HanPhraseTable.EMPTY
+        }
     }
 }

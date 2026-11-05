@@ -28,7 +28,7 @@ Tap <KeyCap>Select</KeyCap> to turn selection mode on. The key lights up while i
 
 Once something is selected, the keyboard can offer what to do with it: [Selection actions](/smart/selection-actions/) puts the edits, a find and replace, the case options, Call, Open, QR and a good deal more above the keys, depending on what you selected. That bar is off by default and lives under Advanced.
 
-Holding <KeyCap>◀</KeyCap>, <KeyCap>▶</KeyCap>, <KeyCap>▲</KeyCap>, <KeyCap>▼</KeyCap>, or <KeyCap>Backspace</KeyCap> auto-repeats after the keyboard's own key repeat delay, then keeps repeating at an interval you can tune (see [Options](#options) below). That start delay defaults to 300 ms and is adjustable from 150 to 800 ms under Key press.
+Holding <KeyCap>◀</KeyCap>, <KeyCap>▶</KeyCap>, <KeyCap>▲</KeyCap>, <KeyCap>▼</KeyCap>, or <KeyCap>Backspace</KeyCap> auto-repeats after the keyboard's own key repeat delay, then keeps repeating at an interval you can tune (see [Options](#options) below). That start delay defaults to 300 ms and is adjustable from 150 to 3000 ms under Key press.
 
 ## Copying, pasting, and cutting
 
@@ -38,7 +38,7 @@ The panel's second column holds <KeyCap>Select all</KeyCap>, <KeyCap>Copy</KeyCa
 - **Copy** copies the current selection and turns selection mode back off. With nothing selected it copies the whole text, the same as holding C.
 - **Paste** inserts the clipboard content at the cursor (replacing any selection) and doesn't touch selection mode either way.
 
-All three also exist as their own toolbar tools, **Copy**, **Cut** and **Paste**, under the **Quick actions** group in <SettingsPath path="Tools" />. Pin any of them and the operation costs one tap with no panel to open first. They do exactly what the panel's keys do, including copy and cut ending selection mode. Copy and cut work [before you unlock the phone](/tools/overview/#which-tools-work-before-you-unlock-your-phone); paste doesn't, because the clipboard isn't readable yet.
+All three also exist as their own toolbar tools, **Copy**, **Cut** and **Paste**, under the **Quick actions** group in <SettingsPath path="Tools" />. Pin any of them and the operation costs one tap with no panel to open first. They do exactly what the panel's keys do, including copy and cut ending selection mode. Like Copy, Cut takes the whole text when nothing is selected, the same as holding X. That goes for a layout's Cut key too, and for the keyboard's own boxes, such as a note or a search field. Copy and cut work [before you unlock the phone](/tools/overview/#which-tools-work-before-you-unlock-your-phone); paste doesn't, because the clipboard isn't readable yet.
 
 Copy and paste run through the target field's own handling, the same as if you'd triggered them from that app's text-selection menu. What exactly gets copied, and whether a "Copied" system toast appears, therefore follows the app you're typing into. WM Keyboard can add its own **"Copied"** confirmation on top, off by default, under <SettingsPath path="Clipboard / Panel" /> (see [Clipboard manager](/tools/clipboard/)).
 

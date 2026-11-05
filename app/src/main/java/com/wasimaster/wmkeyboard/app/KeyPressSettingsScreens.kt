@@ -61,6 +61,7 @@ import com.wasimaster.wmkeyboard.core.settings.ShiftCapsLockMsRange
 import com.wasimaster.wmkeyboard.core.settings.DefaultCurrencyKeys
 import com.wasimaster.wmkeyboard.core.util.requireInputStream
 import com.wasimaster.wmkeyboard.core.settings.HapticStyle
+import com.wasimaster.wmkeyboard.core.settings.KeySoundOutput
 import com.wasimaster.wmkeyboard.core.settings.KeySoundStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -104,6 +105,7 @@ internal fun KeySoundGroup(
     // Which rows the group holds depends on the style, so it is read here; the
     // rows read their own values below.
     val soundStyle = settings.watch { it.sound.style }
+    val soundOn = settings.watch { it.sound.enabled }
     SettingsGroup(stringResource(R.string.hardware_sound_group_title)) {
         item {
             ToggleSetting(
@@ -118,6 +120,19 @@ internal fun KeySoundGroup(
                     KeySoundPlayer.preview(context, sound.style, sound.volume, sound.previewId())
                 }
             }
+        }
+        item(visible = soundOn) {
+            ChoiceSetting(
+                R.string.hardware_sound_output_title,
+                subtitle = stringResource(R.string.hardware_sound_output_subtitle),
+                options = listOf(
+                    KeySoundOutput.ANYWHERE to stringResource(R.string.hardware_sound_output_anywhere),
+                    KeySoundOutput.HEADPHONES to stringResource(R.string.hardware_sound_output_headphones),
+                    KeySoundOutput.SPEAKER to stringResource(R.string.hardware_sound_output_speaker),
+                ),
+                selected = settings.watch { it.sound.output },
+                default = SettingsDefaults.sound.output,
+            ) { scope.launch { repository.setKeySoundOutput(it) } }
         }
         item {
             // A ControlSetting rather than a ChoiceSetting: each chip acts the
@@ -906,6 +921,15 @@ internal fun KeyPressSettings(
                 }
             }
         }
+        item(level = SettingLevel.STANDARD) {
+            ToggleSetting(
+                R.string.typing_backspace_up_clears_title,
+                stringResource(R.string.typing_backspace_up_clears_subtitle),
+                settings.watch { it.textEditing.backspaceSwipeUpClears },
+                info = stringResource(R.string.typing_backspace_up_clears_info),
+                default = SettingsDefaults.textEditing.backspaceSwipeUpClears,
+            ) { scope.launch { repository.setBackspaceSwipeUpClears(it) } }
+        }
         item(level = SettingLevel.ADVANCED) {
             ToggleSetting(
                 R.string.typing_forward_delete_swipe_title,
@@ -991,6 +1015,16 @@ internal fun KeyPressSettings(
             ) { scope.launch { repository.setAlternatesCentred(it) } }
         }
         item {
+            // Issue #1096: the comma key keeps what was last picked from it.
+            ToggleSetting(
+                R.string.keypress_remember_punctuation_title,
+                stringResource(R.string.keypress_remember_punctuation_subtitle),
+                settings.watch { it.popup.rememberPunctuationPick },
+                info = stringResource(R.string.keypress_remember_punctuation_info),
+                default = SettingsDefaults.popup.rememberPunctuationPick,
+            ) { scope.launch { repository.setRememberPunctuationPick(it) } }
+        }
+        item {
             // Issue #385: which group a letter's popup leads with.
             ControlSetting(
                 R.string.keypress_alternates_order_title,
@@ -1027,7 +1061,10 @@ internal fun KeyPressSettings(
                 R.string.keypress_long_press_delay_title,
                 subtitle = stringResource(R.string.keypress_long_press_delay_subtitle),
                 value = settings.watch { it.longPressDelayMs }.toFloat(),
-                range = 100f..800f,
+                // To 3 s: a screen reader's double tap and hold reaches the
+                // key as a held press, and 800 ms ran out before a TalkBack
+                // user had heard which key they were on.
+                range = 100f..3000f,
                 display = { context.getString(R.string.keypress_value_ms, it.toInt()) },
                 info = stringResource(R.string.keypress_long_press_delay_info),
                 default = SettingsDefaults.longPressDelayMs.toFloat(),
@@ -1038,7 +1075,7 @@ internal fun KeyPressSettings(
                 R.string.keypress_repeat_start_title,
                 subtitle = stringResource(R.string.keypress_repeat_start_subtitle),
                 value = settings.watch { it.keyRepeat.startDelayMs }.toFloat(),
-                range = 150f..800f,
+                range = 150f..3000f,
                 display = { context.getString(R.string.keypress_value_ms, it.toInt()) },
                 info = stringResource(R.string.keypress_repeat_start_info),
                 default = SettingsDefaults.keyRepeat.startDelayMs.toFloat(),

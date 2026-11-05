@@ -27,6 +27,7 @@ import com.wasimaster.wmkeyboard.core.prediction.OctopusKind
 import com.wasimaster.wmkeyboard.core.prediction.SlipFixes
 import com.wasimaster.wmkeyboard.core.prediction.UndoMemory
 import com.wasimaster.wmkeyboard.core.settings.FlickDistanceRange
+import com.wasimaster.wmkeyboard.core.settings.SpaceSwipeDistanceRange
 import com.wasimaster.wmkeyboard.core.settings.FlickReachRange
 import com.wasimaster.wmkeyboard.core.settings.MAX_STOP_AFTER_DECLINES
 import com.wasimaster.wmkeyboard.core.settings.SettingsDefaults
@@ -68,6 +69,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.wasimaster.wmkeyboard.R
+import com.wasimaster.wmkeyboard.core.otp.NotificationOtpCapture
 import com.wasimaster.wmkeyboard.common.R as CommonR
 import com.wasimaster.wmkeyboard.core.settings.usableTools
 import com.wasimaster.wmkeyboard.core.tools.SmartSuggest
@@ -317,7 +319,7 @@ internal fun TypingCorrectionsSettings(
                     R.string.typing_autocorrect_confidence_title,
                     subtitle = stringResource(R.string.typing_autocorrect_confidence_subtitle),
                     value = settings.watch { it.correction.confidence },
-                    range = 1.5f..10f,
+                    range = 1f..10f,
                     display = { valueFormat.format("%.1f".format(it)) },
                     info = stringResource(R.string.typing_autocorrect_confidence_info),
                     default = SettingsDefaults.correction.confidence,
@@ -499,6 +501,22 @@ internal fun TypingCorrectionsSettings(
                     info = stringResource(R.string.typing_context_revision_info),
                     default = SettingsDefaults.suggestionStrip.contextRevision,
                 ) { scope.launch { repository.setContextRevision(it) } }
+            }
+            item(level = SettingLevel.ADVANCED) {
+                ToggleSetting(
+                    R.string.typing_shortcuts_converting_title,
+                    stringResource(R.string.typing_shortcuts_converting_subtitle),
+                    settings.watch { it.suggestionStrip.shortcutsWhileConverting },
+                    default = SettingsDefaults.suggestionStrip.shortcutsWhileConverting,
+                ) { scope.launch { repository.setShortcutsWhileConverting(it) } }
+            }
+            item {
+                ToggleSetting(
+                    R.string.typing_chips_at_end_title,
+                    stringResource(R.string.typing_chips_at_end_subtitle),
+                    settings.watch { it.suggestionStrip.chipsAtEnd },
+                    default = SettingsDefaults.suggestionStrip.chipsAtEnd,
+                ) { scope.launch { repository.setStripChipsAtEnd(it) } }
             }
             item(level = SettingLevel.ADVANCED) {
                 ToggleSetting(
@@ -794,6 +812,14 @@ internal fun TypingWritingSettings(
                 default = SettingsDefaults.textEditing.autoCloseBrackets,
             ) { scope.launch { repository.setAutoCloseBrackets(it) } }
         }
+        item(level = SettingLevel.ADVANCED) {
+            ToggleSetting(
+                R.string.typing_auto_close_quotes_title,
+                stringResource(R.string.typing_auto_close_quotes_subtitle),
+                settings.watch { it.textEditing.autoCloseQuotes },
+                default = SettingsDefaults.textEditing.autoCloseQuotes,
+            ) { scope.launch { repository.setAutoCloseQuotes(it) } }
+        }
         item(level = SettingLevel.STANDARD) {
             ToggleSetting(
                 R.string.typing_continue_lists_title,
@@ -877,6 +903,22 @@ internal fun TypingSuggestionsSettings(
                 info = stringResource(R.string.typing_fit_more_words_info),
                 default = SettingsDefaults.suggestionStrip.fitMoreWords,
             ) { scope.launch { repository.setFitMoreWords(it) } }
+        }
+        item(level = SettingLevel.ADVANCED) {
+            ToggleSetting(
+                R.string.typing_rtl_words_from_right_title,
+                stringResource(R.string.typing_rtl_words_from_right_subtitle),
+                settings.watch { it.suggestionStrip.rtlWordsFromRight },
+                default = SettingsDefaults.suggestionStrip.rtlWordsFromRight,
+            ) { scope.launch { repository.setRtlWordsFromRight(it) } }
+        }
+        item(level = SettingLevel.ADVANCED) {
+            TextFieldSetting(
+                stringResource(R.string.typing_rest_words_title),
+                value = settings.watch { it.suggestionStrip.restWords }.joinToString(", "),
+                hint = stringResource(R.string.typing_rest_words_hint),
+                onSave = { repository.setRestWords(it) },
+            )
         }
         item(level = SettingLevel.ADVANCED) {
             // Issue #385: the words the strip has no room for.
@@ -1168,6 +1210,24 @@ internal fun TypingSuggestionsSettings(
                 info = stringResource(R.string.typing_inline_autofill_info),
                 default = SettingsDefaults.suggestionSources.inlineAutofill,
             ) { scope.launch { repository.setInlineAutofill(it) } }
+        }
+        item(visible = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P, level = SettingLevel.STANDARD) {
+            ToggleSetting(
+                R.string.typing_password_manager_chip_title,
+                stringResource(R.string.typing_password_manager_chip_subtitle),
+                settings.watch { it.suggestionSources.passwordManagerChip },
+                info = stringResource(R.string.typing_password_manager_chip_info),
+                default = SettingsDefaults.suggestionSources.passwordManagerChip,
+            ) { scope.launch { repository.setPasswordManagerChip(it) } }
+        }
+        item(visible = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P, level = SettingLevel.ADVANCED) {
+            ToggleSetting(
+                R.string.typing_password_manager_chip_wm_pass_title,
+                stringResource(R.string.typing_password_manager_chip_wm_pass_subtitle),
+                settings.watch { it.suggestionSources.passwordManagerChipWmPassTool },
+                info = stringResource(R.string.typing_password_manager_chip_wm_pass_info),
+                default = SettingsDefaults.suggestionSources.passwordManagerChipWmPassTool,
+            ) { scope.launch { repository.setPasswordManagerChipWmPassTool(it) } }
         }
         item(visible = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R, level = SettingLevel.STANDARD) {
             ToggleSetting(
@@ -1648,6 +1708,15 @@ internal fun TypingSmartChipsSettings(
                     default = SettingsDefaults.smartChips.dates,
                 ) { scope.launch { repository.setSmartChipDates(it) } }
             }
+            // Issue #1089: the date written the user's own way, or ways.
+            item(visible = datesOn, level = SettingLevel.ADVANCED) {
+                TextFieldSetting(
+                    label = stringResource(R.string.typing_smart_date_formats_title),
+                    value = settings.watch { it.smartChips.dateFormats.joinToString(" | ") },
+                    hint = stringResource(R.string.typing_smart_date_formats_hint),
+                    default = "",
+                ) { repository.setSmartChipDateFormats(it) }
+            }
             chipToolsOffItem(SmartSuggest.Family.DATES, datesOn, usable, repository)
             item(level = SettingLevel.STANDARD) {
                 ToggleSetting(
@@ -1828,6 +1897,11 @@ internal fun TypingCodesSettings(
     val minutesFormat = stringResource(R.string.values_minutes)
     // Decides which rows the group holds; the rows read everything else.
     val otpOn = settings.watch { it.otp.enabled }
+    val otpContext = LocalContext.current
+    val codesRedacted = remember(otpOn) {
+        val at = NotificationOtpCapture.lastRedactedAt(otpContext)
+        at > 0L && System.currentTimeMillis() - at < 7L * 24 * 60 * 60 * 1000
+    }
     SettingsGroup(stringResource(R.string.typing_group_otp_title)) {
         item {
             val accessContext = LocalContext.current
@@ -1854,6 +1928,13 @@ internal fun TypingCodesSettings(
                     R.string.typing_otp_access_title,
                     stringResource(R.string.typing_otp_access_subtitle),
                 ) { codesAccessRow() }
+            }
+            // Android's own redaction: said here because the chip simply never comes.
+            item(visible = codesRedacted) {
+                WmRow(
+                    title = stringResource(R.string.typing_otp_redacted_title),
+                    subtitle = stringResource(R.string.typing_otp_redacted_subtitle),
+                )
             }
             item(level = SettingLevel.ADVANCED) {
                 ToggleSetting(
@@ -1882,6 +1963,16 @@ internal fun TypingCodesSettings(
                     info = stringResource(R.string.typing_otp_dismiss_info),
                     default = SettingsDefaults.otp.dismissNotification,
                 ) { scope.launch { repository.setOtpDismissNotification(it) } }
+            }
+            // #992: for wordings the built-in English, Chinese, Japanese and
+            // Korean code words miss.
+            item(level = SettingLevel.STANDARD) {
+                TextFieldSetting(
+                    label = stringResource(R.string.typing_otp_keywords_title),
+                    value = settings.watch { it.otp.extraKeywords },
+                    hint = stringResource(R.string.typing_otp_keywords_hint),
+                    default = SettingsDefaults.otp.extraKeywords,
+                ) { repository.setOtpExtraKeywords(it) }
             }
         }
         // Outside the enabled block on purpose: this governs how *every* code
@@ -2666,6 +2757,7 @@ internal fun TypingSpacebarSettings(
         it.spaceShortSwipe == SpaceSwipeAction.LANGUAGE || it.spaceLongSwipe == SpaceSwipeAction.LANGUAGE
     }
     val spaceAccelerate = settings.watch { it.textEditing.spaceCursorAccelerate }
+    val spaceMagnifier = settings.watch { it.textEditing.spaceCursorMagnifier }
     SettingsGroup(stringResource(R.string.typing_group_spacebar_swipes_title)) {
         item {
             SpaceSwipeSetting(
@@ -2684,6 +2776,18 @@ internal fun TypingSpacebarSettings(
                 value = settings.watch { it.spaceLongSwipe },
                 default = SettingsDefaults.spaceLongSwipe,
             ) { scope.launch { repository.setSpaceLongSwipe(it) } }
+        }
+        // Issue #1088: a thumb that slides a little on its way to a space.
+        item(level = SettingLevel.ADVANCED) {
+            SliderSetting(
+                R.string.typing_space_swipe_distance_title,
+                subtitle = stringResource(R.string.typing_space_swipe_distance_subtitle),
+                value = settings.watch { it.textEditing.spaceSwipeDistanceDp }.toFloat(),
+                range = SpaceSwipeDistanceRange.first.toFloat()..SpaceSwipeDistanceRange.last.toFloat(),
+                display = { context.getString(R.string.typing_value_dp, it.roundToInt()) },
+                info = stringResource(R.string.typing_space_swipe_distance_info),
+                default = SettingsDefaults.textEditing.spaceSwipeDistanceDp.toFloat(),
+            ) { scope.launch { repository.setSpaceSwipeDistanceDp(it.roundToInt()) } }
         }
         // Issue #444: a swipe up is the touchpad, beside the sideways slots.
         item(level = SettingLevel.ADVANCED) {
@@ -2788,6 +2892,14 @@ internal fun TypingSpacebarSettings(
                     default = SettingsDefaults.textEditing.spaceCursorMagnifier,
                 ) { scope.launch { repository.setSpaceCursorMagnifier(it) } }
             }
+            item(visible = spaceMagnifier, level = SettingLevel.ADVANCED) {
+                ToggleSetting(
+                    R.string.typing_magnifier_follows_title,
+                    stringResource(R.string.typing_magnifier_follows_subtitle),
+                    settings.watch { it.textEditing.magnifierFollowsText },
+                    default = SettingsDefaults.textEditing.magnifierFollowsText,
+                ) { scope.launch { repository.setMagnifierFollowsText(it) } }
+            }
         }
         item(level = SettingLevel.STANDARD) {
             ToggleSetting(
@@ -2829,6 +2941,23 @@ internal fun TypingSpacebarSettings(
         }
     }
     SettingsGroup(stringResource(R.string.typing_group_spacebar_hold_title)) {
+        item {
+            // Issue #1060: a slow quick swipe should not count as press and hold.
+            val sameLabel = stringResource(R.string.typing_space_hold_delay_same)
+            val msFormat = stringResource(R.string.typing_value_milliseconds)
+            SliderSetting(
+                R.string.typing_space_hold_delay_title,
+                subtitle = stringResource(R.string.typing_space_hold_delay_subtitle),
+                value = settings.watch { it.textEditing.spaceHoldDelayMs }.toFloat(),
+                range = 0f..1500f,
+                display = {
+                    val ms = (it / 50f).roundToInt() * 50
+                    if (ms == 0) sameLabel else msFormat.format(ms)
+                },
+                info = stringResource(R.string.typing_space_hold_delay_info),
+                default = SettingsDefaults.textEditing.spaceHoldDelayMs.toFloat(),
+            ) { scope.launch { repository.setSpaceHoldDelayMs((it / 50f).roundToInt() * 50) } }
+        }
         item {
             // Issue #57: the characters the spacebar's long press offers, space
             // separated. Blank gives the hold back to the language picker.

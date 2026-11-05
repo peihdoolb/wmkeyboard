@@ -32,6 +32,9 @@ object PinyinComposer : Composer {
     override val improvingPack: String? get() = CjkDictionaries.missingPinyinNgrams
     override val readsLatinLetters: Boolean get() = true
 
+    /** A mistyped letter in the middle is fixed where it is (#1106). */
+    override val editsReadingInPlace: Boolean get() = true
+
     /** Reading space for learned picks: pinyin letters, whatever scheme typed them. */
     private const val NAMESPACE = "pinyin"
 
@@ -189,6 +192,62 @@ object PinyinComposer : Composer {
         return ranked(b).getOrNull(index)?.consumed ?: b.length
     }
 
+    override fun nextReadingLetter(buffer: String, index: Int): Char? {
+        val b = buffer.lowercase()
+        val cand = ranked(b).getOrNull(index)?.takeIf { !it.special && it.consumed == b.length } ?: return null
+        val typed = b.replace("'", "")
+        val reading = cand.reading.replace("'", "")
+        doublePinyinTable()?.let { table ->
+            return DoublePinyin.nextKey(typed, syllablesOf(reading), table, PinyinSyllables.valid, ::fuzzySpellings)
+        }
+        if (reading.length > typed.length && reading.startsWith(typed)) return reading[typed.length]
+        val abbreviated = jianpin() != null
+        if (CjkConfig.fuzzyPinyin) {
+            return PinyinSyllables.nextFuzzyLetter(typed, syllablesOf(reading), ::fuzzySpellings, abbreviated)
+        }
+        return if (abbreviated) PinyinSyllables.nextInitial(typed, syllablesOf(reading)) else null
+    }
+
+    /** What [syllable] may be typed as under the Fuzzy Pinyin switch, itself first. */
+    private fun fuzzySpellings(syllable: String): Set<String> =
+        if (CjkConfig.fuzzyPinyin) {
+            PinyinFuzzy.expand(syllable, PinyinSyllables.valid, CjkConfig.fuzzyPinyinPairs)
+        } else {
+            setOf(syllable)
+        }
+
+    private fun syllablesOf(reading: String): List<String> = PinyinSyllables.segment(reading).map { it.syllable }
+
+    /** The dictionary the map was built from, and each character's commonest reading. */
+    @Volatile
+    private var characterReadings: Pair<ConversionDictionary, Map<Int, String>>? = null
+
+    override fun primePredictionKeys() {
+        val dict = CjkDictionaries.pinyin
+        if (dict.isEmpty || characterReadings?.first === dict) return
+        val readings = HashMap<Int, String>()
+        val best = HashMap<Int, Int>()
+        for (row in 0 until dict.size) {
+            val word = dict.word(row)
+            if (word.isEmpty() || word.codePointCount(0, word.length) != 1) continue
+            val character = word.codePointAt(0)
+            val frequency = dict.frequency(row)
+            if (frequency > (best[character] ?: Int.MIN_VALUE)) {
+                best[character] = frequency
+                readings[character] = dict.reading(row)
+            }
+        }
+        characterReadings = dict to readings
+    }
+
+    override fun predictionKey(word: String): Char? {
+        if (word.isEmpty()) return null
+        val built = characterReadings?.takeIf { it.first === CjkDictionaries.pinyin } ?: return null
+        val reading = built.second[word.codePointAt(0)]?.takeIf { it.isNotEmpty() } ?: return null
+        val table = doublePinyinTable() ?: return reading.first()
+        return DoublePinyin.keysOf(table, PinyinSyllables.valid)[reading]?.first()
+    }
+
     override fun learnChoice(buffer: String, index: Int) {
         val b = buffer.lowercase()
         val cand = ranked(b).getOrNull(index) ?: return
@@ -211,6 +270,28 @@ object PinyinComposer : Composer {
         }
         run = null
         learnPhrase(parts, reading)
+    }
+
+    /**
+     * A word the decoder did not offer goes in under its reading, which only full
+     * pinyin spells: Jianpin and Double Pinyin keys are not a reading, and a word
+     * whose length is not the syllable count could never be found under it.
+     */
+    override fun learnConversion(buffer: String, word: String) {
+        val b = buffer.lowercase()
+        val index = ranked(b).indexOfFirst { it.text == word && it.consumed == b.length }
+        if (index >= 0) {
+            learnChoice(b, index)
+            return
+        }
+        if (doublePinyinTable() != null || CjkContext.hanTail(word) != word) return
+        val syllables = syllablesOf(b)
+        val reading = syllables.joinToString("")
+        if (reading != b.replace("'", "") || syllables.size != word.codePointCount(0, word.length)) return
+        val previous = contextWord()
+        CjkLearning.learn(NAMESPACE, reading, word)
+        if (previous != null) CjkLearning.learnPair(NAMESPACE, previous, word)
+        run = null
     }
 
     /**
@@ -440,7 +521,6 @@ object PinyinComposer : Composer {
 
     private fun rank(buffer: String, context: String?): List<Cand> {
         val dict = CjkDictionaries.pinyin
-        val adjust = CjkLearning.adjustFor(NAMESPACE)
         val graph: Lattice.Graph?
         val stitch: Int
         if (doublePinyinTable() != null) {
@@ -470,16 +550,15 @@ object PinyinComposer : Composer {
                 .flatMap { word -> HanVariant.traditionalForms(word).map { Cand(it, buffer.length, buffer, word) } }
                 .distinctBy { it.text }
         }
-        val opts = Lattice.Opts(limit = LOOKUP_LIMIT, stitch = stitch, coverageOrder = true, wordPenalty = HanLevels::penalty)
+        val opts = Lattice.Opts(limit = LOOKUP_LIMIT, stitch = stitch, coverageOrder = true, hanLevels = true)
         val decoded = Lattice.decode(
             graph,
             dict,
             CjkDictionaries.pinyinNgrams,
             opts,
-            ::learnedPicks,
-            adjust,
-            context = context,
-            user = CjkLearning.userWords(NAMESPACE),
+            CjkLearning.userData(NAMESPACE),
+            Lattice.UserScope.ALL,
+            context,
         )
             .flatMap { c -> HanVariant.traditionalForms(c.text).map { Cand(it, c.consumed, c.reading, c.text) } }
             // Converting to Traditional can merge two Simplified words onto one
@@ -547,9 +626,6 @@ object PinyinComposer : Composer {
         CjkLearning.learnPair(NAMESPACE, previous, picked)
     }
 
-    /** What the user has picked for this reading, for the decoder's own ranking. */
-    private fun learnedPicks(reading: String): Map<String, Int>? =
-        CjkLearning.store?.picksFor(NAMESPACE, reading)
 
     /**
      * A candidate word, the input chars (keys) it covers, the reading behind it,

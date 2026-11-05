@@ -281,6 +281,21 @@ class SuggestionEngineTest {
         assertNull(e.joinCandidate("some", "thing"))
     }
 
+    // #1107: a space typed where the letter above it was meant.
+
+    @Test fun aSpaceTypedForALetterIsJoinedBack() {
+        val dictionary = Trie().apply {
+            insert("enough", 5000)
+            insert("e", 900)
+            insert("to", 50000)
+            insert("into", 20000)
+        }
+        val e = SuggestionEngine(dictionary, BengaliPhoneticIndex(emptyList()), UserLexicon(null))
+        assertEquals("enough", e.joinCandidate("e", "ough"))
+        // A word after the space was a space: `i to` is not *into*.
+        assertNull(e.joinCandidate("i", "to"))
+    }
+
     @Test fun prefixCompletion() {
         val suggestions = engine().suggest("th", previousWord = null)
         assertEquals("the", suggestions.first())
@@ -327,6 +342,42 @@ class SuggestionEngineTest {
         assertNull(engine().shouldAutocorrect("xy")) // too short
         // "helo" is ambiguous between "hello" and "help": suggest, don't force.
         assertNull(engine().shouldAutocorrect("helo"))
+    }
+
+    // #1105: two letters typed the wrong way round.
+
+    private fun swapEngine(): SuggestionEngine {
+        val dictionary = Trie().apply {
+            insert("what", 250)
+            insert("want", 120)
+            insert("and", 250)
+            insert("an", 150)
+            insert("dan", 20)
+            insert("who", 120)
+            insert("how", 120)
+        }
+        return SuggestionEngine(dictionary, BengaliPhoneticIndex(emptyList()), UserLexicon(null))
+    }
+
+    @Test fun aSwappedPairIsPutBackOverACommonerSlip() {
+        // `what` reads `wnat` as an n slipped for an h and is the commoner
+        // word; `want` keeps every letter typed.
+        assertEquals("want", swapEngine().shouldAutocorrect("wnat"))
+    }
+
+    @Test fun theLikeliestOfTwoSwapsIsPutBack() {
+        // `adn` is `and` or `dan` swapped back, and `an` with a stray d.
+        assertEquals("and", swapEngine().shouldAutocorrect("adn"))
+    }
+
+    @Test fun twoSwapsAsLikelyAsEachOtherStayAsTyped() {
+        assertNull(swapEngine().shouldAutocorrect("hwo"))
+    }
+
+    @Test fun aSwapIsNotPutBackAtTheMostCarefulSetting() {
+        val e = swapEngine()
+        e.autocorrectConfidence = SuggestionEngine.MAX_AUTOCORRECT_CONFIDENCE
+        assertNull(e.shouldAutocorrect("wnat"))
     }
 
     @Test fun blacklistedWordNeverSuggested() {
@@ -650,6 +701,20 @@ class SuggestionEngineTest {
         )
         assertEquals("কিবোর্ড", e.suggest("keyboard", null, phoneticLanguage = "bn").first())
         assertEquals("চেয়ার", e.suggest("chair", null, phoneticLanguage = "bn").first())
+    }
+
+    @Test fun avroCapitalsAreNotFoldedOntoAListedSpelling() {
+        // Capital N is ণ. The map and the word list both fold case, so `moN`
+        // used to come out as whatever they say for `mon`.
+        val map = SpellingMap.load("mon\tমোন\n".byteInputStream(Charsets.UTF_8))
+        val bengali = BengaliPhoneticIndex(listOf("মন" to 5000, "মণ" to 10))
+        val e = SuggestionEngine(Trie(), bengali, UserLexicon(null), map)
+        assertEquals("মোন", e.suggest("mon", null, phoneticLanguage = "bn").first())
+        assertEquals("মণ", e.suggest("moN", null, phoneticLanguage = "bn").first())
+        assertEquals(null, e.phoneticSpelling("bn", "moN"))
+        // A capital that spells nothing of its own is the same spelling.
+        assertEquals("মোন", e.suggest("Mon", null, phoneticLanguage = "bn").first())
+        assertEquals("মোন", e.phoneticSpelling("bn", "Mon"))
     }
 
     @Test fun avroLiteralHoldsAgainstNearTieSibling() {

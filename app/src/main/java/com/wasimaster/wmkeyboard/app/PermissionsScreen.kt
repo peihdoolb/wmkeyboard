@@ -23,6 +23,8 @@ import com.wasimaster.wmkeyboard.R
 import com.wasimaster.wmkeyboard.app.updates.UpdateChannel
 import com.wasimaster.wmkeyboard.core.accessibility.KeyboardPassthrough
 import com.wasimaster.wmkeyboard.core.accessibility.ScreenContextService
+import com.wasimaster.wmkeyboard.core.accessibility.SplitScreenHelperService
+import com.wasimaster.wmkeyboard.ime.AppLaunchModes
 import com.wasimaster.wmkeyboard.core.location.LocationAccess
 import com.wasimaster.wmkeyboard.core.media.hasNotificationAccess
 
@@ -120,6 +122,14 @@ internal fun PermissionsSettings() {
                 PermissionDisclosures.STORAGE,
             )
         }
+        // The file manager before Android 11; from there it is a special grant, below.
+        item(visible = ChannelFeatures.FILE_MANAGER && Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            RuntimePermissionRow(
+                R.string.privacy_permissions_all_files_title,
+                R.string.privacy_permissions_all_files_subtitle,
+                PermissionDisclosures.FILES,
+            )
+        }
     }
 
     SettingsGroup(stringResource(R.string.privacy_permissions_special_group_title)) {
@@ -145,6 +155,14 @@ internal fun PermissionsSettings() {
                 R.string.privacy_permissions_overlay_subtitle,
                 SpecialAccess.OVERLAY,
             ) { Settings.canDrawOverlays(it) }
+        }
+        item(visible = ChannelFeatures.FILE_MANAGER && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            SpecialAccessRow(
+                R.string.privacy_permissions_all_files_title,
+                R.string.privacy_permissions_all_files_subtitle,
+                SpecialAccess.ALL_FILES,
+                com.wasimaster.wmkeyboard.core.files.FilePlaces::hasAccess,
+            )
         }
         // The clock tool's two grants, only where Android asks for them.
         item(visible = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S, level = SettingLevel.ADVANCED) {
@@ -180,6 +198,17 @@ internal fun PermissionsSettings() {
                 R.string.privacy_permissions_screen_content_subtitle,
                 SpecialAccess.SCREEN_CONTENT,
                 { ScreenContextService.isEnabled(it) },
+            )
+        }
+        item(
+            visible = ChannelFeatures.SPLIT_SCREEN_HELPER && AppLaunchModes.splitHelperApplies,
+            level = SettingLevel.ADVANCED,
+        ) {
+            SpecialAccessRow(
+                R.string.privacy_permissions_split_screen_title,
+                R.string.privacy_permissions_split_screen_subtitle,
+                SpecialAccess.SPLIT_SCREEN,
+                { SplitScreenHelperService.isEnabled(it) },
             )
         }
         // Only where the app can install a new version of itself, and only

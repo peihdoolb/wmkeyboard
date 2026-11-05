@@ -55,7 +55,7 @@ The stylus mode only works with a stylus the screen reports as one (S Pen, a Wac
 
 ## Handwriting as a layout
 
-Chinese, Japanese and Korean have a **Handwriting** layout of their own, the way Gboard offers one. Turn it on with the language's other layouts and pick it with the globe key: the writing area takes the place of the letter keys, and a normal bottom row (<KeyCap>?123</KeyCap>, globe, punctuation, <KeyCap>Space</KeyCap>, <KeyCap>Delete</KeyCap>, <KeyCap>Enter</KeyCap>) stays under it. Ink is read in that layout's language, with everything below about models, delete and undo working the same. There's no language chip on it; the globe key changes language. On the F-Droid build these layouts write Chinese and Japanese through zinnia, and Korean through [PaddleOCR](#paddleocr-for-other-scripts).
+Chinese, Japanese and Korean have a **Handwriting** layout of their own, the way Gboard offers one, and so do 296 more languages, Burmese among them: every language a recogniser here reads in the script the keyboard writes it in. A language with a model only from ML Kit, Burmese again, says no recogniser is available on the F-Droid build. Turn it on with the language's other layouts and pick it with the globe key: the writing area takes the place of the letter keys, and a normal bottom row (<KeyCap>?123</KeyCap>, globe, punctuation, <KeyCap>Space</KeyCap>, <KeyCap>Delete</KeyCap>, <KeyCap>Enter</KeyCap>) stays under it. Ink is read in that layout's language, with everything below about models, delete and undo working the same. There's no language chip on it; the globe key changes language. On the F-Droid build these layouts write Chinese and Japanese through zinnia, and Korean through [PaddleOCR](#paddleocr-for-other-scripts).
 
 ## Handwriting without opening the panel
 
@@ -148,6 +148,8 @@ The panel is also the **Handwriting** bundle on [Extensions](/reference/settings
 - **Automatic space**: on by default. Inserts a space between words you write one after another, but never before punctuation, and never next to Chinese, Japanese, Thai or another script written without spaces.
 - **Offline recogniser for Chinese and Japanese**: off by default, and shown only where ML Kit is in the build. With it on, Chinese and Japanese read through zinnia; see [zinnia for Chinese and Japanese](#zinnia-for-chinese-and-japanese).
 - **Panel layout**: opens the layout editor described in [The panel is a layout](#the-panel-is-a-layout).
+- **Pen thickness**, **Pen color** and **When ink turns into text**: the pen's width from 1 to 12 dp (default 4), its color (the theme's accent until you pick one), and how strokes leave the canvas: Dissolve (default), Fade, Shrink, Rise or Disappear at once.
+- **Panel height**: opens the canvas taller than the keyboard, without changing the keys. The emoji panel has its own, under Emoji.
 - **Recognition pause**: default **700 ms**, adjustable from 300–2000 ms. How long the canvas waits after your last stroke before it sends the word off for recognition. Shorter feels snappier. It can also cut a multi-stroke letter or a Bengali conjunct in half if you pause mid-letter, where a longer wait gives you room to breathe between strokes.
 
 :::note[Bangla, Chinese, Japanese and Korean get a higher floor]

@@ -444,6 +444,7 @@ internal val SettingsRouteColors: Map<String, Color> = mapOf(
     "selection_macros" to Color(0xFF5E6BC0),
     "selection_macros/actions" to Color(0xFF5E6BC0),
     "selection_macros/ai" to Color(0xFF5E6BC0),
+    "selection_macros/icons" to Color(0xFF5E6BC0),
     "selection_macros/zones" to Color(0xFF5E6BC0),
     "advanced" to Color(0xFF8D6E63),
     "extensions" to Color(0xFF26A69A),
@@ -462,6 +463,8 @@ internal val SettingsRouteColors: Map<String, Color> = mapOf(
     "egg_game" to Color(0xFF90A4AE),
     "debug_log" to Color(0xFF607D8B),
     "storage" to Color(0xFF546E7A),
+    "feature_libraries" to Color(0xFF90A4AE),
+    "import_hub" to Color(0xFF546E7A),
     "statistics" to Color(0xFF9CCC65),
     "dictionary" to Color(0xFF26A69A),
     "customdictionaries" to Color(0xFF26A69A),
@@ -2743,6 +2746,7 @@ private fun WmScreenFrame(
     val preview = LocalKeyboardPreview.current?.takeIf { slots.dock == null }
     val chatFab = LocalAiChatFab.current
     val scope = rememberCoroutineScope()
+    val depthReveal = rememberDepthReveal()
     // One per screen, published for everything it draws — see [SettingsSnackbar].
     val snackbarHost = remember { SnackbarHostState() }
     val snackbar = remember(snackbarHost, scope) { SettingsSnackbar(snackbarHost, scope) }
@@ -2766,6 +2770,7 @@ private fun WmScreenFrame(
         LocalFlightOrigin provides origin,
         LocalScreenSlots provides slots,
         LocalSettingsSnackbar provides snackbar,
+        LocalDepthReveal provides depthReveal,
     ) {
         // A settings row is a name on the left and a control on the right, and
         // on a window wider than a phone the two end up a hand's width apart
@@ -2839,6 +2844,9 @@ private fun WmScreenFrame(
                         // pinned block costs no arithmetic here and stays put
                         // while the collapsing title above it does its thing.
                         (pinned ?: slots.pinned)?.invoke()
+                        // Here for the same reason, and because the row it talks
+                        // about may be scrolled to anywhere on the page.
+                        DepthRevealNotice(depthReveal)
                     }
                 },
                 floatingActionButton = {

@@ -222,14 +222,14 @@
     <string name="tooldetail_dictionary_translation_langs_title">Translate into</string>
     <string name="tooldetail_dictionary_translation_langs_none_subtitle">Your keyboard languages. Add a language other than English, or pick some here</string>
     <string name="tooldetail_dictionary_translation_langs_dialog_body">The tool shows the translations that Wiktionary has for these languages, in this order. Pick none to follow your keyboard languages.</string>
-    <string name="tooldetail_dictionary_info">Definitions come from the sources below, in their order. The keyboard sends the word that you look up to an online source only when you use the tool.</string>
+    <string name="tooldetail_dictionary_info">Definitions come from the sources below, in their order, and the built-in ones define English words. For another language, add a dictionary under Imported dictionaries or use a dictionary app on the phone. Word lists downloaded under Languages &amp; layouts are for typing: they hold spellings, not definitions, so they don\'t help here. The keyboard sends the word that you look up to an online source only when you use the tool.</string>
     <string name="tooldetail_dictionary_sources_title">Dictionary sources</string>
     <string name="tooldetail_dictionary_sources_subtitle">Where the tool looks for definitions, in order</string>
     <string name="tooldetail_dictionary_sources_info">The tool asks the first source that is on. When that source does not know the word, or cannot be reached, the tool asks the next one. Drag a source to change the order, and turn off a source to never ask it. Online sources receive only the word you look up.</string>
     <string name="tooldetail_dictionary_packs_title">Vocabulary packs</string>
     <string name="tooldetail_dictionary_offline_group">Offline dictionaries</string>
     <string name="tooldetail_dictionary_imported_group">Imported dictionaries</string>
-    <string name="tooldetail_dictionary_imported_info">Yomichan and Yomitan dictionaries, in any language: Japanese with readings and pitch accent (JMdict, Jitendex), Chinese, Korean, and the Wiktionary dictionaries for many other languages. Import the dictionary\'s zip file. Inflected Japanese words find their dictionary form. The source list above asks them as one source, Imported dictionaries; inside it they answer in this order.</string>
+    <string name="tooldetail_dictionary_imported_info">Yomichan and Yomitan dictionaries, in any language: Japanese with readings and pitch accent (JMdict, Jitendex), Chinese, Korean, and the Wiktionary dictionaries for many other languages. StarDict dictionaries work too, as plain text. Import the dictionary\'s zip or tar file. Inflected Japanese words find their dictionary form. The source list above asks them as one source, Imported dictionaries; inside it they answer in this order.</string>
     <plurals name="tooldetail_dictionary_imported_entries">
         <item quantity="one">%1$s entry</item>
         <item quantity="other">%1$s entries</item>
@@ -237,7 +237,7 @@
     <string name="tooldetail_dictionary_imported_up_desc">Move %1$s up</string>
     <string name="tooldetail_dictionary_imported_down_desc">Move %1$s down</string>
     <string name="tooldetail_dictionary_imported_import_title">Import a dictionary</string>
-    <string name="tooldetail_dictionary_imported_import_subtitle">A Yomichan or Yomitan dictionary zip. A large one takes some minutes.</string>
+    <string name="tooldetail_dictionary_imported_import_subtitle">A Yomichan or Yomitan dictionary zip, or a StarDict dictionary in a zip or tar. A large one takes some minutes.</string>
     <string name="tooldetail_dictionary_imported_link">Yomitan dictionaries</string>
     <string name="tooldetail_dictionary_offline_info">Whole English dictionaries kept on the phone, so the Dictionary tool can define ordinary words with no connection, and in the build without internet access. The vocabulary packs know only their own lists\' words. Once one is here, the source list above asks it wherever you put it; by default after the online sources, so it answers when they cannot be reached. Wiktionary, offline, is Wiktionary\'s common words with pronunciation (CC BY-SA 4.0). Open English WordNet has every single English word in WordNet, with shorter definitions (CC BY 4.0).</string>
     <string name="tooldetail_dictionary_offline_available">%1$s download, %2$s</string>
@@ -447,6 +447,19 @@
     <string name="tooldetail_handwriting_zinnia_title">Offline recogniser for Chinese and Japanese</string>
     <string name="tooldetail_handwriting_zinnia_subtitle">Read Chinese and Japanese with zinnia instead of Google ML Kit</string>
     <string name="tooldetail_handwriting_zinnia_info">zinnia is a small open-source recogniser with models from the Tegaki project. It reads one character at a time and is less accurate than ML Kit, but needs nothing from Google. Builds without ML Kit, such as the F-Droid one, always use it. Simplified or Traditional Chinese follows the Traditional characters switch in Chinese settings.</string>
+    <string name="tooldetail_handwriting_pen_width_title">Pen thickness</string>
+    <string name="tooldetail_handwriting_pen_width_value">%1$d dp</string>
+    <string name="tooldetail_handwriting_pen_color_title">Pen color</string>
+    <string name="tooldetail_handwriting_pen_color_subtitle">Reset it to follow the theme\'s accent</string>
+    <string name="tooldetail_handwriting_ink_fade_title">When ink turns into text</string>
+    <string name="tooldetail_handwriting_ink_fade_subtitle">How the strokes leave the canvas</string>
+    <string name="tooldetail_handwriting_ink_fade_dissolve">Dissolve</string>
+    <string name="tooldetail_handwriting_ink_fade_fade">Fade</string>
+    <string name="tooldetail_handwriting_ink_fade_shrink">Shrink</string>
+    <string name="tooldetail_handwriting_ink_fade_rise">Rise</string>
+    <string name="tooldetail_handwriting_ink_fade_none">Disappear at once</string>
+    <string name="tooldetail_handwriting_height_title">Panel height</string>
+    <string name="tooldetail_handwriting_height_subtitle">Open the canvas taller than the keyboard, without changing the keys</string>
     <string name="tooldetail_handwriting_pause_title">Recognition pause</string>
     <string name="tooldetail_handwriting_pause_subtitle">How long after the last stroke the keyboard waits before it recognizes the word</string>
     <string name="tooldetail_handwriting_pause_info">A shorter pause feels faster, but it can cut multi-stroke letters and Bengali conjuncts in half. A longer pause gives you more time between strokes. Gboard uses about half a second.</string>
@@ -498,6 +511,8 @@
     <string name="tooldetail_translate_module_missing_info">On-device translation is an extra part of the keyboard that downloads when you first need it. Download it, then select the languages.</string>
     <string name="tooldetail_translate_module_installing_info">Downloading the on-device translation part…</string>
     <string name="tooldetail_translate_module_installing_sized_info">Downloading the on-device translation part: <xliff:g id="done" example="4.1 MB">%1$s</xliff:g> of <xliff:g id="total" example="9 MB">%2$s</xliff:g></string>
+    <string name="tooldetail_translate_offline_build_info">This offline build cannot translate on this phone: its one engine, Firefox Translations, needs a 64-bit phone with Android 9 or later. To translate, install the standard build.</string>
+    <string name="tooldetail_translate_offline_import_info">This offline build translates on the phone only. Open On device (Firefox Translations) under Providers, then get its library and the language directions you want on another device, and import them. Or install the standard build over this one from the same release page, which downloads it by itself. Your settings and learned words stay.</string>
     <string name="tooldetail_translate_module_failed_info">The download did not finish. Check the connection, then try again.</string>
     <string name="tooldetail_translate_module_metered_body">The on-device translation part is a separate download.</string>
     <string name="tooldetail_translate_model_builtin_label">Part of the engine. No download is necessary</string>
@@ -767,6 +782,9 @@
 
     <!-- Special symbols tool. -->
     <string name="tooldetail_symbols_recents_group">Recents</string>
+    <string name="tooldetail_symbols_edit_group">Your symbols</string>
+    <string name="tooldetail_symbols_edit_hint">Symbols, with a space between each. To offer more when one is held, join them with |, as in →|⇒|⟶</string>
+    <string name="tooldetail_symbols_edit_reset">Reset</string>
     <string name="tooldetail_symbols_clear_title">Clear the recent symbols</string>
     <string name="tooldetail_symbols_clear_empty">No recent symbols yet</string>
     <!-- %1$d is how many symbols the tool remembers. -->
@@ -978,8 +996,11 @@
     <string name="tooldetail_launcher_open_mode_normal_label">Normally</string>
     <string name="tooldetail_launcher_open_mode_floating_label">Floating</string>
     <string name="tooldetail_launcher_open_mode_split_label">Split screen</string>
-    <string name="tooldetail_launcher_open_mode_info">A press and hold on an app offers all three whatever you pick here. Split screen puts the app beside the one you are typing in and needs Android 12L or later. A floating window needs a device with a desktop or freeform window mode, such as many tablets; elsewhere the app opens full screen.</string>
-    <string name="tooldetail_launcher_open_mode_info_no_split">A press and hold on an app offers both whatever you pick here. A floating window needs a device with a desktop or freeform window mode, such as many tablets; elsewhere the app opens full screen. Split screen needs Android 12L or later.</string>
+    <string name="tooldetail_launcher_open_mode_info">A press and hold on an app offers all three whatever you pick here. Split screen puts the app beside the one you are typing in and needs Android 12L or later, or the split screen helper. A floating window needs a device with a desktop or freeform window mode, such as many tablets; elsewhere the app opens full screen.</string>
+    <string name="tooldetail_launcher_open_mode_info_no_split">A press and hold on an app offers both whatever you pick here. A floating window needs a device with a desktop or freeform window mode, such as many tablets; elsewhere the app opens full screen. Split screen needs Android 12L or later, or the split screen helper.</string>
+    <string name="tooldetail_launcher_split_helper_title">Split screen helper</string>
+    <string name="tooldetail_launcher_split_helper_off_subtitle">Off. Turn on if split screen opens apps full screen</string>
+    <string name="tooldetail_launcher_split_helper_on_subtitle">On. Split screen goes through Android\'s split screen switch</string>
     <string name="tooldetail_launcher_combos_title">Split screen pairs</string>
     <plurals name="tooldetail_launcher_combos_count">
         <item quantity="one">%1$d pair</item>
@@ -1047,6 +1068,9 @@
     </plurals>
     <string name="tooldetail_notes_open_none_subtitle">Nothing saved yet</string>
     <string name="tooldetail_notes_tags_subtitle">Rename, recolour or remove the tags on your notes</string>
+    <string name="tooldetail_notes_share_title">Save to notes from other apps</string>
+    <string name="tooldetail_notes_share_subtitle">An entry in the share sheet</string>
+    <string name="tooldetail_notes_share_info">Share text from any app and choose Save to notes, and it becomes a note. Share a link, a page from the browser say, and the note gets the page\'s title and its text with the layout taken off, under the link and tagged Read later, so the Read back tool can read it to you. A page that cannot be read is saved as the link alone. Works with the keyboard closed.</string>
     <string name="tooldetail_notes_trash_subtitle">Notes you deleted, until they are gone for good</string>
     <string name="tooldetail_notes_sort_title">Sort notes by</string>
     <string name="tooldetail_notes_sort_updated_label">Last edited</string>
@@ -1058,6 +1082,10 @@
     <string name="tooldetail_notes_panel_start_subtitle">What you see when you tap the tool</string>
     <string name="tooldetail_notes_panel_start_list_label">The list of notes</string>
     <string name="tooldetail_notes_panel_start_last_label">The note you edited last</string>
+    <string name="tooldetail_notes_panel_layout_title">Keyboard panel layout</string>
+    <string name="tooldetail_notes_panel_layout_subtitle">How the list of notes is laid out in the keyboard</string>
+    <string name="tooldetail_notes_panel_layout_shelf_label">Shelf: pinned notes as wide cards, the rest in a grid</string>
+    <string name="tooldetail_notes_panel_layout_timeline_label">Timeline: one row per note, grouped by day</string>
     <string name="tooldetail_notes_trash_days_title">Keep trashed notes for</string>
     <string name="tooldetail_notes_trash_7_label">7 days</string>
     <string name="tooldetail_notes_trash_30_label">30 days</string>

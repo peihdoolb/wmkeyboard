@@ -16,11 +16,17 @@ Translate opens a small typing window right above the keys. It grows with your p
 {/* shot: tools/translate-panel */}
 </PhoneFrame>
 
+## What you need
+
+- **The standard GitHub and F-Droid builds:** nothing. Open the tool and type. It uses the free Google endpoint until you change [Providers](#providers).
+- **The Google Play build, or the On device engine:** one download. Type something, and when the panel says a model is missing, press **Download** in the panel. It translates as soon as the model lands.
+- **The offline build:** translates with Firefox Translations only, from files you [import](/privacy/offline/#translation-models). You need its library and the files of each language direction, fetched on another device. It needs a 64-bit phone with Android 9 or later.
+
 ## Using it
 
 Open **Translate** from the toolbar, or from the toolbox if you haven't pinned it (it isn't pinned by default). On a hardware keyboard, use the [leader key](/reference/shortcuts/): double-tap <KeyCap>Ctrl</KeyCap>, then press <KeyCap>R</KeyCap>.
 
-The panel has its own text box at the top, which wraps onto several lines and scrolls once it holds more than four or so. <KeyCap>Enter</KeyCap> starts a new line in it rather than closing it. What you type there is what gets translated, not the text already in your field. It's the same key-rerouting trick the GIF, sticker, and Wikipedia panels use: while the panel is focused, your keystrokes go to its text box instead of the app behind the keyboard. Opening Translate over a chat you're mid-way through never touches what you already wrote.
+The panel has its own text box at the top, which wraps onto several lines and scrolls once it holds more than four or so. <KeyCap>Enter</KeyCap> starts a new line in it rather than closing it. What you type there is what gets translated, not the text already in your field. On a phonetic layout such as Avro, the box spells in your script as you type, the same as a text field does, and Space settles the word. It's the same key-rerouting trick the GIF, sticker, and Wikipedia panels use: while the panel is focused, your keystrokes go to its text box instead of the app behind the keyboard. Opening Translate over a chat you're mid-way through never touches what you already wrote.
 
 Once you've typed, the keys cover most of the translation. Press Back, or tap the keyboard button at the right end of the suggestion strip, and the keys go down: your text stays in the box and the panel takes its full height again, so a long translation shows whole. Tap the box to bring the keys back. See [Putting the keys down](/tools/overview/#putting-the-keys-down).
 
@@ -30,12 +36,14 @@ Once you've typed, the keys cover most of the translation. Press Back, or tap th
 
 **Pasting into the box.** The clipboard icon in the box's top corner pastes the text you copied last, without opening the clipboard. An image on the clipboard is skipped. If you weren't typing in the box, the translation runs straight away and stays on screen with the keys out of the way; if you were, the text goes in at the cursor and you carry on typing. You can also long-press the box where there is no word (an empty box anywhere) and a **Paste** bar comes up at the caret, with **Select all** beside it once the box holds text. Long-press a word to select it instead, and the bar offers **Cut**, **Copy**, **Paste** and **Select all**. The toolbar's **Paste** tool, and a layout's Paste key, paste into the box too while it has the keys. This works in every one of the keyboard's own text boxes, not only this one; see [A captured box is a real text field](/tools/overview/#a-captured-box-is-a-real-text-field).
 
+**Clearing the box.** Once the box holds text, an ✕ sits beside the clipboard icon. It empties the box and its translation and hands the keys back to the box, so after inserting one translation you can start typing the next message straight away.
+
 The header reads left to right like a sentence: *from* this language, *to* that one, *using* this engine.
 
 - **Source language** is the first chip. It starts on **Detect language** and switches to the language it found once a result comes back, for example "Bengali". Tap it to pick the source yourself when the detection is wrong, which mostly happens with a word or two. Your pick lasts until you close the panel. Pick **Detect language** to hand it back.
 - **Swap** is the arrows between the chips. It turns the translation round: the result becomes the text, its language the source, and the language it was read as the new target. It lights up once there is a result to swap.
-- **Target language** is the second chip. Tap it to open a dropdown of all 68 languages and pick one.
-- **Engine** is the chip on the right: **Online**, **On device** or **Automatic**. See [On-device translation](#on-device-translation) below. It shows wherever an on-device engine runs: every build on a 64-bit phone with Android 9 or later, and every build but F-Droid's everywhere.
+- **Target language** is the second chip. Tap it to open a dropdown of all 68 languages and pick one. You can also change it from the keys: type a slash and a language code at the start of an empty box, then Space. `/ja` makes Japanese the target and `/bn:ja` translates from Bangla to Japanese. The box empties, ready for the text. A code no language has stays as ordinary text.
+- **Engine** is the chip on the right: **Online**, **On device** or **Automatic**. See [On-device translation](#on-device-translation) below. It shows wherever an on-device engine runs: every build on a 64-bit phone with Android 9 or later, and every build but F-Droid's everywhere. The offline build has only the device, so it shows no chip and uses Firefox Translations.
 - The translation updates automatically about 400 milliseconds after you stop typing. Pressing return translates immediately, and changing the target language re-translates what's already in the box right away.
 - Once a translation is showing, two actions light up below it:
   - **Insert** types the translation into your field at the cursor, leaving whatever was already there in place.

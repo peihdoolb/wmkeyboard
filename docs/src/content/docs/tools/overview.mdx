@@ -27,7 +27,7 @@ Open the toolbox and hold-and-drag a tool:
 - Drag a toolbox tool up onto the toolbar to pin it.
 - Drag a tool around inside the toolbox grid to reorder it there.
 - Drag a pinned toolbar tool back down into the toolbox to unpin it.
-- Drop a tool on the middle of another tool to put the two in a folder. See [Folders](#folders).
+- Drop a tool on the middle of another tool to put the two in a folder. See [Folders](#folders). The middle is small on purpose: anywhere else on it, the tool takes that place. With a folder open, the star makes its toolbar button run the first tool on a tap and open the folder on a hold.
 
 It's the same drag-to-pin model Gboard uses. The first time you open the toolbox, a hint explains the drag. Dismiss it and it only resurfaces occasionally as a reminder.
 
@@ -70,6 +70,12 @@ The third gesture is optional too. **Rearrange by dragging**, under <SettingsPat
 - Binding a tool to itself is refused, since that is a slow tap.
 - Nothing is shown while you hold. The buzz says the hold registered; the tool washes out and the drag notice appears only once your finger moves.
 
+## Tools on the home screen
+
+<SettingsPath path="Tools / (any tool) / Add to home screen" />
+
+A tool with a panel can have an icon of its own on your home screen, so the level, the compass or the unit converter can stand in for an app you no longer need. **Add to home screen** on the tool's page asks your launcher to pin it. Tapping the icon opens a blank text box with the keyboard up and that tool already open on it. Whatever the tool types, such as a sum, a translation or a password, lands in the box, and **Copy** and **Share** under it take it from there. A second tool's icon opens in the same screen over a fresh box. The tool opens in WM Keyboard only, so if another keyboard is in use the screen says so and offers to switch. The Clock, Notes and To-do list pin their own screens in the app instead.
+
 ## What does this button do?
 
 Inside a tool's panel, most buttons are bare icons: the clipboard's filter and list switch, a refresh arrow, a swap, the speaker in the dictionary. Press and hold any of them and its name pops up above it for a moment. A hold that shows the name doesn't press the button, so it's safe to ask before you tap. Buttons that already have a hold of their own keep it, and a button with its name written on it doesn't need one.
@@ -105,6 +111,8 @@ Pick a page size that's a multiple of your row size and every page comes out wit
 
 ## Folders
 
+Launchers with their own shortcut list, a secondary launcher for one, offer **WM Keyboard tool** there and add any tool with its own icon. **Add to home screen** on a tool's page does the same from here.
+
 A long toolbox is easier to scan in groups. Hold a tool, drag it over the middle of another one, and let go when that tool lights up: the two become a folder in that tool's place. The edges of a tool still mean "put it beside this one", so reordering works as before; only the middle files it. Drop more tools on the folder to add them, and drop a toolbar tool there to unpin it straight into the folder.
 
 A new folder is called **Folder**. Tap it to open it in the toolbox, and the header shows what you can do with it:
@@ -137,7 +145,7 @@ A row's switch enables or disables the tool everywhere at once: toolbar, toolbox
 
 To keep a tool working but out of the toolbox grid, open its page and turn off **Show in toolbox**. It still runs from the toolbar if pinned, from its keyword, from [selection actions](/smart/selection-actions/) and from the hardware leader key; the grid just loses one cell. Each tool has its own switch. A small tune icon marks the tools with settings beyond the switch. Most have them. Four don't, because their real options live on other screens: Settings, Sound & haptics, One-handed, and [Resize](/tools/resize/).
 
-Related pages cover most of these tools in depth: [Clipboard manager](/tools/clipboard/), [Snippets & text expansion](/tools/snippets/), [Notes](/tools/notes/), [To-do list](/tools/todo/), [Text editing & cursor tools](/tools/text-editing/), [Trackpad](/tools/trackpad/), [Handwriting](/tools/handwriting/), [Camera tool](/tools/camera/), [Gallery](/tools/gallery/), [Send files](/tools/send/), [Voice typing](/tools/voice/), [Offline voice (Whisper)](/tools/whisper/), [Scanner (OCR, QR, documents)](/tools/scanner/), [Translate](/tools/translate/), [Search & Wikipedia](/tools/search/), [AI tools](/tools/ai/), [AI reply](/tools/ai-reply/), [Utility tools](/tools/utilities/), [Internet speed test](/tools/speed-test/), [Media controls](/tools/media/), [Music ID](/tools/music-id/), [Calendar](/tools/calendar/), [App launcher](/tools/app-launcher/), [Resize](/tools/resize/), and [Instruments](/tools/instruments/) (flashlight, compass, level, moon phase, weather). The master tool list is being built out on [Reference → Tools](/reference/settings/tools/).
+Related pages cover most of these tools in depth: [WM Pass](/tools/wm-pass/), [Clipboard manager](/tools/clipboard/), [Snippets & text expansion](/tools/snippets/), [Notes](/tools/notes/), [To-do list](/tools/todo/), [Text editing & cursor tools](/tools/text-editing/), [Trackpad](/tools/trackpad/), [Handwriting](/tools/handwriting/), [Camera tool](/tools/camera/), [Gallery](/tools/gallery/), [Send files](/tools/send/), [Voice typing](/tools/voice/), [Offline voice (Whisper)](/tools/whisper/), [Scanner (OCR, QR, documents)](/tools/scanner/), [Translate](/tools/translate/), [Search & Wikipedia](/tools/search/), [AI tools](/tools/ai/), [AI reply](/tools/ai-reply/), [Utility tools](/tools/utilities/), [Internet speed test](/tools/speed-test/), [Media controls](/tools/media/), [Music ID](/tools/music-id/), [Calendar](/tools/calendar/), [App launcher](/tools/app-launcher/), [Resize](/tools/resize/), and [Instruments](/tools/instruments/) (flashlight, compass, level, moon phase, weather). The master tool list is being built out on [Reference → Tools](/reference/settings/tools/).
 
 ## Panels and captured keys
 
@@ -168,7 +176,7 @@ Tap the switch again, or tap the box itself, and the box takes the keys back wit
 The keys that come up under a tool's box cover most of the tool: the translation under Translate's box, the clips a search found, the rest of a note. To see it all again, put the keys down. The box keeps its text and its caret, and the tool takes back the room the keys had, so the keyboard stays the same height. Any of these does it:
 
 - The keyboard button at the right end of the box's suggestion strip, after the undo arrow and the mic.
-- The system Back button or gesture. The first Back puts the keys down; the next one does what Back did before, such as closing the tool. The AI chat's message box and a plugin's text field already put the keys away on Back, so there Back works as it always has.
+- The system Back button or gesture, with **Back puts a tool's keys down first** on (Appearance / Toolbox, off by default). The first Back then puts the keys down and the next one closes the tool. Off, Back closes the tool at once. The AI chat's message box and a plugin's text field always put the keys away on Back.
 - A swipe down on the spacebar, with [**Swipe down to hide the keyboard**](/typing/gestures/) on, and the **Hide keyboard** tool or key. With a tool's keys up, these put down only the keys and leave the tool open.
 
 Tap the box and the keys come back, with the caret where you tapped. Moving to another box, or opening another tool, brings the keys up for that box. A hardware keyboard still types into the box while the keys are down. The typing test and the toolbox's own boxes have no way to put the keys down: their keys are the point of the screen, and Back closes them.

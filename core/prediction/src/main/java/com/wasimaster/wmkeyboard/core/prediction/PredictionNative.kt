@@ -191,6 +191,9 @@ internal object PredictionNative {
     /** ln P(word next) per word, NaN where the model has no opinion. */
     external fun lmScores(session: Long, words: Array<String>): FloatArray
 
+    /** [lmScores], spelling a word the vocabulary lacks through its pieces. For a few words at a time. */
+    external fun lmScoresSpelled(session: Long, words: Array<String>): FloatArray
+
     /**
      * The learned gate's view of the typed spelling: `[ln P(typed) if listed,
      * rank of typed among next words, entropy of the distribution in nats,
@@ -227,8 +230,12 @@ internal object PredictionNative {
     /** `[String fixed, IntArray(count)]`, or null. */
     external fun cmFixFor(handle: Long, typed: String): Array<Any>?
     external fun cmForget(handle: Long, typed: String)
+    external fun cmSetPair(handle: Long, typed: String, fixed: String, count: Int)
+    external fun cmRemovePair(handle: Long, typed: String, fixed: String)
+    external fun cmSetHabit(handle: Long, layout: String, key: String, count: Int)
+    external fun cmHabitLayouts(handle: Long): Array<String>
 
-    /** `[Array<String> typed, Array<String> fixed, IntArray counts]`, most used first. */
+    /** `[Array<String> typed, Array<String> fixed, IntArray counts, IntArray byHand]`, most used first. */
     external fun cmPairs(handle: Long): Array<Any>
     external fun cmPairCount(handle: Long): Int
     external fun cmVersion(handle: Long): Int
@@ -253,6 +260,10 @@ internal object PredictionNative {
 
     /** The [CorrectionStats.Penalty] ordinal. */
     external fun csPenalty(handle: Long, key: String): Int
+    external fun csSetPair(handle: Long, key: String, count: Int, held: Boolean)
+
+    /** `[Array<String> typed, Array<String> fixed, IntArray counts, IntArray penalties, IntArray held]`, in key order. */
+    external fun csPairs(handle: Long): Array<Any>
     external fun csConfidenceMultiplier(handle: Long): Double
     external fun csClear(handle: Long, deleted: Boolean)
     external fun csPrepareSave(handle: Long): String?

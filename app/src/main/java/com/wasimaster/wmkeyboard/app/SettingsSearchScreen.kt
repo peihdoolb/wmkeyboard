@@ -64,6 +64,7 @@ import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Hub
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Collections
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Phone
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.PhotoLibrary
+import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.FileOpen
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.PieChart
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.QueryStats
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Wallpaper
@@ -253,6 +254,7 @@ internal object SettingsHighlight {
         target = titleRes
         targetItems = emptySet()
         scrollClaimed = false
+        awaitingArrival = true
         serial++
     }
 
@@ -264,7 +266,34 @@ internal object SettingsHighlight {
         target = titleRes
         targetItems = keys.filter { it.isNotBlank() }.toSet()
         scrollClaimed = false
+        awaitingArrival = true
         serial++
+    }
+
+    /**
+     * For a link to a whole screen: nothing to flash, but the screen opens with
+     * every row the settings depth would hide; see [DepthReveal].
+     */
+    fun requestScreen() {
+        awaitingArrival = true
+        serial++
+    }
+
+    /** True while a row or entry is waiting to be flashed. */
+    val pending: Boolean get() = target != 0 || targetItems.isNotEmpty()
+
+    /**
+     * Set by a request and taken by the screen it sent the user to, so one
+     * arrival opens one screen's hidden rows and not those of the next screen
+     * opened while the flash is still running.
+     */
+    private var awaitingArrival = false
+
+    /** True once per request, for the screen the user landed on. */
+    fun takeArrival(): Boolean {
+        val arrived = awaitingArrival
+        awaitingArrival = false
+        return arrived
     }
 
     /** True for the one row that gets to scroll itself into view. */
@@ -280,6 +309,7 @@ internal object SettingsHighlight {
     fun clear() {
         target = 0
         targetItems = emptySet()
+        awaitingArrival = false
     }
 
     /** Clears only if nothing new was requested since [serialAtEntry]. */
@@ -371,6 +401,8 @@ internal fun HighlightableRow(
      * is not read.
      */
     info: String? = null,
+    /** The level the depth would need to show this row, when it is here only for a [DepthReveal]. */
+    revealedAt: SettingLevel? = LocalRevealedLevel.current,
     content: @Composable () -> Unit,
 ) {
     val target = SettingsHighlight.target
@@ -379,6 +411,12 @@ internal fun HighlightableRow(
         highlightKey != 0 -> highlightKey == target
         title == null -> false
         else -> title == stringResource(target)
+    }
+    // Sent here, to a row the depth would have hidden: the notice on the screen
+    // names the depth that would keep it.
+    if (requested && revealedAt != null) {
+        val depthReveal = LocalDepthReveal.current
+        SideEffect { depthReveal?.landedOn = revealedAt }
     }
     // The same two names are what a row's link is made of (#646), so the row
     // publishes them for its link button, and a plain row takes the long
@@ -692,6 +730,7 @@ internal object SettingsRouteIcons {
         "selection_macros" to { Icons.Outlined.HighlightAlt },
         "selection_macros/actions" to { Icons.Outlined.Checklist },
         "selection_macros/ai" to { Icons.Outlined.AutoAwesome },
+        "selection_macros/icons" to { Icons.Outlined.Interests },
         "selection_macros/zones" to { Icons.Outlined.Public },
         "advanced" to { Icons.Outlined.Tune },
         "extensions" to { Icons.Outlined.ExtensionIcon },
@@ -705,7 +744,9 @@ internal object SettingsRouteIcons {
         "backup/contents" to { Icons.Outlined.Checklist },
         "about" to { Icons.Outlined.Info },
         "supporters" to { Icons.Outlined.VolunteerActivism },
+        "import_hub" to { Icons.Outlined.FileOpen },
         "storage" to { Icons.Outlined.PieChart },
+        "feature_libraries" to { Icons.Outlined.Extension },
         "statistics" to { Icons.Outlined.QueryStats },
         "licenses" to { Icons.Outlined.Gavel },
         "debug_log" to { Icons.AutoMirrored.Outlined.Article },

@@ -346,6 +346,7 @@ internal fun AppearanceToolbarSettings(
             s.suggestionStrip.textScale != d.suggestionStrip.textScale ||
             s.suggestionStrip.chipPadding != d.suggestionStrip.chipPadding ||
             s.suggestionStrip.primaryColor != d.suggestionStrip.primaryColor ||
+            s.suggestionStrip.newWordColor != d.suggestionStrip.newWordColor ||
             s.toolCircleRadiusDp != d.toolCircleRadiusDp ||
             s.toolShape != d.toolShape
     }
@@ -651,6 +652,17 @@ internal fun AppearanceToolbarSettings(
                 info = stringResource(R.string.appearance_suggestion_primary_color_info),
             ) { scope.launch { repository.setSuggestionPrimaryColor(it) } }
         }
+        // Its twin for the other end of the strip's promises (#1098): not
+        // the word a space will put in, but the word no list knows yet.
+        item(level = SettingLevel.ADVANCED) {
+            ColorSetting(
+                R.string.appearance_suggestion_new_word_color_title,
+                subtitle = stringResource(R.string.appearance_suggestion_new_word_color_subtitle),
+                color = settings.watch { it.suggestionStrip.newWordColor },
+                fallback = MaterialTheme.colorScheme.onSurface.argbLong(),
+                info = stringResource(R.string.appearance_suggestion_new_word_color_info),
+            ) { scope.launch { repository.setSuggestionNewWordColor(it) } }
+        }
         item {
             ResetPinnedToolsSetting(repository, scope)
         }
@@ -854,6 +866,15 @@ internal fun AppearanceToolboxSettings(
                 display = { dpFormat.format(it.roundToInt()) },
                 default = SettingsDefaults.toolbox.cellSpacingDp.toFloat(),
             ) { scope.launch { repository.setToolboxCellSpacing(it.roundToInt()) } }
+        }
+        item(level = SettingLevel.STANDARD) {
+            ToggleSetting(
+                R.string.appearance_toolbox_back_lowers_title,
+                stringResource(R.string.appearance_toolbox_back_lowers_subtitle),
+                settings.watch { it.toolbox.backLowersKeys },
+                info = stringResource(R.string.appearance_toolbox_back_lowers_info),
+                default = SettingsDefaults.toolbox.backLowersKeys,
+            ) { scope.launch { repository.setToolboxBackLowersKeys(it) } }
         }
         item(level = SettingLevel.STANDARD) {
             ToggleSetting(
@@ -1063,6 +1084,15 @@ internal fun LayoutSettings(
                 info = stringResource(R.string.layout_arrow_row_info),
                 default = SettingsDefaults.layoutBehavior.arrowRow,
             ) { scope.launch { repository.setArrowRow(it) } }
+        }
+        item(visible = arrowRow, level = SettingLevel.STANDARD) {
+            ToggleSetting(
+                R.string.layout_arrow_row_on_top_title,
+                stringResource(R.string.layout_arrow_row_on_top_subtitle),
+                settings.watch { it.layoutBehavior.arrowRowOnTop },
+                info = stringResource(R.string.layout_arrow_row_on_top_info),
+                default = SettingsDefaults.layoutBehavior.arrowRowOnTop,
+            ) { scope.launch { repository.setArrowRowOnTop(it) } }
         }
         item(visible = arrowRow, level = SettingLevel.ADVANCED) {
             ControlSetting(
@@ -1330,7 +1360,7 @@ internal fun LayoutSizeSettings(
         // The sliders below, dragged on the keyboard itself (#912): opens the
         // test field and puts the keyboard that comes up into resize mode.
         // Needs the test field, so not while its button is switched off.
-        item(visible = preview != null, level = SettingLevel.STANDARD) {
+        item(visible = preview != null) {
             ActionRow(
                 title = R.string.layout_resize_drag_title,
                 subtitle = stringResource(R.string.layout_resize_drag_subtitle),
@@ -1422,7 +1452,9 @@ internal fun LayoutSizeSettings(
                 default = SettingsDefaults.layoutBehavior.extendEdgeKeys,
             ) { scope.launch { repository.setExtendEdgeKeys(it) } }
         }
-        item(level = SettingLevel.STANDARD) {
+        item {
+            // Basic: an empty band under the keys is the first thing anyone
+            // resizing the keyboard comes here to fix (#1030).
             val bottomPadding = settings.watch { it.bottomPaddingDp }
             SliderSetting(
                 R.string.layout_bottom_padding_title,

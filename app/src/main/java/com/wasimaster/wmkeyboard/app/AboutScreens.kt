@@ -58,6 +58,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -659,6 +660,24 @@ private val bundledAttributions: List<Attribution> = buildList {
         )
         add(
             Attribution(
+                "Kiwi",
+                R.string.about_bundled_kiwi_used,
+                "Copyright 2017-2026 Minchul Lee and the Kiwi contributors",
+                "Apache-2.0", "kiwi-notice.txt",
+                "https://github.com/bab2min/Kiwi",
+            ),
+        )
+        add(
+            Attribution(
+                "WebRTC (webrtc-sdk build)",
+                R.string.about_bundled_webrtc_used,
+                "Copyright The WebRTC project authors; webrtc-sdk contributors",
+                "BSD-3-Clause", "bsd-3-clause.txt",
+                "https://github.com/webrtc-sdk/android",
+            ),
+        )
+        add(
+            Attribution(
                 "Vosk models",
                 R.string.about_bundled_vosk_used,
                 "Copyright Alpha Cephei Inc.",
@@ -772,6 +791,15 @@ private val bundledAttributions: List<Attribution> = buildList {
             "Copyright (c) 2019 GitHub, Inc.",
             "MIT", "mit-gemoji.txt",
             "https://github.com/github/gemoji",
+        ),
+    )
+    add(
+        Attribution(
+            "BanglaTLit",
+            R.string.about_bundled_banglatlit_used,
+            "Copyright (c) 2024 Aplycaebous",
+            "MIT", "mit-banglatlit.txt",
+            "https://github.com/farhanishmam/BanglaTLit",
         ),
     )
     // One row for 862 keyboards. Each carries its own MIT licence differing
@@ -1049,6 +1077,48 @@ private val dataPackAttributions: List<Attribution> = buildList {
         "https://github.com/google/mozc",
     ))
     add(Attribution(
+        "hunspell-tr",
+        R.string.about_pack_hunspell_tr_used,
+        "Copyright Turkish Data Depository",
+        "MPL-2.0", "mpl-2.0-hunspell-tr.txt",
+        "https://github.com/tdd-ai/hunspell-tr",
+    ))
+    add(Attribution(
+        "CATT",
+        R.string.about_pack_catt_used,
+        "Copyright Abjad AI",
+        "Apache-2.0", "catt-notice.txt",
+        "https://github.com/abjadai/catt",
+    ))
+    add(Attribution(
+        "Phonikud & DictaBERT",
+        R.string.about_pack_phonikud_used,
+        "Copyright the Phonikud authors and Dicta: The Israel Center for Text Analysis",
+        "CC BY 4.0", "phonikud-notice.txt",
+        "https://github.com/thewh1teagle/phonikud",
+    ))
+    add(Attribution(
+        "eyo-kernel",
+        R.string.about_pack_eyo_used,
+        "Copyright Denis Seleznev",
+        "MIT", "mit-eyo.txt",
+        "https://github.com/e2yo/eyo-kernel",
+    ))
+    add(Attribution(
+        "Hazm",
+        R.string.about_pack_hazm_used,
+        "Copyright Alireza Nourian",
+        "MIT", "mit-hazm.txt",
+        "https://github.com/roshan-research/hazm",
+    ))
+    add(Attribution(
+        "liblouis",
+        R.string.about_pack_louis_used,
+        "Copyright the liblouis contributors",
+        "LGPL-2.1-or-later", "lgpl-2.1-liblouis.txt",
+        "https://github.com/liblouis/liblouis",
+    ))
+    add(Attribution(
         "Tegaki handwriting models",
         R.string.about_pack_tegaki_used,
         "Copyright the Tegaki and Tomoe project contributors",
@@ -1070,11 +1140,32 @@ private val dataPackAttributions: List<Attribution> = buildList {
         "https://github.com/yefeijiang/Chinese-characters-code-table",
     ))
     add(Attribution(
+        "Kiwi model",
+        R.string.about_pack_kiwi_used,
+        "Copyright 2017-2026 Minchul Lee and the Kiwi contributors",
+        "Apache-2.0", "kiwi-notice.txt",
+        "https://github.com/bab2min/Kiwi",
+    ))
+    add(Attribution(
+        "libhangul Hanja table",
+        R.string.about_pack_hanja_used,
+        "Copyright (c) 2005, 2006 Choe Hwanjin",
+        "BSD-3-Clause", "bsd-3-clause-hanja.txt",
+        "https://github.com/libhangul/libhangul",
+    ))
+    add(Attribution(
         "Unicode Unihan database",
         R.string.about_pack_unihan_used,
         "Copyright Unicode, Inc.",
         "Unicode License v3", "unicode-3.0.txt",
         "https://www.unicode.org/",
+    ))
+    add(Attribution(
+        "Jidian Wubi 86 table, ibus-table-chinese",
+        R.string.about_pack_wubi_used,
+        "Wozy, Chen Xing, Yu Yuwei",
+        "Freely redistributable", null,
+        "https://github.com/mike-fabian/ibus-table-chinese",
     ))
     // The three below are downloaded by features F-Droid's build lacks, so it
     // does not list what it cannot fetch.
@@ -1116,6 +1207,11 @@ private val dataPackAttributions: List<Attribution> = buildList {
  * these are attribution and terms links rather than licence texts.
  */
 private val serviceAttributions: List<Attribution> = listOf(
+    Attribution(
+        "PairDrop", R.string.about_service_pairdrop_used, "",
+        "The server's own terms", null,
+        "https://pairdrop.net/",
+    ),
     Attribution(
         "Brave Search", R.string.about_service_brave_used, "",
         "Brave Search API terms", null,
@@ -1160,6 +1256,11 @@ private val serviceAttributions: List<Attribution> = listOf(
         "Free Dictionary API", R.string.about_service_dictionary_used, "",
         "Provider terms", null,
         "https://dictionaryapi.dev/",
+    ),
+    Attribution(
+        "Urban Dictionary", R.string.about_service_dictionary_used, "",
+        "Provider terms", null,
+        "https://www.urbandictionary.com/",
     ),
     Attribution(
         "Wiktionary & kaikki.org", R.string.about_service_wiktionary_used, "",
@@ -1300,6 +1401,7 @@ internal fun AboutSettings(
     onOpenLicenseText: (String) -> Unit,
     onOpenDebugLog: () -> Unit = {},
     onOpenStorage: () -> Unit = {},
+    onOpenImportHub: () -> Unit = {},
     onOpenStatistics: () -> Unit = {},
     onOpenEggGame: () -> Unit = {},
     onReplayOnboarding: () -> Unit = {},
@@ -1423,6 +1525,26 @@ internal fun AboutSettings(
                 stringResource(R.string.about_whats_new_subtitle, BuildConfig.VERSION_NAME),
             ) { showNotes = true }
         }
+        item {
+            // The bar that walks through what the latest update added (#970)
+            // goes for good once it is closed; this brings it back, borders
+            // and all, from the first one.
+            val added = NewSettings.lastAdded
+            NavRow(
+                R.string.about_new_settings_title,
+                if (added.isEmpty()) {
+                    stringResource(R.string.about_new_settings_none)
+                } else {
+                    pluralStringResource(R.plurals.about_new_settings_subtitle, added.size, added.size)
+                },
+            ) {
+                if (added.isEmpty()) {
+                    Toast.makeText(context, R.string.about_new_settings_none, Toast.LENGTH_SHORT).show()
+                } else {
+                    NewSettings.replay(context)
+                }
+            }
+        }
         item(level = SettingLevel.STANDARD) {
             // The licence identifier and the copyright line travel verbatim.
             NavRow(R.string.about_licence_title, "MIT, © 2026 Wasi Master") {
@@ -1505,6 +1627,15 @@ internal fun AboutSettings(
                 stringResource(R.string.about_storage_subtitle),
                 route = "storage",
                 onClick = onOpenStorage,
+            )
+        }
+        item(visible = FeatureLibraryList.offered, level = SettingLevel.STANDARD) { FeatureLibrariesNavRow() }
+        item {
+            NavRow(
+                R.string.import_hub_title,
+                stringResource(R.string.import_hub_subtitle),
+                route = "import_hub",
+                onClick = onOpenImportHub,
             )
         }
         // Owned by the Statistics extension: gone with it.

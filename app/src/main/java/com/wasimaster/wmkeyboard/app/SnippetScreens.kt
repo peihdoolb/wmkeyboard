@@ -248,6 +248,8 @@ internal fun SnippetSettings(
     // with no header row through, read by position.
     var expectTable by remember { mutableStateOf(false) }
     var exportTarget by remember { mutableStateOf(false) }
+    var publishing by remember { mutableStateOf(false) }
+    if (publishing) PublishSnippetsDialog(snippets, folders) { publishing = false }
     var urlPrompt by remember { mutableStateOf(false) }
     var packagePrompt by remember { mutableStateOf(false) }
     var manifest by remember { mutableStateOf(EspansoManifest("", "", "")) }
@@ -462,7 +464,7 @@ internal fun SnippetSettings(
                 R.string.expander_grid_columns_title,
                 subtitle = stringResource(R.string.expander_grid_columns_subtitle),
                 value = settings.watch { it.suggestionStrip.snippetGridColumns }.toFloat(),
-                range = 1f..4f,
+                range = 1f..6f,
                 display = { it.toInt().toString() },
                 info = stringResource(R.string.expander_grid_columns_info),
                 default = SettingsDefaults.suggestionStrip.snippetGridColumns.toFloat(),
@@ -693,6 +695,7 @@ internal fun SnippetSettings(
                 R.string.expander_target_native to R.string.expander_target_native_body,
                 R.string.expander_target_espanso to R.string.expander_target_espanso_body,
                 R.string.expander_target_package to R.string.expander_target_package_body,
+                R.string.expander_target_community to R.string.expander_target_community_body,
             ),
             onDismiss = { exportTarget = false },
             onPick = { index ->
@@ -700,7 +703,8 @@ internal fun SnippetSettings(
                 when (index) {
                     0 -> exportLauncher.launch(SnippetFile.fileName())
                     1 -> espansoExportLauncher.launch(EspansoWriter.FILE_NAME)
-                    else -> packagePrompt = true
+                    2 -> packagePrompt = true
+                    else -> publishing = true
                 }
             },
         )

@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.ime.ui
 
+import com.wasimaster.wmkeyboard.core.netlog.InternetPermission
 import android.text.format.Formatter
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -34,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -208,7 +210,7 @@ internal fun HandwritingStatusBody(
         ) {
             val language = HandwritingModels.displayName(hw.languageTag)
             Text(
-                hw.errorMessage ?: if (hw.modelBytes > 0L) {
+                if (!InternetPermission.granted) stringResource(R.string.ime_handwriting_offline_build_body) else hw.errorMessage ?: if (hw.modelBytes > 0L) {
                     stringResource(
                         R.string.ime_handwriting_need_model_sized_body,
                         language,
@@ -222,7 +224,7 @@ internal fun HandwritingStatusBody(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 24.dp),
             )
-            Row(
+            if (InternetPermission.granted) Row(
                 modifier = Modifier
                     .padding(top = 12.dp)
                     .clip(RoundedCornerShape(kb.toolRadiusDp.dp))
@@ -399,6 +401,8 @@ internal fun WritingCanvas(
     // so a knuckle or palm resting on the screen never draws.
     var lastStylusTime by remember { mutableLongStateOf(0L) }
     val dissolve = rememberInkDissolve(hw)
+    val pen = state.settings.handwritingInk
+    val penColor = pen.penColor?.let { Color(it) } ?: kb.accent
 
     Box(
         modifier = Modifier
@@ -452,17 +456,17 @@ internal fun WritingCanvas(
         }
         Canvas(modifier = Modifier.fillMaxSize()) {
             val strokeStyle = Stroke(
-                width = 4.dp.toPx(),
+                width = pen.penWidthDp.dp.toPx(),
                 cap = StrokeCap.Round,
                 join = StrokeJoin.Round,
             )
-            val inkColor = if (hw.recognizing) kb.accent.copy(alpha = 0.45f) else kb.accent
-            drawDissolvingInk(dissolve, kb.accent.copy(alpha = 0.45f), strokeStyle)
+            val inkColor = if (hw.recognizing) penColor.copy(alpha = 0.45f) else penColor
+            drawDissolvingInk(dissolve, penColor.copy(alpha = 0.45f), strokeStyle, pen.fade)
             for (stroke in hw.strokes) {
                 drawPath(pathOf(stroke.points), color = inkColor, style = strokeStyle)
             }
             if (activeStroke.size > 1) {
-                drawPath(pathOf(activeStroke), color = kb.accent, style = strokeStyle)
+                drawPath(pathOf(activeStroke), color = penColor, style = strokeStyle)
             }
         }
     }
