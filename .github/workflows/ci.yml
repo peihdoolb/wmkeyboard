@@ -16,8 +16,8 @@ env:
   GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx6g -Dorg.gradle.daemon=false
 
 jobs:
-  assemble-release-lite:
-    name: Assemble ARM64 Release Lite
+  assemble-release-arm64:
+    name: Assemble ARM64 Release (arm64-v8a)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -34,12 +34,12 @@ jobs:
         with:
           build-scan-publish: false
 
-      - name: Assemble Release Lite (arm64-v8a)
-        run: ./gradlew assembleLiteRelease -Pwmkb.enableFdroid=true -Pwmkb.abi=arm64-v8a -Pwmkb.locales=en,vi -Pwmkb.skipBenchmarks=true --stacktrace
+      - name: Assemble Release (arm64-v8a)
+        run: ./gradlew assembleIntlRelease -Pwmkb.enableFdroid=true -Pwmkb.abi=arm64-v8a -Pwmkb.locales=en,vi -Pwmkb.skipBenchmarks=true --stacktrace
 
-      - name: Upload Release Lite APK
+      - name: Upload Release APK
         uses: actions/upload-artifact@v7
         with:
-          name: wmkeyboard-arm64-release-lite
-          path: app/build/outputs/apk/lite/release/*.apk
+          name: wmkeyboard-arm64-release
+          path: app/build/outputs/apk/intl/release/*.apk
           retention-days: 14
