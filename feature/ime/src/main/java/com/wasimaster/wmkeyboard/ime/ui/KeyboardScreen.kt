@@ -20644,18 +20644,11 @@ private fun KeyRows(
         // grid cell (gaps included) so a press landing between two keys
         // still hits the nearest one. The visual gap comes from per-key
         // padding inside KeyButton.
-        CompositionLocalProvider(
-            LocalKeyFaceProbe provides remember(keyRects, liveToken) {
-                { _, coords ->
-                    keyRects.recordFace(liveToken.value, coords.boundsInRoot())
-                }
-            },
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = KeyRowsPadHorizontal, vertical = KeyRowsPadVertical),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = KeyRowsPadHorizontal, vertical = KeyRowsPadVertical),
-            ) {
             // Records the spacebar's rect in *root* coordinates for the
             // multi-word split. Stored root-relative rather than box-relative on
             // purpose: this callback can fire before the Box's own
@@ -20794,32 +20787,39 @@ private fun KeyRows(
             // the shift latch, so a tap for one capital (or the board's own
             // sentence-start capital) leaves the digits where they are.
             val extraRow = if (numberRow) rememberExtraRow(state, fillRow, chordDrag.shifted) else null
-            KeyGridRows(
-                state = state,
-                gridState = gridState,
-                layout = layout,
-                bodyRows = bodyRows,
-                extraRow = extraRow,
-                palette = palette,
-                gridWeight = gridWeight,
-                settings = settings,
-                split = split,
-                numericField = numericField,
-                mode = mode,
-                keyPreview = keyPreview,
-                onKey = keyTapOnKey,
-                onText = stampedOnText,
-                onCursorMove = onCursorMove,
-                onLayoutSelect = onLayoutSelect,
-                onKeyPositioned = onKeyPositioned,
-                onSpacePositioned = onSpacePositioned,
-                smartResolve = smartResolve,
-                onBurst = onBurst,
-                onHandwritingStroke = onKeyboardHandwritingStroke,
-                onHandwritingUndo = onHandwritingUndo,
-                onHandwritingDownload = onHandwritingDownload,
-            )
-        }
+            CompositionLocalProvider(
+                LocalKeyFaceProbe provides remember(keyRects, liveToken) {
+                    { _, coords ->
+                        keyRects.recordFace(liveToken.value, coords.boundsInRoot())
+                    }
+                },
+            ) {
+                KeyGridRows(
+                    state = state,
+                    gridState = gridState,
+                    layout = layout,
+                    bodyRows = bodyRows,
+                    extraRow = extraRow,
+                    palette = palette,
+                    gridWeight = gridWeight,
+                    settings = settings,
+                    split = split,
+                    numericField = numericField,
+                    mode = mode,
+                    keyPreview = keyPreview,
+                    onKey = keyTapOnKey,
+                    onText = stampedOnText,
+                    onCursorMove = onCursorMove,
+                    onLayoutSelect = onLayoutSelect,
+                    onKeyPositioned = onKeyPositioned,
+                    onSpacePositioned = onSpacePositioned,
+                    smartResolve = smartResolve,
+                    onBurst = onBurst,
+                    onHandwritingStroke = onKeyboardHandwritingStroke,
+                    onHandwritingUndo = onHandwritingUndo,
+                    onHandwritingDownload = onHandwritingDownload,
+                )
+            }
         }
 
         // The theme's stickers, laid over the keys and under the transient
