@@ -43,3 +43,17 @@ jobs:
           name: wmkeyboard-arm64-release
           path: app/build/outputs/apk/intl/release/*.apk
           retention-days: 14
+
+      - name: Upload Kyng Sound Packs
+        uses: actions/upload-artifact@v7
+        with:
+          name: kyng-soundpacks
+          path: tools/kyng/output/soundpacks/*.wmsoundpack
+          retention-days: 14
+
+      - name: Upload Kyng Themes
+        uses: actions/upload-artifact@v7
+        with:
+          name: kyng-themes
+          path: tools/kyng/output/themes/*.wmtheme.json
+          retention-days: 14
