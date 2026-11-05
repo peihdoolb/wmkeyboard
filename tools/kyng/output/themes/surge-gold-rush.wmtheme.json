@@ -1541,5 +1541,11 @@
     "intensity": 0.5,
     "reactive": 0.9
   },
-  "keyMaterial": null
+  "keyMaterial": null,
+  "keyEffect": "SPARKLE",
+  "keyEffectParam": null,
+  "keyEffectIntensity": 1.0,
+  "keyEffectSize": 1.2,
+  "keyEffectSpeed": 1.0,
+  "keyEffectSpread": 0.8
 }

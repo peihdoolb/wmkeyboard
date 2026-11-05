@@ -2668,5 +2668,11 @@
   },
   "keyMaterial": {
     "kind": "METAL"
-  }
+  },
+  "keyEffect": "SPARKLE",
+  "keyEffectParam": null,
+  "keyEffectIntensity": 1.0,
+  "keyEffectSize": 1.2,
+  "keyEffectSpeed": 1.0,
+  "keyEffectSpread": 0.8
 }

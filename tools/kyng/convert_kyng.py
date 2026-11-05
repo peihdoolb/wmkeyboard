@@ -334,6 +334,19 @@ def convert_theme(z, theme_path, out_dir):
         key_material = {"kind": "PAPER"}
     elif any(k in style_low for k in ['jelly', 'cushion', 'candy']):
         key_material = {"kind": "CANDY"}
+
+    # Particle tap burst on key press
+    key_effect = "SPARKLE"
+    key_effect_param = None
+    if effect_id in ['confetti'] or 'spraycan' in theme_id:
+        key_effect = "CONFETTI"
+    elif effect_id in ['charm', 'paws'] or 'star' in theme_id:
+        key_effect = "STARS"
+    elif effect_id in ['k-pop'] or 'heart' in theme_id:
+        key_effect = "HEARTS"
+    elif effect_id in ['bubbles', 'bubble-pop']:
+        key_effect = "EMOJI"
+        key_effect_param = "🫧"
         
     wm_theme = {
         "id": f"kyng_{theme_id}",
@@ -357,7 +370,13 @@ def convert_theme(z, theme_path, out_dir):
         "keySkin": skin_spec,
         "keyLighting": key_lighting,
         "boardEffect": board_effect,
-        "keyMaterial": key_material
+        "keyMaterial": key_material,
+        "keyEffect": key_effect,
+        "keyEffectParam": key_effect_param,
+        "keyEffectIntensity": 1.0,
+        "keyEffectSize": 1.2,
+        "keyEffectSpeed": 1.0,
+        "keyEffectSpread": 0.8
     }
     
     out_file = os.path.join(out_dir, f"{theme_id}.wmtheme.json")

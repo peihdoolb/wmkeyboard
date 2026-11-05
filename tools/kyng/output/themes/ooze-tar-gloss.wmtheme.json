@@ -2217,5 +2217,11 @@
     "reactive": 1.0,
     "halfLifeMs": 1200
   },
-  "keyMaterial": null
+  "keyMaterial": null,
+  "keyEffect": "EMOJI",
+  "keyEffectParam": "\ud83e\udee7",
+  "keyEffectIntensity": 1.0,
+  "keyEffectSize": 1.2,
+  "keyEffectSpeed": 1.0,
+  "keyEffectSpread": 0.8
 }

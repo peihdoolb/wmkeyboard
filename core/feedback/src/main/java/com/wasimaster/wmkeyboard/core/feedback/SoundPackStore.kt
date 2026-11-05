@@ -141,16 +141,20 @@ class SoundPackStore(private var baseDir: File?) {
 
     // ---- reading -------------------------------------------------------
 
-    /** Seeds default sound packs bundled in assets if the store is currently empty. */
+    /** Seeds default sound packs bundled in assets if missing from store. */
     fun seedFromAssetsIfEmpty(context: android.content.Context) {
-        if (packs.isNotEmpty() || baseDir == null) return
+        if (baseDir == null) return
         val assetManager = context.assets
         val list = runCatching { assetManager.list("soundpacks") }.getOrNull() ?: return
         for (file in list) {
             if (file.endsWith(".wmsoundpack", ignoreCase = true)) {
+                val expectedName = file.removeSuffix(".wmsoundpack")
+                if (packs.any { it.name.contains(expectedName, ignoreCase = true) }) {
+                    continue
+                }
                 runCatching {
                     assetManager.open("soundpacks/$file").use { input ->
-                        SoundPackFile.import(input, this, fallbackName = file.removeSuffix(".wmsoundpack"))
+                        SoundPackFile.import(input, this, fallbackName = expectedName)
                     }
                 }
             }

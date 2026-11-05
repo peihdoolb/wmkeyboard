@@ -256,6 +256,15 @@ object KyngTheme {
             else -> null
         }
 
+        val keyEffect = when {
+            effectId == "confetti" || "spraycan" in id -> "CONFETTI"
+            effectId in listOf("charm", "paws") || "star" in id -> "STARS"
+            effectId in listOf("k-pop") || "heart" in id -> "HEARTS"
+            effectId in listOf("bubbles", "bubble-pop") -> "EMOJI"
+            else -> "SPARKLE"
+        }
+        val keyEffectParam = if (effectId in listOf("bubbles", "bubble-pop")) "🫧" else null
+
         val spec = ThemeSpec(
             id = "kyng_$id",
             name = name,
@@ -279,6 +288,12 @@ object KyngTheme {
             keyLighting = keyLighting,
             boardEffect = boardEffect,
             keyMaterial = keyMaterial,
+            keyEffect = keyEffect,
+            keyEffectParam = keyEffectParam,
+            keyEffectIntensity = 1f,
+            keyEffectSize = 1.2f,
+            keyEffectSpeed = 1f,
+            keyEffectSpread = 0.8f,
         )
 
         return KyngThemeResult.Converted(spec)

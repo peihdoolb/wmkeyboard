@@ -1254,5 +1254,11 @@
     "reactive": 1.0,
     "halfLifeMs": 1500
   },
-  "keyMaterial": null
+  "keyMaterial": null,
+  "keyEffect": "CONFETTI",
+  "keyEffectParam": null,
+  "keyEffectIntensity": 1.0,
+  "keyEffectSize": 1.2,
+  "keyEffectSpeed": 1.0,
+  "keyEffectSpread": 0.8
 }

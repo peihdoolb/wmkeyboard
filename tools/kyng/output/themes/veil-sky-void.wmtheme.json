@@ -1836,5 +1836,11 @@
     "reactive": 1.0,
     "halfLifeMs": 1000
   },
-  "keyMaterial": null
+  "keyMaterial": null,
+  "keyEffect": "SPARKLE",
+  "keyEffectParam": null,
+  "keyEffectIntensity": 1.0,
+  "keyEffectSize": 1.2,
+  "keyEffectSpeed": 1.0,
+  "keyEffectSpread": 0.8
 }
