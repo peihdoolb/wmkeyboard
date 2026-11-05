@@ -1,0 +1,18 @@
+{
+  "id": "kyng_dot-matrix-night",
+  "name": "Kyng Dot Matrix Night",
+  "dark": true,
+  "boardBackground": 4278914579,
+  "keyBackground": 4279638562,
+  "pressedKeyBackground": 4280494131,
+  "specialKeyBackground": 4279309339,
+  "specialKeyPressedBackground": 4280099372,
+  "keyTextColor": 4294967295,
+  "keySubtextColor": 4285757050,
+  "accentColor": 4286227191,
+  "keyBorderColor": 4280691768,
+  "keyBorderWidthDp": 0,
+  "keyCornerRadiusDp": 3,
+  "keyShape": "ROUNDED",
+  "keySkin": null
+}

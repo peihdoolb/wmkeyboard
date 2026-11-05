@@ -1,0 +1,18 @@
+{
+  "id": "kyng_frost-night-city",
+  "name": "Kyng Frost Night City",
+  "dark": true,
+  "boardBackground": 4278847252,
+  "keyBackground": 4279504938,
+  "pressedKeyBackground": 4280293954,
+  "specialKeyBackground": 4279175967,
+  "specialKeyPressedBackground": 4279899446,
+  "keyTextColor": 4294967295,
+  "keySubtextColor": 4285361019,
+  "accentColor": 4294913672,
+  "keyBorderColor": 4280951128,
+  "keyBorderWidthDp": 1,
+  "keyCornerRadiusDp": 12,
+  "keyShape": "ROUNDED",
+  "keySkin": null
+}

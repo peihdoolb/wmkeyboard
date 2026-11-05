@@ -1,0 +1,2076 @@
+{
+  "id": "kyng_sentinel-dual-core",
+  "name": "Kyng Sentinel",
+  "dark": true,
+  "boardBackground": 4279572251,
+  "keyBackground": 4279509309,
+  "pressedKeyBackground": 4280169056,
+  "specialKeyBackground": 4279047728,
+  "specialKeyPressedBackground": 4279773262,
+  "keyTextColor": 4293850108,
+  "keySubtextColor": 4288525014,
+  "accentColor": 4292882494,
+  "keyBorderColor": 4278849306,
+  "keyBorderWidthDp": 0,
+  "keyCornerRadiusDp": 0,
+  "keyShape": "SHARP",
+  "keySkin": {
+    "slots": {
+      "letter": {
+        "size": [
+          100.0,
+          140.0
+        ],
+        "stretchX": [
+          30,
+          70
+        ],
+        "stretchY": [
+          40,
+          90
+        ],
+        "labelBox": [
+          18,
+          18,
+          82,
+          102
+        ],
+        "labelShift": [
+          0,
+          3
+        ],
+        "layers": [
+          {
+            "d": "M14 12L86 12L92 18L92 126L86 132L14 132L8 126L8 18Z",
+            "fill": {
+              "color": "shadow"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M14 11L86 11L92 17L92 125L86 131L14 131L8 125L8 17Z",
+            "fill": {
+              "color": "chassis:darken:0.7"
+            }
+          },
+          {
+            "d": "M14 8L38 8L42 12L58 12L62 8L86 8L92 14L92 58L89 61L89 79L92 82L92 122L86 128L62 128L58 124L42 124L38 128L14 128L8 122L8 82L11 79L11 61L8 58L8 14Z",
+            "fill": {
+              "linear": [
+                0.0,
+                8.0,
+                0.0,
+                128.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "chassis:lighten:0.55"
+                },
+                {
+                  "at": 0.35,
+                  "color": "chassis"
+                },
+                {
+                  "at": 0.7,
+                  "color": "chassis:darken:0.25"
+                },
+                {
+                  "at": 1.0,
+                  "color": "chassis:lighten:0.25"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M15 9.4L37 9.4M63 9.4L85 9.4",
+            "stroke": {
+              "color": "chassis:lighten:0.8"
+            },
+            "strokeWidth": 1.0,
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M19 17L81 17L85 21L85 115L81 119L19 119L15 115L15 21Z",
+            "fill": {
+              "linear": [
+                0.0,
+                17.0,
+                0.0,
+                119.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "face:lighten:0.1"
+                },
+                {
+                  "at": 0.6,
+                  "color": "face"
+                },
+                {
+                  "at": 1.0,
+                  "color": "face:darken:0.3"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M19 17L81 17L85 21L85 115L81 119L19 119L15 115L15 21Z",
+            "stroke": {
+              "color": "chassis:darken:0.5"
+            },
+            "strokeWidth": 1.0,
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M19 30L19 92M81 30L81 92",
+            "stroke": {
+              "color": "face:lighten:0.18"
+            },
+            "strokeWidth": 0.8,
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M24 22L46 22L45 24L25 24Z",
+            "fill": {
+              "color": "accent:alpha:0.35"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M76 22L54 22L55 24L75 24Z",
+            "fill": {
+              "color": "signal:alpha:0.35"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M40 104L60 104L58 114L42 114Z",
+            "fill": {
+              "color": "face:darken:0.55"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M22 106L34 106L33 110L23 110Z",
+            "fill": {
+              "color": "accent:alpha:0.75"
+            },
+            "glow": {
+              "width": 1.2,
+              "color": "accent",
+              "alpha": 0.3
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M78 106L66 106L67 110L77 110Z",
+            "fill": {
+              "color": "signal:alpha:0.75"
+            },
+            "glow": {
+              "width": 1.2,
+              "color": "signal",
+              "alpha": 0.3
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M51.4 109C51.4 109.773 50.773 110.4 50 110.4C49.227 110.4 48.6 109.773 48.6 109C48.6 108.227 49.227 107.6 50 107.6C50.773 107.6 51.4 108.227 51.4 109Z",
+            "fill": {
+              "color": "chassis"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M50 17L19 17L15 21L15 115L19 119L50 119",
+            "stroke": {
+              "color": "accent"
+            },
+            "strokeWidth": 1.3,
+            "glow": {
+              "width": 2.2,
+              "color": "accent",
+              "alpha": 0.55
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M50 17L81 17L85 21L85 115L81 119L50 119",
+            "stroke": {
+              "color": "signal"
+            },
+            "strokeWidth": 1.3,
+            "glow": {
+              "width": 2.2,
+              "color": "signal",
+              "alpha": 0.55
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M22 106L34 106L33 110L23 110Z",
+            "fill": {
+              "color": "accent:lighten:0.45"
+            },
+            "glow": {
+              "width": 2.4,
+              "color": "accent",
+              "alpha": 0.8
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M78 106L66 106L67 110L77 110Z",
+            "fill": {
+              "color": "signal:lighten:0.45"
+            },
+            "glow": {
+              "width": 2.4,
+              "color": "signal",
+              "alpha": 0.8
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          }
+        ]
+      },
+      "special": {
+        "size": [
+          100.0,
+          140.0
+        ],
+        "stretchX": [
+          30,
+          70
+        ],
+        "stretchY": [
+          40,
+          100
+        ],
+        "labelBox": [
+          22,
+          18,
+          78,
+          104
+        ],
+        "labelShift": [
+          0,
+          3
+        ],
+        "layers": [
+          {
+            "d": "M14 12L86 12L92 18L92 126L86 132L14 132L8 126L8 18Z",
+            "fill": {
+              "color": "shadow"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M14 11L86 11L92 17L92 125L86 131L14 131L8 125L8 17Z",
+            "fill": {
+              "color": "chassis:darken:0.7"
+            }
+          },
+          {
+            "d": "M14 8L38 8L42 12L58 12L62 8L86 8L92 14L92 122L86 128L62 128L58 124L42 124L38 128L14 128L8 122L8 14Z",
+            "fill": {
+              "linear": [
+                0.0,
+                8.0,
+                0.0,
+                128.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "chassis:lighten:0.55"
+                },
+                {
+                  "at": 0.35,
+                  "color": "chassis"
+                },
+                {
+                  "at": 0.7,
+                  "color": "chassis:darken:0.25"
+                },
+                {
+                  "at": 1.0,
+                  "color": "chassis:lighten:0.25"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M24 17L76 17L80 21L80 115L76 119L24 119L20 115L20 21Z",
+            "fill": {
+              "linear": [
+                0.0,
+                17.0,
+                0.0,
+                119.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "face:lighten:0.1"
+                },
+                {
+                  "at": 0.6,
+                  "color": "face"
+                },
+                {
+                  "at": 1.0,
+                  "color": "face:darken:0.3"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M12 52L16 50L16 86L12 84ZM88 52L84 50L84 86L88 84Z",
+            "fill": {
+              "color": "chassis:darken:0.65"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M12.6 24L15.4 24L15.4 38L12.6 38Z",
+            "fill": {
+              "color": "accent:alpha:0.8"
+            },
+            "glow": {
+              "width": 1.0,
+              "color": "accent",
+              "alpha": 0.3
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M87.4 24L84.6 24L84.6 38L87.4 38Z",
+            "fill": {
+              "color": "signal:alpha:0.8"
+            },
+            "glow": {
+              "width": 1.0,
+              "color": "signal",
+              "alpha": 0.3
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M24 108L48 108M52 108L76 108",
+            "stroke": {
+              "color": "face:lighten:0.2"
+            },
+            "strokeWidth": 0.8,
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M12.6 24L15.4 24L15.4 38L12.6 38Z",
+            "fill": {
+              "color": "accent:lighten:0.45"
+            },
+            "glow": {
+              "width": 2.2,
+              "color": "accent",
+              "alpha": 0.8
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M87.4 24L84.6 24L84.6 38L87.4 38Z",
+            "fill": {
+              "color": "signal:lighten:0.45"
+            },
+            "glow": {
+              "width": 2.2,
+              "color": "signal",
+              "alpha": 0.8
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M24 108L48 108",
+            "stroke": {
+              "color": "accent"
+            },
+            "strokeWidth": 1.4,
+            "glow": {
+              "width": 2.0,
+              "color": "accent",
+              "alpha": 0.6
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M52 108L76 108",
+            "stroke": {
+              "color": "signal"
+            },
+            "strokeWidth": 1.4,
+            "glow": {
+              "width": 2.0,
+              "color": "signal",
+              "alpha": 0.6
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          }
+        ]
+      },
+      "emoji": {
+        "size": [
+          100.0,
+          140.0
+        ],
+        "stretchX": [
+          30,
+          70
+        ],
+        "stretchY": [
+          40,
+          100
+        ],
+        "labelBox": [
+          22,
+          18,
+          78,
+          104
+        ],
+        "labelShift": [
+          0,
+          3
+        ],
+        "layers": [
+          {
+            "d": "M14 12L86 12L92 18L92 126L86 132L14 132L8 126L8 18Z",
+            "fill": {
+              "color": "shadow"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M14 11L86 11L92 17L92 125L86 131L14 131L8 125L8 17Z",
+            "fill": {
+              "color": "chassis:darken:0.7"
+            }
+          },
+          {
+            "d": "M14 8L38 8L42 12L58 12L62 8L86 8L92 14L92 122L86 128L62 128L58 124L42 124L38 128L14 128L8 122L8 14Z",
+            "fill": {
+              "linear": [
+                0.0,
+                8.0,
+                0.0,
+                128.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "chassis:lighten:0.55"
+                },
+                {
+                  "at": 0.35,
+                  "color": "chassis"
+                },
+                {
+                  "at": 0.7,
+                  "color": "chassis:darken:0.25"
+                },
+                {
+                  "at": 1.0,
+                  "color": "chassis:lighten:0.25"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M24 17L76 17L80 21L80 115L76 119L24 119L20 115L20 21Z",
+            "fill": {
+              "linear": [
+                0.0,
+                17.0,
+                0.0,
+                119.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "face:lighten:0.1"
+                },
+                {
+                  "at": 0.6,
+                  "color": "face"
+                },
+                {
+                  "at": 1.0,
+                  "color": "face:darken:0.3"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M12 52L16 50L16 86L12 84ZM88 52L84 50L84 86L88 84Z",
+            "fill": {
+              "color": "chassis:darken:0.65"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M12.6 24L15.4 24L15.4 38L12.6 38Z",
+            "fill": {
+              "color": "accent:alpha:0.8"
+            },
+            "glow": {
+              "width": 1.0,
+              "color": "accent",
+              "alpha": 0.3
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M87.4 24L84.6 24L84.6 38L87.4 38Z",
+            "fill": {
+              "color": "signal:alpha:0.8"
+            },
+            "glow": {
+              "width": 1.0,
+              "color": "signal",
+              "alpha": 0.3
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M24 108L48 108M52 108L76 108",
+            "stroke": {
+              "color": "face:lighten:0.2"
+            },
+            "strokeWidth": 0.8,
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M12.6 24L15.4 24L15.4 38L12.6 38Z",
+            "fill": {
+              "color": "accent:lighten:0.45"
+            },
+            "glow": {
+              "width": 2.2,
+              "color": "accent",
+              "alpha": 0.8
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M87.4 24L84.6 24L84.6 38L87.4 38Z",
+            "fill": {
+              "color": "signal:lighten:0.45"
+            },
+            "glow": {
+              "width": 2.2,
+              "color": "signal",
+              "alpha": 0.8
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M24 108L48 108",
+            "stroke": {
+              "color": "accent"
+            },
+            "strokeWidth": 1.4,
+            "glow": {
+              "width": 2.0,
+              "color": "accent",
+              "alpha": 0.6
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M52 108L76 108",
+            "stroke": {
+              "color": "signal"
+            },
+            "strokeWidth": 1.4,
+            "glow": {
+              "width": 2.0,
+              "color": "signal",
+              "alpha": 0.6
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          }
+        ]
+      },
+      "enter": {
+        "size": [
+          150.0,
+          140.0
+        ],
+        "stretchX": [
+          40,
+          110
+        ],
+        "stretchY": [
+          40,
+          100
+        ],
+        "labelBox": [
+          24,
+          22,
+          126,
+          114
+        ],
+        "labelShift": [
+          0,
+          3
+        ],
+        "layers": [
+          {
+            "d": "M16 12L134 12L142 20L142 124L134 132L16 132L8 124L8 20Z",
+            "fill": {
+              "color": "shadow"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M16 11L134 11L142 19L142 123L134 131L16 131L8 123L8 19Z",
+            "fill": {
+              "color": "chassis:darken:0.7"
+            }
+          },
+          {
+            "d": "M16 8L58 8L62 12L88 12L92 8L134 8L142 16L142 120L134 128L92 128L88 124L62 124L58 128L16 128L8 120L8 16Z",
+            "fill": {
+              "linear": [
+                0.0,
+                8.0,
+                0.0,
+                128.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "chassis:lighten:0.55"
+                },
+                {
+                  "at": 0.35,
+                  "color": "chassis"
+                },
+                {
+                  "at": 0.7,
+                  "color": "chassis:darken:0.25"
+                },
+                {
+                  "at": 1.0,
+                  "color": "chassis:lighten:0.25"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M24 17L126 17L132 23L132 113L126 119L24 119L18 113L18 23Z",
+            "fill": {
+              "color": "face:darken:0.55"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M26 19L124 19L130 25L130 111L124 117L26 117L20 111L20 25Z",
+            "fill": {
+              "linear": [
+                0.0,
+                18.0,
+                0.0,
+                118.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "face:lighten:0.2"
+                },
+                {
+                  "at": 0.55,
+                  "color": "face"
+                },
+                {
+                  "at": 1.0,
+                  "color": "face:darken:0.28"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M28 20.6L122 20.6",
+            "stroke": {
+              "color": "faceLabel:alpha:0.3"
+            },
+            "strokeWidth": 1.0,
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M15.7 22C15.7 23.215 14.715 24.2 13.5 24.2C12.285 24.2 11.3 23.215 11.3 22C11.3 20.785 12.285 19.8 13.5 19.8C14.715 19.8 15.7 20.785 15.7 22Z",
+            "fill": {
+              "color": "accent:lighten:0.15"
+            },
+            "glow": {
+              "width": 1.0,
+              "color": "accent",
+              "alpha": 0.4
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M138.7 22C138.7 23.215 137.715 24.2 136.5 24.2C135.285 24.2 134.3 23.215 134.3 22C134.3 20.785 135.285 19.8 136.5 19.8C137.715 19.8 138.7 20.785 138.7 22Z",
+            "fill": {
+              "color": "signal"
+            },
+            "glow": {
+              "width": 1.0,
+              "color": "signal",
+              "alpha": 0.4
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M15.7 22C15.7 23.215 14.715 24.2 13.5 24.2C12.285 24.2 11.3 23.215 11.3 22C11.3 20.785 12.285 19.8 13.5 19.8C14.715 19.8 15.7 20.785 15.7 22Z",
+            "fill": {
+              "color": "accent:lighten:0.5"
+            },
+            "glow": {
+              "width": 2.6,
+              "color": "accent",
+              "alpha": 0.85
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M138.7 22C138.7 23.215 137.715 24.2 136.5 24.2C135.285 24.2 134.3 23.215 134.3 22C134.3 20.785 135.285 19.8 136.5 19.8C137.715 19.8 138.7 20.785 138.7 22Z",
+            "fill": {
+              "color": "signal:lighten:0.5"
+            },
+            "glow": {
+              "width": 2.6,
+              "color": "signal",
+              "alpha": 0.85
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M26 19L124 19L130 25L130 111L124 117L26 117L20 111L20 25Z",
+            "stroke": {
+              "color": "faceLabel:alpha:0.55"
+            },
+            "strokeWidth": 1.2,
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          }
+        ]
+      },
+      "space": {
+        "size": [
+          400.0,
+          140.0
+        ],
+        "stretchX": [
+          70,
+          160,
+          240,
+          330
+        ],
+        "labelBox": [
+          70,
+          97,
+          330,
+          121
+        ],
+        "labelShift": [
+          0,
+          3
+        ],
+        "labelGround": "face:darken:0.25",
+        "layers": [
+          {
+            "d": "M16 12L384 12L392 20L392 126L384 132L16 132L8 126L8 20Z",
+            "fill": {
+              "color": "shadow"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M16 11L384 11L392 19L392 125L384 131L16 131L8 125L8 19Z",
+            "fill": {
+              "color": "chassis:darken:0.7"
+            }
+          },
+          {
+            "d": "M16 8L384 8L392 16L392 58L389 61L389 79L392 82L392 120L384 128L16 128L8 120L8 82L11 79L11 61L8 58L8 16Z",
+            "fill": {
+              "linear": [
+                0.0,
+                8.0,
+                0.0,
+                128.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "chassis:lighten:0.55"
+                },
+                {
+                  "at": 0.35,
+                  "color": "chassis"
+                },
+                {
+                  "at": 0.7,
+                  "color": "chassis:darken:0.25"
+                },
+                {
+                  "at": 1.0,
+                  "color": "chassis:lighten:0.25"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M22 16L156 16L162 22L162 86L156 92L22 92L16 86L16 22Z",
+            "fill": {
+              "linear": [
+                0.0,
+                16.0,
+                0.0,
+                92.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "face:lighten:0.1"
+                },
+                {
+                  "at": 0.6,
+                  "color": "face"
+                },
+                {
+                  "at": 1.0,
+                  "color": "face:darken:0.3"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M378 16L244 16L238 22L238 86L244 92L378 92L384 86L384 22Z",
+            "fill": {
+              "linear": [
+                0.0,
+                16.0,
+                0.0,
+                92.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "face:lighten:0.1"
+                },
+                {
+                  "at": 0.6,
+                  "color": "face"
+                },
+                {
+                  "at": 1.0,
+                  "color": "face:darken:0.3"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M22 96L378 96L384 102L384 116L378 122L22 122L16 116L16 102Z",
+            "fill": {
+              "color": "face:darken:0.25"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M24 30L150 30M376 30L250 30",
+            "stroke": {
+              "color": "face:lighten:0.18"
+            },
+            "strokeWidth": 0.8,
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M24 72L130 72L134 76L24 76Z",
+            "fill": {
+              "color": "accent:alpha:0.8"
+            },
+            "glow": {
+              "width": 1.4,
+              "color": "accent",
+              "alpha": 0.35
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M376 72L270 72L266 76L376 76Z",
+            "fill": {
+              "color": "signal:alpha:0.8"
+            },
+            "glow": {
+              "width": 1.4,
+              "color": "signal",
+              "alpha": 0.35
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M24 40L44 40L44 58L24 58ZM376 40L356 40L356 58L376 58Z",
+            "fill": {
+              "color": "face:darken:0.55"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M28 46L40 46L39 52L29 52Z",
+            "fill": {
+              "color": "accent:alpha:0.85"
+            },
+            "glow": {
+              "width": 1.2,
+              "color": "accent",
+              "alpha": 0.35
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M372 46L360 46L361 52L371 52Z",
+            "fill": {
+              "color": "signal:alpha:0.85"
+            },
+            "glow": {
+              "width": 1.2,
+              "color": "signal",
+              "alpha": 0.35
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M193 3L207 3L205 9L195 9ZM193 97L207 97L205 91L195 91Z",
+            "fill": {
+              "linear": [
+                0.0,
+                8.0,
+                0.0,
+                128.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "chassis:lighten:0.55"
+                },
+                {
+                  "at": 0.35,
+                  "color": "chassis"
+                },
+                {
+                  "at": 0.7,
+                  "color": "chassis:darken:0.25"
+                },
+                {
+                  "at": 1.0,
+                  "color": "chassis:lighten:0.25"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M242 51C242 74.196 223.196 93 200 93C176.804 93 158 74.196 158 51C158 27.804 176.804 9 200 9C223.196 9 242 27.804 242 51Z",
+            "fill": {
+              "color": "shadow"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M241 50C241 72.644 222.644 91 200 91C177.356 91 159 72.644 159 50C159 27.356 177.356 9 200 9C222.644 9 241 27.356 241 50Z",
+            "fill": {
+              "radial": [
+                194.0,
+                42.0,
+                44.0
+              ],
+              "stops": [
+                {
+                  "at": 0.55,
+                  "color": "chassis:lighten:0.55"
+                },
+                {
+                  "at": 0.85,
+                  "color": "chassis"
+                },
+                {
+                  "at": 1.0,
+                  "color": "chassis:darken:0.35"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M235 50C235 69.33 219.33 85 200 85C180.67 85 165 69.33 165 50C165 30.67 180.67 15 200 15C219.33 15 235 30.67 235 50Z",
+            "fill": {
+              "color": "face:darken:0.65"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M196.67 75.28L195.82 81.73M190.24 73.56L187.75 79.56M184.48 70.23L180.52 75.39M179.77 65.52L174.61 69.48M176.44 59.76L170.44 62.25M174.72 53.33L168.27 54.18M174.72 46.67L168.27 45.82M176.44 40.24L170.44 37.75M179.77 34.48L174.61 30.52M184.48 29.77L180.52 24.61M190.24 26.44L187.75 20.44M196.67 24.72L195.82 18.27",
+            "stroke": {
+              "color": "accent:alpha:0.85"
+            },
+            "strokeWidth": 3.2,
+            "glow": {
+              "width": 1.4,
+              "color": "accent",
+              "alpha": 0.35
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M203.33 24.72L204.18 18.27M209.76 26.44L212.25 20.44M215.52 29.77L219.48 24.61M220.23 34.48L225.39 30.52M223.56 40.24L229.56 37.75M225.28 46.67L231.73 45.82M225.28 53.33L231.73 54.18M223.56 59.76L229.56 62.25M220.23 65.52L225.39 69.48M215.52 70.23L219.48 75.39M209.76 73.56L212.25 79.56M203.33 75.28L204.18 81.73",
+            "stroke": {
+              "color": "signal:alpha:0.85"
+            },
+            "strokeWidth": 3.2,
+            "glow": {
+              "width": 1.4,
+              "color": "signal",
+              "alpha": 0.35
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M216 50C216 58.837 208.837 66 200 66C191.163 66 184 58.837 184 50C184 41.163 191.163 34 200 34C208.837 34 216 41.163 216 50Z",
+            "fill": {
+              "color": "chassis:darken:0.15"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M213 50C213 57.18 207.18 63 200 63C192.82 63 187 57.18 187 50C187 42.82 192.82 37 200 37C207.18 37 213 42.82 213 50Z",
+            "fill": {
+              "color": "face:darken:0.4"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M200 44L206 50L200 56L194 50Z",
+            "fill": {
+              "color": "chassis:lighten:0.3"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M200 9L200 17M200 83L200 91",
+            "stroke": {
+              "color": "chassis:darken:0.5"
+            },
+            "strokeWidth": 2.0,
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M196.67 75.28L195.82 81.73M190.24 73.56L187.75 79.56M184.48 70.23L180.52 75.39M179.77 65.52L174.61 69.48M176.44 59.76L170.44 62.25M174.72 53.33L168.27 54.18M174.72 46.67L168.27 45.82M176.44 40.24L170.44 37.75M179.77 34.48L174.61 30.52M184.48 29.77L180.52 24.61M190.24 26.44L187.75 20.44M196.67 24.72L195.82 18.27",
+            "stroke": {
+              "color": "accent:lighten:0.45"
+            },
+            "strokeWidth": 3.2,
+            "glow": {
+              "width": 2.6,
+              "color": "accent",
+              "alpha": 0.8
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M203.33 24.72L204.18 18.27M209.76 26.44L212.25 20.44M215.52 29.77L219.48 24.61M220.23 34.48L225.39 30.52M223.56 40.24L229.56 37.75M225.28 46.67L231.73 45.82M225.28 53.33L231.73 54.18M223.56 59.76L229.56 62.25M220.23 65.52L225.39 69.48M215.52 70.23L219.48 75.39M209.76 73.56L212.25 79.56M203.33 75.28L204.18 81.73",
+            "stroke": {
+              "color": "signal:lighten:0.45"
+            },
+            "strokeWidth": 3.2,
+            "glow": {
+              "width": 2.6,
+              "color": "signal",
+              "alpha": 0.8
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M24 72L130 72L134 76L24 76Z",
+            "fill": {
+              "color": "accent:lighten:0.4"
+            },
+            "glow": {
+              "width": 2.4,
+              "color": "accent",
+              "alpha": 0.7
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M376 72L270 72L266 76L376 76Z",
+            "fill": {
+              "color": "signal:lighten:0.4"
+            },
+            "glow": {
+              "width": 2.4,
+              "color": "signal",
+              "alpha": 0.7
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          }
+        ]
+      },
+      "popup": {
+        "size": [
+          150.0,
+          160.0
+        ],
+        "labelBox": [
+          22,
+          22,
+          128,
+          128
+        ],
+        "labelColor": "previewLabel",
+        "labelGround": "previewFill",
+        "layers": [
+          {
+            "d": "M14 10L136 10L146 20L146 140L136 150L14 150L4 140L4 20Z",
+            "fill": {
+              "color": "shadow"
+            }
+          },
+          {
+            "d": "M14 4L56 4L61 9L89 9L94 4L136 4L146 14L146 66L142 70L142 90L146 94L146 136L136 146L14 146L4 136L4 94L8 90L8 70L4 66L4 14Z",
+            "fill": {
+              "linear": [
+                0.0,
+                4.0,
+                0.0,
+                150.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "chassis:lighten:0.55"
+                },
+                {
+                  "at": 0.35,
+                  "color": "chassis"
+                },
+                {
+                  "at": 0.7,
+                  "color": "chassis:darken:0.25"
+                },
+                {
+                  "at": 1.0,
+                  "color": "chassis:lighten:0.25"
+                }
+              ]
+            }
+          },
+          {
+            "d": "M24 16L126 16L134 24L134 126L126 134L24 134L16 126L16 24Z",
+            "fill": {
+              "radial": [
+                75.0,
+                72.0,
+                70.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "previewFill:lighten:0.06"
+                },
+                {
+                  "at": 1.0,
+                  "color": "previewFill:darken:0.25"
+                }
+              ]
+            }
+          },
+          {
+            "d": "M75 16L24 16L16 24L16 126L24 134L75 134",
+            "stroke": {
+              "color": "accent:alpha:0.8"
+            },
+            "strokeWidth": 1.2,
+            "glow": {
+              "width": 2.0,
+              "color": "accent",
+              "alpha": 0.45
+            }
+          },
+          {
+            "d": "M75 16L126 16L134 24L134 126L126 134L75 134",
+            "stroke": {
+              "color": "signal:alpha:0.8"
+            },
+            "strokeWidth": 1.2,
+            "glow": {
+              "width": 2.0,
+              "color": "signal",
+              "alpha": 0.45
+            }
+          },
+          {
+            "d": "M26 6.2L42 6.2L41 8.6L27 8.6Z",
+            "fill": {
+              "color": "accent:lighten:0.35"
+            },
+            "glow": {
+              "width": 1.4,
+              "color": "accent",
+              "alpha": 0.7
+            }
+          },
+          {
+            "d": "M124 6.2L108 6.2L109 8.6L123 8.6Z",
+            "fill": {
+              "color": "signal:lighten:0.35"
+            },
+            "glow": {
+              "width": 1.4,
+              "color": "signal",
+              "alpha": 0.7
+            }
+          },
+          {
+            "d": "M62 146L88 146L75 158Z",
+            "fill": {
+              "linear": [
+                0.0,
+                4.0,
+                0.0,
+                150.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "chassis:lighten:0.55"
+                },
+                {
+                  "at": 0.35,
+                  "color": "chassis"
+                },
+                {
+                  "at": 0.7,
+                  "color": "chassis:darken:0.25"
+                },
+                {
+                  "at": 1.0,
+                  "color": "chassis:lighten:0.25"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "globe": {
+        "size": [
+          100.0,
+          140.0
+        ],
+        "stretchX": [
+          48,
+          52
+        ],
+        "stretchY": [
+          58,
+          62
+        ],
+        "labelBox": [
+          34,
+          44,
+          66,
+          76
+        ],
+        "labelGround": "face:darken:0.25",
+        "layers": [
+          {
+            "d": "M26 104L74 104L88 116L88 124L80 132L20 132L12 124L12 116Z",
+            "fill": {
+              "linear": [
+                0.0,
+                100.0,
+                0.0,
+                132.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "chassis:lighten:0.55"
+                },
+                {
+                  "at": 0.35,
+                  "color": "chassis"
+                },
+                {
+                  "at": 0.7,
+                  "color": "chassis:darken:0.25"
+                },
+                {
+                  "at": 1.0,
+                  "color": "chassis:lighten:0.25"
+                }
+              ]
+            }
+          },
+          {
+            "d": "M30 120L46 120M54 120L70 120",
+            "stroke": {
+              "color": "chassis:darken:0.6"
+            },
+            "strokeWidth": 2.0
+          },
+          {
+            "d": "M47 4L53 4L53 18L47 18ZM47 102L53 102L53 110L47 110Z",
+            "fill": {
+              "linear": [
+                0.0,
+                100.0,
+                0.0,
+                132.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "chassis:lighten:0.55"
+                },
+                {
+                  "at": 0.35,
+                  "color": "chassis"
+                },
+                {
+                  "at": 0.7,
+                  "color": "chassis:darken:0.25"
+                },
+                {
+                  "at": 1.0,
+                  "color": "chassis:lighten:0.25"
+                }
+              ]
+            }
+          },
+          {
+            "d": "M93 61C93 84.748 73.748 104 50 104C26.252 104 7 84.748 7 61C7 37.252 26.252 18 50 18C73.748 18 93 37.252 93 61Z",
+            "fill": {
+              "color": "shadow"
+            }
+          },
+          {
+            "d": "M92 60C92 83.196 73.196 102 50 102C26.804 102 8 83.196 8 60C8 36.804 26.804 18 50 18C73.196 18 92 36.804 92 60Z",
+            "fill": {
+              "radial": [
+                44.0,
+                52.0,
+                46.0
+              ],
+              "stops": [
+                {
+                  "at": 0.6,
+                  "color": "chassis:lighten:0.55"
+                },
+                {
+                  "at": 0.85,
+                  "color": "chassis"
+                },
+                {
+                  "at": 1.0,
+                  "color": "chassis:darken:0.35"
+                }
+              ]
+            }
+          },
+          {
+            "d": "M85 60C85 79.33 69.33 95 50 95C30.67 95 15 79.33 15 60C15 40.67 30.67 25 50 25C69.33 25 85 40.67 85 60Z",
+            "fill": {
+              "color": "face:darken:0.65"
+            }
+          },
+          {
+            "d": "M46.09 84.69L44.99 91.61M38.65 82.28L35.47 88.51M32.32 77.68L27.37 82.63M27.72 71.35L21.49 74.53M25.31 63.91L18.39 65.01M25.31 56.09L18.39 54.99M27.72 48.65L21.49 45.47M32.32 42.32L27.37 37.37M38.65 37.72L35.47 31.49M46.09 35.31L44.99 28.39",
+            "stroke": {
+              "color": "accent:alpha:0.85"
+            },
+            "strokeWidth": 3.6,
+            "glow": {
+              "width": 1.4,
+              "color": "accent",
+              "alpha": 0.35
+            }
+          },
+          {
+            "d": "M53.91 35.31L55.01 28.39M61.35 37.72L64.53 31.49M67.68 42.32L72.63 37.37M72.28 48.65L78.51 45.47M74.69 56.09L81.61 54.99M74.69 63.91L81.61 65.01M72.28 71.35L78.51 74.53M67.68 77.68L72.63 82.63M61.35 82.28L64.53 88.51M53.91 84.69L55.01 91.61",
+            "stroke": {
+              "color": "signal:alpha:0.85"
+            },
+            "strokeWidth": 3.6,
+            "glow": {
+              "width": 1.4,
+              "color": "signal",
+              "alpha": 0.35
+            }
+          },
+          {
+            "d": "M46.09 84.69L44.99 91.61M38.65 82.28L35.47 88.51M32.32 77.68L27.37 82.63M27.72 71.35L21.49 74.53M25.31 63.91L18.39 65.01M25.31 56.09L18.39 54.99M27.72 48.65L21.49 45.47M32.32 42.32L27.37 37.37M38.65 37.72L35.47 31.49M46.09 35.31L44.99 28.39",
+            "stroke": {
+              "color": "accent:lighten:0.45"
+            },
+            "strokeWidth": 3.6,
+            "glow": {
+              "width": 2.6,
+              "color": "accent",
+              "alpha": 0.8
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M53.91 35.31L55.01 28.39M61.35 37.72L64.53 31.49M67.68 42.32L72.63 37.37M72.28 48.65L78.51 45.47M74.69 56.09L81.61 54.99M74.69 63.91L81.61 65.01M72.28 71.35L78.51 74.53M67.68 77.68L72.63 82.63M61.35 82.28L64.53 88.51M53.91 84.69L55.01 91.61",
+            "stroke": {
+              "color": "signal:lighten:0.45"
+            },
+            "strokeWidth": 3.6,
+            "glow": {
+              "width": 2.6,
+              "color": "signal",
+              "alpha": 0.8
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M71 60C71 71.598 61.598 81 50 81C38.402 81 29 71.598 29 60C29 48.402 38.402 39 50 39C61.598 39 71 48.402 71 60Z",
+            "fill": {
+              "color": "chassis:darken:0.1"
+            }
+          },
+          {
+            "d": "M68.5 60C68.5 70.217 60.217 78.5 50 78.5C39.783 78.5 31.5 70.217 31.5 60C31.5 49.783 39.783 41.5 50 41.5C60.217 41.5 68.5 49.783 68.5 60Z",
+            "fill": {
+              "color": "face:darken:0.25"
+            }
+          },
+          {
+            "d": "M50 18L50 26M50 94L50 102",
+            "stroke": {
+              "color": "chassis:darken:0.5"
+            },
+            "strokeWidth": 2.0
+          }
+        ]
+      }
+    },
+    "board": {
+      "size": [
+        360.0,
+        240.0
+      ],
+      "stretchX": [
+        50,
+        310
+      ],
+      "stretchY": [
+        44,
+        196
+      ],
+      "layers": [
+        {
+          "d": "M0 10L4 14L4 104L2 108L2 132L4 136L4 226L0 230Z",
+          "fill": {
+            "linear": [
+              0.0,
+              0.0,
+              0.0,
+              240.0
+            ],
+            "stops": [
+              {
+                "at": 0.0,
+                "color": "chassis:lighten:0.55"
+              },
+              {
+                "at": 0.35,
+                "color": "chassis"
+              },
+              {
+                "at": 0.7,
+                "color": "chassis:darken:0.25"
+              },
+              {
+                "at": 1.0,
+                "color": "chassis:lighten:0.25"
+              }
+            ]
+          }
+        },
+        {
+          "d": "M360 10L356 14L356 104L358 108L358 132L356 136L356 226L360 230Z",
+          "fill": {
+            "linear": [
+              0.0,
+              0.0,
+              0.0,
+              240.0
+            ],
+            "stops": [
+              {
+                "at": 0.0,
+                "color": "chassis:lighten:0.55"
+              },
+              {
+                "at": 0.35,
+                "color": "chassis"
+              },
+              {
+                "at": 0.7,
+                "color": "chassis:darken:0.25"
+              },
+              {
+                "at": 1.0,
+                "color": "chassis:lighten:0.25"
+              }
+            ]
+          }
+        },
+        {
+          "d": "M0 0L40 0L36 3L3 3L3 8L0 10ZM360 0L320 0L324 3L357 3L357 8L360 10Z",
+          "fill": {
+            "linear": [
+              0.0,
+              0.0,
+              0.0,
+              240.0
+            ],
+            "stops": [
+              {
+                "at": 0.0,
+                "color": "chassis:lighten:0.55"
+              },
+              {
+                "at": 0.35,
+                "color": "chassis"
+              },
+              {
+                "at": 0.7,
+                "color": "chassis:darken:0.25"
+              },
+              {
+                "at": 1.0,
+                "color": "chassis:lighten:0.25"
+              }
+            ]
+          }
+        },
+        {
+          "d": "M0 240L40 240L36 237L3 237L3 232L0 230ZM360 240L320 240L324 237L357 237L357 232L360 230Z",
+          "fill": {
+            "linear": [
+              0.0,
+              0.0,
+              0.0,
+              240.0
+            ],
+            "stops": [
+              {
+                "at": 0.0,
+                "color": "chassis:lighten:0.55"
+              },
+              {
+                "at": 0.35,
+                "color": "chassis"
+              },
+              {
+                "at": 0.7,
+                "color": "chassis:darken:0.25"
+              },
+              {
+                "at": 1.0,
+                "color": "chassis:lighten:0.25"
+              }
+            ]
+          }
+        },
+        {
+          "d": "M60 238.8L176 238.8",
+          "stroke": {
+            "color": "accent:alpha:0.55"
+          },
+          "strokeWidth": 0.8
+        },
+        {
+          "d": "M184 238.8L300 238.8",
+          "stroke": {
+            "color": "signal:alpha:0.55"
+          },
+          "strokeWidth": 0.8
+        }
+      ]
+    }
+  }
+}

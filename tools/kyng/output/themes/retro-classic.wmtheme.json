@@ -1,0 +1,787 @@
+{
+  "id": "kyng_retro-classic",
+  "name": "Kyng Retro",
+  "dark": true,
+  "boardBackground": 4290822336,
+  "keyBackground": 4291940817,
+  "pressedKeyBackground": 4289901234,
+  "specialKeyBackground": 4291282887,
+  "specialKeyPressedBackground": 4289243304,
+  "keyTextColor": 4278190080,
+  "keySubtextColor": 4284374622,
+  "accentColor": 4278190208,
+  "keyBorderColor": 4287598479,
+  "keyBorderWidthDp": 0,
+  "keyCornerRadiusDp": 0,
+  "keyShape": "SHARP",
+  "keySkin": {
+    "slots": {
+      "letter": {
+        "size": [
+          100.0,
+          130.0
+        ],
+        "stretchX": [
+          30,
+          70
+        ],
+        "stretchY": [
+          40,
+          90
+        ],
+        "labelBox": [
+          12.4,
+          12.4,
+          87.6,
+          117.6
+        ],
+        "labelShift": [
+          2.6,
+          2.6
+        ],
+        "layers": [
+          {
+            "d": "M0 0L100 0L100 130L0 130Z",
+            "fill": {
+              "color": "face:darken:0.92"
+            }
+          },
+          {
+            "d": "M10.4 10.4L89.6 10.4L89.6 119.6L10.4 119.6Z",
+            "fill": {
+              "color": "face"
+            }
+          },
+          {
+            "d": "M2.6 2.6L97.4 2.6L89.6 10.4L10.4 10.4Z",
+            "fill": {
+              "color": "face:lighten:0.9"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M2.6 2.6L10.4 10.4L10.4 119.6L2.6 127.4Z",
+            "fill": {
+              "color": "face:lighten:0.45"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M97.4 2.6L97.4 127.4L89.6 119.6L89.6 10.4Z",
+            "fill": {
+              "color": "face:darken:0.35"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M2.6 127.4L10.4 119.6L89.6 119.6L97.4 127.4Z",
+            "fill": {
+              "color": "face:darken:0.6"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M2.6 2.6L97.4 2.6L89.6 10.4L10.4 10.4Z",
+            "fill": {
+              "color": "face:darken:0.6"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M2.6 2.6L10.4 10.4L10.4 119.6L2.6 127.4Z",
+            "fill": {
+              "color": "face:darken:0.35"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M97.4 2.6L97.4 127.4L89.6 119.6L89.6 10.4Z",
+            "fill": {
+              "color": "face:lighten:0.45"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M2.6 127.4L10.4 119.6L89.6 119.6L97.4 127.4Z",
+            "fill": {
+              "color": "face:lighten:0.9"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M10.4 10.4L89.6 10.4L89.6 119.6L10.4 119.6Z",
+            "fill": {
+              "color": "face:darken:0.06"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          }
+        ]
+      },
+      "special": {
+        "size": [
+          100.0,
+          130.0
+        ],
+        "stretchX": [
+          30,
+          70
+        ],
+        "stretchY": [
+          40,
+          90
+        ],
+        "labelBox": [
+          12.4,
+          12.4,
+          87.6,
+          117.6
+        ],
+        "labelShift": [
+          2.6,
+          2.6
+        ],
+        "labelColor": "face:ink:0.9",
+        "labelGround": "face",
+        "layers": [
+          {
+            "d": "M0 0L100 0L100 130L0 130Z",
+            "fill": {
+              "color": "face:darken:0.92"
+            }
+          },
+          {
+            "d": "M10.4 10.4L89.6 10.4L89.6 119.6L10.4 119.6Z",
+            "fill": {
+              "color": "face"
+            }
+          },
+          {
+            "d": "M2.6 2.6L97.4 2.6L89.6 10.4L10.4 10.4Z",
+            "fill": {
+              "color": "face:lighten:0.9"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M2.6 2.6L10.4 10.4L10.4 119.6L2.6 127.4Z",
+            "fill": {
+              "color": "face:lighten:0.45"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M97.4 2.6L97.4 127.4L89.6 119.6L89.6 10.4Z",
+            "fill": {
+              "color": "face:darken:0.35"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M2.6 127.4L10.4 119.6L89.6 119.6L97.4 127.4Z",
+            "fill": {
+              "color": "face:darken:0.6"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M2.6 2.6L97.4 2.6L89.6 10.4L10.4 10.4Z",
+            "fill": {
+              "color": "face:darken:0.6"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M2.6 2.6L10.4 10.4L10.4 119.6L2.6 127.4Z",
+            "fill": {
+              "color": "face:darken:0.35"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M97.4 2.6L97.4 127.4L89.6 119.6L89.6 10.4Z",
+            "fill": {
+              "color": "face:lighten:0.45"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M2.6 127.4L10.4 119.6L89.6 119.6L97.4 127.4Z",
+            "fill": {
+              "color": "face:lighten:0.9"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M10.4 10.4L89.6 10.4L89.6 119.6L10.4 119.6Z",
+            "fill": {
+              "color": "face:darken:0.06"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          }
+        ]
+      },
+      "enter": {
+        "size": [
+          150.0,
+          130.0
+        ],
+        "stretchX": [
+          40,
+          110
+        ],
+        "stretchY": [
+          40,
+          90
+        ],
+        "labelBox": [
+          17.6,
+          17.6,
+          132.4,
+          112.4
+        ],
+        "labelShift": [
+          2.6,
+          2.6
+        ],
+        "labelColor": "keySpecial:ink:0.9",
+        "labelGround": "keySpecial",
+        "layers": [
+          {
+            "d": "M0 0L150 0L150 130L0 130Z",
+            "fill": {
+              "color": "keySpecial:darken:0.92"
+            }
+          },
+          {
+            "d": "M2.6 2.6L147.4 2.6L147.4 127.4L2.6 127.4Z",
+            "fill": {
+              "color": "board"
+            }
+          },
+          {
+            "d": "M5.2 5.2L144.8 5.2L144.8 124.8L5.2 124.8Z",
+            "fill": {
+              "color": "keySpecial:darken:0.92"
+            }
+          },
+          {
+            "d": "M15.6 15.6L134.4 15.6L134.4 114.4L15.6 114.4Z",
+            "fill": {
+              "color": "keySpecial"
+            }
+          },
+          {
+            "d": "M7.8 7.8L142.2 7.8L134.4 15.6L15.6 15.6Z",
+            "fill": {
+              "color": "keySpecial:lighten:0.9"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M7.8 7.8L15.6 15.6L15.6 114.4L7.8 122.2Z",
+            "fill": {
+              "color": "keySpecial:lighten:0.45"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M142.2 7.8L142.2 122.2L134.4 114.4L134.4 15.6Z",
+            "fill": {
+              "color": "keySpecial:darken:0.35"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M7.8 122.2L15.6 114.4L134.4 114.4L142.2 122.2Z",
+            "fill": {
+              "color": "keySpecial:darken:0.6"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M7.8 7.8L142.2 7.8L134.4 15.6L15.6 15.6Z",
+            "fill": {
+              "color": "keySpecial:darken:0.6"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M7.8 7.8L15.6 15.6L15.6 114.4L7.8 122.2Z",
+            "fill": {
+              "color": "keySpecial:darken:0.35"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M142.2 7.8L142.2 122.2L134.4 114.4L134.4 15.6Z",
+            "fill": {
+              "color": "keySpecial:lighten:0.45"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M7.8 122.2L15.6 114.4L134.4 114.4L142.2 122.2Z",
+            "fill": {
+              "color": "keySpecial:lighten:0.9"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M15.6 15.6L134.4 15.6L134.4 114.4L15.6 114.4Z",
+            "fill": {
+              "color": "keySpecial:darken:0.06"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          }
+        ]
+      },
+      "space": {
+        "size": [
+          400.0,
+          130.0
+        ],
+        "stretchX": [
+          60,
+          340
+        ],
+        "stretchY": [
+          40,
+          90
+        ],
+        "layers": [
+          {
+            "d": "M0 0L400 0L400 130L0 130Z",
+            "fill": {
+              "color": "face:darken:0.92"
+            }
+          },
+          {
+            "d": "M10.4 10.4L389.6 10.4L389.6 119.6L10.4 119.6Z",
+            "fill": {
+              "color": "face"
+            }
+          },
+          {
+            "d": "M2.6 2.6L397.4 2.6L389.6 10.4L10.4 10.4Z",
+            "fill": {
+              "color": "face:lighten:0.9"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M2.6 2.6L10.4 10.4L10.4 119.6L2.6 127.4Z",
+            "fill": {
+              "color": "face:lighten:0.45"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M397.4 2.6L397.4 127.4L389.6 119.6L389.6 10.4Z",
+            "fill": {
+              "color": "face:darken:0.35"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M2.6 127.4L10.4 119.6L389.6 119.6L397.4 127.4Z",
+            "fill": {
+              "color": "face:darken:0.6"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "d": "M2.6 2.6L397.4 2.6L389.6 10.4L10.4 10.4Z",
+            "fill": {
+              "color": "face:darken:0.6"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M2.6 2.6L10.4 10.4L10.4 119.6L2.6 127.4Z",
+            "fill": {
+              "color": "face:darken:0.35"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M397.4 2.6L397.4 127.4L389.6 119.6L389.6 10.4Z",
+            "fill": {
+              "color": "face:lighten:0.45"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M2.6 127.4L10.4 119.6L389.6 119.6L397.4 127.4Z",
+            "fill": {
+              "color": "face:lighten:0.9"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M10.4 10.4L389.6 10.4L389.6 119.6L10.4 119.6Z",
+            "fill": {
+              "color": "face:darken:0.06"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ]
+            }
+          },
+          {
+            "d": "M375.2 113.6L383.6 105.2L383.6 107.6L377.6 113.6Z",
+            "fill": {
+              "color": "face:lighten:0.9"
+            },
+            "press": {
+              "translate": [
+                2.6,
+                2.6
+              ]
+            }
+          },
+          {
+            "d": "M380 113.6L383.6 110L383.6 107.8L377.8 113.6Z",
+            "fill": {
+              "color": "face:darken:0.45"
+            },
+            "press": {
+              "translate": [
+                2.6,
+                2.6
+              ]
+            }
+          },
+          {
+            "d": "M368.2 113.6L383.6 98.2L383.6 100.6L370.6 113.6Z",
+            "fill": {
+              "color": "face:lighten:0.9"
+            },
+            "press": {
+              "translate": [
+                2.6,
+                2.6
+              ]
+            }
+          },
+          {
+            "d": "M373 113.6L383.6 103L383.6 100.8L370.8 113.6Z",
+            "fill": {
+              "color": "face:darken:0.45"
+            },
+            "press": {
+              "translate": [
+                2.6,
+                2.6
+              ]
+            }
+          },
+          {
+            "d": "M361.2 113.6L383.6 91.2L383.6 93.6L363.6 113.6Z",
+            "fill": {
+              "color": "face:lighten:0.9"
+            },
+            "press": {
+              "translate": [
+                2.6,
+                2.6
+              ]
+            }
+          },
+          {
+            "d": "M366 113.6L383.6 96L383.6 93.8L363.8 113.6Z",
+            "fill": {
+              "color": "face:darken:0.45"
+            },
+            "press": {
+              "translate": [
+                2.6,
+                2.6
+              ]
+            }
+          }
+        ]
+      },
+      "popup": {
+        "size": [
+          150.0,
+          160.0
+        ],
+        "labelBox": [
+          20,
+          14,
+          130,
+          146
+        ],
+        "labelColor": "previewLabel",
+        "labelGround": "previewFill",
+        "layers": [
+          {
+            "d": "M0 0L150 0L150 160L0 160Z",
+            "fill": {
+              "color": "previewFill:darken:0.92"
+            }
+          },
+          {
+            "d": "M2.6 2.6L147.4 2.6L139.6 10.4L10.4 10.4Z",
+            "fill": {
+              "color": "previewFill:lighten:0.9"
+            }
+          },
+          {
+            "d": "M2.6 2.6L10.4 10.4L10.4 149.6L2.6 157.4Z",
+            "fill": {
+              "color": "previewFill:lighten:0.45"
+            }
+          },
+          {
+            "d": "M147.4 2.6L147.4 157.4L139.6 149.6L139.6 10.4Z",
+            "fill": {
+              "color": "previewFill:darken:0.35"
+            }
+          },
+          {
+            "d": "M2.6 157.4L10.4 149.6L139.6 149.6L147.4 157.4Z",
+            "fill": {
+              "color": "previewFill:darken:0.6"
+            }
+          },
+          {
+            "d": "M10.4 10.4L139.6 10.4L139.6 149.6L10.4 149.6Z",
+            "fill": {
+              "color": "previewFill"
+            }
+          }
+        ]
+      }
+    },
+    "board": {
+      "size": [
+        1000.0,
+        640.0
+      ],
+      "stretchX": [
+        40,
+        960
+      ],
+      "stretchY": [
+        24,
+        500
+      ],
+      "layers": [
+        {
+          "d": "M0 0L1000 0L1000 640L0 640Z",
+          "fill": {
+            "color": "board"
+          }
+        },
+        {
+          "d": "M0 0L1000 0L996 4L4 4Z",
+          "fill": {
+            "color": "board:lighten:0.9"
+          }
+        },
+        {
+          "d": "M0 0L4 4L4 636L0 640Z",
+          "fill": {
+            "color": "board:lighten:0.45"
+          }
+        },
+        {
+          "d": "M1000 0L1000 640L996 636L996 4Z",
+          "fill": {
+            "color": "board:darken:0.35"
+          }
+        },
+        {
+          "d": "M0 640L4 636L996 636L1000 640Z",
+          "fill": {
+            "color": "board:darken:0.6"
+          }
+        },
+        {
+          "d": "M4 4L996 4L996 636L4 636Z",
+          "fill": {
+            "color": "board"
+          }
+        }
+      ]
+    }
+  }
+}

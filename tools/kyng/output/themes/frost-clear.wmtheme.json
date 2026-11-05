@@ -1,0 +1,18 @@
+{
+  "id": "kyng_frost-clear",
+  "name": "Kyng Frost",
+  "dark": true,
+  "boardBackground": 4279901477,
+  "keyBackground": 2571192926,
+  "pressedKeyBackground": 2572970112,
+  "specialKeyBackground": 2570271563,
+  "specialKeyPressedBackground": 2571916907,
+  "keyTextColor": 4294967295,
+  "keySubtextColor": 4287928479,
+  "accentColor": 4287280376,
+  "keyBorderColor": 1722332364,
+  "keyBorderWidthDp": 1,
+  "keyCornerRadiusDp": 12,
+  "keyShape": "ROUNDED",
+  "keySkin": null
+}

@@ -1,0 +1,1921 @@
+{
+  "id": "kyng_vanguard-steel-signal",
+  "name": "Kyng Vanguard",
+  "dark": true,
+  "boardBackground": 4278915096,
+  "keyBackground": 4291416283,
+  "pressedKeyBackground": 4292402919,
+  "specialKeyBackground": 4286092750,
+  "specialKeyPressedBackground": 4287079126,
+  "keyTextColor": 4279507492,
+  "keySubtextColor": 4282008146,
+  "accentColor": 4283398086,
+  "keyBorderColor": 4278585615,
+  "keyBorderWidthDp": 0,
+  "keyCornerRadiusDp": 6,
+  "keyShape": "ROUNDED",
+  "keySkin": {
+    "slots": {
+      "letter": {
+        "size": [
+          100.0,
+          124.0
+        ],
+        "stretchX": [
+          36,
+          58
+        ],
+        "stretchY": [
+          36,
+          50
+        ],
+        "mirrorInLeftHalf": true,
+        "labelBox": [
+          14,
+          22,
+          74,
+          108
+        ],
+        "labelShift": [
+          0,
+          2
+        ],
+        "layers": [
+          {
+            "d": "M72 120L16 120L2 104L2 112L14 124L70 124Z",
+            "fill": {
+              "color": "shadow"
+            },
+            "opacity": 0.6
+          },
+          {
+            "d": "M96 52L78 60L78 114L72 120L90 120L96 114Z",
+            "fill": {
+              "color": "chassis"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M96 114L96 52L78 60",
+            "stroke": {
+              "color": "chassis:lighten:0.25"
+            },
+            "strokeWidth": 2.6,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M93 70L82 70L82 72.6L93 72.6ZM93 77L82 77L82 79.6L93 79.6ZM93 84L82 84L82 86.6L93 86.6ZM93 91L82 91L82 93.6L93 93.6ZM93 98L82 98L82 100.6L93 100.6Z",
+            "fill": {
+              "color": "chassis:darken:0.55"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M92 109.5L89 109.5L89 112.5L92 112.5Z",
+            "fill": {
+              "color": "signal"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M85 109.5L82 109.5L82 112.5L85 112.5Z",
+            "fill": {
+              "color": "chassis:darken:0.1"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M74 4L4 4L2 8L2 104L16 120L72 120L78 114L78 62L88 54L88 24Z",
+            "fill": {
+              "linear": [
+                0.0,
+                4.0,
+                0.0,
+                120.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "face:lighten:0.45"
+                },
+                {
+                  "at": 0.6,
+                  "color": "face"
+                },
+                {
+                  "at": 1.0,
+                  "color": "face:darken:0.15"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M74 4L20 4L28 16L70 16L82 34L88 34L88 24Z",
+            "fill": {
+              "linear": [
+                0.0,
+                4.0,
+                0.0,
+                34.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "accent:lighten:0.06"
+                },
+                {
+                  "at": 1.0,
+                  "color": "accent:darken:0.04"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M88 34L82 34L70 16L28 16L20 4",
+            "stroke": {
+              "color": "keySpecial:darken:0.7"
+            },
+            "strokeWidth": 2.6,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M74 4L4 4L2 8L2 104L16 120L72 120L78 114L78 62L88 54L88 24Z",
+            "stroke": {
+              "color": "face:lighten:0.45"
+            },
+            "strokeWidth": 2.6,
+            "opacity": 0.85,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M70 26L34 26M70 26L70 98L60 110L22 110L10 98L10 20",
+            "stroke": {
+              "color": "face:darken:0.38"
+            },
+            "strokeWidth": 2.6,
+            "opacity": 0.5,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M8 10L15 14L8 18Z",
+            "fill": {
+              "color": "signal"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M64 101.5L60.6 101.5L60.6 104.9L64 104.9ZM20 101.5L16.6 101.5L16.6 104.9L20 104.9Z",
+            "fill": {
+              "color": "face:darken:0.38"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M74 4L4 4L2 8L2 104L16 120L72 120L78 114L78 62L88 54L88 24Z",
+            "fill": {
+              "color": "face:lighten:0.6"
+            },
+            "opacity": 0.18,
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          }
+        ]
+      },
+      "center": {
+        "size": [
+          100.0,
+          124.0
+        ],
+        "stretchX": [
+          32,
+          42,
+          58,
+          68
+        ],
+        "stretchY": [
+          24,
+          44
+        ],
+        "labelBox": [
+          30,
+          22,
+          70,
+          106
+        ],
+        "labelShift": [
+          0,
+          2
+        ],
+        "layers": [
+          {
+            "d": "M30 120L70 120L80 112L80 118L72 124L28 124L20 118L20 112Z",
+            "fill": {
+              "color": "shadow"
+            },
+            "opacity": 0.6
+          },
+          {
+            "d": "M2 58L20 72L20 110L4 98ZM98 58L80 72L80 110L96 98Z",
+            "fill": {
+              "color": "chassis"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M4 98L2 58L20 72M96 98L98 58L80 72",
+            "stroke": {
+              "color": "chassis:lighten:0.25"
+            },
+            "strokeWidth": 2.6,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M6 74L13 74L13 76.6L6 76.6ZM6 80L13 80L13 82.6L6 82.6ZM6 86L13 86L13 88.6L6 88.6ZM6 92L13 92L13 94.6L6 94.6ZM6 98L13 98L13 100.6L6 100.6ZM94 74L87 74L87 76.6L94 76.6ZM94 80L87 80L87 82.6L94 82.6ZM94 86L87 86L87 88.6L94 88.6ZM94 92L87 92L87 94.6L94 94.6ZM94 98L87 98L87 100.6L94 100.6Z",
+            "fill": {
+              "color": "chassis:darken:0.55"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M22 2L78 2L96 18L96 54L80 68L80 110L70 120L30 120L20 110L20 68L4 54L4 18Z",
+            "fill": {
+              "linear": [
+                0.0,
+                2.0,
+                0.0,
+                120.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "face:lighten:0.45"
+                },
+                {
+                  "at": 0.6,
+                  "color": "face"
+                },
+                {
+                  "at": 1.0,
+                  "color": "face:darken:0.15"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M4 54L20 68L20 104L30 94L30 62L14 48L4 48ZM4 18L22 2L30 2L12 22L12 36L4 36ZM96 54L80 68L80 104L70 94L70 62L86 48L96 48ZM96 18L78 2L70 2L88 22L88 36L96 36Z",
+            "fill": {
+              "linear": [
+                0.0,
+                2.0,
+                0.0,
+                104.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "accent:lighten:0.06"
+                },
+                {
+                  "at": 1.0,
+                  "color": "accent:darken:0.04"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M4 48L14 48L30 62L30 94L20 104M30 2L12 22L12 36L4 36M96 48L86 48L70 62L70 94L80 104M70 2L88 22L88 36L96 36",
+            "stroke": {
+              "color": "keySpecial:darken:0.7"
+            },
+            "strokeWidth": 2.6,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M22 2L78 2L96 18L96 54L80 68L80 110L70 120L30 120L20 110L20 68L4 54L4 18Z",
+            "stroke": {
+              "color": "face:lighten:0.45"
+            },
+            "strokeWidth": 2.6,
+            "opacity": 0.85,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M30 12L70 12M36 60L64 60M50 96L50 106",
+            "stroke": {
+              "color": "face:darken:0.38"
+            },
+            "strokeWidth": 2.6,
+            "opacity": 0.5,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M44 114L56 114L50 107Z",
+            "fill": {
+              "color": "signal"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M22 2L78 2L96 18L96 54L80 68L80 110L70 120L30 120L20 110L20 68L4 54L4 18Z",
+            "fill": {
+              "color": "face:lighten:0.6"
+            },
+            "opacity": 0.18,
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          }
+        ]
+      },
+      "punctuation": {
+        "size": [
+          100.0,
+          124.0
+        ],
+        "stretchX": [
+          36,
+          58
+        ],
+        "stretchY": [
+          36,
+          50
+        ],
+        "mirrorInLeftHalf": true,
+        "labelBox": [
+          20,
+          34,
+          68,
+          100
+        ],
+        "labelShift": [
+          0,
+          2
+        ],
+        "layers": [
+          {
+            "d": "M72 120L16 120L2 104L2 112L14 124L70 124Z",
+            "fill": {
+              "color": "shadow"
+            },
+            "opacity": 0.6
+          },
+          {
+            "d": "M96 52L78 60L78 114L72 120L90 120L96 114Z",
+            "fill": {
+              "color": "chassis"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M96 114L96 52L78 60",
+            "stroke": {
+              "color": "chassis:lighten:0.25"
+            },
+            "strokeWidth": 2.6,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M93 70L82 70L82 72.6L93 72.6ZM93 77L82 77L82 79.6L93 79.6ZM93 84L82 84L82 86.6L93 86.6ZM93 91L82 91L82 93.6L93 93.6ZM93 98L82 98L82 100.6L93 100.6Z",
+            "fill": {
+              "color": "chassis:darken:0.55"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M92 109.5L89 109.5L89 112.5L92 112.5Z",
+            "fill": {
+              "color": "signal"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M85 109.5L82 109.5L82 112.5L85 112.5Z",
+            "fill": {
+              "color": "chassis:darken:0.1"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M74 4L4 4L2 8L2 104L16 120L72 120L78 114L78 62L88 54L88 24Z",
+            "fill": {
+              "linear": [
+                0.0,
+                4.0,
+                0.0,
+                120.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "face:lighten:0.45"
+                },
+                {
+                  "at": 0.6,
+                  "color": "face"
+                },
+                {
+                  "at": 1.0,
+                  "color": "face:darken:0.15"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M74 4L20 4L28 16L70 16L82 34L88 34L88 24Z",
+            "fill": {
+              "linear": [
+                0.0,
+                4.0,
+                0.0,
+                34.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "accent:lighten:0.06"
+                },
+                {
+                  "at": 1.0,
+                  "color": "accent:darken:0.04"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M88 34L82 34L70 16L28 16L20 4",
+            "stroke": {
+              "color": "keySpecial:darken:0.7"
+            },
+            "strokeWidth": 2.6,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M74 4L4 4L2 8L2 104L16 120L72 120L78 114L78 62L88 54L88 24Z",
+            "stroke": {
+              "color": "face:lighten:0.45"
+            },
+            "strokeWidth": 2.6,
+            "opacity": 0.85,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M70 26L34 26M70 26L70 98L60 110L22 110L10 98L10 20",
+            "stroke": {
+              "color": "face:darken:0.38"
+            },
+            "strokeWidth": 2.6,
+            "opacity": 0.5,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M8 10L15 14L8 18Z",
+            "fill": {
+              "color": "signal"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M64 101.5L60.6 101.5L60.6 104.9L64 104.9ZM20 101.5L16.6 101.5L16.6 104.9L20 104.9Z",
+            "fill": {
+              "color": "face:darken:0.38"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M74 4L4 4L2 8L2 104L16 120L72 120L78 114L78 62L88 54L88 24Z",
+            "fill": {
+              "color": "face:lighten:0.6"
+            },
+            "opacity": 0.18,
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          }
+        ]
+      },
+      "special": {
+        "size": [
+          150.0,
+          124.0
+        ],
+        "stretchX": [
+          48,
+          92
+        ],
+        "stretchY": [
+          60,
+          78
+        ],
+        "mirrorInLeftHalf": true,
+        "labelBox": [
+          26,
+          22,
+          110,
+          80
+        ],
+        "labelShift": [
+          0,
+          2
+        ],
+        "labelColor": "keySpecial:lighten:0.92",
+        "labelGround": "keySpecial:darken:0.65",
+        "captionBox": [
+          26,
+          82,
+          110,
+          96
+        ],
+        "captionColor": "accent:lighten:0.4",
+        "layers": [
+          {
+            "d": "M150 29.52L138 21.65L138 108.25L120 120.06L15 120.06L21 124L129 124L150 110.22Z",
+            "fill": {
+              "color": "accent:darken:0.3"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M138 108.25L120 120.06L15 120.06L6 112.19L6 106.29Z",
+            "fill": {
+              "color": "accent"
+            },
+            "opacity": 0.85,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M117 9.84L24 1.97L3 13.78L6 102.35L21 114.16L120 116.13L138 104.32L138 21.65Z",
+            "fill": {
+              "linear": [
+                0.0,
+                2.0,
+                0.0,
+                118.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "keySpecial:darken:0.65"
+                },
+                {
+                  "at": 1.0,
+                  "color": "keySpecial:darken:0.78"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M114 11.81L25.5 3.94L12 13.78L105 19.68Z",
+            "fill": {
+              "color": "keySpecial:darken:0.55"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M112.5 12.3L27 4.92",
+            "stroke": {
+              "color": "accent:lighten:0.45"
+            },
+            "strokeWidth": 2.6,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M117 9.84L24 1.97L3 13.78L6 102.35L21 114.16L120 116.13L138 104.32L138 21.65Z",
+            "stroke": {
+              "color": "keySpecial:darken:0.55"
+            },
+            "strokeWidth": 2.6,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M21 39.37L12 39.37L12 41.92L21 41.92ZM21 46.25L12 46.25L12 48.81L21 48.81ZM21 53.14L12 53.14L12 55.7L21 55.7Z",
+            "fill": {
+              "color": "keySpecial:darken:0.88"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M24 23.62L12 23.62L12 27.56L24 27.56Z",
+            "fill": {
+              "color": "signal"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M129 100.38L117 100.38L129 108.25Z",
+            "fill": {
+              "color": "signal"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M117 9.84L24 1.97L3 13.78L6 102.35L21 114.16L120 116.13L138 104.32L138 21.65Z",
+            "fill": {
+              "color": "keySpecial"
+            },
+            "opacity": 0.12,
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          }
+        ]
+      },
+      "delete": {
+        "size": [
+          150.0,
+          124.0
+        ],
+        "stretchX": [
+          48,
+          92
+        ],
+        "stretchY": [
+          60,
+          78
+        ],
+        "mirrorInLeftHalf": true,
+        "labelBox": [
+          26,
+          22,
+          110,
+          80
+        ],
+        "labelShift": [
+          0,
+          2
+        ],
+        "labelColor": "keySpecial:lighten:0.92",
+        "labelGround": "keySpecial:darken:0.65",
+        "captionBox": [
+          26,
+          82,
+          110,
+          96
+        ],
+        "captionColor": "accent:lighten:0.4",
+        "layers": [
+          {
+            "d": "M150 29.52L138 21.65L138 108.25L120 120.06L15 120.06L21 124L129 124L150 110.22Z",
+            "fill": {
+              "color": "accent:darken:0.3"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M138 108.25L120 120.06L15 120.06L6 112.19L6 106.29Z",
+            "fill": {
+              "color": "accent"
+            },
+            "opacity": 0.85,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M117 9.84L24 1.97L3 13.78L6 102.35L21 114.16L120 116.13L138 104.32L138 21.65Z",
+            "fill": {
+              "linear": [
+                0.0,
+                2.0,
+                0.0,
+                118.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "keySpecial:darken:0.65"
+                },
+                {
+                  "at": 1.0,
+                  "color": "keySpecial:darken:0.78"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M114 11.81L25.5 3.94L12 13.78L105 19.68Z",
+            "fill": {
+              "color": "keySpecial:darken:0.55"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M112.5 12.3L27 4.92",
+            "stroke": {
+              "color": "accent:lighten:0.45"
+            },
+            "strokeWidth": 2.6,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M117 9.84L24 1.97L3 13.78L6 102.35L21 114.16L120 116.13L138 104.32L138 21.65Z",
+            "stroke": {
+              "color": "keySpecial:darken:0.55"
+            },
+            "strokeWidth": 2.6,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M21 39.37L12 39.37L12 41.92L21 41.92ZM21 46.25L12 46.25L12 48.81L21 48.81ZM21 53.14L12 53.14L12 55.7L21 55.7Z",
+            "fill": {
+              "color": "keySpecial:darken:0.88"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M24 23.62L12 23.62L12 27.56L24 27.56Z",
+            "fill": {
+              "color": "signal"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M129 100.38L117 100.38L129 108.25Z",
+            "fill": {
+              "color": "signal"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M117 9.84L24 1.97L3 13.78L6 102.35L21 114.16L120 116.13L138 104.32L138 21.65Z",
+            "fill": {
+              "color": "keySpecial"
+            },
+            "opacity": 0.12,
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          }
+        ]
+      },
+      "enter": {
+        "size": [
+          150.0,
+          124.0
+        ],
+        "stretchX": [
+          48,
+          92
+        ],
+        "stretchY": [
+          60,
+          78
+        ],
+        "mirrorInLeftHalf": true,
+        "labelBox": [
+          26,
+          22,
+          110,
+          80
+        ],
+        "labelShift": [
+          0,
+          2
+        ],
+        "labelColor": "keySpecial:lighten:0.92",
+        "labelGround": "keySpecial:darken:0.65",
+        "captionBox": [
+          26,
+          82,
+          110,
+          96
+        ],
+        "captionColor": "accent:lighten:0.4",
+        "layers": [
+          {
+            "d": "M150 29.52L138 21.65L138 108.25L120 120.06L15 120.06L21 124L129 124L150 110.22Z",
+            "fill": {
+              "color": "accent:darken:0.3"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M138 108.25L120 120.06L15 120.06L6 112.19L6 106.29Z",
+            "fill": {
+              "color": "accent"
+            },
+            "opacity": 0.85,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M117 9.84L24 1.97L3 13.78L6 102.35L21 114.16L120 116.13L138 104.32L138 21.65Z",
+            "fill": {
+              "linear": [
+                0.0,
+                2.0,
+                0.0,
+                118.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "keySpecial:darken:0.65"
+                },
+                {
+                  "at": 1.0,
+                  "color": "keySpecial:darken:0.78"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M114 11.81L25.5 3.94L12 13.78L105 19.68Z",
+            "fill": {
+              "color": "keySpecial:darken:0.55"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M112.5 12.3L27 4.92",
+            "stroke": {
+              "color": "accent:lighten:0.45"
+            },
+            "strokeWidth": 2.6,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M117 9.84L24 1.97L3 13.78L6 102.35L21 114.16L120 116.13L138 104.32L138 21.65Z",
+            "stroke": {
+              "color": "keySpecial:darken:0.55"
+            },
+            "strokeWidth": 2.6,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M21 39.37L12 39.37L12 41.92L21 41.92ZM21 46.25L12 46.25L12 48.81L21 48.81ZM21 53.14L12 53.14L12 55.7L21 55.7Z",
+            "fill": {
+              "color": "keySpecial:darken:0.88"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M24 23.62L12 23.62L12 27.56L24 27.56Z",
+            "fill": {
+              "color": "signal"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M129 100.38L117 100.38L129 108.25Z",
+            "fill": {
+              "color": "signal"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M117 9.84L24 1.97L3 13.78L6 102.35L21 114.16L120 116.13L138 104.32L138 21.65Z",
+            "fill": {
+              "color": "keySpecial"
+            },
+            "opacity": 0.12,
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          }
+        ]
+      },
+      "space": {
+        "size": [
+          340.0,
+          108.0
+        ],
+        "stretchX": [
+          78,
+          92,
+          248,
+          262
+        ],
+        "stretchY": [
+          55,
+          62
+        ],
+        "labelBox": [
+          110,
+          40,
+          230,
+          62
+        ],
+        "labelShift": [
+          0,
+          2
+        ],
+        "charge": {
+          "lights": [
+            110,
+            64,
+            230,
+            68
+          ],
+          "rim": "M70 36L270 36L282 46L282 68L270 78L70 78L58 68L58 46Z"
+        },
+        "layers": [
+          {
+            "d": "M34 6L116 6L126 14L214 14L224 6L306 6L326 26L326 86L308 104L244 104L234 110L106 110L96 104L32 104L14 86L14 26Z",
+            "fill": {
+              "color": "shadow"
+            },
+            "opacity": 0.6
+          },
+          {
+            "d": "M2 30L16 20L16 80L4 72ZM338 30L324 20L324 80L336 72Z",
+            "fill": {
+              "color": "chassis"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M4 72L2 30L16 20M336 72L338 30L324 20",
+            "stroke": {
+              "color": "chassis:lighten:0.25"
+            },
+            "strokeWidth": 2.6,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M5 26L13 26L13 28.6L5 28.6ZM5 33L13 33L13 35.6L5 35.6ZM5 40L13 40L13 42.6L5 42.6ZM5 47L13 47L13 49.6L5 49.6ZM327 26L335 26L335 28.6L327 28.6ZM327 33L335 33L335 35.6L327 35.6ZM327 40L335 40L335 42.6L327 42.6ZM327 47L335 47L335 49.6L327 49.6Z",
+            "fill": {
+              "color": "chassis:darken:0.55"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M34 2L116 2L126 10L214 10L224 2L306 2L326 22L326 82L308 100L244 100L234 106L106 106L96 100L32 100L14 82L14 22Z",
+            "fill": {
+              "linear": [
+                0.0,
+                2.0,
+                0.0,
+                106.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "face:lighten:0.45"
+                },
+                {
+                  "at": 0.6,
+                  "color": "face"
+                },
+                {
+                  "at": 1.0,
+                  "color": "face:darken:0.15"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M14 22L34 2L100 2L92 14L40 14L28 34L14 34ZM326 22L306 2L240 2L248 14L300 14L312 34L326 34Z",
+            "fill": {
+              "linear": [
+                0.0,
+                2.0,
+                0.0,
+                34.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "accent:lighten:0.06"
+                },
+                {
+                  "at": 1.0,
+                  "color": "accent:darken:0.04"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M14 34L28 34L40 14L92 14L100 2M326 34L312 34L300 14L248 14L240 2",
+            "stroke": {
+              "color": "keySpecial:darken:0.7"
+            },
+            "strokeWidth": 2.6,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M26 44L26 72L38 84L80 84M314 44L314 72L302 84L260 84",
+            "stroke": {
+              "color": "face:darken:0.38"
+            },
+            "strokeWidth": 2.6,
+            "opacity": 0.5,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M34 28L46 28L46 30.6L34 30.6ZM34 35L46 35L46 37.6L34 37.6ZM34 42L46 42L46 44.6L34 44.6ZM34 49L46 49L46 51.6L34 51.6ZM294 28L306 28L306 30.6L294 30.6ZM294 35L306 35L306 37.6L294 37.6ZM294 42L306 42L306 44.6L294 44.6ZM294 49L306 49L306 51.6L294 51.6Z",
+            "fill": {
+              "color": "face:darken:0.25"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M112 6L104 10L112 14ZM228 6L236 10L228 14Z",
+            "fill": {
+              "color": "signal"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M30 76L33.4 76L33.4 79.4L30 79.4ZM306.6 76L310 76L310 79.4L306.6 79.4Z",
+            "fill": {
+              "color": "face:darken:0.38"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M34 2L116 2L126 10L214 10L224 2L306 2L326 22L326 82L308 100L244 100L234 106L106 106L96 100L32 100L14 82L14 22Z",
+            "stroke": {
+              "color": "face:lighten:0.45"
+            },
+            "strokeWidth": 2.6,
+            "opacity": 0.85,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M136 10L204 10L198 16L142 16Z",
+            "fill": {
+              "color": "signal"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M70 36L270 36L282 46L282 68L270 78L70 78L58 68L58 46Z",
+            "fill": {
+              "linear": [
+                0.0,
+                36.0,
+                0.0,
+                78.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "keySpecial:darken:0.65"
+                },
+                {
+                  "at": 1.0,
+                  "color": "keySpecial:darken:0.78"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M70 36L270 36L282 46L282 68L270 78L70 78L58 68L58 46Z",
+            "stroke": {
+              "color": "accent:lighten:0.45"
+            },
+            "strokeWidth": 2.6,
+            "opacity": 0.35,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M70 44L76 44L76 46.6L70 46.6ZM70 51L76 51L76 53.6L70 53.6ZM264 44L270 44L270 46.6L264 46.6ZM264 51L270 51L270 53.6L264 53.6Z",
+            "fill": {
+              "color": "keySpecial:darken:0.88"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M156 54C165 48 175 48 184 54",
+            "stroke": {
+              "color": "accent:lighten:0.45"
+            },
+            "strokeWidth": 2.6,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M111.8 64L120.2 64L120.2 68L111.8 68ZM123.8 64L132.2 64L132.2 68L123.8 68ZM135.8 64L144.2 64L144.2 68L135.8 68ZM147.8 64L156.2 64L156.2 68L147.8 68ZM159.8 64L168.2 64L168.2 68L159.8 68ZM171.8 64L180.2 64L180.2 68L171.8 68ZM183.8 64L192.2 64L192.2 68L183.8 68ZM195.8 64L204.2 64L204.2 68L195.8 68ZM207.8 64L216.2 64L216.2 68L207.8 68ZM219.8 64L228.2 64L228.2 68L219.8 68Z",
+            "fill": {
+              "color": "keySpecial:darken:0.62"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M110 94L230 94L224 102L116 102Z",
+            "fill": {
+              "linear": [
+                0.0,
+                94.0,
+                0.0,
+                102.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "accent:lighten:0.06"
+                },
+                {
+                  "at": 1.0,
+                  "color": "accent:darken:0.04"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M34 2L116 2L126 10L214 10L224 2L306 2L326 22L326 82L308 100L244 100L234 106L106 106L96 100L32 100L14 82L14 22Z",
+            "fill": {
+              "color": "face:lighten:0.6"
+            },
+            "opacity": 0.15,
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          }
+        ]
+      },
+      "popup": {
+        "size": [
+          150.0,
+          150.0
+        ],
+        "labelBox": [
+          21,
+          27,
+          111,
+          130
+        ],
+        "labelColor": "previewLabel",
+        "labelGround": "previewFill",
+        "layers": [
+          {
+            "d": "M108 145.16L24 145.16L3 125.81L3 135.48L21 150L105 150Z",
+            "fill": {
+              "color": "shadow"
+            },
+            "opacity": 0.6
+          },
+          {
+            "d": "M144 62.9L117 72.58L117 137.9L108 145.16L135 145.16L144 137.9Z",
+            "fill": {
+              "color": "chassis"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M144 137.9L144 62.9L117 72.58",
+            "stroke": {
+              "color": "chassis:lighten:0.25"
+            },
+            "strokeWidth": 2.6,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M139.5 84.68L123 84.68L123 87.82L139.5 87.82ZM139.5 93.15L123 93.15L123 96.29L139.5 96.29ZM139.5 101.61L123 101.61L123 104.76L139.5 104.76ZM139.5 110.08L123 110.08L123 113.23L139.5 113.23ZM139.5 118.55L123 118.55L123 121.69L139.5 121.69Z",
+            "fill": {
+              "color": "chassis:darken:0.55"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M138 132.46L133.5 132.46L133.5 136.09L138 136.09Z",
+            "fill": {
+              "color": "signal"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M127.5 132.46L123 132.46L123 136.09L127.5 136.09Z",
+            "fill": {
+              "color": "chassis:darken:0.1"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M111 4.84L6 4.84L3 9.68L3 125.81L24 145.16L108 145.16L117 137.9L117 75L132 65.32L132 29.03Z",
+            "fill": {
+              "linear": [
+                0.0,
+                4.84,
+                0.0,
+                145.16
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "previewFill:lighten:0.45"
+                },
+                {
+                  "at": 0.6,
+                  "color": "previewFill"
+                },
+                {
+                  "at": 1.0,
+                  "color": "previewFill:darken:0.15"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M111 4.84L30 4.84L42 19.35L105 19.35L123 41.13L132 41.13L132 29.03Z",
+            "fill": {
+              "linear": [
+                0.0,
+                4.84,
+                0.0,
+                41.13
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "accent:lighten:0.06"
+                },
+                {
+                  "at": 1.0,
+                  "color": "accent:darken:0.04"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M132 41.13L123 41.13L105 19.35L42 19.35L30 4.84",
+            "stroke": {
+              "color": "keySpecial:darken:0.7"
+            },
+            "strokeWidth": 2.6,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M111 4.84L6 4.84L3 9.68L3 125.81L24 145.16L108 145.16L117 137.9L117 75L132 65.32L132 29.03Z",
+            "stroke": {
+              "color": "previewFill:lighten:0.45"
+            },
+            "strokeWidth": 2.6,
+            "opacity": 0.85,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M105 31.45L51 31.45M105 31.45L105 118.55L90 133.06L33 133.06L15 118.55L15 24.19",
+            "stroke": {
+              "color": "previewFill:darken:0.38"
+            },
+            "strokeWidth": 2.6,
+            "opacity": 0.5,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M12 12.1L22.5 16.94L12 21.77Z",
+            "fill": {
+              "color": "signal"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M96 122.78L90.9 122.78L90.9 126.9L96 126.9ZM30 122.78L24.9 122.78L24.9 126.9L30 126.9Z",
+            "fill": {
+              "color": "previewFill:darken:0.38"
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M111 4.84L6 4.84L3 9.68L3 125.81L24 145.16L108 145.16L117 137.9L117 75L132 65.32L132 29.03Z",
+            "fill": {
+              "color": "previewFill:lighten:0.6"
+            },
+            "opacity": 0.18,
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "board": {
+      "size": [
+        1000.0,
+        544.0
+      ],
+      "stretchX": [
+        40,
+        960
+      ],
+      "stretchY": [
+        24,
+        500
+      ],
+      "layers": [
+        {
+          "d": "M0 0L1000 0L1000 544L0 544Z",
+          "fill": {
+            "color": "board"
+          }
+        },
+        {
+          "d": "M8.66 0L17.32 5L17.32 15L8.66 20L0 15L0 5ZM8.66 20L8.66 30M25.98 0L34.64 5L34.64 15L25.98 20L17.32 15L17.32 5ZM25.98 20L25.98 30M43.3 0L51.96 5L51.96 15L43.3 20L34.64 15L34.64 5ZM43.3 20L43.3 30M60.62 0L69.28 5L69.28 15L60.62 20L51.96 15L51.96 5ZM60.62 20L60.62 30M77.94 0L86.6 5L86.6 15L77.94 20L69.28 15L69.28 5ZM77.94 20L77.94 30M95.26 0L103.92 5L103.92 15L95.26 20L86.6 15L86.6 5ZM95.26 20L95.26 30M112.58 0L121.24 5L121.24 15L112.58 20L103.92 15L103.92 5ZM112.58 20L112.58 30M129.9 0L138.56 5L138.56 15L129.9 20L121.24 15L121.24 5ZM129.9 20L129.9 30M147.22 0L155.88 5L155.88 15L147.22 20L138.56 15L138.56 5ZM147.22 20L147.22 30M164.54 0L173.21 5L173.21 15L164.54 20L155.88 15L155.88 5ZM164.54 20L164.54 30M181.87 0L190.53 5L190.53 15L181.87 20L173.21 15L173.21 5ZM181.87 20L181.87 30M199.19 0L207.85 5L207.85 15L199.19 20L190.53 15L190.53 5ZM199.19 20L199.19 30M216.51 0L225.17 5L225.17 15L216.51 20L207.85 15L207.85 5ZM216.51 20L216.51 30M233.83 0L242.49 5L242.49 15L233.83 20L225.17 15L225.17 5ZM233.83 20L233.83 30M251.15 0L259.81 5L259.81 15L251.15 20L242.49 15L242.49 5ZM251.15 20L251.15 30M268.47 0L277.13 5L277.13 15L268.47 20L259.81 15L259.81 5ZM268.47 20L268.47 30M285.79 0L294.45 5L294.45 15L285.79 20L277.13 15L277.13 5ZM285.79 20L285.79 30M303.11 0L311.77 5L311.77 15L303.11 20L294.45 15L294.45 5ZM303.11 20L303.11 30M320.43 0L329.09 5L329.09 15L320.43 20L311.77 15L311.77 5ZM320.43 20L320.43 30M337.75 0L346.41 5L346.41 15L337.75 20L329.09 15L329.09 5ZM337.75 20L337.75 30M355.07 0L363.73 5L363.73 15L355.07 20L346.41 15L346.41 5ZM355.07 20L355.07 30M372.39 0L381.05 5L381.05 15L372.39 20L363.73 15L363.73 5ZM372.39 20L372.39 30M389.71 0L398.37 5L398.37 15L389.71 20L381.05 15L381.05 5ZM389.71 20L389.71 30M407.03 0L415.69 5L415.69 15L407.03 20L398.37 15L398.37 5ZM407.03 20L407.03 30M424.35 0L433.01 5L433.01 15L424.35 20L415.69 15L415.69 5ZM424.35 20L424.35 30M441.67 0L450.33 5L450.33 15L441.67 20L433.01 15L433.01 5ZM441.67 20L441.67 30M458.99 0L467.65 5L467.65 15L458.99 20L450.33 15L450.33 5ZM458.99 20L458.99 30M476.31 0L484.97 5L484.97 15L476.31 20L467.65 15L467.65 5ZM476.31 20L476.31 30M493.63 0L502.29 5L502.29 15L493.63 20L484.97 15L484.97 5ZM493.63 20L493.63 30M510.95 0L519.62 5L519.62 15L510.95 20L502.29 15L502.29 5ZM510.95 20L510.95 30M528.28 0L536.94 5L536.94 15L528.28 20L519.62 15L519.62 5ZM528.28 20L528.28 30M545.6 0L554.26 5L554.26 15L545.6 20L536.94 15L536.94 5ZM545.6 20L545.6 30M562.92 0L571.58 5L571.58 15L562.92 20L554.26 15L554.26 5ZM562.92 20L562.92 30M580.24 0L588.9 5L588.9 15L580.24 20L571.58 15L571.58 5ZM580.24 20L580.24 30M597.56 0L606.22 5L606.22 15L597.56 20L588.9 15L588.9 5ZM597.56 20L597.56 30M614.88 0L623.54 5L623.54 15L614.88 20L606.22 15L606.22 5ZM614.88 20L614.88 30M632.2 0L640.86 5L640.86 15L632.2 20L623.54 15L623.54 5ZM632.2 20L632.2 30M649.52 0L658.18 5L658.18 15L649.52 20L640.86 15L640.86 5ZM649.52 20L649.52 30M666.84 0L675.5 5L675.5 15L666.84 20L658.18 15L658.18 5ZM666.84 20L666.84 30M684.16 0L692.82 5L692.82 15L684.16 20L675.5 15L675.5 5ZM684.16 20L684.16 30M701.48 0L710.14 5L710.14 15L701.48 20L692.82 15L692.82 5ZM701.48 20L701.48 30M718.8 0L727.46 5L727.46 15L718.8 20L710.14 15L710.14 5ZM718.8 20L718.8 30M736.12 0L744.78 5L744.78 15L736.12 20L727.46 15L727.46 5ZM736.12 20L736.12 30M753.44 0L762.1 5L762.1 15L753.44 20L744.78 15L744.78 5ZM753.44 20L753.44 30M770.76 0L779.42 5L779.42 15L770.76 20L762.1 15L762.1 5ZM770.76 20L770.76 30M788.08 0L796.74 5L796.74 15L788.08 20L779.42 15L779.42 5ZM788.08 20L788.08 30M805.4 0L814.06 5L814.06 15L805.4 20L796.74 15L796.74 5ZM805.4 20L805.4 30M822.72 0L831.38 5L831.38 15L822.72 20L814.06 15L814.06 5ZM822.72 20L822.72 30M840.04 0L848.7 5L848.7 15L840.04 20L831.38 15L831.38 5ZM840.04 20L840.04 30M857.37 0L866.03 5L866.03 15L857.37 20L848.7 15L848.7 5ZM857.37 20L857.37 30M874.69 0L883.35 5L883.35 15L874.69 20L866.03 15L866.03 5ZM874.69 20L874.69 30M892.01 0L900.67 5L900.67 15L892.01 20L883.35 15L883.35 5ZM892.01 20L892.01 30M909.33 0L917.99 5L917.99 15L909.33 20L900.67 15L900.67 5ZM909.33 20L909.33 30M926.65 0L935.31 5L935.31 15L926.65 20L917.99 15L917.99 5ZM926.65 20L926.65 30M943.97 0L952.63 5L952.63 15L943.97 20L935.31 15L935.31 5ZM943.97 20L943.97 30M961.29 0L969.95 5L969.95 15L961.29 20L952.63 15L952.63 5ZM961.29 20L961.29 30M978.61 0L987.27 5L987.27 15L978.61 20L969.95 15L969.95 5ZM978.61 20L978.61 30M8.66 30L17.32 35L17.32 45L8.66 50L0 45L0 35ZM8.66 50L8.66 60M25.98 30L34.64 35L34.64 45L25.98 50L17.32 45L17.32 35ZM25.98 50L25.98 60M43.3 30L51.96 35L51.96 45L43.3 50L34.64 45L34.64 35ZM43.3 50L43.3 60M60.62 30L69.28 35L69.28 45L60.62 50L51.96 45L51.96 35ZM60.62 50L60.62 60M77.94 30L86.6 35L86.6 45L77.94 50L69.28 45L69.28 35ZM77.94 50L77.94 60M95.26 30L103.92 35L103.92 45L95.26 50L86.6 45L86.6 35ZM95.26 50L95.26 60M112.58 30L121.24 35L121.24 45L112.58 50L103.92 45L103.92 35ZM112.58 50L112.58 60M129.9 30L138.56 35L138.56 45L129.9 50L121.24 45L121.24 35ZM129.9 50L129.9 60M147.22 30L155.88 35L155.88 45L147.22 50L138.56 45L138.56 35ZM147.22 50L147.22 60M164.54 30L173.21 35L173.21 45L164.54 50L155.88 45L155.88 35ZM164.54 50L164.54 60M181.87 30L190.53 35L190.53 45L181.87 50L173.21 45L173.21 35ZM181.87 50L181.87 60M199.19 30L207.85 35L207.85 45L199.19 50L190.53 45L190.53 35ZM199.19 50L199.19 60M216.51 30L225.17 35L225.17 45L216.51 50L207.85 45L207.85 35ZM216.51 50L216.51 60M233.83 30L242.49 35L242.49 45L233.83 50L225.17 45L225.17 35ZM233.83 50L233.83 60M251.15 30L259.81 35L259.81 45L251.15 50L242.49 45L242.49 35ZM251.15 50L251.15 60M268.47 30L277.13 35L277.13 45L268.47 50L259.81 45L259.81 35ZM268.47 50L268.47 60M285.79 30L294.45 35L294.45 45L285.79 50L277.13 45L277.13 35ZM285.79 50L285.79 60M303.11 30L311.77 35L311.77 45L303.11 50L294.45 45L294.45 35ZM303.11 50L303.11 60M320.43 30L329.09 35L329.09 45L320.43 50L311.77 45L311.77 35ZM320.43 50L320.43 60M337.75 30L346.41 35L346.41 45L337.75 50L329.09 45L329.09 35ZM337.75 50L337.75 60M355.07 30L363.73 35L363.73 45L355.07 50L346.41 45L346.41 35ZM355.07 50L355.07 60M372.39 30L381.05 35L381.05 45L372.39 50L363.73 45L363.73 35ZM372.39 50L372.39 60M389.71 30L398.37 35L398.37 45L389.71 50L381.05 45L381.05 35ZM389.71 50L389.71 60M407.03 30L415.69 35L415.69 45L407.03 50L398.37 45L398.37 35ZM407.03 50L407.03 60M424.35 30L433.01 35L433.01 45L424.35 50L415.69 45L415.69 35ZM424.35 50L424.35 60M441.67 30L450.33 35L450.33 45L441.67 50L433.01 45L433.01 35ZM441.67 50L441.67 60M458.99 30L467.65 35L467.65 45L458.99 50L450.33 45L450.33 35ZM458.99 50L458.99 60M476.31 30L484.97 35L484.97 45L476.31 50L467.65 45L467.65 35ZM476.31 50L476.31 60M493.63 30L502.29 35L502.29 45L493.63 50L484.97 45L484.97 35ZM493.63 50L493.63 60M510.95 30L519.62 35L519.62 45L510.95 50L502.29 45L502.29 35ZM510.95 50L510.95 60M528.28 30L536.94 35L536.94 45L528.28 50L519.62 45L519.62 35ZM528.28 50L528.28 60M545.6 30L554.26 35L554.26 45L545.6 50L536.94 45L536.94 35ZM545.6 50L545.6 60M562.92 30L571.58 35L571.58 45L562.92 50L554.26 45L554.26 35ZM562.92 50L562.92 60M580.24 30L588.9 35L588.9 45L580.24 50L571.58 45L571.58 35ZM580.24 50L580.24 60M597.56 30L606.22 35L606.22 45L597.56 50L588.9 45L588.9 35ZM597.56 50L597.56 60M614.88 30L623.54 35L623.54 45L614.88 50L606.22 45L606.22 35ZM614.88 50L614.88 60M632.2 30L640.86 35L640.86 45L632.2 50L623.54 45L623.54 35ZM632.2 50L632.2 60M649.52 30L658.18 35L658.18 45L649.52 50L640.86 45L640.86 35ZM649.52 50L649.52 60M666.84 30L675.5 35L675.5 45L666.84 50L658.18 45L658.18 35ZM666.84 50L666.84 60M684.16 30L692.82 35L692.82 45L684.16 50L675.5 45L675.5 35ZM684.16 50L684.16 60M701.48 30L710.14 35L710.14 45L701.48 50L692.82 45L692.82 35ZM701.48 50L701.48 60M718.8 30L727.46 35L727.46 45L718.8 50L710.14 45L710.14 35ZM718.8 50L718.8 60M736.12 30L744.78 35L744.78 45L736.12 50L727.46 45L727.46 35ZM736.12 50L736.12 60M753.44 30L762.1 35L762.1 45L753.44 50L744.78 45L744.78 35ZM753.44 50L753.44 60M770.76 30L779.42 35L779.42 45L770.76 50L762.1 45L762.1 35ZM770.76 50L770.76 60M788.08 30L796.74 35L796.74 45L788.08 50L779.42 45L779.42 35ZM788.08 50L788.08 60M805.4 30L814.06 35L814.06 45L805.4 50L796.74 45L796.74 35ZM805.4 50L805.4 60M822.72 30L831.38 35L831.38 45L822.72 50L814.06 45L814.06 35ZM822.72 50L822.72 60M840.04 30L848.7 35L848.7 45L840.04 50L831.38 45L831.38 35ZM840.04 50L840.04 60M857.37 30L866.03 35L866.03 45L857.37 50L848.7 45L848.7 35ZM857.37 50L857.37 60M874.69 30L883.35 35L883.35 45L874.69 50L866.03 45L866.03 35ZM874.69 50L874.69 60M892.01 30L900.67 35L900.67 45L892.01 50L883.35 45L883.35 35ZM892.01 50L892.01 60M909.33 30L917.99 35L917.99 45L909.33 50L900.67 45L900.67 35ZM909.33 50L909.33 60M926.65 30L935.31 35L935.31 45L926.65 50L917.99 45L917.99 35ZM926.65 50L926.65 60M943.97 30L952.63 35L952.63 45L943.97 50L935.31 45L935.31 35ZM943.97 50L943.97 60M961.29 30L969.95 35L969.95 45L961.29 50L952.63 45L952.63 35ZM961.29 50L961.29 60M978.61 30L987.27 35L987.27 45L978.61 50L969.95 45L969.95 35ZM978.61 50L978.61 60M8.66 60L17.32 65L17.32 75L8.66 80L0 75L0 65ZM8.66 80L8.66 90M25.98 60L34.64 65L34.64 75L25.98 80L17.32 75L17.32 65ZM25.98 80L25.98 90M43.3 60L51.96 65L51.96 75L43.3 80L34.64 75L34.64 65ZM43.3 80L43.3 90M60.62 60L69.28 65L69.28 75L60.62 80L51.96 75L51.96 65ZM60.62 80L60.62 90M77.94 60L86.6 65L86.6 75L77.94 80L69.28 75L69.28 65ZM77.94 80L77.94 90M95.26 60L103.92 65L103.92 75L95.26 80L86.6 75L86.6 65ZM95.26 80L95.26 90M112.58 60L121.24 65L121.24 75L112.58 80L103.92 75L103.92 65ZM112.58 80L112.58 90M129.9 60L138.56 65L138.56 75L129.9 80L121.24 75L121.24 65ZM129.9 80L129.9 90M147.22 60L155.88 65L155.88 75L147.22 80L138.56 75L138.56 65ZM147.22 80L147.22 90M164.54 60L173.21 65L173.21 75L164.54 80L155.88 75L155.88 65ZM164.54 80L164.54 90M181.87 60L190.53 65L190.53 75L181.87 80L173.21 75L173.21 65ZM181.87 80L181.87 90M199.19 60L207.85 65L207.85 75L199.19 80L190.53 75L190.53 65ZM199.19 80L199.19 90M216.51 60L225.17 65L225.17 75L216.51 80L207.85 75L207.85 65ZM216.51 80L216.51 90M233.83 60L242.49 65L242.49 75L233.83 80L225.17 75L225.17 65ZM233.83 80L233.83 90M251.15 60L259.81 65L259.81 75L251.15 80L242.49 75L242.49 65ZM251.15 80L251.15 90M268.47 60L277.13 65L277.13 75L268.47 80L259.81 75L259.81 65ZM268.47 80L268.47 90M285.79 60L294.45 65L294.45 75L285.79 80L277.13 75L277.13 65ZM285.79 80L285.79 90M303.11 60L311.77 65L311.77 75L303.11 80L294.45 75L294.45 65ZM303.11 80L303.11 90M320.43 60L329.09 65L329.09 75L320.43 80L311.77 75L311.77 65ZM320.43 80L320.43 90M337.75 60L346.41 65L346.41 75L337.75 80L329.09 75L329.09 65ZM337.75 80L337.75 90M355.07 60L363.73 65L363.73 75L355.07 80L346.41 75L346.41 65ZM355.07 80L355.07 90M372.39 60L381.05 65L381.05 75L372.39 80L363.73 75L363.73 65ZM372.39 80L372.39 90M389.71 60L398.37 65L398.37 75L389.71 80L381.05 75L381.05 65ZM389.71 80L389.71 90M407.03 60L415.69 65L415.69 75L407.03 80L398.37 75L398.37 65ZM407.03 80L407.03 90M424.35 60L433.01 65L433.01 75L424.35 80L415.69 75L415.69 65ZM424.35 80L424.35 90M441.67 60L450.33 65L450.33 75L441.67 80L433.01 75L433.01 65ZM441.67 80L441.67 90M458.99 60L467.65 65L467.65 75L458.99 80L450.33 75L450.33 65ZM458.99 80L458.99 90M476.31 60L484.97 65L484.97 75L476.31 80L467.65 75L467.65 65ZM476.31 80L476.31 90M493.63 60L502.29 65L502.29 75L493.63 80L484.97 75L484.97 65ZM493.63 80L493.63 90M510.95 60L519.62 65L519.62 75L510.95 80L502.29 75L502.29 65ZM510.95 80L510.95 90M528.28 60L536.94 65L536.94 75L528.28 80L519.62 75L519.62 65ZM528.28 80L528.28 90M545.6 60L554.26 65L554.26 75L545.6 80L536.94 75L536.94 65ZM545.6 80L545.6 90M562.92 60L571.58 65L571.58 75L562.92 80L554.26 75L554.26 65ZM562.92 80L562.92 90M580.24 60L588.9 65L588.9 75L580.24 80L571.58 75L571.58 65ZM580.24 80L580.24 90M597.56 60L606.22 65L606.22 75L597.56 80L588.9 75L588.9 65ZM597.56 80L597.56 90M614.88 60L623.54 65L623.54 75L614.88 80L606.22 75L606.22 65ZM614.88 80L614.88 90M632.2 60L640.86 65L640.86 75L632.2 80L623.54 75L623.54 65ZM632.2 80L632.2 90M649.52 60L658.18 65L658.18 75L649.52 80L640.86 75L640.86 65ZM649.52 80L649.52 90M666.84 60L675.5 65L675.5 75L666.84 80L658.18 75L658.18 65ZM666.84 80L666.84 90M684.16 60L692.82 65L692.82 75L684.16 80L675.5 75L675.5 65ZM684.16 80L684.16 90M701.48 60L710.14 65L710.14 75L701.48 80L692.82 75L692.82 65ZM701.48 80L701.48 90M718.8 60L727.46 65L727.46 75L718.8 80L710.14 75L710.14 65ZM718.8 80L718.8 90M736.12 60L744.78 65L744.78 75L736.12 80L727.46 75L727.46 65ZM736.12 80L736.12 90M753.44 60L762.1 65L762.1 75L753.44 80L744.78 75L744.78 65ZM753.44 80L753.44 90M770.76 60L779.42 65L779.42 75L770.76 80L762.1 75L762.1 65ZM770.76 80L770.76 90M788.08 60L796.74 65L796.74 75L788.08 80L779.42 75L779.42 65ZM788.08 80L788.08 90M805.4 60L814.06 65L814.06 75L805.4 80L796.74 75L796.74 65ZM805.4 80L805.4 90M822.72 60L831.38 65L831.38 75L822.72 80L814.06 75L814.06 65ZM822.72 80L822.72 90M840.04 60L848.7 65L848.7 75L840.04 80L831.38 75L831.38 65ZM840.04 80L840.04 90M857.37 60L866.03 65L866.03 75L857.37 80L848.7 75L848.7 65ZM857.37 80L857.37 90M874.69 60L883.35 65L883.35 75L874.69 80L866.03 75L866.03 65ZM874.69 80L874.69 90M892.01 60L900.67 65L900.67 75L892.01 80L883.35 75L883.35 65ZM892.01 80L892.01 90M909.33 60L917.99 65L917.99 75L909.33 80L900.67 75L900.67 65ZM909.33 80L909.33 90M926.65 60L935.31 65L935.31 75L926.65 80L917.99 75L917.99 65ZM926.65 80L926.65 90M943.97 60L952.63 65L952.63 75L943.97 80L935.31 75L935.31 65ZM943.97 80L943.97 90M961.29 60L969.95 65L969.95 75L961.29 80L952.63 75L952.63 65ZM961.29 80L961.29 90M978.61 60L987.27 65L987.27 75L978.61 80L969.95 75L969.95 65ZM978.61 80L978.61 90M8.66 90L17.32 95L17.32 105L8.66 110L0 105L0 95ZM8.66 110L8.66 120M25.98 90L34.64 95L34.64 105L25.98 110L17.32 105L17.32 95ZM25.98 110L25.98 120M43.3 90L51.96 95L51.96 105L43.3 110L34.64 105L34.64 95ZM43.3 110L43.3 120M60.62 90L69.28 95L69.28 105L60.62 110L51.96 105L51.96 95ZM60.62 110L60.62 120M77.94 90L86.6 95L86.6 105L77.94 110L69.28 105L69.28 95ZM77.94 110L77.94 120M95.26 90L103.92 95L103.92 105L95.26 110L86.6 105L86.6 95ZM95.26 110L95.26 120M112.58 90L121.24 95L121.24 105L112.58 110L103.92 105L103.92 95ZM112.58 110L112.58 120M129.9 90L138.56 95L138.56 105L129.9 110L121.24 105L121.24 95ZM129.9 110L129.9 120M147.22 90L155.88 95L155.88 105L147.22 110L138.56 105L138.56 95ZM147.22 110L147.22 120M164.54 90L173.21 95L173.21 105L164.54 110L155.88 105L155.88 95ZM164.54 110L164.54 120M181.87 90L190.53 95L190.53 105L181.87 110L173.21 105L173.21 95ZM181.87 110L181.87 120M199.19 90L207.85 95L207.85 105L199.19 110L190.53 105L190.53 95ZM199.19 110L199.19 120M216.51 90L225.17 95L225.17 105L216.51 110L207.85 105L207.85 95ZM216.51 110L216.51 120M233.83 90L242.49 95L242.49 105L233.83 110L225.17 105L225.17 95ZM233.83 110L233.83 120M251.15 90L259.81 95L259.81 105L251.15 110L242.49 105L242.49 95ZM251.15 110L251.15 120M268.47 90L277.13 95L277.13 105L268.47 110L259.81 105L259.81 95ZM268.47 110L268.47 120M285.79 90L294.45 95L294.45 105L285.79 110L277.13 105L277.13 95ZM285.79 110L285.79 120M303.11 90L311.77 95L311.77 105L303.11 110L294.45 105L294.45 95ZM303.11 110L303.11 120M320.43 90L329.09 95L329.09 105L320.43 110L311.77 105L311.77 95ZM320.43 110L320.43 120M337.75 90L346.41 95L346.41 105L337.75 110L329.09 105L329.09 95ZM337.75 110L337.75 120M355.07 90L363.73 95L363.73 105L355.07 110L346.41 105L346.41 95ZM355.07 110L355.07 120M372.39 90L381.05 95L381.05 105L372.39 110L363.73 105L363.73 95ZM372.39 110L372.39 120M389.71 90L398.37 95L398.37 105L389.71 110L381.05 105L381.05 95ZM389.71 110L389.71 120M407.03 90L415.69 95L415.69 105L407.03 110L398.37 105L398.37 95ZM407.03 110L407.03 120M424.35 90L433.01 95L433.01 105L424.35 110L415.69 105L415.69 95ZM424.35 110L424.35 120M441.67 90L450.33 95L450.33 105L441.67 110L433.01 105L433.01 95ZM441.67 110L441.67 120M458.99 90L467.65 95L467.65 105L458.99 110L450.33 105L450.33 95ZM458.99 110L458.99 120M476.31 90L484.97 95L484.97 105L476.31 110L467.65 105L467.65 95ZM476.31 110L476.31 120M493.63 90L502.29 95L502.29 105L493.63 110L484.97 105L484.97 95ZM493.63 110L493.63 120M510.95 90L519.62 95L519.62 105L510.95 110L502.29 105L502.29 95ZM510.95 110L510.95 120M528.28 90L536.94 95L536.94 105L528.28 110L519.62 105L519.62 95ZM528.28 110L528.28 120M545.6 90L554.26 95L554.26 105L545.6 110L536.94 105L536.94 95ZM545.6 110L545.6 120M562.92 90L571.58 95L571.58 105L562.92 110L554.26 105L554.26 95ZM562.92 110L562.92 120M580.24 90L588.9 95L588.9 105L580.24 110L571.58 105L571.58 95ZM580.24 110L580.24 120M597.56 90L606.22 95L606.22 105L597.56 110L588.9 105L588.9 95ZM597.56 110L597.56 120M614.88 90L623.54 95L623.54 105L614.88 110L606.22 105L606.22 95ZM614.88 110L614.88 120M632.2 90L640.86 95L640.86 105L632.2 110L623.54 105L623.54 95ZM632.2 110L632.2 120M649.52 90L658.18 95L658.18 105L649.52 110L640.86 105L640.86 95ZM649.52 110L649.52 120M666.84 90L675.5 95L675.5 105L666.84 110L658.18 105L658.18 95ZM666.84 110L666.84 120M684.16 90L692.82 95L692.82 105L684.16 110L675.5 105L675.5 95ZM684.16 110L684.16 120M701.48 90L710.14 95L710.14 105L701.48 110L692.82 105L692.82 95ZM701.48 110L701.48 120M718.8 90L727.46 95L727.46 105L718.8 110L710.14 105L710.14 95ZM718.8 110L718.8 120M736.12 90L744.78 95L744.78 105L736.12 110L727.46 105L727.46 95ZM736.12 110L736.12 120M753.44 90L762.1 95L762.1 105L753.44 110L744.78 105L744.78 95ZM753.44 110L753.44 120M770.76 90L779.42 95L779.42 105L770.76 110L762.1 105L762.1 95ZM770.76 110L770.76 120M788.08 90L796.74 95L796.74 105L788.08 110L779.42 105L779.42 95ZM788.08 110L788.08 120M805.4 90L814.06 95L814.06 105L805.4 110L796.74 105L796.74 95ZM805.4 110L805.4 120M822.72 90L831.38 95L831.38 105L822.72 110L814.06 105L814.06 95ZM822.72 110L822.72 120M840.04 90L848.7 95L848.7 105L840.04 110L831.38 105L831.38 95ZM840.04 110L840.04 120M857.37 90L866.03 95L866.03 105L857.37 110L848.7 105L848.7 95ZM857.37 110L857.37 120M874.69 90L883.35 95L883.35 105L874.69 110L866.03 105L866.03 95ZM874.69 110L874.69 120M892.01 90L900.67 95L900.67 105L892.01 110L883.35 105L883.35 95ZM892.01 110L892.01 120M909.33 90L917.99 95L917.99 105L909.33 110L900.67 105L900.67 95ZM909.33 110L909.33 120M926.65 90L935.31 95L935.31 105L926.65 110L917.99 105L917.99 95ZM926.65 110L926.65 120M943.97 90L952.63 95L952.63 105L943.97 110L935.31 105L935.31 95ZM943.97 110L943.97 120M961.29 90L969.95 95L969.95 105L961.29 110L952.63 105L952.63 95ZM961.29 110L961.29 120M978.61 90L987.27 95L987.27 105L978.61 110L969.95 105L969.95 95ZM978.61 110L978.61 120M8.66 120L17.32 125L17.32 135L8.66 140L0 135L0 125ZM8.66 140L8.66 150M25.98 120L34.64 125L34.64 135L25.98 140L17.32 135L17.32 125ZM25.98 140L25.98 150M43.3 120L51.96 125L51.96 135L43.3 140L34.64 135L34.64 125ZM43.3 140L43.3 150M60.62 120L69.28 125L69.28 135L60.62 140L51.96 135L51.96 125ZM60.62 140L60.62 150M77.94 120L86.6 125L86.6 135L77.94 140L69.28 135L69.28 125ZM77.94 140L77.94 150M95.26 120L103.92 125L103.92 135L95.26 140L86.6 135L86.6 125ZM95.26 140L95.26 150M112.58 120L121.24 125L121.24 135L112.58 140L103.92 135L103.92 125ZM112.58 140L112.58 150M129.9 120L138.56 125L138.56 135L129.9 140L121.24 135L121.24 125ZM129.9 140L129.9 150M147.22 120L155.88 125L155.88 135L147.22 140L138.56 135L138.56 125ZM147.22 140L147.22 150M164.54 120L173.21 125L173.21 135L164.54 140L155.88 135L155.88 125ZM164.54 140L164.54 150M181.87 120L190.53 125L190.53 135L181.87 140L173.21 135L173.21 125ZM181.87 140L181.87 150M199.19 120L207.85 125L207.85 135L199.19 140L190.53 135L190.53 125ZM199.19 140L199.19 150M216.51 120L225.17 125L225.17 135L216.51 140L207.85 135L207.85 125ZM216.51 140L216.51 150M233.83 120L242.49 125L242.49 135L233.83 140L225.17 135L225.17 125ZM233.83 140L233.83 150M251.15 120L259.81 125L259.81 135L251.15 140L242.49 135L242.49 125ZM251.15 140L251.15 150M268.47 120L277.13 125L277.13 135L268.47 140L259.81 135L259.81 125ZM268.47 140L268.47 150M285.79 120L294.45 125L294.45 135L285.79 140L277.13 135L277.13 125ZM285.79 140L285.79 150M303.11 120L311.77 125L311.77 135L303.11 140L294.45 135L294.45 125ZM303.11 140L303.11 150M320.43 120L329.09 125L329.09 135L320.43 140L311.77 135L311.77 125ZM320.43 140L320.43 150M337.75 120L346.41 125L346.41 135L337.75 140L329.09 135L329.09 125ZM337.75 140L337.75 150M355.07 120L363.73 125L363.73 135L355.07 140L346.41 135L346.41 125ZM355.07 140L355.07 150M372.39 120L381.05 125L381.05 135L372.39 140L363.73 135L363.73 125ZM372.39 140L372.39 150M389.71 120L398.37 125L398.37 135L389.71 140L381.05 135L381.05 125ZM389.71 140L389.71 150M407.03 120L415.69 125L415.69 135L407.03 140L398.37 135L398.37 125ZM407.03 140L407.03 150M424.35 120L433.01 125L433.01 135L424.35 140L415.69 135L415.69 125ZM424.35 140L424.35 150M441.67 120L450.33 125L450.33 135L441.67 140L433.01 135L433.01 125ZM441.67 140L441.67 150M458.99 120L467.65 125L467.65 135L458.99 140L450.33 135L450.33 125ZM458.99 140L458.99 150M476.31 120L484.97 125L484.97 135L476.31 140L467.65 135L467.65 125ZM476.31 140L476.31 150M493.63 120L502.29 125L502.29 135L493.63 140L484.97 135L484.97 125ZM493.63 140L493.63 150M510.95 120L519.62 125L519.62 135L510.95 140L502.29 135L502.29 125ZM510.95 140L510.95 150M528.28 120L536.94 125L536.94 135L528.28 140L519.62 135L519.62 125ZM528.28 140L528.28 150M545.6 120L554.26 125L554.26 135L545.6 140L536.94 135L536.94 125ZM545.6 140L545.6 150M562.92 120L571.58 125L571.58 135L562.92 140L554.26 135L554.26 125ZM562.92 140L562.92 150M580.24 120L588.9 125L588.9 135L580.24 140L571.58 135L571.58 125ZM580.24 140L580.24 150M597.56 120L606.22 125L606.22 135L597.56 140L588.9 135L588.9 125ZM597.56 140L597.56 150M614.88 120L623.54 125L623.54 135L614.88 140L606.22 135L606.22 125ZM614.88 140L614.88 150M632.2 120L640.86 125L640.86 135L632.2 140L623.54 135L623.54 125ZM632.2 140L632.2 150M649.52 120L658.18 125L658.18 135L649.52 140L640.86 135L640.86 125ZM649.52 140L649.52 150M666.84 120L675.5 125L675.5 135L666.84 140L658.18 135L658.18 125ZM666.84 140L666.84 150M684.16 120L692.82 125L692.82 135L684.16 140L675.5 135L675.5 125ZM684.16 140L684.16 150M701.48 120L710.14 125L710.14 135L701.48 140L692.82 135L692.82 125ZM701.48 140L701.48 150M718.8 120L727.46 125L727.46 135L718.8 140L710.14 135L710.14 125ZM718.8 140L718.8 150M736.12 120L744.78 125L744.78 135L736.12 140L727.46 135L727.46 125ZM736.12 140L736.12 150M753.44 120L762.1 125L762.1 135L753.44 140L744.78 135L744.78 125ZM753.44 140L753.44 150M770.76 120L779.42 125L779.42 135L770.76 140L762.1 135L762.1 125ZM770.76 140L770.76 150M788.08 120L796.74 125L796.74 135L788.08 140L779.42 135L779.42 125ZM788.08 140L788.08 150M805.4 120L814.06 125L814.06 135L805.4 140L796.74 135L796.74 125ZM805.4 140L805.4 150M822.72 120L831.38 125L831.38 135L822.72 140L814.06 135L814.06 125ZM822.72 140L822.72 150M840.04 120L848.7 125L848.7 135L840.04 140L831.38 135L831.38 125ZM840.04 140L840.04 150M857.37 120L866.03 125L866.03 135L857.37 140L848.7 135L848.7 125ZM857.37 140L857.37 150M874.69 120L883.35 125L883.35 135L874.69 140L866.03 135L866.03 125ZM874.69 140L874.69 150M892.01 120L900.67 125L900.67 135L892.01 140L883.35 135L883.35 125ZM892.01 140L892.01 150M909.33 120L917.99 125L917.99 135L909.33 140L900.67 135L900.67 125ZM909.33 140L909.33 150M926.65 120L935.31 125L935.31 135L926.65 140L917.99 135L917.99 125ZM926.65 140L926.65 150M943.97 120L952.63 125L952.63 135L943.97 140L935.31 135L935.31 125ZM943.97 140L943.97 150M961.29 120L969.95 125L969.95 135L961.29 140L952.63 135L952.63 125ZM961.29 140L961.29 150M978.61 120L987.27 125L987.27 135L978.61 140L969.95 135L969.95 125ZM978.61 140L978.61 150M8.66 150L17.32 155L17.32 165L8.66 170L0 165L0 155ZM8.66 170L8.66 180M25.98 150L34.64 155L34.64 165L25.98 170L17.32 165L17.32 155ZM25.98 170L25.98 180M43.3 150L51.96 155L51.96 165L43.3 170L34.64 165L34.64 155ZM43.3 170L43.3 180M60.62 150L69.28 155L69.28 165L60.62 170L51.96 165L51.96 155ZM60.62 170L60.62 180M77.94 150L86.6 155L86.6 165L77.94 170L69.28 165L69.28 155ZM77.94 170L77.94 180M95.26 150L103.92 155L103.92 165L95.26 170L86.6 165L86.6 155ZM95.26 170L95.26 180M112.58 150L121.24 155L121.24 165L112.58 170L103.92 165L103.92 155ZM112.58 170L112.58 180M129.9 150L138.56 155L138.56 165L129.9 170L121.24 165L121.24 155ZM129.9 170L129.9 180M147.22 150L155.88 155L155.88 165L147.22 170L138.56 165L138.56 155ZM147.22 170L147.22 180M164.54 150L173.21 155L173.21 165L164.54 170L155.88 165L155.88 155ZM164.54 170L164.54 180M181.87 150L190.53 155L190.53 165L181.87 170L173.21 165L173.21 155ZM181.87 170L181.87 180M199.19 150L207.85 155L207.85 165L199.19 170L190.53 165L190.53 155ZM199.19 170L199.19 180M216.51 150L225.17 155L225.17 165L216.51 170L207.85 165L207.85 155ZM216.51 170L216.51 180M233.83 150L242.49 155L242.49 165L233.83 170L225.17 165L225.17 155ZM233.83 170L233.83 180M251.15 150L259.81 155L259.81 165L251.15 170L242.49 165L242.49 155ZM251.15 170L251.15 180M268.47 150L277.13 155L277.13 165L268.47 170L259.81 165L259.81 155ZM268.47 170L268.47 180M285.79 150L294.45 155L294.45 165L285.79 170L277.13 165L277.13 155ZM285.79 170L285.79 180M303.11 150L311.77 155L311.77 165L303.11 170L294.45 165L294.45 155ZM303.11 170L303.11 180M320.43 150L329.09 155L329.09 165L320.43 170L311.77 165L311.77 155ZM320.43 170L320.43 180M337.75 150L346.41 155L346.41 165L337.75 170L329.09 165L329.09 155ZM337.75 170L337.75 180M355.07 150L363.73 155L363.73 165L355.07 170L346.41 165L346.41 155ZM355.07 170L355.07 180M372.39 150L381.05 155L381.05 165L372.39 170L363.73 165L363.73 155ZM372.39 170L372.39 180M389.71 150L398.37 155L398.37 165L389.71 170L381.05 165L381.05 155ZM389.71 170L389.71 180M407.03 150L415.69 155L415.69 165L407.03 170L398.37 165L398.37 155ZM407.03 170L407.03 180M424.35 150L433.01 155L433.01 165L424.35 170L415.69 165L415.69 155ZM424.35 170L424.35 180M441.67 150L450.33 155L450.33 165L441.67 170L433.01 165L433.01 155ZM441.67 170L441.67 180M458.99 150L467.65 155L467.65 165L458.99 170L450.33 165L450.33 155ZM458.99 170L458.99 180M476.31 150L484.97 155L484.97 165L476.31 170L467.65 165L467.65 155ZM476.31 170L476.31 180M493.63 150L502.29 155L502.29 165L493.63 170L484.97 165L484.97 155ZM493.63 170L493.63 180M510.95 150L519.62 155L519.62 165L510.95 170L502.29 165L502.29 155ZM510.95 170L510.95 180M528.28 150L536.94 155L536.94 165L528.28 170L519.62 165L519.62 155ZM528.28 170L528.28 180M545.6 150L554.26 155L554.26 165L545.6 170L536.94 165L536.94 155ZM545.6 170L545.6 180M562.92 150L571.58 155L571.58 165L562.92 170L554.26 165L554.26 155ZM562.92 170L562.92 180M580.24 150L588.9 155L588.9 165L580.24 170L571.58 165L571.58 155ZM580.24 170L580.24 180M597.56 150L606.22 155L606.22 165L597.56 170L588.9 165L588.9 155ZM597.56 170L597.56 180M614.88 150L623.54 155L623.54 165L614.88 170L606.22 165L606.22 155ZM614.88 170L614.88 180M632.2 150L640.86 155L640.86 165L632.2 170L623.54 165L623.54 155ZM632.2 170L632.2 180M649.52 150L658.18 155L658.18 165L649.52 170L640.86 165L640.86 155ZM649.52 170L649.52 180M666.84 150L675.5 155L675.5 165L666.84 170L658.18 165L658.18 155ZM666.84 170L666.84 180M684.16 150L692.82 155L692.82 165L684.16 170L675.5 165L675.5 155ZM684.16 170L684.16 180M701.48 150L710.14 155L710.14 165L701.48 170L692.82 165L692.82 155ZM701.48 170L701.48 180M718.8 150L727.46 155L727.46 165L718.8 170L710.14 165L710.14 155ZM718.8 170L718.8 180M736.12 150L744.78 155L744.78 165L736.12 170L727.46 165L727.46 155ZM736.12 170L736.12 180M753.44 150L762.1 155L762.1 165L753.44 170L744.78 165L744.78 155ZM753.44 170L753.44 180M770.76 150L779.42 155L779.42 165L770.76 170L762.1 165L762.1 155ZM770.76 170L770.76 180M788.08 150L796.74 155L796.74 165L788.08 170L779.42 165L779.42 155ZM788.08 170L788.08 180M805.4 150L814.06 155L814.06 165L805.4 170L796.74 165L796.74 155ZM805.4 170L805.4 180M822.72 150L831.38 155L831.38 165L822.72 170L814.06 165L814.06 155ZM822.72 170L822.72 180M840.04 150L848.7 155L848.7 165L840.04 170L831.38 165L831.38 155ZM840.04 170L840.04 180M857.37 150L866.03 155L866.03 165L857.37 170L848.7 165L848.7 155ZM857.37 170L857.37 180M874.69 150L883.35 155L883.35 165L874.69 170L866.03 165L866.03 155ZM874.69 170L874.69 180M892.01 150L900.67 155L900.67 165L892.01 170L883.35 165L883.35 155ZM892.01 170L892.01 180M909.33 150L917.99 155L917.99 165L909.33 170L900.67 165L900.67 155ZM909.33 170L909.33 180M926.65 150L935.31 155L935.31 165L926.65 170L917.99 165L917.99 155ZM926.65 170L926.65 180M943.97 150L952.63 155L952.63 165L943.97 170L935.31 165L935.31 155ZM943.97 170L943.97 180M961.29 150L969.95 155L969.95 165L961.29 170L952.63 165L952.63 155ZM961.29 170L961.29 180M978.61 150L987.27 155L987.27 165L978.61 170L969.95 165L969.95 155ZM978.61 170L978.61 180M8.66 180L17.32 185L17.32 195L8.66 200L0 195L0 185ZM8.66 200L8.66 210M25.98 180L34.64 185L34.64 195L25.98 200L17.32 195L17.32 185ZM25.98 200L25.98 210M43.3 180L51.96 185L51.96 195L43.3 200L34.64 195L34.64 185ZM43.3 200L43.3 210M60.62 180L69.28 185L69.28 195L60.62 200L51.96 195L51.96 185ZM60.62 200L60.62 210M77.94 180L86.6 185L86.6 195L77.94 200L69.28 195L69.28 185ZM77.94 200L77.94 210M95.26 180L103.92 185L103.92 195L95.26 200L86.6 195L86.6 185ZM95.26 200L95.26 210M112.58 180L121.24 185L121.24 195L112.58 200L103.92 195L103.92 185ZM112.58 200L112.58 210M129.9 180L138.56 185L138.56 195L129.9 200L121.24 195L121.24 185ZM129.9 200L129.9 210M147.22 180L155.88 185L155.88 195L147.22 200L138.56 195L138.56 185ZM147.22 200L147.22 210M164.54 180L173.21 185L173.21 195L164.54 200L155.88 195L155.88 185ZM164.54 200L164.54 210M181.87 180L190.53 185L190.53 195L181.87 200L173.21 195L173.21 185ZM181.87 200L181.87 210M199.19 180L207.85 185L207.85 195L199.19 200L190.53 195L190.53 185ZM199.19 200L199.19 210M216.51 180L225.17 185L225.17 195L216.51 200L207.85 195L207.85 185ZM216.51 200L216.51 210M233.83 180L242.49 185L242.49 195L233.83 200L225.17 195L225.17 185ZM233.83 200L233.83 210M251.15 180L259.81 185L259.81 195L251.15 200L242.49 195L242.49 185ZM251.15 200L251.15 210M268.47 180L277.13 185L277.13 195L268.47 200L259.81 195L259.81 185ZM268.47 200L268.47 210M285.79 180L294.45 185L294.45 195L285.79 200L277.13 195L277.13 185ZM285.79 200L285.79 210M303.11 180L311.77 185L311.77 195L303.11 200L294.45 195L294.45 185ZM303.11 200L303.11 210M320.43 180L329.09 185L329.09 195L320.43 200L311.77 195L311.77 185ZM320.43 200L320.43 210M337.75 180L346.41 185L346.41 195L337.75 200L329.09 195L329.09 185ZM337.75 200L337.75 210M355.07 180L363.73 185L363.73 195L355.07 200L346.41 195L346.41 185ZM355.07 200L355.07 210M372.39 180L381.05 185L381.05 195L372.39 200L363.73 195L363.73 185ZM372.39 200L372.39 210M389.71 180L398.37 185L398.37 195L389.71 200L381.05 195L381.05 185ZM389.71 200L389.71 210M407.03 180L415.69 185L415.69 195L407.03 200L398.37 195L398.37 185ZM407.03 200L407.03 210M424.35 180L433.01 185L433.01 195L424.35 200L415.69 195L415.69 185ZM424.35 200L424.35 210M441.67 180L450.33 185L450.33 195L441.67 200L433.01 195L433.01 185ZM441.67 200L441.67 210M458.99 180L467.65 185L467.65 195L458.99 200L450.33 195L450.33 185ZM458.99 200L458.99 210M476.31 180L484.97 185L484.97 195L476.31 200L467.65 195L467.65 185ZM476.31 200L476.31 210M493.63 180L502.29 185L502.29 195L493.63 200L484.97 195L484.97 185ZM493.63 200L493.63 210M510.95 180L519.62 185L519.62 195L510.95 200L502.29 195L502.29 185ZM510.95 200L510.95 210M528.28 180L536.94 185L536.94 195L528.28 200L519.62 195L519.62 185ZM528.28 200L528.28 210M545.6 180L554.26 185L554.26 195L545.6 200L536.94 195L536.94 185ZM545.6 200L545.6 210M562.92 180L571.58 185L571.58 195L562.92 200L554.26 195L554.26 185ZM562.92 200L562.92 210M580.24 180L588.9 185L588.9 195L580.24 200L571.58 195L571.58 185ZM580.24 200L580.24 210M597.56 180L606.22 185L606.22 195L597.56 200L588.9 195L588.9 185ZM597.56 200L597.56 210M614.88 180L623.54 185L623.54 195L614.88 200L606.22 195L606.22 185ZM614.88 200L614.88 210M632.2 180L640.86 185L640.86 195L632.2 200L623.54 195L623.54 185ZM632.2 200L632.2 210M649.52 180L658.18 185L658.18 195L649.52 200L640.86 195L640.86 185ZM649.52 200L649.52 210M666.84 180L675.5 185L675.5 195L666.84 200L658.18 195L658.18 185ZM666.84 200L666.84 210M684.16 180L692.82 185L692.82 195L684.16 200L675.5 195L675.5 185ZM684.16 200L684.16 210M701.48 180L710.14 185L710.14 195L701.48 200L692.82 195L692.82 185ZM701.48 200L701.48 210M718.8 180L727.46 185L727.46 195L718.8 200L710.14 195L710.14 185ZM718.8 200L718.8 210M736.12 180L744.78 185L744.78 195L736.12 200L727.46 195L727.46 185ZM736.12 200L736.12 210M753.44 180L762.1 185L762.1 195L753.44 200L744.78 195L744.78 185ZM753.44 200L753.44 210M770.76 180L779.42 185L779.42 195L770.76 200L762.1 195L762.1 185ZM770.76 200L770.76 210M788.08 180L796.74 185L796.74 195L788.08 200L779.42 195L779.42 185ZM788.08 200L788.08 210M805.4 180L814.06 185L814.06 195L805.4 200L796.74 195L796.74 185ZM805.4 200L805.4 210M822.72 180L831.38 185L831.38 195L822.72 200L814.06 195L814.06 185ZM822.72 200L822.72 210M840.04 180L848.7 185L848.7 195L840.04 200L831.38 195L831.38 185ZM840.04 200L840.04 210M857.37 180L866.03 185L866.03 195L857.37 200L848.7 195L848.7 185ZM857.37 200L857.37 210M874.69 180L883.35 185L883.35 195L874.69 200L866.03 195L866.03 185ZM874.69 200L874.69 210M892.01 180L900.67 185L900.67 195L892.01 200L883.35 195L883.35 185ZM892.01 200L892.01 210M909.33 180L917.99 185L917.99 195L909.33 200L900.67 195L900.67 185ZM909.33 200L909.33 210M926.65 180L935.31 185L935.31 195L926.65 200L917.99 195L917.99 185ZM926.65 200L926.65 210M943.97 180L952.63 185L952.63 195L943.97 200L935.31 195L935.31 185ZM943.97 200L943.97 210M961.29 180L969.95 185L969.95 195L961.29 200L952.63 195L952.63 185ZM961.29 200L961.29 210M978.61 180L987.27 185L987.27 195L978.61 200L969.95 195L969.95 185ZM978.61 200L978.61 210M8.66 210L17.32 215L17.32 225L8.66 230L0 225L0 215ZM8.66 230L8.66 240M25.98 210L34.64 215L34.64 225L25.98 230L17.32 225L17.32 215ZM25.98 230L25.98 240M43.3 210L51.96 215L51.96 225L43.3 230L34.64 225L34.64 215ZM43.3 230L43.3 240M60.62 210L69.28 215L69.28 225L60.62 230L51.96 225L51.96 215ZM60.62 230L60.62 240M77.94 210L86.6 215L86.6 225L77.94 230L69.28 225L69.28 215ZM77.94 230L77.94 240M95.26 210L103.92 215L103.92 225L95.26 230L86.6 225L86.6 215ZM95.26 230L95.26 240M112.58 210L121.24 215L121.24 225L112.58 230L103.92 225L103.92 215ZM112.58 230L112.58 240M129.9 210L138.56 215L138.56 225L129.9 230L121.24 225L121.24 215ZM129.9 230L129.9 240M147.22 210L155.88 215L155.88 225L147.22 230L138.56 225L138.56 215ZM147.22 230L147.22 240M164.54 210L173.21 215L173.21 225L164.54 230L155.88 225L155.88 215ZM164.54 230L164.54 240M181.87 210L190.53 215L190.53 225L181.87 230L173.21 225L173.21 215ZM181.87 230L181.87 240M199.19 210L207.85 215L207.85 225L199.19 230L190.53 225L190.53 215ZM199.19 230L199.19 240M216.51 210L225.17 215L225.17 225L216.51 230L207.85 225L207.85 215ZM216.51 230L216.51 240M233.83 210L242.49 215L242.49 225L233.83 230L225.17 225L225.17 215ZM233.83 230L233.83 240M251.15 210L259.81 215L259.81 225L251.15 230L242.49 225L242.49 215ZM251.15 230L251.15 240M268.47 210L277.13 215L277.13 225L268.47 230L259.81 225L259.81 215ZM268.47 230L268.47 240M285.79 210L294.45 215L294.45 225L285.79 230L277.13 225L277.13 215ZM285.79 230L285.79 240M303.11 210L311.77 215L311.77 225L303.11 230L294.45 225L294.45 215ZM303.11 230L303.11 240M320.43 210L329.09 215L329.09 225L320.43 230L311.77 225L311.77 215ZM320.43 230L320.43 240M337.75 210L346.41 215L346.41 225L337.75 230L329.09 225L329.09 215ZM337.75 230L337.75 240M355.07 210L363.73 215L363.73 225L355.07 230L346.41 225L346.41 215ZM355.07 230L355.07 240M372.39 210L381.05 215L381.05 225L372.39 230L363.73 225L363.73 215ZM372.39 230L372.39 240M389.71 210L398.37 215L398.37 225L389.71 230L381.05 225L381.05 215ZM389.71 230L389.71 240M407.03 210L415.69 215L415.69 225L407.03 230L398.37 225L398.37 215ZM407.03 230L407.03 240M424.35 210L433.01 215L433.01 225L424.35 230L415.69 225L415.69 215ZM424.35 230L424.35 240M441.67 210L450.33 215L450.33 225L441.67 230L433.01 225L433.01 215ZM441.67 230L441.67 240M458.99 210L467.65 215L467.65 225L458.99 230L450.33 225L450.33 215ZM458.99 230L458.99 240M476.31 210L484.97 215L484.97 225L476.31 230L467.65 225L467.65 215ZM476.31 230L476.31 240M493.63 210L502.29 215L502.29 225L493.63 230L484.97 225L484.97 215ZM493.63 230L493.63 240M510.95 210L519.62 215L519.62 225L510.95 230L502.29 225L502.29 215ZM510.95 230L510.95 240M528.28 210L536.94 215L536.94 225L528.28 230L519.62 225L519.62 215ZM528.28 230L528.28 240M545.6 210L554.26 215L554.26 225L545.6 230L536.94 225L536.94 215ZM545.6 230L545.6 240M562.92 210L571.58 215L571.58 225L562.92 230L554.26 225L554.26 215ZM562.92 230L562.92 240M580.24 210L588.9 215L588.9 225L580.24 230L571.58 225L571.58 215ZM580.24 230L580.24 240M597.56 210L606.22 215L606.22 225L597.56 230L588.9 225L588.9 215ZM597.56 230L597.56 240M614.88 210L623.54 215L623.54 225L614.88 230L606.22 225L606.22 215ZM614.88 230L614.88 240M632.2 210L640.86 215L640.86 225L632.2 230L623.54 225L623.54 215ZM632.2 230L632.2 240M649.52 210L658.18 215L658.18 225L649.52 230L640.86 225L640.86 215ZM649.52 230L649.52 240M666.84 210L675.5 215L675.5 225L666.84 230L658.18 225L658.18 215ZM666.84 230L666.84 240M684.16 210L692.82 215L692.82 225L684.16 230L675.5 225L675.5 215ZM684.16 230L684.16 240M701.48 210L710.14 215L710.14 225L701.48 230L692.82 225L692.82 215ZM701.48 230L701.48 240M718.8 210L727.46 215L727.46 225L718.8 230L710.14 225L710.14 215ZM718.8 230L718.8 240M736.12 210L744.78 215L744.78 225L736.12 230L727.46 225L727.46 215ZM736.12 230L736.12 240M753.44 210L762.1 215L762.1 225L753.44 230L744.78 225L744.78 215ZM753.44 230L753.44 240M770.76 210L779.42 215L779.42 225L770.76 230L762.1 225L762.1 215ZM770.76 230L770.76 240M788.08 210L796.74 215L796.74 225L788.08 230L779.42 225L779.42 215ZM788.08 230L788.08 240M805.4 210L814.06 215L814.06 225L805.4 230L796.74 225L796.74 215ZM805.4 230L805.4 240M822.72 210L831.38 215L831.38 225L822.72 230L814.06 225L814.06 215ZM822.72 230L822.72 240M840.04 210L848.7 215L848.7 225L840.04 230L831.38 225L831.38 215ZM840.04 230L840.04 240M857.37 210L866.03 215L866.03 225L857.37 230L848.7 225L848.7 215ZM857.37 230L857.37 240M874.69 210L883.35 215L883.35 225L874.69 230L866.03 225L866.03 215ZM874.69 230L874.69 240M892.01 210L900.67 215L900.67 225L892.01 230L883.35 225L883.35 215ZM892.01 230L892.01 240M909.33 210L917.99 215L917.99 225L909.33 230L900.67 225L900.67 215ZM909.33 230L909.33 240M926.65 210L935.31 215L935.31 225L926.65 230L917.99 225L917.99 215ZM926.65 230L926.65 240M943.97 210L952.63 215L952.63 225L943.97 230L935.31 225L935.31 215ZM943.97 230L943.97 240M961.29 210L969.95 215L969.95 225L961.29 230L952.63 225L952.63 215ZM961.29 230L961.29 240M978.61 210L987.27 215L987.27 225L978.61 230L969.95 225L969.95 215ZM978.61 230L978.61 240M8.66 240L17.32 245L17.32 255L8.66 260L0 255L0 245ZM8.66 260L8.66 270M25.98 240L34.64 245L34.64 255L25.98 260L17.32 255L17.32 245ZM25.98 260L25.98 270M43.3 240L51.96 245L51.96 255L43.3 260L34.64 255L34.64 245ZM43.3 260L43.3 270M60.62 240L69.28 245L69.28 255L60.62 260L51.96 255L51.96 245ZM60.62 260L60.62 270M77.94 240L86.6 245L86.6 255L77.94 260L69.28 255L69.28 245ZM77.94 260L77.94 270M95.26 240L103.92 245L103.92 255L95.26 260L86.6 255L86.6 245ZM95.26 260L95.26 270M112.58 240L121.24 245L121.24 255L112.58 260L103.92 255L103.92 245ZM112.58 260L112.58 270M129.9 240L138.56 245L138.56 255L129.9 260L121.24 255L121.24 245ZM129.9 260L129.9 270M147.22 240L155.88 245L155.88 255L147.22 260L138.56 255L138.56 245ZM147.22 260L147.22 270M164.54 240L173.21 245L173.21 255L164.54 260L155.88 255L155.88 245ZM164.54 260L164.54 270M181.87 240L190.53 245L190.53 255L181.87 260L173.21 255L173.21 245ZM181.87 260L181.87 270M199.19 240L207.85 245L207.85 255L199.19 260L190.53 255L190.53 245ZM199.19 260L199.19 270M216.51 240L225.17 245L225.17 255L216.51 260L207.85 255L207.85 245ZM216.51 260L216.51 270M233.83 240L242.49 245L242.49 255L233.83 260L225.17 255L225.17 245ZM233.83 260L233.83 270M251.15 240L259.81 245L259.81 255L251.15 260L242.49 255L242.49 245ZM251.15 260L251.15 270M268.47 240L277.13 245L277.13 255L268.47 260L259.81 255L259.81 245ZM268.47 260L268.47 270M285.79 240L294.45 245L294.45 255L285.79 260L277.13 255L277.13 245ZM285.79 260L285.79 270M303.11 240L311.77 245L311.77 255L303.11 260L294.45 255L294.45 245ZM303.11 260L303.11 270M320.43 240L329.09 245L329.09 255L320.43 260L311.77 255L311.77 245ZM320.43 260L320.43 270M337.75 240L346.41 245L346.41 255L337.75 260L329.09 255L329.09 245ZM337.75 260L337.75 270M355.07 240L363.73 245L363.73 255L355.07 260L346.41 255L346.41 245ZM355.07 260L355.07 270M372.39 240L381.05 245L381.05 255L372.39 260L363.73 255L363.73 245ZM372.39 260L372.39 270M389.71 240L398.37 245L398.37 255L389.71 260L381.05 255L381.05 245ZM389.71 260L389.71 270M407.03 240L415.69 245L415.69 255L407.03 260L398.37 255L398.37 245ZM407.03 260L407.03 270M424.35 240L433.01 245L433.01 255L424.35 260L415.69 255L415.69 245ZM424.35 260L424.35 270M441.67 240L450.33 245L450.33 255L441.67 260L433.01 255L433.01 245ZM441.67 260L441.67 270M458.99 240L467.65 245L467.65 255L458.99 260L450.33 255L450.33 245ZM458.99 260L458.99 270M476.31 240L484.97 245L484.97 255L476.31 260L467.65 255L467.65 245ZM476.31 260L476.31 270M493.63 240L502.29 245L502.29 255L493.63 260L484.97 255L484.97 245ZM493.63 260L493.63 270M510.95 240L519.62 245L519.62 255L510.95 260L502.29 255L502.29 245ZM510.95 260L510.95 270M528.28 240L536.94 245L536.94 255L528.28 260L519.62 255L519.62 245ZM528.28 260L528.28 270M545.6 240L554.26 245L554.26 255L545.6 260L536.94 255L536.94 245ZM545.6 260L545.6 270M562.92 240L571.58 245L571.58 255L562.92 260L554.26 255L554.26 245ZM562.92 260L562.92 270M580.24 240L588.9 245L588.9 255L580.24 260L571.58 255L571.58 245ZM580.24 260L580.24 270M597.56 240L606.22 245L606.22 255L597.56 260L588.9 255L588.9 245ZM597.56 260L597.56 270M614.88 240L623.54 245L623.54 255L614.88 260L606.22 255L606.22 245ZM614.88 260L614.88 270M632.2 240L640.86 245L640.86 255L632.2 260L623.54 255L623.54 245ZM632.2 260L632.2 270M649.52 240L658.18 245L658.18 255L649.52 260L640.86 255L640.86 245ZM649.52 260L649.52 270M666.84 240L675.5 245L675.5 255L666.84 260L658.18 255L658.18 245ZM666.84 260L666.84 270M684.16 240L692.82 245L692.82 255L684.16 260L675.5 255L675.5 245ZM684.16 260L684.16 270M701.48 240L710.14 245L710.14 255L701.48 260L692.82 255L692.82 245ZM701.48 260L701.48 270M718.8 240L727.46 245L727.46 255L718.8 260L710.14 255L710.14 245ZM718.8 260L718.8 270M736.12 240L744.78 245L744.78 255L736.12 260L727.46 255L727.46 245ZM736.12 260L736.12 270M753.44 240L762.1 245L762.1 255L753.44 260L744.78 255L744.78 245ZM753.44 260L753.44 270M770.76 240L779.42 245L779.42 255L770.76 260L762.1 255L762.1 245ZM770.76 260L770.76 270M788.08 240L796.74 245L796.74 255L788.08 260L779.42 255L779.42 245ZM788.08 260L788.08 270M805.4 240L814.06 245L814.06 255L805.4 260L796.74 255L796.74 245ZM805.4 260L805.4 270M822.72 240L831.38 245L831.38 255L822.72 260L814.06 255L814.06 245ZM822.72 260L822.72 270M840.04 240L848.7 245L848.7 255L840.04 260L831.38 255L831.38 245ZM840.04 260L840.04 270M857.37 240L866.03 245L866.03 255L857.37 260L848.7 255L848.7 245ZM857.37 260L857.37 270M874.69 240L883.35 245L883.35 255L874.69 260L866.03 255L866.03 245ZM874.69 260L874.69 270M892.01 240L900.67 245L900.67 255L892.01 260L883.35 255L883.35 245ZM892.01 260L892.01 270M909.33 240L917.99 245L917.99 255L909.33 260L900.67 255L900.67 245ZM909.33 260L909.33 270M926.65 240L935.31 245L935.31 255L926.65 260L917.99 255L917.99 245ZM926.65 260L926.65 270M943.97 240L952.63 245L952.63 255L943.97 260L935.31 255L935.31 245ZM943.97 260L943.97 270M961.29 240L969.95 245L969.95 255L961.29 260L952.63 255L952.63 245ZM961.29 260L961.29 270M978.61 240L987.27 245L987.27 255L978.61 260L969.95 255L969.95 245ZM978.61 260L978.61 270M8.66 270L17.32 275L17.32 285L8.66 290L0 285L0 275ZM8.66 290L8.66 300M25.98 270L34.64 275L34.64 285L25.98 290L17.32 285L17.32 275ZM25.98 290L25.98 300M43.3 270L51.96 275L51.96 285L43.3 290L34.64 285L34.64 275ZM43.3 290L43.3 300M60.62 270L69.28 275L69.28 285L60.62 290L51.96 285L51.96 275ZM60.62 290L60.62 300M77.94 270L86.6 275L86.6 285L77.94 290L69.28 285L69.28 275ZM77.94 290L77.94 300M95.26 270L103.92 275L103.92 285L95.26 290L86.6 285L86.6 275ZM95.26 290L95.26 300M112.58 270L121.24 275L121.24 285L112.58 290L103.92 285L103.92 275ZM112.58 290L112.58 300M129.9 270L138.56 275L138.56 285L129.9 290L121.24 285L121.24 275ZM129.9 290L129.9 300M147.22 270L155.88 275L155.88 285L147.22 290L138.56 285L138.56 275ZM147.22 290L147.22 300M164.54 270L173.21 275L173.21 285L164.54 290L155.88 285L155.88 275ZM164.54 290L164.54 300M181.87 270L190.53 275L190.53 285L181.87 290L173.21 285L173.21 275ZM181.87 290L181.87 300M199.19 270L207.85 275L207.85 285L199.19 290L190.53 285L190.53 275ZM199.19 290L199.19 300M216.51 270L225.17 275L225.17 285L216.51 290L207.85 285L207.85 275ZM216.51 290L216.51 300M233.83 270L242.49 275L242.49 285L233.83 290L225.17 285L225.17 275ZM233.83 290L233.83 300M251.15 270L259.81 275L259.81 285L251.15 290L242.49 285L242.49 275ZM251.15 290L251.15 300M268.47 270L277.13 275L277.13 285L268.47 290L259.81 285L259.81 275ZM268.47 290L268.47 300M285.79 270L294.45 275L294.45 285L285.79 290L277.13 285L277.13 275ZM285.79 290L285.79 300M303.11 270L311.77 275L311.77 285L303.11 290L294.45 285L294.45 275ZM303.11 290L303.11 300M320.43 270L329.09 275L329.09 285L320.43 290L311.77 285L311.77 275ZM320.43 290L320.43 300M337.75 270L346.41 275L346.41 285L337.75 290L329.09 285L329.09 275ZM337.75 290L337.75 300M355.07 270L363.73 275L363.73 285L355.07 290L346.41 285L346.41 275ZM355.07 290L355.07 300M372.39 270L381.05 275L381.05 285L372.39 290L363.73 285L363.73 275ZM372.39 290L372.39 300M389.71 270L398.37 275L398.37 285L389.71 290L381.05 285L381.05 275ZM389.71 290L389.71 300M407.03 270L415.69 275L415.69 285L407.03 290L398.37 285L398.37 275ZM407.03 290L407.03 300M424.35 270L433.01 275L433.01 285L424.35 290L415.69 285L415.69 275ZM424.35 290L424.35 300M441.67 270L450.33 275L450.33 285L441.67 290L433.01 285L433.01 275ZM441.67 290L441.67 300M458.99 270L467.65 275L467.65 285L458.99 290L450.33 285L450.33 275ZM458.99 290L458.99 300M476.31 270L484.97 275L484.97 285L476.31 290L467.65 285L467.65 275ZM476.31 290L476.31 300M493.63 270L502.29 275L502.29 285L493.63 290L484.97 285L484.97 275ZM493.63 290L493.63 300M510.95 270L519.62 275L519.62 285L510.95 290L502.29 285L502.29 275ZM510.95 290L510.95 300M528.28 270L536.94 275L536.94 285L528.28 290L519.62 285L519.62 275ZM528.28 290L528.28 300M545.6 270L554.26 275L554.26 285L545.6 290L536.94 285L536.94 275ZM545.6 290L545.6 300M562.92 270L571.58 275L571.58 285L562.92 290L554.26 285L554.26 275ZM562.92 290L562.92 300M580.24 270L588.9 275L588.9 285L580.24 290L571.58 285L571.58 275ZM580.24 290L580.24 300M597.56 270L606.22 275L606.22 285L597.56 290L588.9 285L588.9 275ZM597.56 290L597.56 300M614.88 270L623.54 275L623.54 285L614.88 290L606.22 285L606.22 275ZM614.88 290L614.88 300M632.2 270L640.86 275L640.86 285L632.2 290L623.54 285L623.54 275ZM632.2 290L632.2 300M649.52 270L658.18 275L658.18 285L649.52 290L640.86 285L640.86 275ZM649.52 290L649.52 300M666.84 270L675.5 275L675.5 285L666.84 290L658.18 285L658.18 275ZM666.84 290L666.84 300M684.16 270L692.82 275L692.82 285L684.16 290L675.5 285L675.5 275ZM684.16 290L684.16 300M701.48 270L710.14 275L710.14 285L701.48 290L692.82 285L692.82 275ZM701.48 290L701.48 300M718.8 270L727.46 275L727.46 285L718.8 290L710.14 285L710.14 275ZM718.8 290L718.8 300M736.12 270L744.78 275L744.78 285L736.12 290L727.46 285L727.46 275ZM736.12 290L736.12 300M753.44 270L762.1 275L762.1 285L753.44 290L744.78 285L744.78 275ZM753.44 290L753.44 300M770.76 270L779.42 275L779.42 285L770.76 290L762.1 285L762.1 275ZM770.76 290L770.76 300M788.08 270L796.74 275L796.74 285L788.08 290L779.42 285L779.42 275ZM788.08 290L788.08 300M805.4 270L814.06 275L814.06 285L805.4 290L796.74 285L796.74 275ZM805.4 290L805.4 300M822.72 270L831.38 275L831.38 285L822.72 290L814.06 285L814.06 275ZM822.72 290L822.72 300M840.04 270L848.7 275L848.7 285L840.04 290L831.38 285L831.38 275ZM840.04 290L840.04 300M857.37 270L866.03 275L866.03 285L857.37 290L848.7 285L848.7 275ZM857.37 290L857.37 300M874.69 270L883.35 275L883.35 285L874.69 290L866.03 285L866.03 275ZM874.69 290L874.69 300M892.01 270L900.67 275L900.67 285L892.01 290L883.35 285L883.35 275ZM892.01 290L892.01 300M909.33 270L917.99 275L917.99 285L909.33 290L900.67 285L900.67 275ZM909.33 290L909.33 300M926.65 270L935.31 275L935.31 285L926.65 290L917.99 285L917.99 275ZM926.65 290L926.65 300M943.97 270L952.63 275L952.63 285L943.97 290L935.31 285L935.31 275ZM943.97 290L943.97 300M961.29 270L969.95 275L969.95 285L961.29 290L952.63 285L952.63 275ZM961.29 290L961.29 300M978.61 270L987.27 275L987.27 285L978.61 290L969.95 285L969.95 275ZM978.61 290L978.61 300M8.66 300L17.32 305L17.32 315L8.66 320L0 315L0 305ZM8.66 320L8.66 330M25.98 300L34.64 305L34.64 315L25.98 320L17.32 315L17.32 305ZM25.98 320L25.98 330M43.3 300L51.96 305L51.96 315L43.3 320L34.64 315L34.64 305ZM43.3 320L43.3 330M60.62 300L69.28 305L69.28 315L60.62 320L51.96 315L51.96 305ZM60.62 320L60.62 330M77.94 300L86.6 305L86.6 315L77.94 320L69.28 315L69.28 305ZM77.94 320L77.94 330M95.26 300L103.92 305L103.92 315L95.26 320L86.6 315L86.6 305ZM95.26 320L95.26 330M112.58 300L121.24 305L121.24 315L112.58 320L103.92 315L103.92 305ZM112.58 320L112.58 330M129.9 300L138.56 305L138.56 315L129.9 320L121.24 315L121.24 305ZM129.9 320L129.9 330M147.22 300L155.88 305L155.88 315L147.22 320L138.56 315L138.56 305ZM147.22 320L147.22 330M164.54 300L173.21 305L173.21 315L164.54 320L155.88 315L155.88 305ZM164.54 320L164.54 330M181.87 300L190.53 305L190.53 315L181.87 320L173.21 315L173.21 305ZM181.87 320L181.87 330M199.19 300L207.85 305L207.85 315L199.19 320L190.53 315L190.53 305ZM199.19 320L199.19 330M216.51 300L225.17 305L225.17 315L216.51 320L207.85 315L207.85 305ZM216.51 320L216.51 330M233.83 300L242.49 305L242.49 315L233.83 320L225.17 315L225.17 305ZM233.83 320L233.83 330M251.15 300L259.81 305L259.81 315L251.15 320L242.49 315L242.49 305ZM251.15 320L251.15 330M268.47 300L277.13 305L277.13 315L268.47 320L259.81 315L259.81 305ZM268.47 320L268.47 330M285.79 300L294.45 305L294.45 315L285.79 320L277.13 315L277.13 305ZM285.79 320L285.79 330M303.11 300L311.77 305L311.77 315L303.11 320L294.45 315L294.45 305ZM303.11 320L303.11 330M320.43 300L329.09 305L329.09 315L320.43 320L311.77 315L311.77 305ZM320.43 320L320.43 330M337.75 300L346.41 305L346.41 315L337.75 320L329.09 315L329.09 305ZM337.75 320L337.75 330M355.07 300L363.73 305L363.73 315L355.07 320L346.41 315L346.41 305ZM355.07 320L355.07 330M372.39 300L381.05 305L381.05 315L372.39 320L363.73 315L363.73 305ZM372.39 320L372.39 330M389.71 300L398.37 305L398.37 315L389.71 320L381.05 315L381.05 305ZM389.71 320L389.71 330M407.03 300L415.69 305L415.69 315L407.03 320L398.37 315L398.37 305ZM407.03 320L407.03 330M424.35 300L433.01 305L433.01 315L424.35 320L415.69 315L415.69 305ZM424.35 320L424.35 330M441.67 300L450.33 305L450.33 315L441.67 320L433.01 315L433.01 305ZM441.67 320L441.67 330M458.99 300L467.65 305L467.65 315L458.99 320L450.33 315L450.33 305ZM458.99 320L458.99 330M476.31 300L484.97 305L484.97 315L476.31 320L467.65 315L467.65 305ZM476.31 320L476.31 330M493.63 300L502.29 305L502.29 315L493.63 320L484.97 315L484.97 305ZM493.63 320L493.63 330M510.95 300L519.62 305L519.62 315L510.95 320L502.29 315L502.29 305ZM510.95 320L510.95 330M528.28 300L536.94 305L536.94 315L528.28 320L519.62 315L519.62 305ZM528.28 320L528.28 330M545.6 300L554.26 305L554.26 315L545.6 320L536.94 315L536.94 305ZM545.6 320L545.6 330M562.92 300L571.58 305L571.58 315L562.92 320L554.26 315L554.26 305ZM562.92 320L562.92 330M580.24 300L588.9 305L588.9 315L580.24 320L571.58 315L571.58 305ZM580.24 320L580.24 330M597.56 300L606.22 305L606.22 315L597.56 320L588.9 315L588.9 305ZM597.56 320L597.56 330M614.88 300L623.54 305L623.54 315L614.88 320L606.22 315L606.22 305ZM614.88 320L614.88 330M632.2 300L640.86 305L640.86 315L632.2 320L623.54 315L623.54 305ZM632.2 320L632.2 330M649.52 300L658.18 305L658.18 315L649.52 320L640.86 315L640.86 305ZM649.52 320L649.52 330M666.84 300L675.5 305L675.5 315L666.84 320L658.18 315L658.18 305ZM666.84 320L666.84 330M684.16 300L692.82 305L692.82 315L684.16 320L675.5 315L675.5 305ZM684.16 320L684.16 330M701.48 300L710.14 305L710.14 315L701.48 320L692.82 315L692.82 305ZM701.48 320L701.48 330M718.8 300L727.46 305L727.46 315L718.8 320L710.14 315L710.14 305ZM718.8 320L718.8 330M736.12 300L744.78 305L744.78 315L736.12 320L727.46 315L727.46 305ZM736.12 320L736.12 330M753.44 300L762.1 305L762.1 315L753.44 320L744.78 315L744.78 305ZM753.44 320L753.44 330M770.76 300L779.42 305L779.42 315L770.76 320L762.1 315L762.1 305ZM770.76 320L770.76 330M788.08 300L796.74 305L796.74 315L788.08 320L779.42 315L779.42 305ZM788.08 320L788.08 330M805.4 300L814.06 305L814.06 315L805.4 320L796.74 315L796.74 305ZM805.4 320L805.4 330M822.72 300L831.38 305L831.38 315L822.72 320L814.06 315L814.06 305ZM822.72 320L822.72 330M840.04 300L848.7 305L848.7 315L840.04 320L831.38 315L831.38 305ZM840.04 320L840.04 330M857.37 300L866.03 305L866.03 315L857.37 320L848.7 315L848.7 305ZM857.37 320L857.37 330M874.69 300L883.35 305L883.35 315L874.69 320L866.03 315L866.03 305ZM874.69 320L874.69 330M892.01 300L900.67 305L900.67 315L892.01 320L883.35 315L883.35 305ZM892.01 320L892.01 330M909.33 300L917.99 305L917.99 315L909.33 320L900.67 315L900.67 305ZM909.33 320L909.33 330M926.65 300L935.31 305L935.31 315L926.65 320L917.99 315L917.99 305ZM926.65 320L926.65 330M943.97 300L952.63 305L952.63 315L943.97 320L935.31 315L935.31 305ZM943.97 320L943.97 330M961.29 300L969.95 305L969.95 315L961.29 320L952.63 315L952.63 305ZM961.29 320L961.29 330M978.61 300L987.27 305L987.27 315L978.61 320L969.95 315L969.95 305ZM978.61 320L978.61 330M8.66 330L17.32 335L17.32 345L8.66 350L0 345L0 335ZM8.66 350L8.66 360M25.98 330L34.64 335L34.64 345L25.98 350L17.32 345L17.32 335ZM25.98 350L25.98 360M43.3 330L51.96 335L51.96 345L43.3 350L34.64 345L34.64 335ZM43.3 350L43.3 360M60.62 330L69.28 335L69.28 345L60.62 350L51.96 345L51.96 335ZM60.62 350L60.62 360M77.94 330L86.6 335L86.6 345L77.94 350L69.28 345L69.28 335ZM77.94 350L77.94 360M95.26 330L103.92 335L103.92 345L95.26 350L86.6 345L86.6 335ZM95.26 350L95.26 360M112.58 330L121.24 335L121.24 345L112.58 350L103.92 345L103.92 335ZM112.58 350L112.58 360M129.9 330L138.56 335L138.56 345L129.9 350L121.24 345L121.24 335ZM129.9 350L129.9 360M147.22 330L155.88 335L155.88 345L147.22 350L138.56 345L138.56 335ZM147.22 350L147.22 360M164.54 330L173.21 335L173.21 345L164.54 350L155.88 345L155.88 335ZM164.54 350L164.54 360M181.87 330L190.53 335L190.53 345L181.87 350L173.21 345L173.21 335ZM181.87 350L181.87 360M199.19 330L207.85 335L207.85 345L199.19 350L190.53 345L190.53 335ZM199.19 350L199.19 360M216.51 330L225.17 335L225.17 345L216.51 350L207.85 345L207.85 335ZM216.51 350L216.51 360M233.83 330L242.49 335L242.49 345L233.83 350L225.17 345L225.17 335ZM233.83 350L233.83 360M251.15 330L259.81 335L259.81 345L251.15 350L242.49 345L242.49 335ZM251.15 350L251.15 360M268.47 330L277.13 335L277.13 345L268.47 350L259.81 345L259.81 335ZM268.47 350L268.47 360M285.79 330L294.45 335L294.45 345L285.79 350L277.13 345L277.13 335ZM285.79 350L285.79 360M303.11 330L311.77 335L311.77 345L303.11 350L294.45 345L294.45 335ZM303.11 350L303.11 360M320.43 330L329.09 335L329.09 345L320.43 350L311.77 345L311.77 335ZM320.43 350L320.43 360M337.75 330L346.41 335L346.41 345L337.75 350L329.09 345L329.09 335ZM337.75 350L337.75 360M355.07 330L363.73 335L363.73 345L355.07 350L346.41 345L346.41 335ZM355.07 350L355.07 360M372.39 330L381.05 335L381.05 345L372.39 350L363.73 345L363.73 335ZM372.39 350L372.39 360M389.71 330L398.37 335L398.37 345L389.71 350L381.05 345L381.05 335ZM389.71 350L389.71 360M407.03 330L415.69 335L415.69 345L407.03 350L398.37 345L398.37 335ZM407.03 350L407.03 360M424.35 330L433.01 335L433.01 345L424.35 350L415.69 345L415.69 335ZM424.35 350L424.35 360M441.67 330L450.33 335L450.33 345L441.67 350L433.01 345L433.01 335ZM441.67 350L441.67 360M458.99 330L467.65 335L467.65 345L458.99 350L450.33 345L450.33 335ZM458.99 350L458.99 360M476.31 330L484.97 335L484.97 345L476.31 350L467.65 345L467.65 335ZM476.31 350L476.31 360M493.63 330L502.29 335L502.29 345L493.63 350L484.97 345L484.97 335ZM493.63 350L493.63 360M510.95 330L519.62 335L519.62 345L510.95 350L502.29 345L502.29 335ZM510.95 350L510.95 360M528.28 330L536.94 335L536.94 345L528.28 350L519.62 345L519.62 335ZM528.28 350L528.28 360M545.6 330L554.26 335L554.26 345L545.6 350L536.94 345L536.94 335ZM545.6 350L545.6 360M562.92 330L571.58 335L571.58 345L562.92 350L554.26 345L554.26 335ZM562.92 350L562.92 360M580.24 330L588.9 335L588.9 345L580.24 350L571.58 345L571.58 335ZM580.24 350L580.24 360M597.56 330L606.22 335L606.22 345L597.56 350L588.9 345L588.9 335ZM597.56 350L597.56 360M614.88 330L623.54 335L623.54 345L614.88 350L606.22 345L606.22 335ZM614.88 350L614.88 360M632.2 330L640.86 335L640.86 345L632.2 350L623.54 345L623.54 335ZM632.2 350L632.2 360M649.52 330L658.18 335L658.18 345L649.52 350L640.86 345L640.86 335ZM649.52 350L649.52 360M666.84 330L675.5 335L675.5 345L666.84 350L658.18 345L658.18 335ZM666.84 350L666.84 360M684.16 330L692.82 335L692.82 345L684.16 350L675.5 345L675.5 335ZM684.16 350L684.16 360M701.48 330L710.14 335L710.14 345L701.48 350L692.82 345L692.82 335ZM701.48 350L701.48 360M718.8 330L727.46 335L727.46 345L718.8 350L710.14 345L710.14 335ZM718.8 350L718.8 360M736.12 330L744.78 335L744.78 345L736.12 350L727.46 345L727.46 335ZM736.12 350L736.12 360M753.44 330L762.1 335L762.1 345L753.44 350L744.78 345L744.78 335ZM753.44 350L753.44 360M770.76 330L779.42 335L779.42 345L770.76 350L762.1 345L762.1 335ZM770.76 350L770.76 360M788.08 330L796.74 335L796.74 345L788.08 350L779.42 345L779.42 335ZM788.08 350L788.08 360M805.4 330L814.06 335L814.06 345L805.4 350L796.74 345L796.74 335ZM805.4 350L805.4 360M822.72 330L831.38 335L831.38 345L822.72 350L814.06 345L814.06 335ZM822.72 350L822.72 360M840.04 330L848.7 335L848.7 345L840.04 350L831.38 345L831.38 335ZM840.04 350L840.04 360M857.37 330L866.03 335L866.03 345L857.37 350L848.7 345L848.7 335ZM857.37 350L857.37 360M874.69 330L883.35 335L883.35 345L874.69 350L866.03 345L866.03 335ZM874.69 350L874.69 360M892.01 330L900.67 335L900.67 345L892.01 350L883.35 345L883.35 335ZM892.01 350L892.01 360M909.33 330L917.99 335L917.99 345L909.33 350L900.67 345L900.67 335ZM909.33 350L909.33 360M926.65 330L935.31 335L935.31 345L926.65 350L917.99 345L917.99 335ZM926.65 350L926.65 360M943.97 330L952.63 335L952.63 345L943.97 350L935.31 345L935.31 335ZM943.97 350L943.97 360M961.29 330L969.95 335L969.95 345L961.29 350L952.63 345L952.63 335ZM961.29 350L961.29 360M978.61 330L987.27 335L987.27 345L978.61 350L969.95 345L969.95 335ZM978.61 350L978.61 360M8.66 360L17.32 365L17.32 375L8.66 380L0 375L0 365ZM8.66 380L8.66 390M25.98 360L34.64 365L34.64 375L25.98 380L17.32 375L17.32 365ZM25.98 380L25.98 390M43.3 360L51.96 365L51.96 375L43.3 380L34.64 375L34.64 365ZM43.3 380L43.3 390M60.62 360L69.28 365L69.28 375L60.62 380L51.96 375L51.96 365ZM60.62 380L60.62 390M77.94 360L86.6 365L86.6 375L77.94 380L69.28 375L69.28 365ZM77.94 380L77.94 390M95.26 360L103.92 365L103.92 375L95.26 380L86.6 375L86.6 365ZM95.26 380L95.26 390M112.58 360L121.24 365L121.24 375L112.58 380L103.92 375L103.92 365ZM112.58 380L112.58 390M129.9 360L138.56 365L138.56 375L129.9 380L121.24 375L121.24 365ZM129.9 380L129.9 390M147.22 360L155.88 365L155.88 375L147.22 380L138.56 375L138.56 365ZM147.22 380L147.22 390M164.54 360L173.21 365L173.21 375L164.54 380L155.88 375L155.88 365ZM164.54 380L164.54 390M181.87 360L190.53 365L190.53 375L181.87 380L173.21 375L173.21 365ZM181.87 380L181.87 390M199.19 360L207.85 365L207.85 375L199.19 380L190.53 375L190.53 365ZM199.19 380L199.19 390M216.51 360L225.17 365L225.17 375L216.51 380L207.85 375L207.85 365ZM216.51 380L216.51 390M233.83 360L242.49 365L242.49 375L233.83 380L225.17 375L225.17 365ZM233.83 380L233.83 390M251.15 360L259.81 365L259.81 375L251.15 380L242.49 375L242.49 365ZM251.15 380L251.15 390M268.47 360L277.13 365L277.13 375L268.47 380L259.81 375L259.81 365ZM268.47 380L268.47 390M285.79 360L294.45 365L294.45 375L285.79 380L277.13 375L277.13 365ZM285.79 380L285.79 390M303.11 360L311.77 365L311.77 375L303.11 380L294.45 375L294.45 365ZM303.11 380L303.11 390M320.43 360L329.09 365L329.09 375L320.43 380L311.77 375L311.77 365ZM320.43 380L320.43 390M337.75 360L346.41 365L346.41 375L337.75 380L329.09 375L329.09 365ZM337.75 380L337.75 390M355.07 360L363.73 365L363.73 375L355.07 380L346.41 375L346.41 365ZM355.07 380L355.07 390M372.39 360L381.05 365L381.05 375L372.39 380L363.73 375L363.73 365ZM372.39 380L372.39 390M389.71 360L398.37 365L398.37 375L389.71 380L381.05 375L381.05 365ZM389.71 380L389.71 390M407.03 360L415.69 365L415.69 375L407.03 380L398.37 375L398.37 365ZM407.03 380L407.03 390M424.35 360L433.01 365L433.01 375L424.35 380L415.69 375L415.69 365ZM424.35 380L424.35 390M441.67 360L450.33 365L450.33 375L441.67 380L433.01 375L433.01 365ZM441.67 380L441.67 390M458.99 360L467.65 365L467.65 375L458.99 380L450.33 375L450.33 365ZM458.99 380L458.99 390M476.31 360L484.97 365L484.97 375L476.31 380L467.65 375L467.65 365ZM476.31 380L476.31 390M493.63 360L502.29 365L502.29 375L493.63 380L484.97 375L484.97 365ZM493.63 380L493.63 390M510.95 360L519.62 365L519.62 375L510.95 380L502.29 375L502.29 365ZM510.95 380L510.95 390M528.28 360L536.94 365L536.94 375L528.28 380L519.62 375L519.62 365ZM528.28 380L528.28 390M545.6 360L554.26 365L554.26 375L545.6 380L536.94 375L536.94 365ZM545.6 380L545.6 390M562.92 360L571.58 365L571.58 375L562.92 380L554.26 375L554.26 365ZM562.92 380L562.92 390M580.24 360L588.9 365L588.9 375L580.24 380L571.58 375L571.58 365ZM580.24 380L580.24 390M597.56 360L606.22 365L606.22 375L597.56 380L588.9 375L588.9 365ZM597.56 380L597.56 390M614.88 360L623.54 365L623.54 375L614.88 380L606.22 375L606.22 365ZM614.88 380L614.88 390M632.2 360L640.86 365L640.86 375L632.2 380L623.54 375L623.54 365ZM632.2 380L632.2 390M649.52 360L658.18 365L658.18 375L649.52 380L640.86 375L640.86 365ZM649.52 380L649.52 390M666.84 360L675.5 365L675.5 375L666.84 380L658.18 375L658.18 365ZM666.84 380L666.84 390M684.16 360L692.82 365L692.82 375L684.16 380L675.5 375L675.5 365ZM684.16 380L684.16 390M701.48 360L710.14 365L710.14 375L701.48 380L692.82 375L692.82 365ZM701.48 380L701.48 390M718.8 360L727.46 365L727.46 375L718.8 380L710.14 375L710.14 365ZM718.8 380L718.8 390M736.12 360L744.78 365L744.78 375L736.12 380L727.46 375L727.46 365ZM736.12 380L736.12 390M753.44 360L762.1 365L762.1 375L753.44 380L744.78 375L744.78 365ZM753.44 380L753.44 390M770.76 360L779.42 365L779.42 375L770.76 380L762.1 375L762.1 365ZM770.76 380L770.76 390M788.08 360L796.74 365L796.74 375L788.08 380L779.42 375L779.42 365ZM788.08 380L788.08 390M805.4 360L814.06 365L814.06 375L805.4 380L796.74 375L796.74 365ZM805.4 380L805.4 390M822.72 360L831.38 365L831.38 375L822.72 380L814.06 375L814.06 365ZM822.72 380L822.72 390M840.04 360L848.7 365L848.7 375L840.04 380L831.38 375L831.38 365ZM840.04 380L840.04 390M857.37 360L866.03 365L866.03 375L857.37 380L848.7 375L848.7 365ZM857.37 380L857.37 390M874.69 360L883.35 365L883.35 375L874.69 380L866.03 375L866.03 365ZM874.69 380L874.69 390M892.01 360L900.67 365L900.67 375L892.01 380L883.35 375L883.35 365ZM892.01 380L892.01 390M909.33 360L917.99 365L917.99 375L909.33 380L900.67 375L900.67 365ZM909.33 380L909.33 390M926.65 360L935.31 365L935.31 375L926.65 380L917.99 375L917.99 365ZM926.65 380L926.65 390M943.97 360L952.63 365L952.63 375L943.97 380L935.31 375L935.31 365ZM943.97 380L943.97 390M961.29 360L969.95 365L969.95 375L961.29 380L952.63 375L952.63 365ZM961.29 380L961.29 390M978.61 360L987.27 365L987.27 375L978.61 380L969.95 375L969.95 365ZM978.61 380L978.61 390M8.66 390L17.32 395L17.32 405L8.66 410L0 405L0 395ZM8.66 410L8.66 420M25.98 390L34.64 395L34.64 405L25.98 410L17.32 405L17.32 395ZM25.98 410L25.98 420M43.3 390L51.96 395L51.96 405L43.3 410L34.64 405L34.64 395ZM43.3 410L43.3 420M60.62 390L69.28 395L69.28 405L60.62 410L51.96 405L51.96 395ZM60.62 410L60.62 420M77.94 390L86.6 395L86.6 405L77.94 410L69.28 405L69.28 395ZM77.94 410L77.94 420M95.26 390L103.92 395L103.92 405L95.26 410L86.6 405L86.6 395ZM95.26 410L95.26 420M112.58 390L121.24 395L121.24 405L112.58 410L103.92 405L103.92 395ZM112.58 410L112.58 420M129.9 390L138.56 395L138.56 405L129.9 410L121.24 405L121.24 395ZM129.9 410L129.9 420M147.22 390L155.88 395L155.88 405L147.22 410L138.56 405L138.56 395ZM147.22 410L147.22 420M164.54 390L173.21 395L173.21 405L164.54 410L155.88 405L155.88 395ZM164.54 410L164.54 420M181.87 390L190.53 395L190.53 405L181.87 410L173.21 405L173.21 395ZM181.87 410L181.87 420M199.19 390L207.85 395L207.85 405L199.19 410L190.53 405L190.53 395ZM199.19 410L199.19 420M216.51 390L225.17 395L225.17 405L216.51 410L207.85 405L207.85 395ZM216.51 410L216.51 420M233.83 390L242.49 395L242.49 405L233.83 410L225.17 405L225.17 395ZM233.83 410L233.83 420M251.15 390L259.81 395L259.81 405L251.15 410L242.49 405L242.49 395ZM251.15 410L251.15 420M268.47 390L277.13 395L277.13 405L268.47 410L259.81 405L259.81 395ZM268.47 410L268.47 420M285.79 390L294.45 395L294.45 405L285.79 410L277.13 405L277.13 395ZM285.79 410L285.79 420M303.11 390L311.77 395L311.77 405L303.11 410L294.45 405L294.45 395ZM303.11 410L303.11 420M320.43 390L329.09 395L329.09 405L320.43 410L311.77 405L311.77 395ZM320.43 410L320.43 420M337.75 390L346.41 395L346.41 405L337.75 410L329.09 405L329.09 395ZM337.75 410L337.75 420M355.07 390L363.73 395L363.73 405L355.07 410L346.41 405L346.41 395ZM355.07 410L355.07 420M372.39 390L381.05 395L381.05 405L372.39 410L363.73 405L363.73 395ZM372.39 410L372.39 420M389.71 390L398.37 395L398.37 405L389.71 410L381.05 405L381.05 395ZM389.71 410L389.71 420M407.03 390L415.69 395L415.69 405L407.03 410L398.37 405L398.37 395ZM407.03 410L407.03 420M424.35 390L433.01 395L433.01 405L424.35 410L415.69 405L415.69 395ZM424.35 410L424.35 420M441.67 390L450.33 395L450.33 405L441.67 410L433.01 405L433.01 395ZM441.67 410L441.67 420M458.99 390L467.65 395L467.65 405L458.99 410L450.33 405L450.33 395ZM458.99 410L458.99 420M476.31 390L484.97 395L484.97 405L476.31 410L467.65 405L467.65 395ZM476.31 410L476.31 420M493.63 390L502.29 395L502.29 405L493.63 410L484.97 405L484.97 395ZM493.63 410L493.63 420M510.95 390L519.62 395L519.62 405L510.95 410L502.29 405L502.29 395ZM510.95 410L510.95 420M528.28 390L536.94 395L536.94 405L528.28 410L519.62 405L519.62 395ZM528.28 410L528.28 420M545.6 390L554.26 395L554.26 405L545.6 410L536.94 405L536.94 395ZM545.6 410L545.6 420M562.92 390L571.58 395L571.58 405L562.92 410L554.26 405L554.26 395ZM562.92 410L562.92 420M580.24 390L588.9 395L588.9 405L580.24 410L571.58 405L571.58 395ZM580.24 410L580.24 420M597.56 390L606.22 395L606.22 405L597.56 410L588.9 405L588.9 395ZM597.56 410L597.56 420M614.88 390L623.54 395L623.54 405L614.88 410L606.22 405L606.22 395ZM614.88 410L614.88 420M632.2 390L640.86 395L640.86 405L632.2 410L623.54 405L623.54 395ZM632.2 410L632.2 420M649.52 390L658.18 395L658.18 405L649.52 410L640.86 405L640.86 395ZM649.52 410L649.52 420M666.84 390L675.5 395L675.5 405L666.84 410L658.18 405L658.18 395ZM666.84 410L666.84 420M684.16 390L692.82 395L692.82 405L684.16 410L675.5 405L675.5 395ZM684.16 410L684.16 420M701.48 390L710.14 395L710.14 405L701.48 410L692.82 405L692.82 395ZM701.48 410L701.48 420M718.8 390L727.46 395L727.46 405L718.8 410L710.14 405L710.14 395ZM718.8 410L718.8 420M736.12 390L744.78 395L744.78 405L736.12 410L727.46 405L727.46 395ZM736.12 410L736.12 420M753.44 390L762.1 395L762.1 405L753.44 410L744.78 405L744.78 395ZM753.44 410L753.44 420M770.76 390L779.42 395L779.42 405L770.76 410L762.1 405L762.1 395ZM770.76 410L770.76 420M788.08 390L796.74 395L796.74 405L788.08 410L779.42 405L779.42 395ZM788.08 410L788.08 420M805.4 390L814.06 395L814.06 405L805.4 410L796.74 405L796.74 395ZM805.4 410L805.4 420M822.72 390L831.38 395L831.38 405L822.72 410L814.06 405L814.06 395ZM822.72 410L822.72 420M840.04 390L848.7 395L848.7 405L840.04 410L831.38 405L831.38 395ZM840.04 410L840.04 420M857.37 390L866.03 395L866.03 405L857.37 410L848.7 405L848.7 395ZM857.37 410L857.37 420M874.69 390L883.35 395L883.35 405L874.69 410L866.03 405L866.03 395ZM874.69 410L874.69 420M892.01 390L900.67 395L900.67 405L892.01 410L883.35 405L883.35 395ZM892.01 410L892.01 420M909.33 390L917.99 395L917.99 405L909.33 410L900.67 405L900.67 395ZM909.33 410L909.33 420M926.65 390L935.31 395L935.31 405L926.65 410L917.99 405L917.99 395ZM926.65 410L926.65 420M943.97 390L952.63 395L952.63 405L943.97 410L935.31 405L935.31 395ZM943.97 410L943.97 420M961.29 390L969.95 395L969.95 405L961.29 410L952.63 405L952.63 395ZM961.29 410L961.29 420M978.61 390L987.27 395L987.27 405L978.61 410L969.95 405L969.95 395ZM978.61 410L978.61 420M8.66 420L17.32 425L17.32 435L8.66 440L0 435L0 425ZM8.66 440L8.66 450M25.98 420L34.64 425L34.64 435L25.98 440L17.32 435L17.32 425ZM25.98 440L25.98 450M43.3 420L51.96 425L51.96 435L43.3 440L34.64 435L34.64 425ZM43.3 440L43.3 450M60.62 420L69.28 425L69.28 435L60.62 440L51.96 435L51.96 425ZM60.62 440L60.62 450M77.94 420L86.6 425L86.6 435L77.94 440L69.28 435L69.28 425ZM77.94 440L77.94 450M95.26 420L103.92 425L103.92 435L95.26 440L86.6 435L86.6 425ZM95.26 440L95.26 450M112.58 420L121.24 425L121.24 435L112.58 440L103.92 435L103.92 425ZM112.58 440L112.58 450M129.9 420L138.56 425L138.56 435L129.9 440L121.24 435L121.24 425ZM129.9 440L129.9 450M147.22 420L155.88 425L155.88 435L147.22 440L138.56 435L138.56 425ZM147.22 440L147.22 450M164.54 420L173.21 425L173.21 435L164.54 440L155.88 435L155.88 425ZM164.54 440L164.54 450M181.87 420L190.53 425L190.53 435L181.87 440L173.21 435L173.21 425ZM181.87 440L181.87 450M199.19 420L207.85 425L207.85 435L199.19 440L190.53 435L190.53 425ZM199.19 440L199.19 450M216.51 420L225.17 425L225.17 435L216.51 440L207.85 435L207.85 425ZM216.51 440L216.51 450M233.83 420L242.49 425L242.49 435L233.83 440L225.17 435L225.17 425ZM233.83 440L233.83 450M251.15 420L259.81 425L259.81 435L251.15 440L242.49 435L242.49 425ZM251.15 440L251.15 450M268.47 420L277.13 425L277.13 435L268.47 440L259.81 435L259.81 425ZM268.47 440L268.47 450M285.79 420L294.45 425L294.45 435L285.79 440L277.13 435L277.13 425ZM285.79 440L285.79 450M303.11 420L311.77 425L311.77 435L303.11 440L294.45 435L294.45 425ZM303.11 440L303.11 450M320.43 420L329.09 425L329.09 435L320.43 440L311.77 435L311.77 425ZM320.43 440L320.43 450M337.75 420L346.41 425L346.41 435L337.75 440L329.09 435L329.09 425ZM337.75 440L337.75 450M355.07 420L363.73 425L363.73 435L355.07 440L346.41 435L346.41 425ZM355.07 440L355.07 450M372.39 420L381.05 425L381.05 435L372.39 440L363.73 435L363.73 425ZM372.39 440L372.39 450M389.71 420L398.37 425L398.37 435L389.71 440L381.05 435L381.05 425ZM389.71 440L389.71 450M407.03 420L415.69 425L415.69 435L407.03 440L398.37 435L398.37 425ZM407.03 440L407.03 450M424.35 420L433.01 425L433.01 435L424.35 440L415.69 435L415.69 425ZM424.35 440L424.35 450M441.67 420L450.33 425L450.33 435L441.67 440L433.01 435L433.01 425ZM441.67 440L441.67 450M458.99 420L467.65 425L467.65 435L458.99 440L450.33 435L450.33 425ZM458.99 440L458.99 450M476.31 420L484.97 425L484.97 435L476.31 440L467.65 435L467.65 425ZM476.31 440L476.31 450M493.63 420L502.29 425L502.29 435L493.63 440L484.97 435L484.97 425ZM493.63 440L493.63 450M510.95 420L519.62 425L519.62 435L510.95 440L502.29 435L502.29 425ZM510.95 440L510.95 450M528.28 420L536.94 425L536.94 435L528.28 440L519.62 435L519.62 425ZM528.28 440L528.28 450M545.6 420L554.26 425L554.26 435L545.6 440L536.94 435L536.94 425ZM545.6 440L545.6 450M562.92 420L571.58 425L571.58 435L562.92 440L554.26 435L554.26 425ZM562.92 440L562.92 450M580.24 420L588.9 425L588.9 435L580.24 440L571.58 435L571.58 425ZM580.24 440L580.24 450M597.56 420L606.22 425L606.22 435L597.56 440L588.9 435L588.9 425ZM597.56 440L597.56 450M614.88 420L623.54 425L623.54 435L614.88 440L606.22 435L606.22 425ZM614.88 440L614.88 450M632.2 420L640.86 425L640.86 435L632.2 440L623.54 435L623.54 425ZM632.2 440L632.2 450M649.52 420L658.18 425L658.18 435L649.52 440L640.86 435L640.86 425ZM649.52 440L649.52 450M666.84 420L675.5 425L675.5 435L666.84 440L658.18 435L658.18 425ZM666.84 440L666.84 450M684.16 420L692.82 425L692.82 435L684.16 440L675.5 435L675.5 425ZM684.16 440L684.16 450M701.48 420L710.14 425L710.14 435L701.48 440L692.82 435L692.82 425ZM701.48 440L701.48 450M718.8 420L727.46 425L727.46 435L718.8 440L710.14 435L710.14 425ZM718.8 440L718.8 450M736.12 420L744.78 425L744.78 435L736.12 440L727.46 435L727.46 425ZM736.12 440L736.12 450M753.44 420L762.1 425L762.1 435L753.44 440L744.78 435L744.78 425ZM753.44 440L753.44 450M770.76 420L779.42 425L779.42 435L770.76 440L762.1 435L762.1 425ZM770.76 440L770.76 450M788.08 420L796.74 425L796.74 435L788.08 440L779.42 435L779.42 425ZM788.08 440L788.08 450M805.4 420L814.06 425L814.06 435L805.4 440L796.74 435L796.74 425ZM805.4 440L805.4 450M822.72 420L831.38 425L831.38 435L822.72 440L814.06 435L814.06 425ZM822.72 440L822.72 450M840.04 420L848.7 425L848.7 435L840.04 440L831.38 435L831.38 425ZM840.04 440L840.04 450M857.37 420L866.03 425L866.03 435L857.37 440L848.7 435L848.7 425ZM857.37 440L857.37 450M874.69 420L883.35 425L883.35 435L874.69 440L866.03 435L866.03 425ZM874.69 440L874.69 450M892.01 420L900.67 425L900.67 435L892.01 440L883.35 435L883.35 425ZM892.01 440L892.01 450M909.33 420L917.99 425L917.99 435L909.33 440L900.67 435L900.67 425ZM909.33 440L909.33 450M926.65 420L935.31 425L935.31 435L926.65 440L917.99 435L917.99 425ZM926.65 440L926.65 450M943.97 420L952.63 425L952.63 435L943.97 440L935.31 435L935.31 425ZM943.97 440L943.97 450M961.29 420L969.95 425L969.95 435L961.29 440L952.63 435L952.63 425ZM961.29 440L961.29 450M978.61 420L987.27 425L987.27 435L978.61 440L969.95 435L969.95 425ZM978.61 440L978.61 450M8.66 450L17.32 455L17.32 465L8.66 470L0 465L0 455ZM8.66 470L8.66 480M25.98 450L34.64 455L34.64 465L25.98 470L17.32 465L17.32 455ZM25.98 470L25.98 480M43.3 450L51.96 455L51.96 465L43.3 470L34.64 465L34.64 455ZM43.3 470L43.3 480M60.62 450L69.28 455L69.28 465L60.62 470L51.96 465L51.96 455ZM60.62 470L60.62 480M77.94 450L86.6 455L86.6 465L77.94 470L69.28 465L69.28 455ZM77.94 470L77.94 480M95.26 450L103.92 455L103.92 465L95.26 470L86.6 465L86.6 455ZM95.26 470L95.26 480M112.58 450L121.24 455L121.24 465L112.58 470L103.92 465L103.92 455ZM112.58 470L112.58 480M129.9 450L138.56 455L138.56 465L129.9 470L121.24 465L121.24 455ZM129.9 470L129.9 480M147.22 450L155.88 455L155.88 465L147.22 470L138.56 465L138.56 455ZM147.22 470L147.22 480M164.54 450L173.21 455L173.21 465L164.54 470L155.88 465L155.88 455ZM164.54 470L164.54 480M181.87 450L190.53 455L190.53 465L181.87 470L173.21 465L173.21 455ZM181.87 470L181.87 480M199.19 450L207.85 455L207.85 465L199.19 470L190.53 465L190.53 455ZM199.19 470L199.19 480M216.51 450L225.17 455L225.17 465L216.51 470L207.85 465L207.85 455ZM216.51 470L216.51 480M233.83 450L242.49 455L242.49 465L233.83 470L225.17 465L225.17 455ZM233.83 470L233.83 480M251.15 450L259.81 455L259.81 465L251.15 470L242.49 465L242.49 455ZM251.15 470L251.15 480M268.47 450L277.13 455L277.13 465L268.47 470L259.81 465L259.81 455ZM268.47 470L268.47 480M285.79 450L294.45 455L294.45 465L285.79 470L277.13 465L277.13 455ZM285.79 470L285.79 480M303.11 450L311.77 455L311.77 465L303.11 470L294.45 465L294.45 455ZM303.11 470L303.11 480M320.43 450L329.09 455L329.09 465L320.43 470L311.77 465L311.77 455ZM320.43 470L320.43 480M337.75 450L346.41 455L346.41 465L337.75 470L329.09 465L329.09 455ZM337.75 470L337.75 480M355.07 450L363.73 455L363.73 465L355.07 470L346.41 465L346.41 455ZM355.07 470L355.07 480M372.39 450L381.05 455L381.05 465L372.39 470L363.73 465L363.73 455ZM372.39 470L372.39 480M389.71 450L398.37 455L398.37 465L389.71 470L381.05 465L381.05 455ZM389.71 470L389.71 480M407.03 450L415.69 455L415.69 465L407.03 470L398.37 465L398.37 455ZM407.03 470L407.03 480M424.35 450L433.01 455L433.01 465L424.35 470L415.69 465L415.69 455ZM424.35 470L424.35 480M441.67 450L450.33 455L450.33 465L441.67 470L433.01 465L433.01 455ZM441.67 470L441.67 480M458.99 450L467.65 455L467.65 465L458.99 470L450.33 465L450.33 455ZM458.99 470L458.99 480M476.31 450L484.97 455L484.97 465L476.31 470L467.65 465L467.65 455ZM476.31 470L476.31 480M493.63 450L502.29 455L502.29 465L493.63 470L484.97 465L484.97 455ZM493.63 470L493.63 480M510.95 450L519.62 455L519.62 465L510.95 470L502.29 465L502.29 455ZM510.95 470L510.95 480M528.28 450L536.94 455L536.94 465L528.28 470L519.62 465L519.62 455ZM528.28 470L528.28 480M545.6 450L554.26 455L554.26 465L545.6 470L536.94 465L536.94 455ZM545.6 470L545.6 480M562.92 450L571.58 455L571.58 465L562.92 470L554.26 465L554.26 455ZM562.92 470L562.92 480M580.24 450L588.9 455L588.9 465L580.24 470L571.58 465L571.58 455ZM580.24 470L580.24 480M597.56 450L606.22 455L606.22 465L597.56 470L588.9 465L588.9 455ZM597.56 470L597.56 480M614.88 450L623.54 455L623.54 465L614.88 470L606.22 465L606.22 455ZM614.88 470L614.88 480M632.2 450L640.86 455L640.86 465L632.2 470L623.54 465L623.54 455ZM632.2 470L632.2 480M649.52 450L658.18 455L658.18 465L649.52 470L640.86 465L640.86 455ZM649.52 470L649.52 480M666.84 450L675.5 455L675.5 465L666.84 470L658.18 465L658.18 455ZM666.84 470L666.84 480M684.16 450L692.82 455L692.82 465L684.16 470L675.5 465L675.5 455ZM684.16 470L684.16 480M701.48 450L710.14 455L710.14 465L701.48 470L692.82 465L692.82 455ZM701.48 470L701.48 480M718.8 450L727.46 455L727.46 465L718.8 470L710.14 465L710.14 455ZM718.8 470L718.8 480M736.12 450L744.78 455L744.78 465L736.12 470L727.46 465L727.46 455ZM736.12 470L736.12 480M753.44 450L762.1 455L762.1 465L753.44 470L744.78 465L744.78 455ZM753.44 470L753.44 480M770.76 450L779.42 455L779.42 465L770.76 470L762.1 465L762.1 455ZM770.76 470L770.76 480M788.08 450L796.74 455L796.74 465L788.08 470L779.42 465L779.42 455ZM788.08 470L788.08 480M805.4 450L814.06 455L814.06 465L805.4 470L796.74 465L796.74 455ZM805.4 470L805.4 480M822.72 450L831.38 455L831.38 465L822.72 470L814.06 465L814.06 455ZM822.72 470L822.72 480M840.04 450L848.7 455L848.7 465L840.04 470L831.38 465L831.38 455ZM840.04 470L840.04 480M857.37 450L866.03 455L866.03 465L857.37 470L848.7 465L848.7 455ZM857.37 470L857.37 480M874.69 450L883.35 455L883.35 465L874.69 470L866.03 465L866.03 455ZM874.69 470L874.69 480M892.01 450L900.67 455L900.67 465L892.01 470L883.35 465L883.35 455ZM892.01 470L892.01 480M909.33 450L917.99 455L917.99 465L909.33 470L900.67 465L900.67 455ZM909.33 470L909.33 480M926.65 450L935.31 455L935.31 465L926.65 470L917.99 465L917.99 455ZM926.65 470L926.65 480M943.97 450L952.63 455L952.63 465L943.97 470L935.31 465L935.31 455ZM943.97 470L943.97 480M961.29 450L969.95 455L969.95 465L961.29 470L952.63 465L952.63 455ZM961.29 470L961.29 480M978.61 450L987.27 455L987.27 465L978.61 470L969.95 465L969.95 455ZM978.61 470L978.61 480M8.66 480L17.32 485L17.32 495L8.66 500L0 495L0 485ZM8.66 500L8.66 510M25.98 480L34.64 485L34.64 495L25.98 500L17.32 495L17.32 485ZM25.98 500L25.98 510M43.3 480L51.96 485L51.96 495L43.3 500L34.64 495L34.64 485ZM43.3 500L43.3 510M60.62 480L69.28 485L69.28 495L60.62 500L51.96 495L51.96 485ZM60.62 500L60.62 510M77.94 480L86.6 485L86.6 495L77.94 500L69.28 495L69.28 485ZM77.94 500L77.94 510M95.26 480L103.92 485L103.92 495L95.26 500L86.6 495L86.6 485ZM95.26 500L95.26 510M112.58 480L121.24 485L121.24 495L112.58 500L103.92 495L103.92 485ZM112.58 500L112.58 510M129.9 480L138.56 485L138.56 495L129.9 500L121.24 495L121.24 485ZM129.9 500L129.9 510M147.22 480L155.88 485L155.88 495L147.22 500L138.56 495L138.56 485ZM147.22 500L147.22 510M164.54 480L173.21 485L173.21 495L164.54 500L155.88 495L155.88 485ZM164.54 500L164.54 510M181.87 480L190.53 485L190.53 495L181.87 500L173.21 495L173.21 485ZM181.87 500L181.87 510M199.19 480L207.85 485L207.85 495L199.19 500L190.53 495L190.53 485ZM199.19 500L199.19 510M216.51 480L225.17 485L225.17 495L216.51 500L207.85 495L207.85 485ZM216.51 500L216.51 510M233.83 480L242.49 485L242.49 495L233.83 500L225.17 495L225.17 485ZM233.83 500L233.83 510M251.15 480L259.81 485L259.81 495L251.15 500L242.49 495L242.49 485ZM251.15 500L251.15 510M268.47 480L277.13 485L277.13 495L268.47 500L259.81 495L259.81 485ZM268.47 500L268.47 510M285.79 480L294.45 485L294.45 495L285.79 500L277.13 495L277.13 485ZM285.79 500L285.79 510M303.11 480L311.77 485L311.77 495L303.11 500L294.45 495L294.45 485ZM303.11 500L303.11 510M320.43 480L329.09 485L329.09 495L320.43 500L311.77 495L311.77 485ZM320.43 500L320.43 510M337.75 480L346.41 485L346.41 495L337.75 500L329.09 495L329.09 485ZM337.75 500L337.75 510M355.07 480L363.73 485L363.73 495L355.07 500L346.41 495L346.41 485ZM355.07 500L355.07 510M372.39 480L381.05 485L381.05 495L372.39 500L363.73 495L363.73 485ZM372.39 500L372.39 510M389.71 480L398.37 485L398.37 495L389.71 500L381.05 495L381.05 485ZM389.71 500L389.71 510M407.03 480L415.69 485L415.69 495L407.03 500L398.37 495L398.37 485ZM407.03 500L407.03 510M424.35 480L433.01 485L433.01 495L424.35 500L415.69 495L415.69 485ZM424.35 500L424.35 510M441.67 480L450.33 485L450.33 495L441.67 500L433.01 495L433.01 485ZM441.67 500L441.67 510M458.99 480L467.65 485L467.65 495L458.99 500L450.33 495L450.33 485ZM458.99 500L458.99 510M476.31 480L484.97 485L484.97 495L476.31 500L467.65 495L467.65 485ZM476.31 500L476.31 510M493.63 480L502.29 485L502.29 495L493.63 500L484.97 495L484.97 485ZM493.63 500L493.63 510M510.95 480L519.62 485L519.62 495L510.95 500L502.29 495L502.29 485ZM510.95 500L510.95 510M528.28 480L536.94 485L536.94 495L528.28 500L519.62 495L519.62 485ZM528.28 500L528.28 510M545.6 480L554.26 485L554.26 495L545.6 500L536.94 495L536.94 485ZM545.6 500L545.6 510M562.92 480L571.58 485L571.58 495L562.92 500L554.26 495L554.26 485ZM562.92 500L562.92 510M580.24 480L588.9 485L588.9 495L580.24 500L571.58 495L571.58 485ZM580.24 500L580.24 510M597.56 480L606.22 485L606.22 495L597.56 500L588.9 495L588.9 485ZM597.56 500L597.56 510M614.88 480L623.54 485L623.54 495L614.88 500L606.22 495L606.22 485ZM614.88 500L614.88 510M632.2 480L640.86 485L640.86 495L632.2 500L623.54 495L623.54 485ZM632.2 500L632.2 510M649.52 480L658.18 485L658.18 495L649.52 500L640.86 495L640.86 485ZM649.52 500L649.52 510M666.84 480L675.5 485L675.5 495L666.84 500L658.18 495L658.18 485ZM666.84 500L666.84 510M684.16 480L692.82 485L692.82 495L684.16 500L675.5 495L675.5 485ZM684.16 500L684.16 510M701.48 480L710.14 485L710.14 495L701.48 500L692.82 495L692.82 485ZM701.48 500L701.48 510M718.8 480L727.46 485L727.46 495L718.8 500L710.14 495L710.14 485ZM718.8 500L718.8 510M736.12 480L744.78 485L744.78 495L736.12 500L727.46 495L727.46 485ZM736.12 500L736.12 510M753.44 480L762.1 485L762.1 495L753.44 500L744.78 495L744.78 485ZM753.44 500L753.44 510M770.76 480L779.42 485L779.42 495L770.76 500L762.1 495L762.1 485ZM770.76 500L770.76 510M788.08 480L796.74 485L796.74 495L788.08 500L779.42 495L779.42 485ZM788.08 500L788.08 510M805.4 480L814.06 485L814.06 495L805.4 500L796.74 495L796.74 485ZM805.4 500L805.4 510M822.72 480L831.38 485L831.38 495L822.72 500L814.06 495L814.06 485ZM822.72 500L822.72 510M840.04 480L848.7 485L848.7 495L840.04 500L831.38 495L831.38 485ZM840.04 500L840.04 510M857.37 480L866.03 485L866.03 495L857.37 500L848.7 495L848.7 485ZM857.37 500L857.37 510M874.69 480L883.35 485L883.35 495L874.69 500L866.03 495L866.03 485ZM874.69 500L874.69 510M892.01 480L900.67 485L900.67 495L892.01 500L883.35 495L883.35 485ZM892.01 500L892.01 510M909.33 480L917.99 485L917.99 495L909.33 500L900.67 495L900.67 485ZM909.33 500L909.33 510M926.65 480L935.31 485L935.31 495L926.65 500L917.99 495L917.99 485ZM926.65 500L926.65 510M943.97 480L952.63 485L952.63 495L943.97 500L935.31 495L935.31 485ZM943.97 500L943.97 510M961.29 480L969.95 485L969.95 495L961.29 500L952.63 495L952.63 485ZM961.29 500L961.29 510M978.61 480L987.27 485L987.27 495L978.61 500L969.95 495L969.95 485ZM978.61 500L978.61 510M8.66 510L17.32 515L17.32 525L8.66 530L0 525L0 515ZM8.66 530L8.66 540M25.98 510L34.64 515L34.64 525L25.98 530L17.32 525L17.32 515ZM25.98 530L25.98 540M43.3 510L51.96 515L51.96 525L43.3 530L34.64 525L34.64 515ZM43.3 530L43.3 540M60.62 510L69.28 515L69.28 525L60.62 530L51.96 525L51.96 515ZM60.62 530L60.62 540M77.94 510L86.6 515L86.6 525L77.94 530L69.28 525L69.28 515ZM77.94 530L77.94 540M95.26 510L103.92 515L103.92 525L95.26 530L86.6 525L86.6 515ZM95.26 530L95.26 540M112.58 510L121.24 515L121.24 525L112.58 530L103.92 525L103.92 515ZM112.58 530L112.58 540M129.9 510L138.56 515L138.56 525L129.9 530L121.24 525L121.24 515ZM129.9 530L129.9 540M147.22 510L155.88 515L155.88 525L147.22 530L138.56 525L138.56 515ZM147.22 530L147.22 540M164.54 510L173.21 515L173.21 525L164.54 530L155.88 525L155.88 515ZM164.54 530L164.54 540M181.87 510L190.53 515L190.53 525L181.87 530L173.21 525L173.21 515ZM181.87 530L181.87 540M199.19 510L207.85 515L207.85 525L199.19 530L190.53 525L190.53 515ZM199.19 530L199.19 540M216.51 510L225.17 515L225.17 525L216.51 530L207.85 525L207.85 515ZM216.51 530L216.51 540M233.83 510L242.49 515L242.49 525L233.83 530L225.17 525L225.17 515ZM233.83 530L233.83 540M251.15 510L259.81 515L259.81 525L251.15 530L242.49 525L242.49 515ZM251.15 530L251.15 540M268.47 510L277.13 515L277.13 525L268.47 530L259.81 525L259.81 515ZM268.47 530L268.47 540M285.79 510L294.45 515L294.45 525L285.79 530L277.13 525L277.13 515ZM285.79 530L285.79 540M303.11 510L311.77 515L311.77 525L303.11 530L294.45 525L294.45 515ZM303.11 530L303.11 540M320.43 510L329.09 515L329.09 525L320.43 530L311.77 525L311.77 515ZM320.43 530L320.43 540M337.75 510L346.41 515L346.41 525L337.75 530L329.09 525L329.09 515ZM337.75 530L337.75 540M355.07 510L363.73 515L363.73 525L355.07 530L346.41 525L346.41 515ZM355.07 530L355.07 540M372.39 510L381.05 515L381.05 525L372.39 530L363.73 525L363.73 515ZM372.39 530L372.39 540M389.71 510L398.37 515L398.37 525L389.71 530L381.05 525L381.05 515ZM389.71 530L389.71 540M407.03 510L415.69 515L415.69 525L407.03 530L398.37 525L398.37 515ZM407.03 530L407.03 540M424.35 510L433.01 515L433.01 525L424.35 530L415.69 525L415.69 515ZM424.35 530L424.35 540M441.67 510L450.33 515L450.33 525L441.67 530L433.01 525L433.01 515ZM441.67 530L441.67 540M458.99 510L467.65 515L467.65 525L458.99 530L450.33 525L450.33 515ZM458.99 530L458.99 540M476.31 510L484.97 515L484.97 525L476.31 530L467.65 525L467.65 515ZM476.31 530L476.31 540M493.63 510L502.29 515L502.29 525L493.63 530L484.97 525L484.97 515ZM493.63 530L493.63 540M510.95 510L519.62 515L519.62 525L510.95 530L502.29 525L502.29 515ZM510.95 530L510.95 540M528.28 510L536.94 515L536.94 525L528.28 530L519.62 525L519.62 515ZM528.28 530L528.28 540M545.6 510L554.26 515L554.26 525L545.6 530L536.94 525L536.94 515ZM545.6 530L545.6 540M562.92 510L571.58 515L571.58 525L562.92 530L554.26 525L554.26 515ZM562.92 530L562.92 540M580.24 510L588.9 515L588.9 525L580.24 530L571.58 525L571.58 515ZM580.24 530L580.24 540M597.56 510L606.22 515L606.22 525L597.56 530L588.9 525L588.9 515ZM597.56 530L597.56 540M614.88 510L623.54 515L623.54 525L614.88 530L606.22 525L606.22 515ZM614.88 530L614.88 540M632.2 510L640.86 515L640.86 525L632.2 530L623.54 525L623.54 515ZM632.2 530L632.2 540M649.52 510L658.18 515L658.18 525L649.52 530L640.86 525L640.86 515ZM649.52 530L649.52 540M666.84 510L675.5 515L675.5 525L666.84 530L658.18 525L658.18 515ZM666.84 530L666.84 540M684.16 510L692.82 515L692.82 525L684.16 530L675.5 525L675.5 515ZM684.16 530L684.16 540M701.48 510L710.14 515L710.14 525L701.48 530L692.82 525L692.82 515ZM701.48 530L701.48 540M718.8 510L727.46 515L727.46 525L718.8 530L710.14 525L710.14 515ZM718.8 530L718.8 540M736.12 510L744.78 515L744.78 525L736.12 530L727.46 525L727.46 515ZM736.12 530L736.12 540M753.44 510L762.1 515L762.1 525L753.44 530L744.78 525L744.78 515ZM753.44 530L753.44 540M770.76 510L779.42 515L779.42 525L770.76 530L762.1 525L762.1 515ZM770.76 530L770.76 540M788.08 510L796.74 515L796.74 525L788.08 530L779.42 525L779.42 515ZM788.08 530L788.08 540M805.4 510L814.06 515L814.06 525L805.4 530L796.74 525L796.74 515ZM805.4 530L805.4 540M822.72 510L831.38 515L831.38 525L822.72 530L814.06 525L814.06 515ZM822.72 530L822.72 540M840.04 510L848.7 515L848.7 525L840.04 530L831.38 525L831.38 515ZM840.04 530L840.04 540M857.37 510L866.03 515L866.03 525L857.37 530L848.7 525L848.7 515ZM857.37 530L857.37 540M874.69 510L883.35 515L883.35 525L874.69 530L866.03 525L866.03 515ZM874.69 530L874.69 540M892.01 510L900.67 515L900.67 525L892.01 530L883.35 525L883.35 515ZM892.01 530L892.01 540M909.33 510L917.99 515L917.99 525L909.33 530L900.67 525L900.67 515ZM909.33 530L909.33 540M926.65 510L935.31 515L935.31 525L926.65 530L917.99 525L917.99 515ZM926.65 530L926.65 540M943.97 510L952.63 515L952.63 525L943.97 530L935.31 525L935.31 515ZM943.97 530L943.97 540M961.29 510L969.95 515L969.95 525L961.29 530L952.63 525L952.63 515ZM961.29 530L961.29 540M978.61 510L987.27 515L987.27 525L978.61 530L969.95 525L969.95 515ZM978.61 530L978.61 540",
+          "stroke": {
+            "color": "board:lighten:0.06"
+          },
+          "strokeWidth": 2.6
+        },
+        {
+          "d": "M0 0L34 20L34 504L0 524ZM1000 0L966 20L966 504L1000 524Z",
+          "fill": {
+            "linear": [
+              0.0,
+              0.0,
+              0.0,
+              544.0
+            ],
+            "stops": [
+              {
+                "at": 0.0,
+                "color": "board:lighten:0.1"
+              },
+              {
+                "at": 1.0,
+                "color": "board:darken:0.3"
+              }
+            ]
+          }
+        },
+        {
+          "d": "M0 0L34 20L34 504L0 524ZM1000 0L966 20L966 504L1000 524Z",
+          "stroke": {
+            "color": "board:lighten:0.15"
+          },
+          "strokeWidth": 2.6
+        },
+        {
+          "d": "M24 60L29 60L29 454L24 454ZM971 60L976 60L976 454L971 454Z",
+          "fill": {
+            "color": "accent"
+          },
+          "opacity": 0.8
+        },
+        {
+          "d": "M8 414L20 414L20 436L8 436ZM980 414L992 414L992 436L980 436Z",
+          "fill": {
+            "color": "signal"
+          },
+          "opacity": 0.9
+        },
+        {
+          "d": "M180 54L330 32L670 32L820 54L900 204L850 374L640 464L360 464L150 374L100 204Z",
+          "fill": {
+            "color": "board:lighten:0.03"
+          }
+        },
+        {
+          "d": "M192.8 61.76L452 218.9M336.8 40.64L474.5 215.6M663.2 40.64L525.5 215.6M807.2 61.76L548 218.9M884 205.76L560 241.4M836 368.96L552.5 266.9M634.4 455.36L521 280.4M365.6 455.36L479 280.4M164 368.96L447.5 266.9M116 205.76L440 241.4",
+          "stroke": {
+            "color": "board:lighten:0.08"
+          },
+          "strokeWidth": 2.6,
+          "opacity": 0.8
+        },
+        {
+          "d": "M530 248L515 273.98L485 273.98L470 248L485 222.02L515 222.02Z",
+          "fill": {
+            "color": "board:lighten:0.06"
+          }
+        },
+        {
+          "d": "M530 248L515 273.98L485 273.98L470 248L485 222.02L515 222.02Z",
+          "stroke": {
+            "color": "board:lighten:0.14"
+          },
+          "strokeWidth": 2.6
+        },
+        {
+          "d": "M180 54L330 32L670 32L820 54L900 204L850 374L640 464L360 464L150 374L100 204Z",
+          "stroke": {
+            "color": "board:darken:0.5"
+          },
+          "strokeWidth": 6.0
+        },
+        {
+          "d": "M180 54L330 32L670 32L820 54L900 204L850 374L640 464L360 464L150 374L100 204Z",
+          "stroke": {
+            "color": "board:lighten:0.14"
+          },
+          "strokeWidth": 2.6
+        },
+        {
+          "d": "M320 29L340 29L340 35L320 35ZM660 29L680 29L680 35L660 35ZM350 461L370 461L370 467L350 467ZM630 461L650 461L650 467L630 467Z",
+          "fill": {
+            "color": "signal"
+          },
+          "opacity": 0.9
+        }
+      ]
+    }
+  }
+}

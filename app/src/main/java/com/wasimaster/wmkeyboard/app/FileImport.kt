@@ -124,6 +124,8 @@ import com.wasimaster.wmkeyboard.core.theme.GboardTheme
 import com.wasimaster.wmkeyboard.core.theme.HeliUnsupported
 import com.wasimaster.wmkeyboard.core.theme.ClinkTheme
 import com.wasimaster.wmkeyboard.core.theme.ClinkThemeResult
+import com.wasimaster.wmkeyboard.core.theme.KyngTheme
+import com.wasimaster.wmkeyboard.core.theme.KyngThemeResult
 import com.wasimaster.wmkeyboard.core.theme.ClinkUnsupported
 import com.wasimaster.wmkeyboard.core.theme.KineticaTheme
 import com.wasimaster.wmkeyboard.core.theme.KineticaUnsupported
@@ -674,6 +676,9 @@ object WMFileTypes {
         // `name`), so they are told apart first, by the keys only they use.
         if (ClinkTheme.looksLikeClinkTheme(text)) {
             (ClinkTheme.read(text) as? ClinkThemeResult.Converted)?.let { return Opened.ClinkThemeFile(it) }
+        }
+        if (KyngTheme.looksLikeKyngTheme(text)) {
+            (KyngTheme.read(text) as? KyngThemeResult.Converted)?.let { return Opened.Theme(it.theme) }
         }
         if (ClinkLayouts.looksLikeClinkLayout(text)) {
             ClinkLayouts.read(text)?.let { return Opened.ForeignLayout(it) }

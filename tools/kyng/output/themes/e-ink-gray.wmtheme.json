@@ -1,0 +1,18 @@
+{
+  "id": "kyng_e-ink-gray",
+  "name": "Kyng E-ink Gray",
+  "dark": true,
+  "boardBackground": 4293322470,
+  "keyBackground": 4294440951,
+  "pressedKeyBackground": 4292203989,
+  "specialKeyBackground": 4293783021,
+  "specialKeyPressedBackground": 4291480266,
+  "keyTextColor": 4279243028,
+  "keySubtextColor": 4285295983,
+  "accentColor": 4282664004,
+  "keyBorderColor": 4290624957,
+  "keyBorderWidthDp": 1,
+  "keyCornerRadiusDp": 4,
+  "keyShape": "ROUNDED",
+  "keySkin": null
+}

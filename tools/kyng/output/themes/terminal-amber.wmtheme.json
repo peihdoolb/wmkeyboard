@@ -1,0 +1,18 @@
+{
+  "id": "kyng_terminal-amber",
+  "name": "Kyng Terminal Amber",
+  "dark": true,
+  "boardBackground": 4279503874,
+  "keyBackground": 4280489221,
+  "pressedKeyBackground": 4281671946,
+  "specialKeyBackground": 4279963652,
+  "specialKeyPressedBackground": 4281080583,
+  "keyTextColor": 4294967295,
+  "keySubtextColor": 4286017124,
+  "accentColor": 4294946816,
+  "keyBorderColor": 4282000905,
+  "keyBorderWidthDp": 1,
+  "keyCornerRadiusDp": 2,
+  "keyShape": "ROUNDED",
+  "keySkin": null
+}

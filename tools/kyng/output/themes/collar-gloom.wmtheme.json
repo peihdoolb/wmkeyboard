@@ -1,0 +1,1168 @@
+{
+  "id": "kyng_collar-gloom",
+  "name": "Kyng Collar",
+  "dark": true,
+  "boardBackground": 4278848011,
+  "keyBackground": 4279900700,
+  "pressedKeyBackground": 4279045391,
+  "specialKeyBackground": 4280953389,
+  "specialKeyPressedBackground": 4279834908,
+  "keyTextColor": 4293716193,
+  "keySubtextColor": 4288452771,
+  "accentColor": 4293716193,
+  "keyBorderColor": 4278519046,
+  "keyBorderWidthDp": 0,
+  "keyCornerRadiusDp": 0,
+  "keyShape": "SHARP",
+  "keySkin": {
+    "slots": {
+      "letter": {
+        "size": [
+          100.0,
+          140.0
+        ],
+        "stretchX": [
+          30,
+          70
+        ],
+        "stretchY": [
+          44,
+          100
+        ],
+        "labelBox": [
+          16,
+          38,
+          84,
+          118
+        ],
+        "labelShift": [
+          0,
+          2
+        ],
+        "layers": [
+          {
+            "d": "M20 12L80 12C86.627 12 92 17.373 92 24L92 120C92 126.627 86.627 132 80 132L20 132C13.373 132 8 126.627 8 120L8 24C8 17.373 13.373 12 20 12Z",
+            "fill": {
+              "color": "shadow"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.2
+              ]
+            }
+          },
+          {
+            "d": "M20 10L80 10C86.627 10 92 15.373 92 22L92 118C92 124.627 86.627 130 80 130L20 130C13.373 130 8 124.627 8 118L8 22C8 15.373 13.373 10 20 10Z",
+            "fill": {
+              "color": "face:darken:0.6"
+            }
+          },
+          {
+            "d": "M20 8L80 8C86.627 8 92 13.373 92 20L92 114C92 120.627 86.627 126 80 126L20 126C13.373 126 8 120.627 8 114L8 20C8 13.373 13.373 8 20 8Z",
+            "fill": {
+              "linear": [
+                0.0,
+                8.0,
+                0.0,
+                128.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "face:lighten:0.07"
+                },
+                {
+                  "at": 0.5,
+                  "color": "face"
+                },
+                {
+                  "at": 1.0,
+                  "color": "face:darken:0.3"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M20 36L20 124M32 37L32 125M44 39L44 125M56 39L56 125M68 37L68 125M80 36L80 124",
+            "stroke": {
+              "color": "faceLabel:alpha:0.09"
+            },
+            "strokeWidth": 0.6,
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M14 9.6L86 9.6",
+            "stroke": {
+              "color": "faceLabel:alpha:0.18"
+            },
+            "strokeWidth": 0.9,
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M30 121.5L70 121.5",
+            "stroke": {
+              "color": "signal:alpha:0.45"
+            },
+            "strokeWidth": 0.7,
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M50 14C40 17 26 17 13 12L13 18C13 31 21 39 33 39C42 39 49 33 51 25C53 33 58 39 67 39C79 39 87 31 87 18L87 12C74 17 60 17 50 14Z",
+            "fill": {
+              "color": "shadow"
+            },
+            "press": {
+              "opacity": [
+                0.35,
+                0.9
+              ]
+            }
+          },
+          {
+            "d": "M20 8L80 8C86.627 8 92 13.373 92 20L92 114C92 120.627 86.627 126 80 126L20 126C13.373 126 8 120.627 8 114L8 20C8 13.373 13.373 8 20 8Z",
+            "fill": {
+              "color": "face:darken:0.6"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                0.25
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M50 12C40 15 26 15 12 10L12 16C12 28 20 36 32 36C41 36 48 30 50 21Z",
+            "fill": {
+              "linear": [
+                0.0,
+                10.0,
+                0.0,
+                38.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "chassis:lighten:0.3"
+                },
+                {
+                  "at": 0.6,
+                  "color": "chassis"
+                },
+                {
+                  "at": 1.0,
+                  "color": "chassis:darken:0.16"
+                }
+              ]
+            },
+            "stroke": {
+              "color": "chassis:darken:0.25"
+            },
+            "strokeWidth": 0.7,
+            "press": {
+              "translate": [
+                0.0,
+                1.0
+              ],
+              "rotate": [
+                0.0,
+                10.0
+              ],
+              "pivot": [
+                50.0,
+                13.0
+              ]
+            }
+          },
+          {
+            "d": "M47 16C40 18 27 18 16 14.5C16.5 25 22.6 32.4 32 32.4C39.6 32.4 45 27.6 47 20.5",
+            "stroke": {
+              "color": "chassis:darken:0.18"
+            },
+            "strokeWidth": 0.5,
+            "press": {
+              "translate": [
+                0.0,
+                1.0
+              ],
+              "rotate": [
+                0.0,
+                10.0
+              ],
+              "pivot": [
+                50.0,
+                13.0
+              ]
+            }
+          },
+          {
+            "d": "M50 12C60 15 74 15 88 10L88 16C88 28 80 36 68 36C59 36 52 30 50 21Z",
+            "fill": {
+              "linear": [
+                0.0,
+                10.0,
+                0.0,
+                38.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "chassis:lighten:0.3"
+                },
+                {
+                  "at": 0.6,
+                  "color": "chassis"
+                },
+                {
+                  "at": 1.0,
+                  "color": "chassis:darken:0.16"
+                }
+              ]
+            },
+            "stroke": {
+              "color": "chassis:darken:0.25"
+            },
+            "strokeWidth": 0.7,
+            "press": {
+              "translate": [
+                0.0,
+                1.0
+              ],
+              "rotate": [
+                0.0,
+                -10.0
+              ],
+              "pivot": [
+                50.0,
+                13.0
+              ]
+            }
+          },
+          {
+            "d": "M53 16C60 18 73 18 84 14.5C83.5 25 77.4 32.4 68 32.4C60.4 32.4 55 27.6 53 20.5",
+            "stroke": {
+              "color": "chassis:darken:0.18"
+            },
+            "strokeWidth": 0.5,
+            "press": {
+              "translate": [
+                0.0,
+                1.0
+              ],
+              "rotate": [
+                0.0,
+                -10.0
+              ],
+              "pivot": [
+                50.0,
+                13.0
+              ]
+            }
+          }
+        ]
+      },
+      "special": {
+        "size": [
+          100.0,
+          140.0
+        ],
+        "stretchX": [
+          30,
+          70
+        ],
+        "stretchY": [
+          40,
+          100
+        ],
+        "labelBox": [
+          18,
+          18,
+          82,
+          116
+        ],
+        "labelShift": [
+          0,
+          2
+        ],
+        "layers": [
+          {
+            "d": "M20 12L80 12C86.627 12 92 17.373 92 24L92 120C92 126.627 86.627 132 80 132L20 132C13.373 132 8 126.627 8 120L8 24C8 17.373 13.373 12 20 12Z",
+            "fill": {
+              "color": "shadow"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.2
+              ]
+            }
+          },
+          {
+            "d": "M20 10L80 10C86.627 10 92 15.373 92 22L92 118C92 124.627 86.627 130 80 130L20 130C13.373 130 8 124.627 8 118L8 22C8 15.373 13.373 10 20 10Z",
+            "fill": {
+              "color": "face:darken:0.6"
+            }
+          },
+          {
+            "d": "M20 8L80 8C86.627 8 92 13.373 92 20L92 114C92 120.627 86.627 126 80 126L20 126C13.373 126 8 120.627 8 114L8 20C8 13.373 13.373 8 20 8Z",
+            "fill": {
+              "linear": [
+                0.0,
+                8.0,
+                0.0,
+                128.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "face:lighten:0.06"
+                },
+                {
+                  "at": 0.5,
+                  "color": "face"
+                },
+                {
+                  "at": 1.0,
+                  "color": "face:darken:0.32"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M14 9.6L86 9.6",
+            "stroke": {
+              "color": "faceLabel:alpha:0.14"
+            },
+            "strokeWidth": 0.9,
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M15 14L85 14",
+            "stroke": {
+              "color": "faceLabel:alpha:0.12"
+            },
+            "strokeWidth": 0.5,
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M14 117L17 117M20 117L23 117M26 117L29 117M32 117L35 117M38 117L41 117M59 117L62 117M65 117L68 117M71 117L74 117M77 117L80 117M83 117L86 117",
+            "stroke": {
+              "color": "faceLabel:alpha:0.22"
+            },
+            "strokeWidth": 0.6,
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M52.6 120C52.6 121.436 51.436 122.6 50 122.6C48.564 122.6 47.4 121.436 47.4 120C47.4 118.564 48.564 117.4 50 117.4C51.436 117.4 52.6 118.564 52.6 120Z",
+            "fill": {
+              "radial": [
+                50.0,
+                120.0,
+                3.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "faceLabel:alpha:0.55"
+                },
+                {
+                  "at": 1.0,
+                  "color": "face:darken:0.8"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M20 8L80 8C86.627 8 92 13.373 92 20L92 114C92 120.627 86.627 126 80 126L20 126C13.373 126 8 120.627 8 114L8 20C8 13.373 13.373 8 20 8Z",
+            "fill": {
+              "color": "face:darken:0.6"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                0.25
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          }
+        ]
+      },
+      "emoji": {
+        "size": [
+          100.0,
+          140.0
+        ],
+        "stretchX": [
+          30,
+          70
+        ],
+        "stretchY": [
+          40,
+          100
+        ],
+        "labelBox": [
+          18,
+          18,
+          82,
+          116
+        ],
+        "labelShift": [
+          0,
+          2
+        ],
+        "layers": [
+          {
+            "d": "M20 12L80 12C86.627 12 92 17.373 92 24L92 120C92 126.627 86.627 132 80 132L20 132C13.373 132 8 126.627 8 120L8 24C8 17.373 13.373 12 20 12Z",
+            "fill": {
+              "color": "shadow"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.2
+              ]
+            }
+          },
+          {
+            "d": "M20 10L80 10C86.627 10 92 15.373 92 22L92 118C92 124.627 86.627 130 80 130L20 130C13.373 130 8 124.627 8 118L8 22C8 15.373 13.373 10 20 10Z",
+            "fill": {
+              "color": "face:darken:0.6"
+            }
+          },
+          {
+            "d": "M20 8L80 8C86.627 8 92 13.373 92 20L92 114C92 120.627 86.627 126 80 126L20 126C13.373 126 8 120.627 8 114L8 20C8 13.373 13.373 8 20 8Z",
+            "fill": {
+              "linear": [
+                0.0,
+                8.0,
+                0.0,
+                128.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "face:lighten:0.06"
+                },
+                {
+                  "at": 0.5,
+                  "color": "face"
+                },
+                {
+                  "at": 1.0,
+                  "color": "face:darken:0.32"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M14 9.6L86 9.6",
+            "stroke": {
+              "color": "faceLabel:alpha:0.14"
+            },
+            "strokeWidth": 0.9,
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M15 14L85 14",
+            "stroke": {
+              "color": "faceLabel:alpha:0.12"
+            },
+            "strokeWidth": 0.5,
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M14 117L17 117M20 117L23 117M26 117L29 117M32 117L35 117M38 117L41 117M59 117L62 117M65 117L68 117M71 117L74 117M77 117L80 117M83 117L86 117",
+            "stroke": {
+              "color": "faceLabel:alpha:0.22"
+            },
+            "strokeWidth": 0.6,
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M52.6 120C52.6 121.436 51.436 122.6 50 122.6C48.564 122.6 47.4 121.436 47.4 120C47.4 118.564 48.564 117.4 50 117.4C51.436 117.4 52.6 118.564 52.6 120Z",
+            "fill": {
+              "radial": [
+                50.0,
+                120.0,
+                3.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "faceLabel:alpha:0.55"
+                },
+                {
+                  "at": 1.0,
+                  "color": "face:darken:0.8"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          },
+          {
+            "d": "M20 8L80 8C86.627 8 92 13.373 92 20L92 114C92 120.627 86.627 126 80 126L20 126C13.373 126 8 120.627 8 114L8 20C8 13.373 13.373 8 20 8Z",
+            "fill": {
+              "color": "face:darken:0.6"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                0.25
+              ],
+              "translate": [
+                0.0,
+                3.0
+              ]
+            }
+          }
+        ]
+      },
+      "enter": {
+        "size": [
+          150.0,
+          140.0
+        ],
+        "stretchX": [
+          44,
+          106
+        ],
+        "stretchY": [
+          40,
+          96
+        ],
+        "labelBox": [
+          34,
+          32,
+          116,
+          104
+        ],
+        "labelShift": [
+          0,
+          2
+        ],
+        "layers": [
+          {
+            "d": "M16 12L134 12C138.418 12 142 15.582 142 20L142 124C142 128.418 138.418 132 134 132L16 132C11.582 132 8 128.418 8 124L8 20C8 15.582 11.582 12 16 12Z",
+            "fill": {
+              "color": "shadow"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.2
+              ]
+            }
+          },
+          {
+            "d": "M16 8L134 8C138.418 8 142 11.582 142 16L142 120C142 124.418 138.418 128 134 128L16 128C11.582 128 8 124.418 8 120L8 16C8 11.582 11.582 8 16 8Z",
+            "fill": {
+              "linear": [
+                0.0,
+                8.0,
+                0.0,
+                128.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "keySpecial:lighten:0.1"
+                },
+                {
+                  "at": 0.25,
+                  "color": "keySpecial:darken:0.45"
+                },
+                {
+                  "at": 1.0,
+                  "color": "keySpecial:darken:0.8"
+                }
+              ]
+            }
+          },
+          {
+            "d": "M14 12C40 10 110 10 136 12L136 22C110 18 40 18 14 22Z",
+            "fill": {
+              "color": "keySpecial:lighten:0.6"
+            },
+            "opacity": 0.18
+          },
+          {
+            "d": "M16 10.4L134 10.4",
+            "stroke": {
+              "color": "keySpecial:lighten:0.7"
+            },
+            "strokeWidth": 0.8,
+            "opacity": 0.5
+          },
+          {
+            "d": "M27 22L123 22C124.657 22 126 23.343 126 25L126 113C126 114.657 124.657 116 123 116L27 116C25.343 116 24 114.657 24 113L24 25C24 23.343 25.343 22 27 22Z",
+            "fill": {
+              "color": "keySpecial:darken:0.85"
+            }
+          },
+          {
+            "d": "M60 122L90 122",
+            "stroke": {
+              "color": "signal:alpha:0.5"
+            },
+            "strokeWidth": 0.8
+          },
+          {
+            "d": "M28 24L122 24L122 102C110 102 100 108 75 112C50 108 40 102 28 102Z",
+            "fill": {
+              "linear": [
+                0.0,
+                26.0,
+                0.0,
+                110.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "face:lighten:0.2"
+                },
+                {
+                  "at": 0.5,
+                  "color": "face"
+                },
+                {
+                  "at": 1.0,
+                  "color": "face:darken:0.1"
+                }
+              ]
+            },
+            "stroke": {
+              "color": "face:darken:0.25"
+            },
+            "strokeWidth": 0.7,
+            "press": {
+              "translate": [
+                0.0,
+                4.0
+              ]
+            }
+          },
+          {
+            "d": "M32 28L118 28L118 98.5C107 98.5 98 104 75 108C52 104 43 98.5 32 98.5Z",
+            "stroke": {
+              "color": "face:darken:0.14"
+            },
+            "strokeWidth": 0.5,
+            "press": {
+              "translate": [
+                0.0,
+                4.0
+              ]
+            }
+          },
+          {
+            "d": "M28 24L122 24L122 102C110 102 100 108 75 112C50 108 40 102 28 102Z",
+            "fill": {
+              "color": "face:darken:0.7"
+            },
+            "press": {
+              "opacity": [
+                0.0,
+                0.18
+              ],
+              "translate": [
+                0.0,
+                4.0
+              ]
+            }
+          }
+        ]
+      },
+      "space": {
+        "size": [
+          400.0,
+          140.0
+        ],
+        "stretchX": [
+          64,
+          336
+        ],
+        "labelBox": [
+          70,
+          36,
+          330,
+          84
+        ],
+        "labelShift": [
+          0,
+          2
+        ],
+        "layers": [
+          {
+            "d": "M18 14L382 14C387.523 14 392 18.477 392 24L392 122C392 127.523 387.523 132 382 132L18 132C12.477 132 8 127.523 8 122L8 24C8 18.477 12.477 14 18 14Z",
+            "fill": {
+              "color": "shadow"
+            },
+            "press": {
+              "opacity": [
+                1.0,
+                0.2
+              ]
+            }
+          },
+          {
+            "d": "M18 10L382 10C387.523 10 392 14.477 392 20L392 118C392 123.523 387.523 128 382 128L18 128C12.477 128 8 123.523 8 118L8 20C8 14.477 12.477 10 18 10Z",
+            "fill": {
+              "color": "face:darken:0.7"
+            }
+          },
+          {
+            "d": "M50 20L350 20C353.314 20 356 22.686 356 26L356 94C356 97.314 353.314 100 350 100L50 100C46.686 100 44 97.314 44 94L44 26C44 22.686 46.686 20 50 20Z",
+            "fill": {
+              "linear": [
+                0.0,
+                20.0,
+                0.0,
+                100.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "face:darken:0.5"
+                },
+                {
+                  "at": 0.3,
+                  "color": "face:lighten:0.06"
+                },
+                {
+                  "at": 0.6,
+                  "color": "face"
+                },
+                {
+                  "at": 1.0,
+                  "color": "face:darken:0.62"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M20 16L40 16C44.418 16 48 19.582 48 24L48 96C48 100.418 44.418 104 40 104L20 104C15.582 104 12 100.418 12 96L12 24C12 19.582 15.582 16 20 16Z",
+            "fill": {
+              "linear": [
+                0.0,
+                16.0,
+                0.0,
+                104.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "keySpecial:lighten:0.1"
+                },
+                {
+                  "at": 0.35,
+                  "color": "keySpecial:darken:0.2"
+                },
+                {
+                  "at": 1.0,
+                  "color": "keySpecial:darken:0.8"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M360 16L380 16C384.418 16 388 19.582 388 24L388 96C388 100.418 384.418 104 380 104L360 104C355.582 104 352 100.418 352 96L352 24C352 19.582 355.582 16 360 16Z",
+            "fill": {
+              "linear": [
+                0.0,
+                16.0,
+                0.0,
+                104.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "keySpecial:lighten:0.1"
+                },
+                {
+                  "at": 0.35,
+                  "color": "keySpecial:darken:0.2"
+                },
+                {
+                  "at": 1.0,
+                  "color": "keySpecial:darken:0.8"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M16 19L44 19M356 19L384 19",
+            "stroke": {
+              "color": "faceLabel:alpha:0.22"
+            },
+            "strokeWidth": 0.8,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M21 108L379 108C381.761 108 384 110.239 384 113L384 113C384 115.761 381.761 118 379 118L21 118C18.239 118 16 115.761 16 113L16 113C16 110.239 18.239 108 21 108Z",
+            "fill": {
+              "linear": [
+                0.0,
+                106.0,
+                0.0,
+                120.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "chassis:darken:0.1"
+                },
+                {
+                  "at": 1.0,
+                  "color": "chassis:darken:0.55"
+                }
+              ]
+            },
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M125 113C125 115.761 122.761 118 120 118C117.239 118 115 115.761 115 113C115 110.239 117.239 108 120 108C122.761 108 125 110.239 125 113Z",
+            "fill": {
+              "color": "face:darken:0.3"
+            },
+            "stroke": {
+              "color": "chassis:darken:0.2"
+            },
+            "strokeWidth": 1.0,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M285 113C285 115.761 282.761 118 280 118C277.239 118 275 115.761 275 113C275 110.239 277.239 108 280 108C282.761 108 285 110.239 285 113Z",
+            "fill": {
+              "color": "face:darken:0.3"
+            },
+            "stroke": {
+              "color": "chassis:darken:0.2"
+            },
+            "strokeWidth": 1.0,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M60 124L340 124",
+            "stroke": {
+              "color": "signal:alpha:0.4"
+            },
+            "strokeWidth": 0.7,
+            "press": {
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M18 22L18 98M24 20L24 100M30 20L30 100M36 20L36 100M42 22L42 98M358 22L358 98M364 20L364 100M370 20L370 100M376 20L376 100M382 22L382 98",
+            "stroke": {
+              "color": "keySpecial:darken:0.85"
+            },
+            "strokeWidth": 1.0,
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ],
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M21 21L21 99M27 20L27 100M33 20L33 100M39 20L39 100M361 21L361 99M367 20L367 100M373 20L373 100M379 20L379 100",
+            "stroke": {
+              "color": "keySpecial:darken:0.85"
+            },
+            "strokeWidth": 1.0,
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M50 30L350 30",
+            "stroke": {
+              "color": "faceLabel:alpha:0.14"
+            },
+            "strokeWidth": 1.6,
+            "press": {
+              "opacity": [
+                1.0,
+                0.0
+              ],
+              "translate": [
+                0.0,
+                2.0
+              ]
+            }
+          },
+          {
+            "d": "M50 30L350 30",
+            "stroke": {
+              "color": "faceLabel:alpha:0.16"
+            },
+            "strokeWidth": 1.6,
+            "press": {
+              "opacity": [
+                0.0,
+                1.0
+              ],
+              "translate": [
+                0.0,
+                10.0
+              ]
+            }
+          }
+        ]
+      },
+      "popup": {
+        "size": [
+          150.0,
+          160.0
+        ],
+        "labelBox": [
+          26,
+          26,
+          124,
+          124
+        ],
+        "labelColor": "previewLabel",
+        "labelGround": "previewFill",
+        "layers": [
+          {
+            "d": "M14 10L126 10L140 24L140 146L14 146Z",
+            "fill": {
+              "color": "shadow"
+            }
+          },
+          {
+            "d": "M12 6L122 6L138 22L138 142L12 142Z",
+            "fill": {
+              "linear": [
+                0.0,
+                6.0,
+                0.0,
+                140.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "previewFill:lighten:0.3"
+                },
+                {
+                  "at": 1.0,
+                  "color": "previewFill:darken:0.06"
+                }
+              ]
+            }
+          },
+          {
+            "d": "M22 22L130 22L130 130L22 130Z",
+            "fill": {
+              "color": "previewFill"
+            }
+          },
+          {
+            "d": "M122 6L122 22L138 22Z",
+            "fill": {
+              "color": "previewFill:darken:0.16"
+            }
+          },
+          {
+            "d": "M19 6L19 142",
+            "stroke": {
+              "color": "signal:alpha:0.6"
+            },
+            "strokeWidth": 0.8
+          },
+          {
+            "d": "M12 136L138 136C142.418 136 146 139.582 146 144L146 148C146 152.418 142.418 156 138 156L12 156C7.582 156 4 152.418 4 148L4 144C4 139.582 7.582 136 12 136Z",
+            "fill": {
+              "linear": [
+                0.0,
+                136.0,
+                0.0,
+                158.0
+              ],
+              "stops": [
+                {
+                  "at": 0.0,
+                  "color": "keySpecial:lighten:0.05"
+                },
+                {
+                  "at": 1.0,
+                  "color": "keySpecial:darken:0.8"
+                }
+              ]
+            }
+          },
+          {
+            "d": "M10 139L140 139",
+            "stroke": {
+              "color": "label:alpha:0.16"
+            },
+            "strokeWidth": 0.8
+          }
+        ]
+      }
+    },
+    "board": {
+      "size": [
+        360.0,
+        240.0
+      ],
+      "stretchX": [
+        20,
+        340
+      ],
+      "stretchY": [
+        20,
+        220
+      ],
+      "layers": [
+        {
+          "d": "M10 0L10 240M30 0L30 240M50 0L50 240M70 0L70 240M90 0L90 240M110 0L110 240M130 0L130 240M150 0L150 240M170 0L170 240M190 0L190 240M210 0L210 240M230 0L230 240M250 0L250 240M270 0L270 240M290 0L290 240M310 0L310 240M330 0L330 240M350 0L350 240",
+          "stroke": {
+            "color": "label:alpha:0.06"
+          },
+          "strokeWidth": 0.5
+        },
+        {
+          "d": "M0 238.8L360 238.8",
+          "stroke": {
+            "color": "signal:alpha:0.3"
+          },
+          "strokeWidth": 0.6
+        }
+      ]
+    }
+  }
+}

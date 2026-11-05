@@ -1,0 +1,18 @@
+{
+  "id": "kyng_keycap-paper",
+  "name": "Kyng Keycap Paper",
+  "dark": true,
+  "boardBackground": 4293782243,
+  "keyBackground": 4294835450,
+  "pressedKeyBackground": 4293189848,
+  "specialKeyBackground": 4294045415,
+  "specialKeyPressedBackground": 4292729039,
+  "keyTextColor": 4279243028,
+  "keySubtextColor": 4286085241,
+  "accentColor": 4282085332,
+  "keyBorderColor": 4292400072,
+  "keyBorderWidthDp": 0,
+  "keyCornerRadiusDp": 6,
+  "keyShape": "ROUNDED",
+  "keySkin": null
+}

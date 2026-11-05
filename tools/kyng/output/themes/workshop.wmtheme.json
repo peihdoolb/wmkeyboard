@@ -1,0 +1,18 @@
+{
+  "id": "kyng_workshop",
+  "name": "Kyng Workshop",
+  "dark": true,
+  "boardBackground": 4294964969,
+  "keyBackground": 4294966776,
+  "pressedKeyBackground": 4294950262,
+  "specialKeyBackground": 4293317301,
+  "specialKeyPressedBackground": 4294950262,
+  "keyTextColor": 4278851357,
+  "keySubtextColor": 4283062879,
+  "accentColor": 4289422115,
+  "keyBorderColor": 4293120957,
+  "keyBorderWidthDp": 0,
+  "keyCornerRadiusDp": 10,
+  "keyShape": "ROUNDED",
+  "keySkin": null
+}
