@@ -748,17 +748,25 @@
   },
   "keyLighting": {
     "pattern": "KEY",
-    "target": "GLOW",
-    "intensity": 0.75,
-    "sizeDp": 10.0,
-    "decayMs": 600
+    "target": "FACE",
+    "intensity": 0.85,
+    "decayMs": 550
   },
-  "boardEffect": null,
+  "boardEffect": {
+    "kind": "SHEEN",
+    "density": 0.5,
+    "speed": 0.9,
+    "intensity": 0.5,
+    "reactive": 0.9
+  },
   "keyMaterial": null,
-  "keyEffect": "SPARKLE",
-  "keyEffectParam": null,
+  "keyEffect": "EMOJI",
+  "keyEffectParam": "\ud83d\udc3e",
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8
+  "keyEffectSpread": 0.8,
+  "popupPlacement": "floating",
+  "popupFloatingHeightDp": 65,
+  "popupCornerRadiusDp": 16
 }

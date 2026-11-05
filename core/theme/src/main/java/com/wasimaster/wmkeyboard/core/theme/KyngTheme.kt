@@ -94,149 +94,75 @@ object KyngTheme {
         val effectId = (themeObj["effectId"] ?: root["effectId"])?.jsonPrimitive?.contentOrNull?.lowercase().orEmpty()
         val styleId = (themeObj["styleId"] ?: root["styleId"])?.jsonPrimitive?.contentOrNull?.lowercase().orEmpty()
 
-        val keyLighting = when {
-            effectId in listOf("ripple", "sonar") -> KeyLightingSpec(
-                pattern = "RIPPLE",
-                target = "GLOW",
-                intensity = 0.85f,
-                sizeDp = 14f,
-                speed = 1.2f,
-                decayMs = 650
-            )
-            effectId in listOf("bubbles", "bubble-pop") -> KeyLightingSpec(
-                pattern = "RIPPLE",
-                target = "GLOW",
-                intensity = 0.75f,
-                sizeDp = 10f,
-                speed = 1f,
-                decayMs = 600
-            )
-            effectId in listOf("confetti", "sparks", "starburst", "shockwave", "seal") -> KeyLightingSpec(
-                pattern = "SPLASH",
-                target = "EDGE",
-                intensity = 0.9f,
-                sizeDp = 10f,
-                speed = 1.3f,
-                decayMs = 500
-            )
-            effectId == "glitch" -> KeyLightingSpec(
-                pattern = "TWINKLE",
-                target = "FACE",
-                intensity = 0.85f,
-                speed = 2f,
-                decayMs = 400
-            )
-            effectId in listOf("slash", "claw", "strand") -> KeyLightingSpec(
-                pattern = "CROSS",
-                target = "FACE",
-                intensity = 0.8f,
-                decayMs = 500
-            )
-            effectId in listOf("stormcall", "zap", "flame", "wyrmfire") -> KeyLightingSpec(
-                pattern = "SPLASH",
-                target = "GLOW",
-                intensity = 0.9f,
-                sizeDp = 12f,
-                decayMs = 600
-            )
-            effectId in listOf("retro", "pixels") -> KeyLightingSpec(
-                pattern = "KEY",
-                target = "FACE",
-                intensity = 0.85f,
-                decayMs = 500
-            )
-            "cyberpunk" in id || "rgb" in id -> KeyLightingSpec(
-                pattern = "WAVE",
-                target = "GLOW",
-                intensity = 0.85f,
-                hueSpanDeg = 360f,
-                speed = 1.2f
-            )
-            "rain" in id || effectId == "rain" -> KeyLightingSpec(
-                pattern = "RAIN",
-                target = "GLOW",
-                intensity = 0.7f,
-                speed = 1.2f
-            )
-            else -> KeyLightingSpec(
-                pattern = "KEY",
-                target = "GLOW",
-                intensity = 0.75f,
-                sizeDp = 10f,
-                decayMs = 600
-            )
+        val keyLighting = when (effectId) {
+            "block-break" -> KeyLightingSpec(pattern = "CROSS", target = "FACE", intensity = 0.85f, decayMs = 500)
+            "bubble-pop" -> KeyLightingSpec(pattern = "RIPPLE", target = "GLOW", intensity = 0.8f, sizeDp = 12f, speed = 1f, decayMs = 600)
+            "bubbles" -> KeyLightingSpec(pattern = "RIPPLE", target = "GLOW", intensity = 0.75f, sizeDp = 10f, speed = 1f, decayMs = 600)
+            "claw", "slash" -> KeyLightingSpec(pattern = "CROSS", target = "FACE", intensity = 0.9f, decayMs = 450)
+            "confetti" -> KeyLightingSpec(pattern = "SPLASH", target = "EDGE", intensity = 0.9f, sizeDp = 12f, speed = 1.3f, decayMs = 500)
+            "echo" -> KeyLightingSpec(pattern = "ECHO", target = "GLOW", intensity = 0.85f, sizeDp = 16f, speed = 1.2f, decayMs = 650)
+            "flame" -> KeyLightingSpec(pattern = "SPLASH", target = "GLOW", intensity = 0.95f, sizeDp = 14f, speed = 1.3f, decayMs = 600)
+            "focus" -> KeyLightingSpec(pattern = "KEY", target = "EDGE", intensity = 0.9f, decayMs = 450)
+            "fog" -> KeyLightingSpec(pattern = "BREATHE", target = "GLOW", intensity = 0.65f, sizeDp = 14f, speed = 1f, decayMs = 600)
+            "glint" -> KeyLightingSpec(pattern = "TWINKLE", target = "FACE", intensity = 0.9f, speed = 1.8f, decayMs = 450)
+            "glitch" -> KeyLightingSpec(pattern = "TWINKLE", target = "FACE", intensity = 0.95f, speed = 2.2f, decayMs = 350)
+            "glow", "press-glow" -> KeyLightingSpec(pattern = "KEY", target = "GLOW", intensity = 0.85f, sizeDp = 14f, decayMs = 600)
+            "gold-dust" -> KeyLightingSpec(pattern = "SPLASH", target = "GLOW", intensity = 0.85f, sizeDp = 12f, speed = 1.2f, decayMs = 550)
+            "lightspeed" -> KeyLightingSpec(pattern = "SWEEP", target = "FACE", intensity = 0.9f, speed = 1.6f, decayMs = 450)
+            "none" -> null
+            "notes" -> KeyLightingSpec(pattern = "SPLASH", target = "GLOW", intensity = 0.85f, sizeDp = 12f, speed = 1.2f, decayMs = 550)
+            "paw-print" -> KeyLightingSpec(pattern = "KEY", target = "FACE", intensity = 0.85f, decayMs = 550)
+            "pixels", "retro" -> KeyLightingSpec(pattern = "KEY", target = "FACE", intensity = 0.9f, decayMs = 450)
+            "recoil" -> KeyLightingSpec(pattern = "RIPPLE", target = "EDGE", intensity = 0.85f, sizeDp = 10f, speed = 1.4f, decayMs = 500)
+            "ripple" -> KeyLightingSpec(pattern = "RIPPLE", target = "GLOW", intensity = 0.85f, sizeDp = 14f, speed = 1.2f, decayMs = 650)
+            "runes" -> KeyLightingSpec(pattern = "CROSS", target = "FACE", intensity = 0.85f, decayMs = 550)
+            "seal" -> KeyLightingSpec(pattern = "KEY", target = "EDGE", intensity = 0.85f, decayMs = 600)
+            "shine" -> KeyLightingSpec(pattern = "TWINKLE", target = "GLOW", intensity = 0.9f, speed = 1.5f, decayMs = 500)
+            "shockwave" -> KeyLightingSpec(pattern = "SPLASH", target = "EDGE", intensity = 0.95f, sizeDp = 16f, speed = 1.4f, decayMs = 500)
+            "sonar" -> KeyLightingSpec(pattern = "ECHO", target = "GLOW", intensity = 0.9f, sizeDp = 18f, speed = 1.3f, decayMs = 700)
+            "sparks" -> KeyLightingSpec(pattern = "SPLASH", target = "EDGE", intensity = 0.9f, sizeDp = 12f, speed = 1.3f, decayMs = 500)
+            "starburst" -> KeyLightingSpec(pattern = "SPLASH", target = "GLOW", intensity = 0.9f, sizeDp = 14f, speed = 1.3f, decayMs = 550)
+            "stormcall", "wyrmfire", "zap" -> KeyLightingSpec(pattern = "SPLASH", target = "GLOW", intensity = 0.95f, sizeDp = 15f, speed = 1.3f, decayMs = 550)
+            "strand" -> KeyLightingSpec(pattern = "CROSS", target = "EDGE", intensity = 0.85f, decayMs = 600)
+            "typewriter" -> KeyLightingSpec(pattern = "KEY", target = "FACE", intensity = 0.85f, decayMs = 400)
+            else -> when {
+                "cyberpunk" in id || "rgb" in id -> KeyLightingSpec(pattern = "WAVE", target = "GLOW", intensity = 0.85f, hueSpanDeg = 360f, speed = 1.2f)
+                "rain" in id -> KeyLightingSpec(pattern = "RAIN", target = "GLOW", intensity = 0.7f, speed = 1.2f)
+                else -> KeyLightingSpec(pattern = "KEY", target = "GLOW", intensity = 0.75f, sizeDp = 10f, decayMs = 600)
+            }
         }
 
-        val boardEffect = when {
-            effectId in listOf("bubbles", "bubble-pop") || "bubble" in id || "water" in id -> BoardEffectSpec(
-                kind = "BUBBLES",
-                density = 0.6f,
-                speed = 1f,
-                intensity = 0.65f,
-                scale = 1f,
-                reactive = 1f,
-                halfLifeMs = 1200
-            )
-            effectId in listOf("ripple", "sonar") || "frost" in id || "jelly" in id -> BoardEffectSpec(
-                kind = "RIPPLES",
-                density = 0.5f,
-                speed = 1f,
-                intensity = 0.6f,
-                scale = 1f,
-                reactive = 1f,
-                halfLifeMs = 1000
-            )
-            effectId == "confetti" || "spraycan" in id -> BoardEffectSpec(
-                kind = "CONFETTI",
-                density = 0.65f,
-                speed = 1.1f,
-                intensity = 0.7f,
-                reactive = 1f,
-                halfLifeMs = 1500
-            )
-            effectId in listOf("stormcall", "zap", "flame", "wyrmfire") || "ember" in id || "obsidian" in id -> BoardEffectSpec(
-                kind = "EMBERS",
-                density = 0.6f,
-                speed = 1f,
-                intensity = 0.7f,
-                reactive = 1f,
-                halfLifeMs = 1200
-            )
-            "rain" in id || "searchlight" in id -> BoardEffectSpec(
-                kind = "RAIN",
-                density = 0.7f,
-                speed = 1.3f,
-                intensity = 0.65f,
-                reactive = 1f
-            )
-            "terminal" in id || "matrix" in id -> BoardEffectSpec(
-                kind = "CODE_RAIN",
-                density = 0.65f,
-                speed = 1f,
-                intensity = 0.6f,
-                reactive = 1f
-            )
-            "aurora" in id || "holo" in id || "veil" in id -> BoardEffectSpec(
-                kind = "AURORA",
-                density = 0.5f,
-                speed = 0.8f,
-                intensity = 0.55f,
-                reactive = 0.8f
-            )
-            effectId == "starburst" || "star" in id || "crown" in id || "gilded" in id || "x07" in id -> BoardEffectSpec(
-                kind = "STARFIELD",
-                density = 0.5f,
-                speed = 0.7f,
-                intensity = 0.5f,
-                reactive = 0.9f
-            )
-            effectId in listOf("pixels", "retro") -> BoardEffectSpec(
-                kind = "DOT_GRID",
-                density = 0.6f,
-                intensity = 0.45f,
-                reactive = 0.8f
-            )
-            else -> null
+        val boardEffect = when (effectId) {
+            "block-break", "runes" -> BoardEffectSpec(kind = "CONTOUR", density = 0.6f, speed = 1f, intensity = 0.6f, reactive = 1f)
+            "bubble-pop", "bubbles" -> BoardEffectSpec(kind = "BUBBLES", density = 0.65f, speed = 1f, intensity = 0.65f, scale = 1f, reactive = 1f, halfLifeMs = 1200)
+            "claw", "slash", "glint", "paw-print", "shine" -> BoardEffectSpec(kind = "SHEEN", density = 0.6f, speed = 1.1f, intensity = 0.65f, reactive = 1f)
+            "confetti" -> BoardEffectSpec(kind = "CONFETTI", density = 0.65f, speed = 1.1f, intensity = 0.7f, reactive = 1f, halfLifeMs = 1500)
+            "echo", "recoil", "ripple" -> BoardEffectSpec(kind = "RIPPLES", density = 0.5f, speed = 1f, intensity = 0.6f, scale = 1f, reactive = 1f, halfLifeMs = 1000)
+            "flame" -> BoardEffectSpec(kind = "LAVA", density = 0.6f, speed = 1f, intensity = 0.7f, reactive = 1f, halfLifeMs = 1200)
+            "focus" -> BoardEffectSpec(kind = "SCAN", density = 0.6f, speed = 1.2f, intensity = 0.65f, reactive = 1f)
+            "fog" -> BoardEffectSpec(kind = "SMOKE", density = 0.6f, speed = 0.8f, intensity = 0.6f, reactive = 0.8f)
+            "glitch" -> BoardEffectSpec(kind = "CODE_RAIN", density = 0.65f, speed = 1.1f, intensity = 0.65f, reactive = 1f)
+            "glow" -> BoardEffectSpec(kind = "AURORA", density = 0.5f, speed = 0.8f, intensity = 0.55f, reactive = 0.8f)
+            "gold-dust" -> BoardEffectSpec(kind = "MOTES", density = 0.6f, speed = 0.9f, intensity = 0.65f, reactive = 1f)
+            "lightspeed" -> BoardEffectSpec(kind = "WARP", density = 0.6f, speed = 1.2f, intensity = 0.7f, reactive = 1f)
+            "notes" -> BoardEffectSpec(kind = "EQUALIZER", density = 0.65f, speed = 1f, intensity = 0.6f, reactive = 1f)
+            "pixels", "retro" -> BoardEffectSpec(kind = "DOT_GRID", density = 0.6f, intensity = 0.5f, reactive = 0.9f)
+            "press-glow" -> BoardEffectSpec(kind = "BOKEH", density = 0.5f, speed = 0.8f, intensity = 0.5f, reactive = 0.8f)
+            "shockwave", "sonar" -> BoardEffectSpec(kind = "RIPPLES", density = 0.6f, speed = 1.3f, intensity = 0.7f, reactive = 1.2f)
+            "sparks" -> BoardEffectSpec(kind = "FIREWORKS", density = 0.6f, speed = 1.1f, intensity = 0.7f, reactive = 1f)
+            "starburst" -> BoardEffectSpec(kind = "STARFIELD", density = 0.5f, speed = 0.7f, intensity = 0.5f, reactive = 1f)
+            "stormcall" -> BoardEffectSpec(kind = "NEBULA", density = 0.55f, speed = 1f, intensity = 0.65f, reactive = 1f)
+            "strand" -> BoardEffectSpec(kind = "CONTOUR", density = 0.5f, speed = 0.8f, intensity = 0.55f, reactive = 0.8f)
+            "wyrmfire" -> BoardEffectSpec(kind = "EMBERS", density = 0.65f, speed = 1.1f, intensity = 0.75f, reactive = 1f, halfLifeMs = 1200)
+            "zap" -> BoardEffectSpec(kind = "AURORA", density = 0.6f, speed = 1f, intensity = 0.65f, reactive = 1f)
+            "none", "typewriter", "seal" -> null
+            else -> when {
+                "rain" in id || "searchlight" in id -> BoardEffectSpec(kind = "RAIN", density = 0.7f, speed = 1.3f, intensity = 0.65f, reactive = 1f)
+                "terminal" in id || "matrix" in id -> BoardEffectSpec(kind = "CODE_RAIN", density = 0.65f, speed = 1f, intensity = 0.6f, reactive = 1f)
+                "aurora" in id || "holo" in id || "veil" in id -> BoardEffectSpec(kind = "AURORA", density = 0.5f, speed = 0.8f, intensity = 0.55f, reactive = 0.8f)
+                "star" in id || "crown" in id || "gilded" in id || "x07" in id -> BoardEffectSpec(kind = "STARFIELD", density = 0.5f, speed = 0.7f, intensity = 0.5f, reactive = 0.9f)
+                else -> null
+            }
         }
 
         val keyMaterial = when {
@@ -256,14 +182,39 @@ object KyngTheme {
             else -> null
         }
 
-        val keyEffect = when {
-            effectId == "confetti" || "spraycan" in id -> "CONFETTI"
-            effectId in listOf("charm", "paws") || "star" in id -> "STARS"
-            effectId in listOf("k-pop") || "heart" in id -> "HEARTS"
-            effectId in listOf("bubbles", "bubble-pop") -> "EMOJI"
-            else -> "SPARKLE"
+        val (keyEffect, keyEffectParam) = when (effectId) {
+            "block-break" -> "EMOJI" to "💎🧱"
+            "bubble-pop" -> "EMOJI" to "🫧🟢"
+            "bubbles" -> "EMOJI" to "🫧"
+            "claw", "slash" -> "EMOJI" to "🐾⚔️"
+            "confetti" -> "CONFETTI" to null
+            "echo", "focus", "glow", "press-glow", "recoil", "ripple" -> "SPARKLE" to null
+            "flame" -> "EMOJI" to "🔥💥"
+            "fog" -> "EMOJI" to "💨☁️"
+            "glint", "shine", "starburst" -> "STARS" to null
+            "glitch" -> "EMOJI" to "⚡💠"
+            "gold-dust" -> "EMOJI" to "✨🪙"
+            "lightspeed" -> "EMOJI" to "💫🚀"
+            "notes" -> "EMOJI" to "🎵🎶"
+            "paw-print" -> "EMOJI" to "🐾"
+            "pixels", "retro" -> "EMOJI" to "👾🕹️"
+            "runes" -> "EMOJI" to "🔮✨"
+            "seal" -> "EMOJI" to "🪶📜"
+            "shockwave", "sparks" -> "EMOJI" to "💥⚡"
+            "sonar" -> "EMOJI" to "🦇📡"
+            "stormcall" -> "EMOJI" to "⚡🌩️"
+            "strand" -> "EMOJI" to "🕸️🕷️"
+            "typewriter" -> "EMOJI" to "⌨️📜"
+            "wyrmfire" -> "EMOJI" to "🐉🔥"
+            "zap" -> "EMOJI" to "⚡"
+            "none" -> null to null
+            else -> when {
+                "spraycan" in id -> "CONFETTI" to null
+                "charm" in id || "star" in id -> "STARS" to null
+                "k-pop" in id || "heart" in id -> "HEARTS" to null
+                else -> "SPARKLE" to null
+            }
         }
-        val keyEffectParam = if (effectId in listOf("bubbles", "bubble-pop")) "🫧" else null
 
         val spec = ThemeSpec(
             id = "kyng_$id",
@@ -294,8 +245,10 @@ object KyngTheme {
             keyEffectSize = 1.2f,
             keyEffectSpeed = 1f,
             keyEffectSpread = 0.8f,
+            popupPlacement = "floating",
+            popupFloatingHeightDp = 65,
+            popupCornerRadiusDp = cornerRadiusDp.toInt(),
         )
-
         return KyngThemeResult.Converted(spec)
     }
 }

@@ -796,14 +796,17 @@
   "boardEffect": {
     "kind": "DOT_GRID",
     "density": 0.6,
-    "intensity": 0.45,
-    "reactive": 0.8
+    "intensity": 0.5,
+    "reactive": 0.9
   },
   "keyMaterial": null,
-  "keyEffect": "SPARKLE",
-  "keyEffectParam": null,
+  "keyEffect": "EMOJI",
+  "keyEffectParam": "\ud83d\udc7e\ud83d\udd79\ufe0f",
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8
+  "keyEffectSpread": 0.8,
+  "popupPlacement": "floating",
+  "popupFloatingHeightDp": 65,
+  "popupCornerRadiusDp": 0
 }

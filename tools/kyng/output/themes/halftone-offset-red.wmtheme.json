@@ -778,16 +778,25 @@
   "keyLighting": {
     "pattern": "TWINKLE",
     "target": "FACE",
-    "intensity": 0.85,
-    "speed": 2.0,
-    "decayMs": 400
+    "intensity": 0.95,
+    "speed": 2.2,
+    "decayMs": 350
   },
-  "boardEffect": null,
+  "boardEffect": {
+    "kind": "CODE_RAIN",
+    "density": 0.65,
+    "speed": 1.1,
+    "intensity": 0.65,
+    "reactive": 1.0
+  },
   "keyMaterial": null,
-  "keyEffect": "SPARKLE",
-  "keyEffectParam": null,
+  "keyEffect": "EMOJI",
+  "keyEffectParam": "\u26a1\ud83d\udca0",
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8
+  "keyEffectSpread": 0.8,
+  "popupPlacement": "floating",
+  "popupFloatingHeightDp": 65,
+  "popupCornerRadiusDp": 0
 }

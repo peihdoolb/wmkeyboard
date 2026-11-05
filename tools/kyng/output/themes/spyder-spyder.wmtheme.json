@@ -1296,16 +1296,25 @@
   },
   "keyLighting": {
     "pattern": "CROSS",
-    "target": "FACE",
-    "intensity": 0.8,
-    "decayMs": 500
+    "target": "EDGE",
+    "intensity": 0.85,
+    "decayMs": 600
   },
-  "boardEffect": null,
+  "boardEffect": {
+    "kind": "CONTOUR",
+    "density": 0.5,
+    "speed": 0.8,
+    "intensity": 0.55,
+    "reactive": 0.8
+  },
   "keyMaterial": null,
-  "keyEffect": "SPARKLE",
-  "keyEffectParam": null,
+  "keyEffect": "EMOJI",
+  "keyEffectParam": "\ud83d\udd78\ufe0f\ud83d\udd77\ufe0f",
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8
+  "keyEffectSpread": 0.8,
+  "popupPlacement": "floating",
+  "popupFloatingHeightDp": 65,
+  "popupCornerRadiusDp": 6
 }

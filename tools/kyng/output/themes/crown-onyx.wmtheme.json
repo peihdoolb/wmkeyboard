@@ -1223,24 +1223,27 @@
     }
   },
   "keyLighting": {
-    "pattern": "KEY",
+    "pattern": "TWINKLE",
     "target": "GLOW",
-    "intensity": 0.75,
-    "sizeDp": 10.0,
-    "decayMs": 600
+    "intensity": 0.9,
+    "speed": 1.5,
+    "decayMs": 500
   },
   "boardEffect": {
-    "kind": "STARFIELD",
-    "density": 0.5,
-    "speed": 0.7,
-    "intensity": 0.5,
-    "reactive": 0.9
+    "kind": "SHEEN",
+    "density": 0.55,
+    "speed": 1.0,
+    "intensity": 0.6,
+    "reactive": 1.0
   },
   "keyMaterial": null,
-  "keyEffect": "SPARKLE",
+  "keyEffect": "STARS",
   "keyEffectParam": null,
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8
+  "keyEffectSpread": 0.8,
+  "popupPlacement": "floating",
+  "popupFloatingHeightDp": 65,
+  "popupCornerRadiusDp": 7
 }

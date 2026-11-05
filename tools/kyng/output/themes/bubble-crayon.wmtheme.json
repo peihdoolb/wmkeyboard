@@ -668,29 +668,18 @@
     },
     "board": null
   },
-  "keyLighting": {
-    "pattern": "KEY",
-    "target": "GLOW",
-    "intensity": 0.75,
-    "sizeDp": 10.0,
-    "decayMs": 600
-  },
-  "boardEffect": {
-    "kind": "BUBBLES",
-    "density": 0.6,
-    "speed": 1.0,
-    "intensity": 0.65,
-    "scale": 1.0,
-    "reactive": 1.0,
-    "halfLifeMs": 1200
-  },
+  "keyLighting": null,
+  "boardEffect": null,
   "keyMaterial": {
     "kind": "CARTOON"
   },
-  "keyEffect": "SPARKLE",
+  "keyEffect": null,
   "keyEffectParam": null,
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8
+  "keyEffectSpread": 0.8,
+  "popupPlacement": "floating",
+  "popupFloatingHeightDp": 65,
+  "popupCornerRadiusDp": 10
 }

@@ -2203,14 +2203,14 @@
   "keyLighting": {
     "pattern": "RIPPLE",
     "target": "GLOW",
-    "intensity": 0.75,
-    "sizeDp": 10.0,
+    "intensity": 0.8,
+    "sizeDp": 12.0,
     "speed": 1.0,
     "decayMs": 600
   },
   "boardEffect": {
     "kind": "BUBBLES",
-    "density": 0.6,
+    "density": 0.65,
     "speed": 1.0,
     "intensity": 0.65,
     "scale": 1.0,
@@ -2219,9 +2219,12 @@
   },
   "keyMaterial": null,
   "keyEffect": "EMOJI",
-  "keyEffectParam": "\ud83e\udee7",
+  "keyEffectParam": "\ud83e\udee7\ud83d\udfe2",
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8
+  "keyEffectSpread": 0.8,
+  "popupPlacement": "floating",
+  "popupFloatingHeightDp": 65,
+  "popupCornerRadiusDp": 0
 }

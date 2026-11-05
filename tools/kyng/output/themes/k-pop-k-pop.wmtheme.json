@@ -431,19 +431,16 @@
       ]
     }
   },
-  "keyLighting": {
-    "pattern": "KEY",
-    "target": "GLOW",
-    "intensity": 0.75,
-    "sizeDp": 10.0,
-    "decayMs": 600
-  },
+  "keyLighting": null,
   "boardEffect": null,
   "keyMaterial": null,
-  "keyEffect": "SPARKLE",
+  "keyEffect": null,
   "keyEffectParam": null,
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8
+  "keyEffectSpread": 0.8,
+  "popupPlacement": "floating",
+  "popupFloatingHeightDp": 65,
+  "popupCornerRadiusDp": 7
 }

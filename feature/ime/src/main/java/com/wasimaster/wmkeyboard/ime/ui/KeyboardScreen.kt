@@ -16342,6 +16342,7 @@ internal fun GlideTrail.sampleEdge(i: Int, count: Int, half: Float): Offset {
 internal class KeyRects {
 
     private val cells = LinkedHashMap<Rect, Key>()
+    private val faces = LinkedHashSet<Rect>()
     private var generation: Any? = null
 
     /**
@@ -16363,7 +16364,18 @@ internal class KeyRects {
     }
 
     /** Every cell, in root space; a copy, for the same reason as [focusCells]. */
+    fun recordFace(gen: Any, rect: Rect) {
+        if (gen !== generation) {
+            cells.clear()
+            faces.clear()
+            generation = gen
+        }
+        if (faces.add(rect)) revision++
+    }
+
     fun cellRects(): List<Rect> = cells.keys.toList()
+
+    fun faceRects(): List<Rect> = if (faces.isNotEmpty()) faces.toList() else cellRects()
 
     /** The key whose cell holds [point], or null outside the grid. */
     fun keyAt(point: Offset): Key? {
@@ -20624,7 +20636,7 @@ private fun KeyRows(
         // in the gaps the way a backlit keyboard's light leaks round its caps.
         keyLighting?.let {
             KeyLightingLayer(
-                it, keyRects::cellRects, { keyRects.revision }, kbTheme.keyRadiusDp.toFloat(),
+                it, keyRects::faceRects, { keyRects.revision }, kbTheme.keyRadiusDp.toFloat(),
                 behind = true, modifier = Modifier.matchParentSize(),
             )
         }
@@ -20632,11 +20644,18 @@ private fun KeyRows(
         // grid cell (gaps included) so a press landing between two keys
         // still hits the nearest one. The visual gap comes from per-key
         // padding inside KeyButton.
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = KeyRowsPadHorizontal, vertical = KeyRowsPadVertical),
+        CompositionLocalProvider(
+            LocalKeyFaceProbe provides remember(keyRects, liveToken) {
+                { _, coords ->
+                    keyRects.recordFace(liveToken.value, coords.boundsInRoot())
+                }
+            },
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = KeyRowsPadHorizontal, vertical = KeyRowsPadVertical),
+            ) {
             // Records the spacebar's rect in *root* coordinates for the
             // multi-word split. Stored root-relative rather than box-relative on
             // purpose: this callback can fire before the Box's own
@@ -20801,6 +20820,7 @@ private fun KeyRows(
                 onHandwritingDownload = onHandwritingDownload,
             )
         }
+        }
 
         // The theme's stickers, laid over the keys and under the transient
         // layers (trail, ink, popups). A plain Canvas takes no touches, so
@@ -20811,7 +20831,7 @@ private fun KeyRows(
         // The key lighting's face and outline half, over the keys.
         keyLighting?.let {
             KeyLightingLayer(
-                it, keyRects::cellRects, { keyRects.revision }, kbTheme.keyRadiusDp.toFloat(),
+                it, keyRects::faceRects, { keyRects.revision }, kbTheme.keyRadiusDp.toFloat(),
                 behind = false, modifier = Modifier.matchParentSize(),
             )
         }

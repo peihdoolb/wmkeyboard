@@ -1455,13 +1455,13 @@
     "decayMs": 650
   },
   "boardEffect": {
-    "kind": "BUBBLES",
-    "density": 0.6,
+    "kind": "RIPPLES",
+    "density": 0.5,
     "speed": 1.0,
-    "intensity": 0.65,
+    "intensity": 0.6,
     "scale": 1.0,
     "reactive": 1.0,
-    "halfLifeMs": 1200
+    "halfLifeMs": 1000
   },
   "keyMaterial": null,
   "keyEffect": "SPARKLE",
@@ -1469,5 +1469,8 @@
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8
+  "keyEffectSpread": 0.8,
+  "popupPlacement": "floating",
+  "popupFloatingHeightDp": 65,
+  "popupCornerRadiusDp": 0
 }

@@ -2654,25 +2654,28 @@
   "keyLighting": {
     "pattern": "SPLASH",
     "target": "GLOW",
-    "intensity": 0.9,
-    "sizeDp": 12.0,
-    "decayMs": 600
+    "intensity": 0.95,
+    "sizeDp": 16.0,
+    "speed": 1.4,
+    "decayMs": 500
   },
   "boardEffect": {
-    "kind": "EMBERS",
-    "density": 0.6,
+    "kind": "NEBULA",
+    "density": 0.55,
     "speed": 1.0,
-    "intensity": 0.7,
-    "reactive": 1.0,
-    "halfLifeMs": 1200
+    "intensity": 0.65,
+    "reactive": 1.0
   },
   "keyMaterial": {
     "kind": "METAL"
   },
-  "keyEffect": "SPARKLE",
-  "keyEffectParam": null,
+  "keyEffect": "EMOJI",
+  "keyEffectParam": "\u26a1\ud83c\udf29\ufe0f",
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8
+  "keyEffectSpread": 0.8,
+  "popupPlacement": "floating",
+  "popupFloatingHeightDp": 65,
+  "popupCornerRadiusDp": 4
 }

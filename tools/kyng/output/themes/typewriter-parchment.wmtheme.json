@@ -1652,19 +1652,21 @@
   },
   "keyLighting": {
     "pattern": "KEY",
-    "target": "GLOW",
-    "intensity": 0.75,
-    "sizeDp": 10.0,
-    "decayMs": 600
+    "target": "FACE",
+    "intensity": 0.85,
+    "decayMs": 400
   },
   "boardEffect": null,
   "keyMaterial": {
     "kind": "TYPEWRITER"
   },
-  "keyEffect": "SPARKLE",
-  "keyEffectParam": null,
+  "keyEffect": "EMOJI",
+  "keyEffectParam": "\u2328\ufe0f\ud83d\udcdc",
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8
+  "keyEffectSpread": 0.8,
+  "popupPlacement": "floating",
+  "popupFloatingHeightDp": 65,
+  "popupCornerRadiusDp": 0
 }

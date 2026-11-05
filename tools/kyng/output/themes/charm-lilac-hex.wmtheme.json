@@ -1723,26 +1723,29 @@
   },
   "keyLighting": {
     "pattern": "SPLASH",
-    "target": "EDGE",
+    "target": "GLOW",
     "intensity": 0.9,
-    "sizeDp": 10.0,
+    "sizeDp": 14.0,
     "speed": 1.3,
-    "decayMs": 500
+    "decayMs": 550
   },
   "boardEffect": {
     "kind": "STARFIELD",
     "density": 0.5,
     "speed": 0.7,
     "intensity": 0.5,
-    "reactive": 0.9
+    "reactive": 1.0
   },
   "keyMaterial": {
     "kind": "CARTOON"
   },
-  "keyEffect": "SPARKLE",
+  "keyEffect": "STARS",
   "keyEffectParam": null,
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8
+  "keyEffectSpread": 0.8,
+  "popupPlacement": "floating",
+  "popupFloatingHeightDp": 65,
+  "popupCornerRadiusDp": 0
 }

@@ -2110,17 +2110,18 @@
     }
   },
   "keyLighting": {
-    "pattern": "RAIN",
+    "pattern": "KEY",
     "target": "GLOW",
-    "intensity": 0.7,
-    "speed": 1.2
+    "intensity": 0.85,
+    "sizeDp": 14.0,
+    "decayMs": 600
   },
   "boardEffect": {
-    "kind": "RAIN",
-    "density": 0.7,
-    "speed": 1.3,
-    "intensity": 0.65,
-    "reactive": 1.0
+    "kind": "AURORA",
+    "density": 0.5,
+    "speed": 0.8,
+    "intensity": 0.55,
+    "reactive": 0.8
   },
   "keyMaterial": null,
   "keyEffect": "SPARKLE",
@@ -2128,5 +2129,8 @@
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8
+  "keyEffectSpread": 0.8,
+  "popupPlacement": "floating",
+  "popupFloatingHeightDp": 65,
+  "popupCornerRadiusDp": 0
 }

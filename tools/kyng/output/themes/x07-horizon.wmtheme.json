@@ -1988,16 +1988,16 @@
   "keyLighting": {
     "pattern": "KEY",
     "target": "GLOW",
-    "intensity": 0.75,
-    "sizeDp": 10.0,
+    "intensity": 0.85,
+    "sizeDp": 14.0,
     "decayMs": 600
   },
   "boardEffect": {
-    "kind": "STARFIELD",
+    "kind": "AURORA",
     "density": 0.5,
-    "speed": 0.7,
-    "intensity": 0.5,
-    "reactive": 0.9
+    "speed": 0.8,
+    "intensity": 0.55,
+    "reactive": 0.8
   },
   "keyMaterial": null,
   "keyEffect": "SPARKLE",
@@ -2005,5 +2005,8 @@
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8
+  "keyEffectSpread": 0.8,
+  "popupPlacement": "floating",
+  "popupFloatingHeightDp": 65,
+  "popupCornerRadiusDp": 0
 }
