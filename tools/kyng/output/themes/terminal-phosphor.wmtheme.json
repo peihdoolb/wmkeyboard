@@ -4,15 +4,35 @@
   "dark": true,
   "boardBackground": 4278456842,
   "keyBackground": 4278657039,
+  "keyText": 4294967295,
+  "modifierKeyBackground": 4278589964,
+  "modifierKeyText": 4294967295,
+  "enterKeyBackground": 4278589964,
+  "enterKeyText": 4294967295,
   "pressedKeyBackground": 4278989849,
-  "specialKeyBackground": 4278589964,
-  "specialKeyPressedBackground": 4278856212,
-  "keyTextColor": 4294967295,
-  "keySubtextColor": 4285496948,
-  "accentColor": 4281991048,
+  "accent": 4281991048,
+  "hintText": 4285496948,
+  "secondaryText": 4285496948,
   "keyBorderColor": 4279253020,
   "keyBorderWidthDp": 1,
   "keyCornerRadiusDp": 2,
   "keyShape": "ROUNDED",
-  "keySkin": null
+  "keySkin": null,
+  "keyLighting": {
+    "pattern": "KEY",
+    "target": "GLOW",
+    "intensity": 0.75,
+    "sizeDp": 10.0,
+    "decayMs": 600
+  },
+  "boardEffect": {
+    "kind": "CODE_RAIN",
+    "density": 0.65,
+    "speed": 1.0,
+    "intensity": 0.6,
+    "reactive": 1.0
+  },
+  "keyMaterial": {
+    "kind": "TERMINAL"
+  }
 }

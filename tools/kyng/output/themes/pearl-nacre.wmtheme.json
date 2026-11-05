@@ -4,12 +4,15 @@
   "dark": true,
   "boardBackground": 4280948016,
   "keyBackground": 4294702582,
+  "keyText": 4283053392,
+  "modifierKeyBackground": 4290359496,
+  "modifierKeyText": 4283053392,
+  "enterKeyBackground": 4290359496,
+  "enterKeyText": 4283053392,
   "pressedKeyBackground": 4294043884,
-  "specialKeyBackground": 4290359496,
-  "specialKeyPressedBackground": 4289503932,
-  "keyTextColor": 4283053392,
-  "keySubtextColor": 4284369508,
-  "accentColor": 4293372351,
+  "accent": 4293372351,
+  "hintText": 4284369508,
+  "secondaryText": 4284369508,
   "keyBorderColor": 4292265936,
   "keyBorderWidthDp": 0,
   "keyCornerRadiusDp": 4,
@@ -630,5 +633,16 @@
         }
       ]
     }
+  },
+  "keyLighting": {
+    "pattern": "KEY",
+    "target": "GLOW",
+    "intensity": 0.75,
+    "sizeDp": 10.0,
+    "decayMs": 600
+  },
+  "boardEffect": null,
+  "keyMaterial": {
+    "kind": "CERAMIC"
   }
 }

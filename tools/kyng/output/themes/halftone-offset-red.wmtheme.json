@@ -4,12 +4,15 @@
   "dark": true,
   "boardBackground": 4279111186,
   "keyBackground": 4279966498,
+  "keyText": 4294309367,
+  "modifierKeyBackground": 4280690223,
+  "modifierKeyText": 4294309367,
+  "enterKeyBackground": 4280690223,
+  "enterKeyText": 4294309367,
   "pressedKeyBackground": 4281545535,
-  "specialKeyBackground": 4280690223,
-  "specialKeyPressedBackground": 4282269259,
-  "keyTextColor": 4294309367,
-  "keySubtextColor": 4289309110,
-  "accentColor": 4293403439,
+  "accent": 4293403439,
+  "hintText": 4289309110,
+  "secondaryText": 4289309110,
   "keyBorderColor": 4278519047,
   "keyBorderWidthDp": 0,
   "keyCornerRadiusDp": 0,
@@ -771,5 +774,14 @@
         }
       ]
     }
-  }
+  },
+  "keyLighting": {
+    "pattern": "TWINKLE",
+    "target": "FACE",
+    "intensity": 0.85,
+    "speed": 2.0,
+    "decayMs": 400
+  },
+  "boardEffect": null,
+  "keyMaterial": null
 }

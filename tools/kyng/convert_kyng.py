@@ -140,23 +140,224 @@ def convert_theme(z, theme_path, out_dir):
     elif shape_str == "CUT":
         key_shape = "CUT"
         
+    effect_id = th.get('effectId', '').lower()
+    
+    # Key Lighting (visual reactive lighting when tapping keys)
+    key_lighting = None
+    if effect_id in ['ripple', 'sonar']:
+        key_lighting = {
+            "pattern": "RIPPLE",
+            "target": "GLOW",
+            "intensity": 0.85,
+            "sizeDp": 14.0,
+            "speed": 1.2,
+            "decayMs": 650
+        }
+    elif effect_id in ['bubbles', 'bubble-pop']:
+        key_lighting = {
+            "pattern": "RIPPLE",
+            "target": "GLOW",
+            "intensity": 0.75,
+            "sizeDp": 10.0,
+            "speed": 1.0,
+            "decayMs": 600
+        }
+    elif effect_id in ['confetti', 'sparks', 'starburst', 'shockwave', 'seal']:
+        key_lighting = {
+            "pattern": "SPLASH",
+            "target": "EDGE",
+            "intensity": 0.9,
+            "sizeDp": 10.0,
+            "speed": 1.3,
+            "decayMs": 500
+        }
+    elif effect_id in ['glitch']:
+        key_lighting = {
+            "pattern": "TWINKLE",
+            "target": "FACE",
+            "intensity": 0.85,
+            "speed": 2.0,
+            "decayMs": 400
+        }
+    elif effect_id in ['slash', 'claw', 'strand']:
+        key_lighting = {
+            "pattern": "CROSS",
+            "target": "FACE",
+            "intensity": 0.8,
+            "decayMs": 500
+        }
+    elif effect_id in ['stormcall', 'zap', 'flame', 'wyrmfire']:
+        key_lighting = {
+            "pattern": "SPLASH",
+            "target": "GLOW",
+            "intensity": 0.9,
+            "sizeDp": 12.0,
+            "decayMs": 600
+        }
+    elif effect_id in ['retro', 'pixels']:
+        key_lighting = {
+            "pattern": "KEY",
+            "target": "FACE",
+            "intensity": 0.85,
+            "decayMs": 500
+        }
+    elif 'cyberpunk' in theme_id or 'rgb' in theme_id:
+        key_lighting = {
+            "pattern": "WAVE",
+            "target": "GLOW",
+            "intensity": 0.85,
+            "hueSpanDeg": 360.0,
+            "speed": 1.2
+        }
+    elif 'rain' in theme_id or effect_id == 'rain':
+        key_lighting = {
+            "pattern": "RAIN",
+            "target": "GLOW",
+            "intensity": 0.7,
+            "speed": 1.2
+        }
+    else:
+        key_lighting = {
+            "pattern": "KEY",
+            "target": "GLOW",
+            "intensity": 0.75,
+            "sizeDp": 10.0,
+            "decayMs": 600
+        }
+
+    # Board Effect (dynamic moving background that reacts to typing)
+    board_effect = None
+    if effect_id in ['bubbles', 'bubble-pop'] or 'bubble' in theme_id or 'water' in theme_id:
+        board_effect = {
+            "kind": "BUBBLES",
+            "density": 0.6,
+            "speed": 1.0,
+            "intensity": 0.65,
+            "scale": 1.0,
+            "reactive": 1.0,
+            "halfLifeMs": 1200
+        }
+    elif effect_id in ['ripple', 'sonar'] or 'frost' in theme_id or 'jelly' in theme_id:
+        board_effect = {
+            "kind": "RIPPLES",
+            "density": 0.5,
+            "speed": 1.0,
+            "intensity": 0.6,
+            "scale": 1.0,
+            "reactive": 1.0,
+            "halfLifeMs": 1000
+        }
+    elif effect_id in ['confetti'] or 'spraycan' in theme_id:
+        board_effect = {
+            "kind": "CONFETTI",
+            "density": 0.65,
+            "speed": 1.1,
+            "intensity": 0.7,
+            "reactive": 1.0,
+            "halfLifeMs": 1500
+        }
+    elif effect_id in ['stormcall', 'zap', 'flame', 'wyrmfire'] or 'ember' in theme_id or 'obsidian' in theme_id:
+        board_effect = {
+            "kind": "EMBERS",
+            "density": 0.6,
+            "speed": 1.0,
+            "intensity": 0.7,
+            "reactive": 1.0,
+            "halfLifeMs": 1200
+        }
+    elif 'rain' in theme_id or 'searchlight' in theme_id:
+        board_effect = {
+            "kind": "RAIN",
+            "density": 0.7,
+            "speed": 1.3,
+            "intensity": 0.65,
+            "reactive": 1.0
+        }
+    elif 'terminal' in theme_id or 'matrix' in theme_id:
+        board_effect = {
+            "kind": "CODE_RAIN",
+            "density": 0.65,
+            "speed": 1.0,
+            "intensity": 0.6,
+            "reactive": 1.0
+        }
+    elif 'aurora' in theme_id or 'holo' in theme_id or 'veil' in theme_id:
+        board_effect = {
+            "kind": "AURORA",
+            "density": 0.5,
+            "speed": 0.8,
+            "intensity": 0.55,
+            "reactive": 0.8
+        }
+    elif effect_id in ['starburst'] or 'star' in theme_id or 'crown' in theme_id or 'gilded' in theme_id or 'x07' in theme_id:
+        board_effect = {
+            "kind": "STARFIELD",
+            "density": 0.5,
+            "speed": 0.7,
+            "intensity": 0.5,
+            "reactive": 0.9
+        }
+    elif effect_id in ['pixels', 'retro']:
+        board_effect = {
+            "kind": "DOT_GRID",
+            "density": 0.6,
+            "intensity": 0.45,
+            "reactive": 0.8
+        }
+
+    # Key Material (3D surface textures and shaders)
+    key_material = None
+    style_low = (style_id or '').lower()
+    if any(k in style_low for k in ['alloy', 'armor', 'tactical', 'stormforge', 'vanguard', 'steel', 'machined']):
+        key_material = {"kind": "METAL"}
+    elif any(k in style_low for k in ['cyberpunk', 'hazard', 'saber', 'neon']):
+        key_material = {"kind": "NEON"}
+    elif any(k in style_low for k in ['frost', 'clear', 'glass']):
+        key_material = {"kind": "GLASS"}
+    elif any(k in style_low for k in ['typewriter']):
+        key_material = {"kind": "TYPEWRITER"}
+    elif any(k in style_low for k in ['timber', 'wood', 'oak']):
+        key_material = {"kind": "WOOD"}
+    elif any(k in style_low for k in ['ceramic', 'glaze', 'pearl', 'porcelain']):
+        key_material = {"kind": "CERAMIC"}
+    elif any(k in style_low for k in ['leather', 'wisecrack']):
+        key_material = {"kind": "LEATHER"}
+    elif any(k in style_low for k in ['terminal', 'dot-matrix']):
+        key_material = {"kind": "TERMINAL"}
+    elif any(k in style_low for k in ['bubble', 'charm', 'marshmallow', 'crayon']):
+        key_material = {"kind": "CARTOON"}
+    elif any(k in style_low for k in ['voxel', 'arcade']):
+        key_material = {"kind": "ARCADE"}
+    elif any(k in style_low for k in ['basalt', 'rune', 'stone', 'brutalist']):
+        key_material = {"kind": "STONE"}
+    elif any(k in style_low for k in ['felt', 'origami', 'paper']):
+        key_material = {"kind": "PAPER"}
+    elif any(k in style_low for k in ['jelly', 'cushion', 'candy']):
+        key_material = {"kind": "CANDY"}
+        
     wm_theme = {
         "id": f"kyng_{theme_id}",
         "name": f"Kyng {theme_name}",
         "dark": True,
         "boardBackground": board_color,
         "keyBackground": key_color,
+        "keyText": label_color,
+        "modifierKeyBackground": special_key_color,
+        "modifierKeyText": label_color,
+        "enterKeyBackground": special_key_color,
+        "enterKeyText": label_color,
         "pressedKeyBackground": pressed_key_color,
-        "specialKeyBackground": special_key_color,
-        "specialKeyPressedBackground": special_pressed_key_color,
-        "keyTextColor": label_color,
-        "keySubtextColor": label_sec_color,
-        "accentColor": accent_color,
+        "accent": accent_color,
+        "hintText": label_sec_color,
+        "secondaryText": label_sec_color,
         "keyBorderColor": border_color,
         "keyBorderWidthDp": border_width,
-        "keyCornerRadiusDp": corner_radius,
+        "keyCornerRadiusDp": int(corner_radius),
         "keyShape": key_shape,
-        "keySkin": skin_spec
+        "keySkin": skin_spec,
+        "keyLighting": key_lighting,
+        "boardEffect": board_effect,
+        "keyMaterial": key_material
     }
     
     out_file = os.path.join(out_dir, f"{theme_id}.wmtheme.json")

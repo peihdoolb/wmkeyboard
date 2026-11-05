@@ -4,12 +4,15 @@
   "dark": true,
   "boardBackground": 4279371271,
   "keyBackground": 4288877084,
+  "keyText": 4294967295,
+  "modifierKeyBackground": 4279900698,
+  "modifierKeyText": 4294967295,
+  "enterKeyBackground": 4279900698,
+  "enterKeyText": 4294967295,
   "pressedKeyBackground": 4291043885,
-  "specialKeyBackground": 4279900698,
-  "specialKeyPressedBackground": 4281677109,
-  "keyTextColor": 4294967295,
-  "keySubtextColor": 4294296772,
-  "accentColor": 4294916923,
+  "accent": 4294916923,
+  "hintText": 4294296772,
+  "secondaryText": 4294296772,
   "keyBorderColor": 4278190080,
   "keyBorderWidthDp": 0,
   "keyCornerRadiusDp": 0,
@@ -1310,5 +1313,23 @@
       }
     },
     "board": null
+  },
+  "keyLighting": {
+    "pattern": "SPLASH",
+    "target": "EDGE",
+    "intensity": 0.9,
+    "sizeDp": 10.0,
+    "speed": 1.3,
+    "decayMs": 500
+  },
+  "boardEffect": {
+    "kind": "STARFIELD",
+    "density": 0.5,
+    "speed": 0.7,
+    "intensity": 0.5,
+    "reactive": 0.9
+  },
+  "keyMaterial": {
+    "kind": "LEATHER"
   }
 }

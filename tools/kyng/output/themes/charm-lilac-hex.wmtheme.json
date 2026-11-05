@@ -4,12 +4,15 @@
   "dark": true,
   "boardBackground": 4279898404,
   "keyBackground": 4279373844,
+  "keyText": 4294504703,
+  "modifierKeyBackground": 4285419688,
+  "modifierKeyText": 4294504703,
+  "enterKeyBackground": 4285419688,
+  "enterKeyText": 4294504703,
   "pressedKeyBackground": 4281082931,
-  "specialKeyBackground": 4285419688,
-  "specialKeyPressedBackground": 4283907212,
-  "keyTextColor": 4294504703,
-  "keySubtextColor": 4291672300,
-  "accentColor": 4294926242,
+  "accent": 4294926242,
+  "hintText": 4291672300,
+  "secondaryText": 4291672300,
   "keyBorderColor": 4278847245,
   "keyBorderWidthDp": 0,
   "keyCornerRadiusDp": 0,
@@ -1717,5 +1720,23 @@
         }
       ]
     }
+  },
+  "keyLighting": {
+    "pattern": "SPLASH",
+    "target": "EDGE",
+    "intensity": 0.9,
+    "sizeDp": 10.0,
+    "speed": 1.3,
+    "decayMs": 500
+  },
+  "boardEffect": {
+    "kind": "STARFIELD",
+    "density": 0.5,
+    "speed": 0.7,
+    "intensity": 0.5,
+    "reactive": 0.9
+  },
+  "keyMaterial": {
+    "kind": "CARTOON"
   }
 }

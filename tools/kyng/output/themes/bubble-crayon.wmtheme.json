@@ -4,12 +4,15 @@
   "dark": true,
   "boardBackground": 4294766550,
   "keyBackground": 4294965224,
+  "keyText": 4287383060,
+  "modifierKeyBackground": 4294764235,
+  "modifierKeyText": 4287383060,
+  "enterKeyBackground": 4294764235,
+  "enterKeyText": 4287383060,
   "pressedKeyBackground": 4294369988,
-  "specialKeyBackground": 4294764235,
-  "specialKeyPressedBackground": 4294103982,
-  "keyTextColor": 4287383060,
-  "keySubtextColor": 4289228864,
-  "accentColor": 4294354248,
+  "accent": 4294354248,
+  "hintText": 4289228864,
+  "secondaryText": 4289228864,
   "keyBorderColor": 4293445018,
   "keyBorderWidthDp": 0,
   "keyCornerRadiusDp": 10,
@@ -664,5 +667,24 @@
       }
     },
     "board": null
+  },
+  "keyLighting": {
+    "pattern": "KEY",
+    "target": "GLOW",
+    "intensity": 0.75,
+    "sizeDp": 10.0,
+    "decayMs": 600
+  },
+  "boardEffect": {
+    "kind": "BUBBLES",
+    "density": 0.6,
+    "speed": 1.0,
+    "intensity": 0.65,
+    "scale": 1.0,
+    "reactive": 1.0,
+    "halfLifeMs": 1200
+  },
+  "keyMaterial": {
+    "kind": "CARTOON"
   }
 }

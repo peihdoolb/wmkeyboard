@@ -4,12 +4,15 @@
   "dark": true,
   "boardBackground": 4290765802,
   "keyBackground": 4294702056,
+  "keyText": 4283912799,
+  "modifierKeyBackground": 4292661747,
+  "modifierKeyText": 4283912799,
+  "enterKeyBackground": 4292661747,
+  "enterKeyText": 4283912799,
   "pressedKeyBackground": 4293977299,
-  "specialKeyBackground": 4292661747,
-  "specialKeyPressedBackground": 4292398828,
-  "keyTextColor": 4283912799,
-  "keySubtextColor": 4286018186,
-  "accentColor": 4294292418,
+  "accent": 4294292418,
+  "hintText": 4286018186,
+  "secondaryText": 4286018186,
   "keyBorderColor": 4291091954,
   "keyBorderWidthDp": 0,
   "keyCornerRadiusDp": 18,
@@ -592,5 +595,16 @@
         }
       ]
     }
+  },
+  "keyLighting": {
+    "pattern": "KEY",
+    "target": "GLOW",
+    "intensity": 0.75,
+    "sizeDp": 10.0,
+    "decayMs": 600
+  },
+  "boardEffect": null,
+  "keyMaterial": {
+    "kind": "CARTOON"
   }
 }

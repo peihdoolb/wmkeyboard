@@ -4,15 +4,27 @@
   "dark": true,
   "boardBackground": 4278847252,
   "keyBackground": 4279504938,
+  "keyText": 4294967295,
+  "modifierKeyBackground": 4279175967,
+  "modifierKeyText": 4294967295,
+  "enterKeyBackground": 4279175967,
+  "enterKeyText": 4294967295,
   "pressedKeyBackground": 4280293954,
-  "specialKeyBackground": 4279175967,
-  "specialKeyPressedBackground": 4279899446,
-  "keyTextColor": 4294967295,
-  "keySubtextColor": 4285361019,
-  "accentColor": 4294913672,
+  "accent": 4294913672,
+  "hintText": 4285361019,
+  "secondaryText": 4285361019,
   "keyBorderColor": 4280951128,
   "keyBorderWidthDp": 0,
   "keyCornerRadiusDp": 6,
   "keyShape": "ROUNDED",
-  "keySkin": null
+  "keySkin": null,
+  "keyLighting": {
+    "pattern": "WAVE",
+    "target": "GLOW",
+    "intensity": 0.85,
+    "hueSpanDeg": 360.0,
+    "speed": 1.2
+  },
+  "boardEffect": null,
+  "keyMaterial": null
 }
