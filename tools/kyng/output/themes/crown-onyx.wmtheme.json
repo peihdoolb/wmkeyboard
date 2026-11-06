@@ -1159,6 +1159,14 @@
               ]
             }
           }
+        ],
+        "stretchX": [
+          30.0,
+          120.0
+        ],
+        "stretchY": [
+          32.0,
+          128.0
         ]
       }
     },
@@ -1225,9 +1233,9 @@
   "keyLighting": {
     "pattern": "TWINKLE",
     "target": "GLOW",
-    "intensity": 0.9,
-    "speed": 1.5,
-    "decayMs": 500
+    "intensity": 0.75,
+    "speed": 1.4,
+    "decayMs": 450
   },
   "boardEffect": {
     "kind": "SHEEN",
@@ -1242,8 +1250,5 @@
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8,
-  "popupPlacement": "floating",
-  "popupFloatingHeightDp": 65,
-  "popupCornerRadiusDp": 7
+  "keyEffectSpread": 0.8
 }

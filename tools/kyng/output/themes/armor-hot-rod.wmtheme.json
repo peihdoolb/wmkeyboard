@@ -1104,6 +1104,14 @@
             "strokeWidth": 2.6,
             "opacity": 0.85
           }
+        ],
+        "stretchX": [
+          30.0,
+          120.0
+        ],
+        "stretchY": [
+          30.0,
+          120.0
         ]
       }
     },
@@ -1146,9 +1154,9 @@
   "keyLighting": {
     "pattern": "KEY",
     "target": "GLOW",
-    "intensity": 0.85,
-    "sizeDp": 14.0,
-    "decayMs": 600
+    "intensity": 0.7,
+    "sizeDp": 6.0,
+    "decayMs": 500
   },
   "boardEffect": {
     "kind": "AURORA",
@@ -1165,8 +1173,5 @@
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8,
-  "popupPlacement": "floating",
-  "popupFloatingHeightDp": 65,
-  "popupCornerRadiusDp": 0
+  "keyEffectSpread": 0.8
 }

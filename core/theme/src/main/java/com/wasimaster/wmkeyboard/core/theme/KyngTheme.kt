@@ -95,40 +95,36 @@ object KyngTheme {
         val styleId = (themeObj["styleId"] ?: root["styleId"])?.jsonPrimitive?.contentOrNull?.lowercase().orEmpty()
 
         val keyLighting = when (effectId) {
-            "block-break" -> KeyLightingSpec(pattern = "CROSS", target = "FACE", intensity = 0.85f, decayMs = 500)
-            "bubble-pop" -> KeyLightingSpec(pattern = "RIPPLE", target = "GLOW", intensity = 0.8f, sizeDp = 12f, speed = 1f, decayMs = 600)
-            "bubbles" -> KeyLightingSpec(pattern = "RIPPLE", target = "GLOW", intensity = 0.75f, sizeDp = 10f, speed = 1f, decayMs = 600)
-            "claw", "slash" -> KeyLightingSpec(pattern = "CROSS", target = "FACE", intensity = 0.9f, decayMs = 450)
-            "confetti" -> KeyLightingSpec(pattern = "SPLASH", target = "EDGE", intensity = 0.9f, sizeDp = 12f, speed = 1.3f, decayMs = 500)
-            "echo" -> KeyLightingSpec(pattern = "ECHO", target = "GLOW", intensity = 0.85f, sizeDp = 16f, speed = 1.2f, decayMs = 650)
-            "flame" -> KeyLightingSpec(pattern = "SPLASH", target = "GLOW", intensity = 0.95f, sizeDp = 14f, speed = 1.3f, decayMs = 600)
-            "focus" -> KeyLightingSpec(pattern = "KEY", target = "EDGE", intensity = 0.9f, decayMs = 450)
-            "fog" -> KeyLightingSpec(pattern = "BREATHE", target = "GLOW", intensity = 0.65f, sizeDp = 14f, speed = 1f, decayMs = 600)
-            "glint" -> KeyLightingSpec(pattern = "TWINKLE", target = "FACE", intensity = 0.9f, speed = 1.8f, decayMs = 450)
-            "glitch" -> KeyLightingSpec(pattern = "TWINKLE", target = "FACE", intensity = 0.95f, speed = 2.2f, decayMs = 350)
-            "glow", "press-glow" -> KeyLightingSpec(pattern = "KEY", target = "GLOW", intensity = 0.85f, sizeDp = 14f, decayMs = 600)
-            "gold-dust" -> KeyLightingSpec(pattern = "SPLASH", target = "GLOW", intensity = 0.85f, sizeDp = 12f, speed = 1.2f, decayMs = 550)
-            "lightspeed" -> KeyLightingSpec(pattern = "SWEEP", target = "FACE", intensity = 0.9f, speed = 1.6f, decayMs = 450)
+            "block-break" -> KeyLightingSpec(pattern = "CROSS", target = "FACE", intensity = 0.7f, decayMs = 400)
+            "bubble-pop", "bubbles" -> KeyLightingSpec(pattern = "RIPPLE", target = "GLOW", intensity = 0.65f, sizeDp = 8f, speed = 1f, decayMs = 500)
+            "claw", "slash" -> KeyLightingSpec(pattern = "CROSS", target = "FACE", intensity = 0.8f, decayMs = 400)
+            "confetti" -> KeyLightingSpec(pattern = "SPLASH", target = "EDGE", intensity = 0.75f, sizeDp = 6f, speed = 1.2f, decayMs = 450)
+            "echo", "sonar" -> KeyLightingSpec(pattern = "ECHO", target = "GLOW", intensity = 0.7f, sizeDp = 8f, speed = 1.1f, decayMs = 550)
+            "flame", "wyrmfire" -> KeyLightingSpec(pattern = "SPLASH", target = "GLOW", intensity = 0.75f, sizeDp = 8f, speed = 1.2f, decayMs = 500)
+            "focus" -> KeyLightingSpec(pattern = "KEY", target = "EDGE", intensity = 0.75f, decayMs = 400)
+            "fog" -> KeyLightingSpec(pattern = "BREATHE", target = "GLOW", intensity = 0.55f, sizeDp = 6f, speed = 1f, decayMs = 500)
+            "glint", "shine" -> KeyLightingSpec(pattern = "TWINKLE", target = "FACE", intensity = 0.75f, speed = 1.6f, decayMs = 400)
+            "glitch" -> KeyLightingSpec(pattern = "TWINKLE", target = "FACE", intensity = 0.8f, speed = 2f, decayMs = 300)
+            "glow", "press-glow" -> KeyLightingSpec(pattern = "KEY", target = "GLOW", intensity = 0.7f, sizeDp = 6f, decayMs = 500)
+            "gold-dust" -> KeyLightingSpec(pattern = "SPLASH", target = "GLOW", intensity = 0.7f, sizeDp = 6f, speed = 1.1f, decayMs = 500)
+            "lightspeed" -> KeyLightingSpec(pattern = "SWEEP", target = "FACE", intensity = 0.75f, speed = 1.4f, decayMs = 400)
             "none" -> null
-            "notes" -> KeyLightingSpec(pattern = "SPLASH", target = "GLOW", intensity = 0.85f, sizeDp = 12f, speed = 1.2f, decayMs = 550)
-            "paw-print" -> KeyLightingSpec(pattern = "KEY", target = "FACE", intensity = 0.85f, decayMs = 550)
-            "pixels", "retro" -> KeyLightingSpec(pattern = "KEY", target = "FACE", intensity = 0.9f, decayMs = 450)
-            "recoil" -> KeyLightingSpec(pattern = "RIPPLE", target = "EDGE", intensity = 0.85f, sizeDp = 10f, speed = 1.4f, decayMs = 500)
-            "ripple" -> KeyLightingSpec(pattern = "RIPPLE", target = "GLOW", intensity = 0.85f, sizeDp = 14f, speed = 1.2f, decayMs = 650)
-            "runes" -> KeyLightingSpec(pattern = "CROSS", target = "FACE", intensity = 0.85f, decayMs = 550)
-            "seal" -> KeyLightingSpec(pattern = "KEY", target = "EDGE", intensity = 0.85f, decayMs = 600)
-            "shine" -> KeyLightingSpec(pattern = "TWINKLE", target = "GLOW", intensity = 0.9f, speed = 1.5f, decayMs = 500)
-            "shockwave" -> KeyLightingSpec(pattern = "SPLASH", target = "EDGE", intensity = 0.95f, sizeDp = 16f, speed = 1.4f, decayMs = 500)
-            "sonar" -> KeyLightingSpec(pattern = "ECHO", target = "GLOW", intensity = 0.9f, sizeDp = 18f, speed = 1.3f, decayMs = 700)
-            "sparks" -> KeyLightingSpec(pattern = "SPLASH", target = "EDGE", intensity = 0.9f, sizeDp = 12f, speed = 1.3f, decayMs = 500)
-            "starburst" -> KeyLightingSpec(pattern = "SPLASH", target = "GLOW", intensity = 0.9f, sizeDp = 14f, speed = 1.3f, decayMs = 550)
-            "stormcall", "wyrmfire", "zap" -> KeyLightingSpec(pattern = "SPLASH", target = "GLOW", intensity = 0.95f, sizeDp = 15f, speed = 1.3f, decayMs = 550)
-            "strand" -> KeyLightingSpec(pattern = "CROSS", target = "EDGE", intensity = 0.85f, decayMs = 600)
-            "typewriter" -> KeyLightingSpec(pattern = "KEY", target = "FACE", intensity = 0.85f, decayMs = 400)
+            "notes" -> KeyLightingSpec(pattern = "SPLASH", target = "GLOW", intensity = 0.7f, sizeDp = 6f, speed = 1.1f, decayMs = 500)
+            "paw-print" -> KeyLightingSpec(pattern = "KEY", target = "FACE", intensity = 0.75f, decayMs = 450)
+            "pixels", "retro" -> KeyLightingSpec(pattern = "KEY", target = "FACE", intensity = 0.75f, decayMs = 400)
+            "recoil" -> KeyLightingSpec(pattern = "RIPPLE", target = "EDGE", intensity = 0.75f, sizeDp = 6f, speed = 1.2f, decayMs = 450)
+            "ripple" -> KeyLightingSpec(pattern = "RIPPLE", target = "GLOW", intensity = 0.7f, sizeDp = 8f, speed = 1.1f, decayMs = 550)
+            "runes" -> KeyLightingSpec(pattern = "CROSS", target = "FACE", intensity = 0.75f, decayMs = 450)
+            "seal" -> KeyLightingSpec(pattern = "KEY", target = "EDGE", intensity = 0.75f, decayMs = 450)
+            "shockwave", "sparks" -> KeyLightingSpec(pattern = "SPLASH", target = "EDGE", intensity = 0.8f, sizeDp = 6f, speed = 1.2f, decayMs = 450)
+            "starburst" -> KeyLightingSpec(pattern = "SPLASH", target = "GLOW", intensity = 0.75f, sizeDp = 8f, speed = 1.2f, decayMs = 500)
+            "stormcall", "zap" -> KeyLightingSpec(pattern = "SPLASH", target = "GLOW", intensity = 0.8f, sizeDp = 8f, speed = 1.2f, decayMs = 500)
+            "strand" -> KeyLightingSpec(pattern = "CROSS", target = "EDGE", intensity = 0.75f, decayMs = 450)
+            "typewriter" -> KeyLightingSpec(pattern = "KEY", target = "FACE", intensity = 0.75f, decayMs = 350)
             else -> when {
-                "cyberpunk" in id || "rgb" in id -> KeyLightingSpec(pattern = "WAVE", target = "GLOW", intensity = 0.85f, hueSpanDeg = 360f, speed = 1.2f)
-                "rain" in id -> KeyLightingSpec(pattern = "RAIN", target = "GLOW", intensity = 0.7f, speed = 1.2f)
-                else -> KeyLightingSpec(pattern = "KEY", target = "GLOW", intensity = 0.75f, sizeDp = 10f, decayMs = 600)
+                "cyberpunk" in id || "rgb" in id -> KeyLightingSpec(pattern = "WAVE", target = "GLOW", intensity = 0.75f, hueSpanDeg = 360f, speed = 1.1f)
+                "rain" in id -> KeyLightingSpec(pattern = "RAIN", target = "GLOW", intensity = 0.65f, speed = 1.1f)
+                else -> null
             }
         }
 
@@ -183,36 +179,32 @@ object KyngTheme {
         }
 
         val (keyEffect, keyEffectParam) = when (effectId) {
-            "block-break" -> "EMOJI" to "💎🧱"
-            "bubble-pop" -> "EMOJI" to "🫧🟢"
-            "bubbles" -> "EMOJI" to "🫧"
-            "claw", "slash" -> "EMOJI" to "🐾⚔️"
             "confetti" -> "CONFETTI" to null
-            "echo", "focus", "glow", "press-glow", "recoil", "ripple" -> "SPARKLE" to null
-            "flame" -> "EMOJI" to "🔥💥"
-            "fog" -> "EMOJI" to "💨☁️"
-            "glint", "shine", "starburst" -> "STARS" to null
-            "glitch" -> "EMOJI" to "⚡💠"
-            "gold-dust" -> "EMOJI" to "✨🪙"
-            "lightspeed" -> "EMOJI" to "💫🚀"
-            "notes" -> "EMOJI" to "🎵🎶"
-            "paw-print" -> "EMOJI" to "🐾"
-            "pixels", "retro" -> "EMOJI" to "👾🕹️"
-            "runes" -> "EMOJI" to "🔮✨"
-            "seal" -> "EMOJI" to "🪶📜"
-            "shockwave", "sparks" -> "EMOJI" to "💥⚡"
-            "sonar" -> "EMOJI" to "🦇📡"
-            "stormcall" -> "EMOJI" to "⚡🌩️"
-            "strand" -> "EMOJI" to "🕸️🕷️"
-            "typewriter" -> "EMOJI" to "⌨️📜"
-            "wyrmfire" -> "EMOJI" to "🐉🔥"
-            "zap" -> "EMOJI" to "⚡"
+            "glint", "shine", "starburst", "charm" -> "STARS" to null
+            "k-pop" -> "HEARTS" to null
+            "glow", "press-glow", "sparks", "zap", "flame", "wyrmfire", "stormcall", "echo", "recoil", "ripple", "focus" -> "SPARKLE" to null
             "none" -> null to null
             else -> when {
                 "spraycan" in id -> "CONFETTI" to null
                 "charm" in id || "star" in id -> "STARS" to null
                 "k-pop" in id || "heart" in id -> "HEARTS" to null
-                else -> "SPARKLE" to null
+                else -> null
+            }
+        }
+
+                val adjustedSkinSpec = keySkinSpec?.let { spec ->
+            val popupSlot = spec.slots["popup"]
+            if (popupSlot != null && popupSlot.stretchX == null && popupSlot.stretchY == null) {
+                val w = popupSlot.size.getOrNull(0) ?: 150f
+                val h = popupSlot.size.getOrNull(1) ?: 160f
+                val updatedSlots = spec.slots.toMutableMap()
+                updatedSlots["popup"] = popupSlot.copy(
+                    stretchX = listOf(w * 0.2f, w * 0.8f),
+                    stretchY = listOf(h * 0.2f, h * 0.8f),
+                )
+                spec.copy(slots = updatedSlots)
+            } else {
+                spec
             }
         }
 
@@ -235,7 +227,7 @@ object KyngTheme {
             keyBorderWidthDp = borderWidthDp,
             keyCornerRadiusDp = cornerRadiusDp.toInt(),
             keyShape = keyShapeKind,
-            keySkin = keySkinSpec,
+            keySkin = adjustedSkinSpec,
             keyLighting = keyLighting,
             boardEffect = boardEffect,
             keyMaterial = keyMaterial,
@@ -245,9 +237,6 @@ object KyngTheme {
             keyEffectSize = 1.2f,
             keyEffectSpeed = 1f,
             keyEffectSpread = 0.8f,
-            popupPlacement = "floating",
-            popupFloatingHeightDp = 65,
-            popupCornerRadiusDp = cornerRadiusDp.toInt(),
         )
         return KyngThemeResult.Converted(spec)
     }

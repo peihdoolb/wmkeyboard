@@ -21,8 +21,8 @@
   "keyLighting": {
     "pattern": "KEY",
     "target": "FACE",
-    "intensity": 0.9,
-    "decayMs": 450
+    "intensity": 0.75,
+    "decayMs": 400
   },
   "boardEffect": {
     "kind": "DOT_GRID",
@@ -33,13 +33,10 @@
   "keyMaterial": {
     "kind": "TERMINAL"
   },
-  "keyEffect": "EMOJI",
-  "keyEffectParam": "\ud83d\udc7e\ud83d\udd79\ufe0f",
+  "keyEffect": null,
+  "keyEffectParam": null,
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8,
-  "popupPlacement": "floating",
-  "popupFloatingHeightDp": 65,
-  "popupCornerRadiusDp": 2
+  "keyEffectSpread": 0.8
 }

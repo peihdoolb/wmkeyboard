@@ -1583,6 +1583,14 @@
               "color": "previewLabel:alpha:0.55"
             }
           }
+        ],
+        "stretchX": [
+          30.0,
+          120.0
+        ],
+        "stretchY": [
+          32.0,
+          128.0
         ]
       }
     },
@@ -1718,10 +1726,10 @@
   "keyLighting": {
     "pattern": "SPLASH",
     "target": "EDGE",
-    "intensity": 0.9,
-    "sizeDp": 12.0,
-    "speed": 1.3,
-    "decayMs": 500
+    "intensity": 0.8,
+    "sizeDp": 6.0,
+    "speed": 1.2,
+    "decayMs": 450
   },
   "boardEffect": {
     "kind": "FIREWORKS",
@@ -1731,13 +1739,10 @@
     "reactive": 1.0
   },
   "keyMaterial": null,
-  "keyEffect": "EMOJI",
-  "keyEffectParam": "\ud83d\udca5\u26a1",
+  "keyEffect": "SPARKLE",
+  "keyEffectParam": null,
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8,
-  "popupPlacement": "floating",
-  "popupFloatingHeightDp": 65,
-  "popupCornerRadiusDp": 0
+  "keyEffectSpread": 0.8
 }

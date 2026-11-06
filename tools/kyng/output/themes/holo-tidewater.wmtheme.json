@@ -1207,6 +1207,14 @@
               "alpha": 0.3
             }
           }
+        ],
+        "stretchX": [
+          30.0,
+          120.0
+        ],
+        "stretchY": [
+          32.0,
+          128.0
         ]
       },
       "globe": {
@@ -1449,10 +1457,10 @@
   "keyLighting": {
     "pattern": "RIPPLE",
     "target": "GLOW",
-    "intensity": 0.85,
-    "sizeDp": 14.0,
-    "speed": 1.2,
-    "decayMs": 650
+    "intensity": 0.7,
+    "sizeDp": 8.0,
+    "speed": 1.1,
+    "decayMs": 550
   },
   "boardEffect": {
     "kind": "RIPPLES",
@@ -1469,8 +1477,5 @@
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8,
-  "popupPlacement": "floating",
-  "popupFloatingHeightDp": 65,
-  "popupCornerRadiusDp": 0
+  "keyEffectSpread": 0.8
 }

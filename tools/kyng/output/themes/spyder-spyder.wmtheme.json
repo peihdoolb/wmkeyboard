@@ -1245,6 +1245,14 @@
               ]
             }
           }
+        ],
+        "stretchX": [
+          30.0,
+          120.0
+        ],
+        "stretchY": [
+          30.0,
+          120.0
         ]
       }
     },
@@ -1297,8 +1305,8 @@
   "keyLighting": {
     "pattern": "CROSS",
     "target": "EDGE",
-    "intensity": 0.85,
-    "decayMs": 600
+    "intensity": 0.75,
+    "decayMs": 450
   },
   "boardEffect": {
     "kind": "CONTOUR",
@@ -1308,13 +1316,10 @@
     "reactive": 0.8
   },
   "keyMaterial": null,
-  "keyEffect": "EMOJI",
-  "keyEffectParam": "\ud83d\udd78\ufe0f\ud83d\udd77\ufe0f",
+  "keyEffect": null,
+  "keyEffectParam": null,
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8,
-  "popupPlacement": "floating",
-  "popupFloatingHeightDp": 65,
-  "popupCornerRadiusDp": 6
+  "keyEffectSpread": 0.8
 }

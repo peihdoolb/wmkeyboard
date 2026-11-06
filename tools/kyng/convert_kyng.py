@@ -114,8 +114,14 @@ def convert_theme(z, theme_path, out_dir):
     skin_spec = None
     if skin_id and f'skins/{skin_id}.json' in z.namelist():
         skin_raw = json.loads(z.read(f'skins/{skin_id}.json').decode('utf-8'))
+        slots = skin_raw.get("slots", {})
+        popup_slot = slots.get("popup")
+        if popup_slot and "stretchX" not in popup_slot and "stretchY" not in popup_slot:
+            w, h = popup_slot.get("size", [150.0, 160.0])
+            popup_slot["stretchX"] = [round(w * 0.2, 1), round(w * 0.8, 1)]
+            popup_slot["stretchY"] = [round(h * 0.2, 1), round(h * 0.8, 1)]
         skin_spec = {
-            "slots": skin_raw.get("slots", {}),
+            "slots": slots,
             "board": skin_raw.get("board")
         }
         
@@ -144,50 +150,50 @@ def convert_theme(z, theme_path, out_dir):
     
     # 1. Key Lighting (dynamic reactive lighting on keypress)
     lighting_map = {
-        'block-break': {'pattern': 'CROSS', 'target': 'FACE', 'intensity': 0.85, 'decayMs': 500},
-        'bubble-pop': {'pattern': 'RIPPLE', 'target': 'GLOW', 'intensity': 0.8, 'sizeDp': 12.0, 'speed': 1.0, 'decayMs': 600},
-        'bubbles': {'pattern': 'RIPPLE', 'target': 'GLOW', 'intensity': 0.75, 'sizeDp': 10.0, 'speed': 1.0, 'decayMs': 600},
-        'claw': {'pattern': 'CROSS', 'target': 'FACE', 'intensity': 0.9, 'decayMs': 450},
-        'confetti': {'pattern': 'SPLASH', 'target': 'EDGE', 'intensity': 0.9, 'sizeDp': 12.0, 'speed': 1.3, 'decayMs': 500},
-        'echo': {'pattern': 'ECHO', 'target': 'GLOW', 'intensity': 0.85, 'sizeDp': 16.0, 'speed': 1.2, 'decayMs': 650},
-        'flame': {'pattern': 'SPLASH', 'target': 'GLOW', 'intensity': 0.95, 'sizeDp': 14.0, 'speed': 1.3, 'decayMs': 600},
-        'focus': {'pattern': 'KEY', 'target': 'EDGE', 'intensity': 0.9, 'decayMs': 450},
-        'fog': {'pattern': 'BREATHE', 'target': 'GLOW', 'intensity': 0.65, 'sizeDp': 14.0, 'speed': 1.0, 'decayMs': 600},
-        'glint': {'pattern': 'TWINKLE', 'target': 'FACE', 'intensity': 0.9, 'speed': 1.8, 'decayMs': 450},
-        'glitch': {'pattern': 'TWINKLE', 'target': 'FACE', 'intensity': 0.95, 'speed': 2.2, 'decayMs': 350},
-        'glow': {'pattern': 'KEY', 'target': 'GLOW', 'intensity': 0.85, 'sizeDp': 14.0, 'decayMs': 600},
-        'gold-dust': {'pattern': 'SPLASH', 'target': 'GLOW', 'intensity': 0.85, 'sizeDp': 12.0, 'speed': 1.2, 'decayMs': 550},
-        'lightspeed': {'pattern': 'SWEEP', 'target': 'FACE', 'intensity': 0.9, 'speed': 1.6, 'decayMs': 450},
+        'block-break': {'pattern': 'CROSS', 'target': 'FACE', 'intensity': 0.7, 'decayMs': 400},
+        'bubble-pop': {'pattern': 'RIPPLE', 'target': 'GLOW', 'intensity': 0.65, 'sizeDp': 8.0, 'speed': 1.0, 'decayMs': 500},
+        'bubbles': {'pattern': 'RIPPLE', 'target': 'GLOW', 'intensity': 0.65, 'sizeDp': 8.0, 'speed': 1.0, 'decayMs': 500},
+        'claw': {'pattern': 'CROSS', 'target': 'FACE', 'intensity': 0.8, 'decayMs': 400},
+        'confetti': {'pattern': 'SPLASH', 'target': 'EDGE', 'intensity': 0.75, 'sizeDp': 6.0, 'speed': 1.2, 'decayMs': 450},
+        'echo': {'pattern': 'ECHO', 'target': 'GLOW', 'intensity': 0.7, 'sizeDp': 8.0, 'speed': 1.1, 'decayMs': 550},
+        'flame': {'pattern': 'SPLASH', 'target': 'GLOW', 'intensity': 0.75, 'sizeDp': 8.0, 'speed': 1.2, 'decayMs': 500},
+        'focus': {'pattern': 'KEY', 'target': 'EDGE', 'intensity': 0.75, 'decayMs': 400},
+        'fog': {'pattern': 'BREATHE', 'target': 'GLOW', 'intensity': 0.55, 'sizeDp': 6.0, 'speed': 1.0, 'decayMs': 500},
+        'glint': {'pattern': 'TWINKLE', 'target': 'FACE', 'intensity': 0.75, 'speed': 1.6, 'decayMs': 400},
+        'glitch': {'pattern': 'TWINKLE', 'target': 'FACE', 'intensity': 0.8, 'speed': 2.0, 'decayMs': 300},
+        'glow': {'pattern': 'KEY', 'target': 'GLOW', 'intensity': 0.7, 'sizeDp': 6.0, 'decayMs': 500},
+        'gold-dust': {'pattern': 'SPLASH', 'target': 'GLOW', 'intensity': 0.7, 'sizeDp': 6.0, 'speed': 1.1, 'decayMs': 500},
+        'lightspeed': {'pattern': 'SWEEP', 'target': 'FACE', 'intensity': 0.75, 'speed': 1.4, 'decayMs': 400},
         'none': None,
-        'notes': {'pattern': 'SPLASH', 'target': 'GLOW', 'intensity': 0.85, 'sizeDp': 12.0, 'speed': 1.2, 'decayMs': 550},
-        'paw-print': {'pattern': 'KEY', 'target': 'FACE', 'intensity': 0.85, 'decayMs': 550},
-        'pixels': {'pattern': 'KEY', 'target': 'FACE', 'intensity': 0.9, 'decayMs': 450},
-        'press-glow': {'pattern': 'KEY', 'target': 'GLOW', 'intensity': 0.9, 'sizeDp': 12.0, 'decayMs': 500},
-        'recoil': {'pattern': 'RIPPLE', 'target': 'EDGE', 'intensity': 0.85, 'sizeDp': 10.0, 'speed': 1.4, 'decayMs': 500},
-        'retro': {'pattern': 'KEY', 'target': 'FACE', 'intensity': 0.85, 'decayMs': 500},
-        'ripple': {'pattern': 'RIPPLE', 'target': 'GLOW', 'intensity': 0.85, 'sizeDp': 14.0, 'speed': 1.2, 'decayMs': 650},
-        'runes': {'pattern': 'CROSS', 'target': 'FACE', 'intensity': 0.85, 'decayMs': 550},
-        'seal': {'pattern': 'KEY', 'target': 'EDGE', 'intensity': 0.85, 'decayMs': 600},
-        'shine': {'pattern': 'TWINKLE', 'target': 'GLOW', 'intensity': 0.9, 'speed': 1.5, 'decayMs': 500},
-        'shockwave': {'pattern': 'SPLASH', 'target': 'EDGE', 'intensity': 0.95, 'sizeDp': 16.0, 'speed': 1.4, 'decayMs': 500},
-        'slash': {'pattern': 'CROSS', 'target': 'FACE', 'intensity': 0.9, 'decayMs': 450},
-        'sonar': {'pattern': 'ECHO', 'target': 'GLOW', 'intensity': 0.9, 'sizeDp': 18.0, 'speed': 1.3, 'decayMs': 700},
-        'sparks': {'pattern': 'SPLASH', 'target': 'EDGE', 'intensity': 0.9, 'sizeDp': 12.0, 'speed': 1.3, 'decayMs': 500},
-        'starburst': {'pattern': 'SPLASH', 'target': 'GLOW', 'intensity': 0.9, 'sizeDp': 14.0, 'speed': 1.3, 'decayMs': 550},
-        'stormcall': {'pattern': 'SPLASH', 'target': 'GLOW', 'intensity': 0.95, 'sizeDp': 16.0, 'speed': 1.4, 'decayMs': 500},
-        'strand': {'pattern': 'CROSS', 'target': 'EDGE', 'intensity': 0.85, 'decayMs': 600},
-        'typewriter': {'pattern': 'KEY', 'target': 'FACE', 'intensity': 0.85, 'decayMs': 400},
-        'wyrmfire': {'pattern': 'SPLASH', 'target': 'GLOW', 'intensity': 0.95, 'sizeDp': 15.0, 'speed': 1.3, 'decayMs': 600},
-        'zap': {'pattern': 'SPLASH', 'target': 'GLOW', 'intensity': 0.95, 'sizeDp': 14.0, 'speed': 1.4, 'decayMs': 450}
+        'notes': {'pattern': 'SPLASH', 'target': 'GLOW', 'intensity': 0.7, 'sizeDp': 6.0, 'speed': 1.1, 'decayMs': 500},
+        'paw-print': {'pattern': 'KEY', 'target': 'FACE', 'intensity': 0.75, 'decayMs': 450},
+        'pixels': {'pattern': 'KEY', 'target': 'FACE', 'intensity': 0.75, 'decayMs': 400},
+        'press-glow': {'pattern': 'KEY', 'target': 'GLOW', 'intensity': 0.7, 'sizeDp': 6.0, 'decayMs': 500},
+        'recoil': {'pattern': 'RIPPLE', 'target': 'EDGE', 'intensity': 0.75, 'sizeDp': 6.0, 'speed': 1.2, 'decayMs': 450},
+        'retro': {'pattern': 'KEY', 'target': 'FACE', 'intensity': 0.75, 'decayMs': 400},
+        'ripple': {'pattern': 'RIPPLE', 'target': 'GLOW', 'intensity': 0.7, 'sizeDp': 8.0, 'speed': 1.1, 'decayMs': 550},
+        'runes': {'pattern': 'CROSS', 'target': 'FACE', 'intensity': 0.75, 'decayMs': 450},
+        'seal': {'pattern': 'KEY', 'target': 'EDGE', 'intensity': 0.75, 'decayMs': 450},
+        'shine': {'pattern': 'TWINKLE', 'target': 'GLOW', 'intensity': 0.75, 'speed': 1.4, 'decayMs': 450},
+        'shockwave': {'pattern': 'SPLASH', 'target': 'EDGE', 'intensity': 0.8, 'sizeDp': 6.0, 'speed': 1.2, 'decayMs': 450},
+        'slash': {'pattern': 'CROSS', 'target': 'FACE', 'intensity': 0.8, 'decayMs': 400},
+        'sonar': {'pattern': 'ECHO', 'target': 'GLOW', 'intensity': 0.7, 'sizeDp': 8.0, 'speed': 1.1, 'decayMs': 550},
+        'sparks': {'pattern': 'SPLASH', 'target': 'EDGE', 'intensity': 0.8, 'sizeDp': 6.0, 'speed': 1.2, 'decayMs': 450},
+        'starburst': {'pattern': 'SPLASH', 'target': 'GLOW', 'intensity': 0.75, 'sizeDp': 8.0, 'speed': 1.2, 'decayMs': 500},
+        'stormcall': {'pattern': 'SPLASH', 'target': 'GLOW', 'intensity': 0.8, 'sizeDp': 8.0, 'speed': 1.2, 'decayMs': 500},
+        'strand': {'pattern': 'CROSS', 'target': 'EDGE', 'intensity': 0.75, 'decayMs': 450},
+        'typewriter': {'pattern': 'KEY', 'target': 'FACE', 'intensity': 0.75, 'decayMs': 350},
+        'wyrmfire': {'pattern': 'SPLASH', 'target': 'GLOW', 'intensity': 0.8, 'sizeDp': 8.0, 'speed': 1.2, 'decayMs': 500},
+        'zap': {'pattern': 'SPLASH', 'target': 'GLOW', 'intensity': 0.8, 'sizeDp': 8.0, 'speed': 1.2, 'decayMs': 500}
     }
     key_lighting = lighting_map.get(effect_id)
     if key_lighting is None and effect_id != 'none':
         if 'cyberpunk' in theme_id or 'rgb' in theme_id:
-            key_lighting = {'pattern': 'WAVE', 'target': 'GLOW', 'intensity': 0.85, 'hueSpanDeg': 360.0, 'speed': 1.2}
+            key_lighting = {'pattern': 'WAVE', 'target': 'GLOW', 'intensity': 0.75, 'hueSpanDeg': 360.0, 'speed': 1.1}
         elif 'rain' in theme_id:
-            key_lighting = {'pattern': 'RAIN', 'target': 'GLOW', 'intensity': 0.7, 'speed': 1.2}
+            key_lighting = {'pattern': 'RAIN', 'target': 'GLOW', 'intensity': 0.65, 'speed': 1.1}
         else:
-            key_lighting = {'pattern': 'KEY', 'target': 'GLOW', 'intensity': 0.75, 'sizeDp': 10.0, 'decayMs': 600}
+            key_lighting = None
 
     # 2. Board Effect (dynamic moving background that reacts to typing)
     board_map = {
@@ -270,43 +276,24 @@ def convert_theme(z, theme_path, out_dir):
 
     # 4. Particle tap burst on key press (differentiated across all 35 Kyng effects)
     particle_map = {
-        'block-break': ('EMOJI', '💎🧱'),
-        'bubble-pop': ('EMOJI', '🫧🟢'),
-        'bubbles': ('EMOJI', '🫧'),
-        'claw': ('EMOJI', '🐾⚔️'),
         'confetti': ('CONFETTI', None),
-        'echo': ('SPARKLE', None),
-        'flame': ('EMOJI', '🔥💥'),
-        'focus': ('SPARKLE', None),
-        'fog': ('EMOJI', '💨☁️'),
         'glint': ('STARS', None),
-        'glitch': ('EMOJI', '⚡💠'),
-        'glow': ('SPARKLE', None),
-        'gold-dust': ('EMOJI', '✨🪙'),
-        'lightspeed': ('EMOJI', '💫🚀'),
-        'none': (None, None),
-        'notes': ('EMOJI', '🎵🎶'),
-        'paw-print': ('EMOJI', '🐾'),
-        'pixels': ('EMOJI', '👾🕹️'),
-        'press-glow': ('SPARKLE', None),
-        'recoil': ('SPARKLE', None),
-        'retro': ('EMOJI', '👾🕹️'),
-        'ripple': ('SPARKLE', None),
-        'runes': ('EMOJI', '🔮✨'),
-        'seal': ('EMOJI', '🪶📜'),
         'shine': ('STARS', None),
-        'shockwave': ('EMOJI', '💥⚡'),
-        'slash': ('EMOJI', '⚔️🗡️'),
-        'sonar': ('EMOJI', '🦇📡'),
-        'sparks': ('EMOJI', '💥⚡'),
         'starburst': ('STARS', None),
-        'stormcall': ('EMOJI', '⚡🌩️'),
-        'strand': ('EMOJI', '🕸️🕷️'),
-        'typewriter': ('EMOJI', '⌨️📜'),
-        'wyrmfire': ('EMOJI', '🐉🔥'),
-        'zap': ('EMOJI', '⚡')
+        'glow': ('SPARKLE', None),
+        'press-glow': ('SPARKLE', None),
+        'sparks': ('SPARKLE', None),
+        'zap': ('SPARKLE', None),
+        'flame': ('SPARKLE', None),
+        'wyrmfire': ('SPARKLE', None),
+        'stormcall': ('SPARKLE', None),
+        'echo': ('SPARKLE', None),
+        'recoil': ('SPARKLE', None),
+        'ripple': ('SPARKLE', None),
+        'focus': ('SPARKLE', None),
+        'none': (None, None)
     }
-    key_effect, key_effect_param = particle_map.get(effect_id, ('SPARKLE', None))
+    key_effect, key_effect_param = particle_map.get(effect_id, (None, None))
     if key_effect is None and effect_id != 'none':
         if 'spraycan' in theme_id:
             key_effect, key_effect_param = 'CONFETTI', None
@@ -315,7 +302,7 @@ def convert_theme(z, theme_path, out_dir):
         elif 'k-pop' in theme_id or 'heart' in theme_id:
             key_effect, key_effect_param = 'HEARTS', None
         else:
-            key_effect, key_effect_param = 'SPARKLE', None
+            key_effect, key_effect_param = None, None
 
     wm_theme = {
         "id": f"kyng_{theme_id}",
@@ -345,10 +332,7 @@ def convert_theme(z, theme_path, out_dir):
         "keyEffectIntensity": 1.0,
         "keyEffectSize": 1.2,
         "keyEffectSpeed": 1.0,
-        "keyEffectSpread": 0.8,
-        "popupPlacement": "floating",
-        "popupFloatingHeightDp": 65,
-        "popupCornerRadiusDp": int(corner_radius)
+        "keyEffectSpread": 0.8
     }
     out_file = os.path.join(out_dir, f"{theme_id}.wmtheme.json")
     with open(out_file, 'w', encoding='utf-8') as f:
@@ -404,24 +388,7 @@ def main():
             converted_themes.append(p)
     print(f"Successfully converted {len(converted_themes)} themes to {themes_out}")
     
-    # Also seed top 6 sound packs into app/src/main/assets/soundpacks/
-    seed_dir = os.path.join(base_dir, 'app', 'src', 'main', 'assets', 'soundpacks')
-    os.makedirs(seed_dir, exist_ok=True)
-    
-    top_packs = [
-        'brass-mech.wmsoundpack',
-        'deep-thock.wmsoundpack',
-        'butter-linear.wmsoundpack',
-        'bubbles.wmsoundpack',
-        'typewriter.wmsoundpack',
-        'retro.wmsoundpack'
-    ]
-    for tp in top_packs:
-        src = os.path.join(sounds_out, tp)
-        if os.path.exists(src):
-            dst = os.path.join(seed_dir, tp)
-            shutil.copyfile(src, dst)
-            print(f"Bundled seed soundpack: {tp} -> {dst}")
+
 
 if __name__ == '__main__':
     main()

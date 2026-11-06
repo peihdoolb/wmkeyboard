@@ -16342,7 +16342,6 @@ internal fun GlideTrail.sampleEdge(i: Int, count: Int, half: Float): Offset {
 internal class KeyRects {
 
     private val cells = LinkedHashMap<Rect, Key>()
-    private val faces = LinkedHashSet<Rect>()
     private var generation: Any? = null
 
     /**
@@ -16364,18 +16363,7 @@ internal class KeyRects {
     }
 
     /** Every cell, in root space; a copy, for the same reason as [focusCells]. */
-    fun recordFace(gen: Any, rect: Rect) {
-        if (gen !== generation) {
-            cells.clear()
-            faces.clear()
-            generation = gen
-        }
-        if (faces.add(rect)) revision++
-    }
-
     fun cellRects(): List<Rect> = cells.keys.toList()
-
-    fun faceRects(): List<Rect> = if (faces.isNotEmpty()) faces.toList() else cellRects()
 
     /** The key whose cell holds [point], or null outside the grid. */
     fun keyAt(point: Offset): Key? {
@@ -20636,7 +20624,7 @@ private fun KeyRows(
         // in the gaps the way a backlit keyboard's light leaks round its caps.
         keyLighting?.let {
             KeyLightingLayer(
-                it, keyRects::faceRects, { keyRects.revision }, kbTheme.keyRadiusDp.toFloat(),
+                it, keyRects::cellRects, { keyRects.revision }, kbTheme.keyRadiusDp.toFloat(),
                 behind = true, modifier = Modifier.matchParentSize(),
             )
         }
@@ -20787,39 +20775,31 @@ private fun KeyRows(
             // the shift latch, so a tap for one capital (or the board's own
             // sentence-start capital) leaves the digits where they are.
             val extraRow = if (numberRow) rememberExtraRow(state, fillRow, chordDrag.shifted) else null
-            CompositionLocalProvider(
-                LocalKeyFaceProbe provides remember(keyRects, liveToken) {
-                    { _, coords ->
-                        keyRects.recordFace(liveToken.value, coords.boundsInRoot())
-                    }
-                },
-            ) {
-                KeyGridRows(
-                    state = state,
-                    gridState = gridState,
-                    layout = layout,
-                    bodyRows = bodyRows,
-                    extraRow = extraRow,
-                    palette = palette,
-                    gridWeight = gridWeight,
-                    settings = settings,
-                    split = split,
-                    numericField = numericField,
-                    mode = mode,
-                    keyPreview = keyPreview,
-                    onKey = keyTapOnKey,
-                    onText = stampedOnText,
-                    onCursorMove = onCursorMove,
-                    onLayoutSelect = onLayoutSelect,
-                    onKeyPositioned = onKeyPositioned,
-                    onSpacePositioned = onSpacePositioned,
-                    smartResolve = smartResolve,
-                    onBurst = onBurst,
-                    onHandwritingStroke = onKeyboardHandwritingStroke,
-                    onHandwritingUndo = onHandwritingUndo,
-                    onHandwritingDownload = onHandwritingDownload,
-                )
-            }
+            KeyGridRows(
+                state = state,
+                gridState = gridState,
+                layout = layout,
+                bodyRows = bodyRows,
+                extraRow = extraRow,
+                palette = palette,
+                gridWeight = gridWeight,
+                settings = settings,
+                split = split,
+                numericField = numericField,
+                mode = mode,
+                keyPreview = keyPreview,
+                onKey = keyTapOnKey,
+                onText = stampedOnText,
+                onCursorMove = onCursorMove,
+                onLayoutSelect = onLayoutSelect,
+                onKeyPositioned = onKeyPositioned,
+                onSpacePositioned = onSpacePositioned,
+                smartResolve = smartResolve,
+                onBurst = onBurst,
+                onHandwritingStroke = onKeyboardHandwritingStroke,
+                onHandwritingUndo = onHandwritingUndo,
+                onHandwritingDownload = onHandwritingDownload,
+            )
         }
 
         // The theme's stickers, laid over the keys and under the transient
@@ -20831,7 +20811,7 @@ private fun KeyRows(
         // The key lighting's face and outline half, over the keys.
         keyLighting?.let {
             KeyLightingLayer(
-                it, keyRects::faceRects, { keyRects.revision }, kbTheme.keyRadiusDp.toFloat(),
+                it, keyRects::cellRects, { keyRects.revision }, kbTheme.keyRadiusDp.toFloat(),
                 behind = false, modifier = Modifier.matchParentSize(),
             )
         }

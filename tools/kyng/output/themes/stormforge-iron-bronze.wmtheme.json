@@ -2610,6 +2610,14 @@
             },
             "strokeWidth": 1.56
           }
+        ],
+        "stretchX": [
+          30.0,
+          120.0
+        ],
+        "stretchY": [
+          30.0,
+          120.0
         ]
       }
     },
@@ -2654,9 +2662,9 @@
   "keyLighting": {
     "pattern": "SPLASH",
     "target": "GLOW",
-    "intensity": 0.95,
-    "sizeDp": 16.0,
-    "speed": 1.4,
+    "intensity": 0.8,
+    "sizeDp": 8.0,
+    "speed": 1.2,
     "decayMs": 500
   },
   "boardEffect": {
@@ -2669,13 +2677,10 @@
   "keyMaterial": {
     "kind": "METAL"
   },
-  "keyEffect": "EMOJI",
-  "keyEffectParam": "\u26a1\ud83c\udf29\ufe0f",
+  "keyEffect": "SPARKLE",
+  "keyEffectParam": null,
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8,
-  "popupPlacement": "floating",
-  "popupFloatingHeightDp": 65,
-  "popupCornerRadiusDp": 4
+  "keyEffectSpread": 0.8
 }

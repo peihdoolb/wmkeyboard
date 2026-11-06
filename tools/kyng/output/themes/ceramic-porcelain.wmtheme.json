@@ -6044,6 +6044,14 @@
               "color": "previewFill:darken:0.3"
             }
           }
+        ],
+        "stretchX": [
+          30.0,
+          120.0
+        ],
+        "stretchY": [
+          29.2,
+          116.8
         ]
       }
     },
@@ -6059,8 +6067,5 @@
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8,
-  "popupPlacement": "floating",
-  "popupFloatingHeightDp": 65,
-  "popupCornerRadiusDp": 4
+  "keyEffectSpread": 0.8
 }

@@ -1491,6 +1491,14 @@
             "strokeWidth": 1.6,
             "opacity": 0.6
           }
+        ],
+        "stretchX": [
+          30.0,
+          120.0
+        ],
+        "stretchY": [
+          36.0,
+          144.0
         ]
       }
     },
@@ -1653,20 +1661,17 @@
   "keyLighting": {
     "pattern": "KEY",
     "target": "FACE",
-    "intensity": 0.85,
-    "decayMs": 400
+    "intensity": 0.75,
+    "decayMs": 350
   },
   "boardEffect": null,
   "keyMaterial": {
     "kind": "TYPEWRITER"
   },
-  "keyEffect": "EMOJI",
-  "keyEffectParam": "\u2328\ufe0f\ud83d\udcdc",
+  "keyEffect": null,
+  "keyEffectParam": null,
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8,
-  "popupPlacement": "floating",
-  "popupFloatingHeightDp": 65,
-  "popupCornerRadiusDp": 0
+  "keyEffectSpread": 0.8
 }

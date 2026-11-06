@@ -1798,6 +1798,14 @@
               ]
             }
           }
+        ],
+        "stretchX": [
+          30.0,
+          120.0
+        ],
+        "stretchY": [
+          30.0,
+          120.0
         ]
       }
     },
@@ -1931,8 +1939,5 @@
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8,
-  "popupPlacement": "floating",
-  "popupFloatingHeightDp": 65,
-  "popupCornerRadiusDp": 6
+  "keyEffectSpread": 0.8
 }

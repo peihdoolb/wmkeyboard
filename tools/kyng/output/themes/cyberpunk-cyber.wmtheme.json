@@ -2397,6 +2397,14 @@
             },
             "opacity": 0.8
           }
+        ],
+        "stretchX": [
+          30.0,
+          120.0
+        ],
+        "stretchY": [
+          30.0,
+          120.0
         ]
       }
     },
@@ -2495,9 +2503,9 @@
   "keyLighting": {
     "pattern": "TWINKLE",
     "target": "FACE",
-    "intensity": 0.95,
-    "speed": 2.2,
-    "decayMs": 350
+    "intensity": 0.8,
+    "speed": 2.0,
+    "decayMs": 300
   },
   "boardEffect": {
     "kind": "CODE_RAIN",
@@ -2509,13 +2517,10 @@
   "keyMaterial": {
     "kind": "NEON"
   },
-  "keyEffect": "EMOJI",
-  "keyEffectParam": "\u26a1\ud83d\udca0",
+  "keyEffect": null,
+  "keyEffectParam": null,
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8,
-  "popupPlacement": "floating",
-  "popupFloatingHeightDp": 65,
-  "popupCornerRadiusDp": 0
+  "keyEffectSpread": 0.8
 }

@@ -86,17 +86,12 @@ class SoundPackStore(private var baseDir: File?) {
 
         fun get(context: android.content.Context): SoundPackStore =
             shared ?: synchronized(this) {
-                shared ?: SoundPackStore(packsDir(context)).also {
-                    shared = it
-                    it.seedFromAssetsIfEmpty(context)
-                }
+                shared ?: SoundPackStore(packsDir(context)).also { shared = it }
             }
 
         /** Re-points the shared store after a direct-boot unlock. */
         fun attach(context: android.content.Context) {
-            val store = get(context)
-            store.attach(packsDir(context))
-            store.seedFromAssetsIfEmpty(context)
+            get(context).attach(packsDir(context))
         }
 
         private fun packsDir(context: android.content.Context): File? =
@@ -140,26 +135,6 @@ class SoundPackStore(private var baseDir: File?) {
     }
 
     // ---- reading -------------------------------------------------------
-
-    /** Seeds default sound packs bundled in assets if missing from store. */
-    fun seedFromAssetsIfEmpty(context: android.content.Context) {
-        if (baseDir == null) return
-        val assetManager = context.assets
-        val list = runCatching { assetManager.list("soundpacks") }.getOrNull() ?: return
-        for (file in list) {
-            if (file.endsWith(".wmsoundpack", ignoreCase = true)) {
-                val expectedName = file.removeSuffix(".wmsoundpack")
-                if (packs.any { it.name.contains(expectedName, ignoreCase = true) }) {
-                    continue
-                }
-                runCatching {
-                    assetManager.open("soundpacks/$file").use { input ->
-                        SoundPackFile.import(input, this, fallbackName = expectedName)
-                    }
-                }
-            }
-        }
-    }
 
     @Synchronized
     fun packs(): List<InstalledSoundPack> = packs.toList()

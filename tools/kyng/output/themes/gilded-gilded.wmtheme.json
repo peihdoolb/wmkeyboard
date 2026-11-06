@@ -2592,6 +2592,14 @@
               ]
             }
           }
+        ],
+        "stretchX": [
+          30.0,
+          120.0
+        ],
+        "stretchY": [
+          30.0,
+          120.0
         ]
       }
     },
@@ -2742,10 +2750,10 @@
   "keyLighting": {
     "pattern": "SPLASH",
     "target": "GLOW",
-    "intensity": 0.9,
-    "sizeDp": 14.0,
-    "speed": 1.3,
-    "decayMs": 550
+    "intensity": 0.75,
+    "sizeDp": 8.0,
+    "speed": 1.2,
+    "decayMs": 500
   },
   "boardEffect": {
     "kind": "STARFIELD",
@@ -2760,8 +2768,5 @@
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8,
-  "popupPlacement": "floating",
-  "popupFloatingHeightDp": 65,
-  "popupCornerRadiusDp": 0
+  "keyEffectSpread": 0.8
 }

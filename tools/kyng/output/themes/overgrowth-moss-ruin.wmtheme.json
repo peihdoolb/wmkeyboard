@@ -1063,6 +1063,14 @@
               "color": "previewFill:darken:0.38"
             }
           }
+        ],
+        "stretchX": [
+          2.6,
+          10.4
+        ],
+        "stretchY": [
+          3.0,
+          12.0
         ]
       }
     },
@@ -1112,8 +1120,8 @@
   "keyLighting": {
     "pattern": "CROSS",
     "target": "FACE",
-    "intensity": 0.85,
-    "decayMs": 500
+    "intensity": 0.7,
+    "decayMs": 400
   },
   "boardEffect": {
     "kind": "CONTOUR",
@@ -1123,13 +1131,10 @@
     "reactive": 1.0
   },
   "keyMaterial": null,
-  "keyEffect": "EMOJI",
-  "keyEffectParam": "\ud83d\udc8e\ud83e\uddf1",
+  "keyEffect": null,
+  "keyEffectParam": null,
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8,
-  "popupPlacement": "floating",
-  "popupFloatingHeightDp": 65,
-  "popupCornerRadiusDp": 0
+  "keyEffectSpread": 0.8
 }

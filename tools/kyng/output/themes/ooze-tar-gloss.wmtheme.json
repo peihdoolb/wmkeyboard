@@ -1959,6 +1959,14 @@
             },
             "strokeWidth": 1.4
           }
+        ],
+        "stretchX": [
+          30.0,
+          120.0
+        ],
+        "stretchY": [
+          32.0,
+          128.0
         ]
       }
     },
@@ -2203,10 +2211,10 @@
   "keyLighting": {
     "pattern": "RIPPLE",
     "target": "GLOW",
-    "intensity": 0.8,
-    "sizeDp": 12.0,
+    "intensity": 0.65,
+    "sizeDp": 8.0,
     "speed": 1.0,
-    "decayMs": 600
+    "decayMs": 500
   },
   "boardEffect": {
     "kind": "BUBBLES",
@@ -2218,13 +2226,10 @@
     "halfLifeMs": 1200
   },
   "keyMaterial": null,
-  "keyEffect": "EMOJI",
-  "keyEffectParam": "\ud83e\udee7\ud83d\udfe2",
+  "keyEffect": null,
+  "keyEffectParam": null,
   "keyEffectIntensity": 1.0,
   "keyEffectSize": 1.2,
   "keyEffectSpeed": 1.0,
-  "keyEffectSpread": 0.8,
-  "popupPlacement": "floating",
-  "popupFloatingHeightDp": 65,
-  "popupCornerRadiusDp": 0
+  "keyEffectSpread": 0.8
 }
