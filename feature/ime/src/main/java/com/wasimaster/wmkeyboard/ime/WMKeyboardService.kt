@@ -4768,6 +4768,19 @@ open class WMKeyboardService : InputMethodService() {
                 runCatching { sendBroadcast(KeyboardAutomation.layoutChangedIntent(spec)) }
             }
         }
+        serviceScope.launch(Dispatchers.Default) {
+            _uiState
+                .map { it.settings.sound }
+                .distinctUntilChanged()
+                .collect { sound ->
+                    if (sound.style == com.wasimaster.wmkeyboard.core.settings.KeySoundStyle.PACK) {
+                        val packId = sound.packFor(_uiState.value.layoutId)
+                        if (packId.isNotBlank()) {
+                            runCatching { KeySoundPlayer.preload(this@WMKeyboardService, packId) }
+                        }
+                    }
+                }
+        }
         // Decode the synthesized key sounds up front so the first press plays,
         // and resolve the audio/vibrator services here rather than from the
         // pointer-down handler of whichever key the user hits first.
@@ -55145,7 +55158,7 @@ open class WMKeyboardService : InputMethodService() {
         // An explicit id wins over the theme's for the same reason an explicit
         // [style] does: both only ever come from a preview, which is about the
         // press that just happened rather than about what is stored.
-        val resolvedId = id ?: theme?.second
+        val resolvedId = id ?: theme?.second?.takeIf { it.isNotBlank() }
             ?: if (resolved == com.wasimaster.wmkeyboard.core.settings.KeySoundStyle.PACK) {
                 // Per layout, falling back to the one global pick. The state
                 // read is inside this branch on purpose: every other style

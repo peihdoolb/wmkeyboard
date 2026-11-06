@@ -215,6 +215,8 @@ internal fun KeySoundGroup(
                                                 repository.setKeySoundStyle(style)
                                             } else {
                                                 repository.setKeySoundPackId(id)
+                                                repository.clearKeySoundPacksByLayout()
+                                                KeySoundPlayer.preload(context, id)
                                                 KeySoundPlayer.previewStroke(
                                                     context, style, sound.volume, id,
                                                 )
@@ -516,8 +518,8 @@ private fun InstalledSoundPackSection(
             }
             if (result is SoundPackImportResult.Imported) {
                 repository.setKeySoundPackId(result.pack.id)
-                // Nothing is said on success here: the pack that was just
-                // selected plays itself, which says it better.
+                repository.clearKeySoundPacksByLayout()
+                KeySoundPlayer.preload(context, result.pack.id)
                 KeySoundPlayer.previewStroke(
                     context, KeySoundStyle.PACK, settings.value.sound.volume, result.pack.id,
                 )
@@ -637,10 +639,11 @@ private fun InstalledSoundPackSection(
                         }
                     },
                     onClick = {
-                        scope.launch { repository.setKeySoundPackId(pack.id) }
-                        // The whole keystroke, not just the way down: a pack
-                        // that recorded the switch returning is being judged on
-                        // both halves, and half of it is a different pack.
+                        scope.launch {
+                            repository.setKeySoundPackId(pack.id)
+                            repository.clearKeySoundPacksByLayout()
+                        }
+                        KeySoundPlayer.preload(context, pack.id)
                         KeySoundPlayer.previewStroke(
                             context, KeySoundStyle.PACK, settings.value.sound.volume, pack.id,
                         )

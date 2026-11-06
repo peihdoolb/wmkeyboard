@@ -54,6 +54,9 @@ object KeySoundPlayer {
 
     private var lastPreviewAt = 0L
 
+    @Volatile
+    private var pendingPreview: (() -> Unit)? = null
+
     private var pool: SoundPool? = null
 
     /**
@@ -228,6 +231,26 @@ object KeySoundPlayer {
         val now = SystemClock.uptimeMillis()
         if (now - lastPreviewAt < PREVIEW_GAP_MS) return
         lastPreviewAt = now
+        if (style == KeySoundStyle.PACK && customId.isNotBlank()) {
+            val needsWait = synchronized(this) {
+                val pack = residentPack(context, customId)
+                val sampleNames = pack?.manifest?.samplesFor(target.role, KeySoundPhase.PRESS)
+                val firstSampleId = sampleNames?.firstOrNull()?.let { pack.samples[it] }
+                if (firstSampleId != null && firstSampleId !in loadedIds) {
+                    pendingPreview = {
+                        play(context, style, volume, customId, target, KeySoundPhase.PRESS)
+                        strokeHandler.postDelayed(
+                            { play(context, style, volume, customId, target, KeySoundPhase.RELEASE) },
+                            PREVIEW_STROKE_MS,
+                        )
+                    }
+                    true
+                } else {
+                    false
+                }
+            }
+            if (needsWait) return
+        }
         play(context, style, volume, customId, target, KeySoundPhase.PRESS)
         strokeHandler.postDelayed(
             { play(context, style, volume, customId, target, KeySoundPhase.RELEASE) },
@@ -481,6 +504,7 @@ object KeySoundPlayer {
 
     /** Releases the resident pack's samples. Caller holds the monitor. */
     private fun unloadPack() {
+        pendingPreview = null
         loadedPack?.samples?.values?.forEach { sampleId ->
             pool?.unload(sampleId)
             loadedIds.remove(sampleId)
@@ -538,7 +562,13 @@ object KeySoundPlayer {
             )
             .build()
         p.setOnLoadCompleteListener { _, sampleId, status ->
-            if (status == 0) synchronized(this) { loadedIds.add(sampleId) }
+            val pending = synchronized(this) {
+                if (status == 0) loadedIds.add(sampleId)
+                val action = pendingPreview
+                pendingPreview = null
+                action
+            }
+            pending?.invoke()
         }
         val dir = File(context.cacheDir, "keysounds").apply { mkdirs() }
         for (style in SYNTHESIZED_STYLES) {

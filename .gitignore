@@ -85,3 +85,6 @@ vendor/bundle/
 
 # Local wiki conversion output
 wiki-dist/
+
+platform-tools/
+
