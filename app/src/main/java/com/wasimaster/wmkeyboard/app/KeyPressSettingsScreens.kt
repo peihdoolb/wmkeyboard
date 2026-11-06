@@ -215,7 +215,6 @@ internal fun KeySoundGroup(
                                                 repository.setKeySoundStyle(style)
                                             } else {
                                                 repository.setKeySoundPackId(id)
-                                                repository.clearKeySoundPacksByLayout()
                                                 KeySoundPlayer.preload(context, id)
                                                 KeySoundPlayer.previewStroke(
                                                     context, style, sound.volume, id,
@@ -518,7 +517,6 @@ private fun InstalledSoundPackSection(
             }
             if (result is SoundPackImportResult.Imported) {
                 repository.setKeySoundPackId(result.pack.id)
-                repository.clearKeySoundPacksByLayout()
                 KeySoundPlayer.preload(context, result.pack.id)
                 KeySoundPlayer.previewStroke(
                     context, KeySoundStyle.PACK, settings.value.sound.volume, result.pack.id,
@@ -639,10 +637,7 @@ private fun InstalledSoundPackSection(
                         }
                     },
                     onClick = {
-                        scope.launch {
-                            repository.setKeySoundPackId(pack.id)
-                            repository.clearKeySoundPacksByLayout()
-                        }
+                        scope.launch { repository.setKeySoundPackId(pack.id) }
                         KeySoundPlayer.preload(context, pack.id)
                         KeySoundPlayer.previewStroke(
                             context, KeySoundStyle.PACK, settings.value.sound.volume, pack.id,

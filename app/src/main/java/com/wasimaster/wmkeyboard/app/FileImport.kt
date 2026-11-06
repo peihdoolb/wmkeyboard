@@ -2275,10 +2275,7 @@ private fun rememberProposal(
                 }
                 // Selected on arrival, the way an imported icon pack is: a pack
                 // that stays unselected makes no sound and reads as a failure.
-                if (result is SoundPackImportResult.Imported) {
-                    repository.setKeySoundPackId(result.pack.id)
-                    repository.clearKeySoundPacksByLayout()
-                }
+                if (result is SoundPackImportResult.Imported) repository.setKeySoundPackId(result.pack.id)
                 describeSoundPackImport(context, result)
             },
         )

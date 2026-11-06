@@ -123,10 +123,7 @@ object AddonApply {
             // effect — see setInstalledEmojiFont and setKeySoundCustomId.
             AddonType.EmojiFont -> repository.setInstalledEmojiFont(ref)
             AddonType.Sound -> repository.setKeySoundCustomId(ref)
-            AddonType.SoundPack -> {
-                repository.setKeySoundPackId(ref)
-                repository.clearKeySoundPacksByLayout()
-            }
+            AddonType.SoundPack -> repository.setKeySoundPackId(ref)
             AddonType.Layout -> {
                 val current = repository.settings.first().enabledLayoutIds
                 if (ref !in current) repository.setEnabledLayoutIds((current + ref).distinct())
