@@ -188,7 +188,7 @@ object KyngTheme {
                 "spraycan" in id -> "CONFETTI" to null
                 "charm" in id || "star" in id -> "STARS" to null
                 "k-pop" in id || "heart" in id -> "HEARTS" to null
-                else -> null
+                else -> null to null
             }
         }
 
