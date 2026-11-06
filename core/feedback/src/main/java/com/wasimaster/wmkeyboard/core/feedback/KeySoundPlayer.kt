@@ -57,6 +57,9 @@ object KeySoundPlayer {
     @Volatile
     private var pendingPreview: (() -> Unit)? = null
 
+    @Volatile
+    private var pendingSampleId: Int? = null
+
     private var pool: SoundPool? = null
 
     /**
@@ -237,6 +240,7 @@ object KeySoundPlayer {
                 val sampleNames = pack?.manifest?.samplesFor(target.role, KeySoundPhase.PRESS)
                 val firstSampleId = sampleNames?.firstOrNull()?.let { pack.samples[it] }
                 if (firstSampleId != null && firstSampleId !in loadedIds) {
+                    pendingSampleId = firstSampleId
                     pendingPreview = {
                         play(context, style, volume, customId, target, KeySoundPhase.PRESS)
                         strokeHandler.postDelayed(
@@ -246,6 +250,8 @@ object KeySoundPlayer {
                     }
                     true
                 } else {
+                    pendingSampleId = null
+                    pendingPreview = null
                     false
                 }
             }
@@ -505,6 +511,7 @@ object KeySoundPlayer {
     /** Releases the resident pack's samples. Caller holds the monitor. */
     private fun unloadPack() {
         pendingPreview = null
+        pendingSampleId = null
         loadedPack?.samples?.values?.forEach { sampleId ->
             pool?.unload(sampleId)
             loadedIds.remove(sampleId)
@@ -564,9 +571,19 @@ object KeySoundPlayer {
         p.setOnLoadCompleteListener { _, sampleId, status ->
             val pending = synchronized(this) {
                 if (status == 0) loadedIds.add(sampleId)
-                val action = pendingPreview
-                pendingPreview = null
-                action
+                val targetId = pendingSampleId
+                if (status == 0 && targetId != null && (targetId == sampleId || targetId in loadedIds)) {
+                    pendingSampleId = null
+                    val action = pendingPreview
+                    pendingPreview = null
+                    action
+                } else if (targetId == sampleId && status != 0) {
+                    pendingSampleId = null
+                    pendingPreview = null
+                    null
+                } else {
+                    null
+                }
             }
             pending?.invoke()
         }

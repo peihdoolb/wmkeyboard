@@ -4770,14 +4770,18 @@ open class WMKeyboardService : InputMethodService() {
         }
         serviceScope.launch(Dispatchers.Default) {
             _uiState
-                .map { it.settings.sound }
-                .distinctUntilChanged()
-                .collect { sound ->
+                .map { state ->
+                    val sound = state.settings.sound
                     if (sound.style == com.wasimaster.wmkeyboard.core.settings.KeySoundStyle.PACK) {
-                        val packId = sound.packFor(_uiState.value.layoutId)
-                        if (packId.isNotBlank()) {
-                            runCatching { KeySoundPlayer.preload(this@WMKeyboardService, packId) }
-                        }
+                        sound.packFor(state.layoutId)
+                    } else {
+                        null
+                    }
+                }
+                .distinctUntilChanged()
+                .collect { packId ->
+                    if (!packId.isNullOrBlank()) {
+                        runCatching { KeySoundPlayer.preload(this@WMKeyboardService, packId) }
                     }
                 }
         }

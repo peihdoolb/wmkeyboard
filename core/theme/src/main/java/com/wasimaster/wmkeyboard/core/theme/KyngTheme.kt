@@ -73,7 +73,6 @@ object KyngTheme {
         val keyColor = parseColor(paletteObj?.get("key")?.jsonPrimitive?.contentOrNull) ?: 0xFF303338L
         val keyPressedColor = parseColor(paletteObj?.get("keyPressed")?.jsonPrimitive?.contentOrNull)
         val specialColor = parseColor(paletteObj?.get("keySpecial")?.jsonPrimitive?.contentOrNull)
-        val specialPressedColor = parseColor(paletteObj?.get("keySpecialPressed")?.jsonPrimitive?.contentOrNull)
         val labelColor = parseColor(paletteObj?.get("label")?.jsonPrimitive?.contentOrNull) ?: 0xFFFFFFFFL
         val labelSecondaryColor = parseColor(paletteObj?.get("labelSecondary")?.jsonPrimitive?.contentOrNull)
         val accentColor = parseColor(paletteObj?.get("accent")?.jsonPrimitive?.contentOrNull) ?: 0xFF8AB4F8L
