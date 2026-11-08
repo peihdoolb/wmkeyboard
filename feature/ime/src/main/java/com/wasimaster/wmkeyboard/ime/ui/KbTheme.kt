@@ -122,6 +122,11 @@ import com.wasimaster.wmkeyboard.core.theme.BOARD_EFFECT_SCALE_RANGE
 import com.wasimaster.wmkeyboard.core.theme.BOARD_EFFECT_SPEED_RANGE
 import com.wasimaster.wmkeyboard.core.theme.BoardEffectKind
 import com.wasimaster.wmkeyboard.core.theme.BoardEffectSpec
+import com.wasimaster.wmkeyboard.core.theme.TOUCH_BLOOM_DIP_RANGE
+import com.wasimaster.wmkeyboard.core.theme.TOUCH_BLOOM_LIGHT_RANGE
+import com.wasimaster.wmkeyboard.core.theme.TOUCH_BLOOM_RADIUS_RANGE
+import com.wasimaster.wmkeyboard.core.theme.TOUCH_BLOOM_WOBBLE_RANGE
+import com.wasimaster.wmkeyboard.core.theme.TouchBloomSpec
 import com.wasimaster.wmkeyboard.core.theme.KeyLightingPattern
 import com.wasimaster.wmkeyboard.core.theme.KeyLightingSpec
 import com.wasimaster.wmkeyboard.core.theme.KeyLightingTarget
@@ -289,6 +294,13 @@ data class KbTheme(
     /** The strip's suggestions other than the primary one, and their size against it. */
     val secondarySuggestionText: Color,
     val secondarySuggestionScale: Float,
+    /**
+     * The pills under the strip's words while Coloured suggestions is on
+     * (#510): every word's, and the primary word's deeper one. Resolved by
+     * [suggestionPillFill] and [primarySuggestionPillFill].
+     */
+    val suggestionPill: Color,
+    val primarySuggestionPill: Color,
     val secondaryText: Color,
     val divider: Color,
     val keyRadiusDp: Int,
@@ -334,8 +346,16 @@ data class KbTheme(
     val boardEffect: KbBoardEffect? = null,
     /** How the keys light up; null is no lighting. */
     val keyLighting: KbLighting? = null,
+    /** Light from the finger and keys dipping under it; null is off. Read through [liveTouchBloom]. */
+    val touchBloom: KbTouchBloom? = null,
     /** Hand-drawn key art that replaces the faces; null draws them from the colours. */
     val keySkin: KeySkinSpec? = null,
+    /**
+     * Draw [boardEffect] as one frame and stop its clock, as reduce motion
+     * does, without stilling anything else. Set by power saving's moving-theme
+     * drop (#1160) through [accessibilityAdjusted].
+     */
+    val boardEffectStill: Boolean = false,
 )
 
 /** A [BoardEffectSpec] with its kind known, its colours chosen and its ranges enforced. */
@@ -384,6 +404,37 @@ internal fun resolveBoardEffect(spec: BoardEffectSpec, accent: Color, keyText: C
         halfLifeMs = spec.halfLifeMs.coerceIn(BOARD_EFFECT_HALF_LIFE_RANGE),
     )
 }
+
+/** A [TouchBloomSpec] resolved the same way. */
+@Immutable
+data class KbTouchBloom(
+    val color: Color,
+    val light: Float,
+    val radiusDp: Float,
+    val dip: Float,
+    val wobble: Float,
+)
+
+/** [spec] ready to draw, or null when both halves are turned down to nothing. */
+internal fun resolveTouchBloom(spec: TouchBloomSpec, accent: Color): KbTouchBloom? {
+    val light = spec.light.coerceIn(TOUCH_BLOOM_LIGHT_RANGE)
+    val dip = spec.dip.coerceIn(TOUCH_BLOOM_DIP_RANGE)
+    if (light == 0f && dip == 0f) return null
+    return KbTouchBloom(
+        color = spec.color?.let { Color(it.toInt()) } ?: accent,
+        light = light,
+        radiusDp = spec.radiusDp.coerceIn(TOUCH_BLOOM_RADIUS_RANGE),
+        dip = dip,
+        wobble = spec.wobble.coerceIn(TOUCH_BLOOM_WOBBLE_RANGE),
+    )
+}
+
+/**
+ * The touch bloom as the keyboard draws it: off under reduce motion and power
+ * saving (which sets it), since there is no still picture of a touch.
+ */
+internal val KbTheme.liveTouchBloom: KbTouchBloom?
+    get() = touchBloom?.takeUnless { reduceMotion }
 
 internal fun resolveLighting(spec: KeyLightingSpec, accent: Color): KbLighting? {
     val pattern = keyLightingPatternOrNull(spec.pattern) ?: return null
@@ -928,6 +979,8 @@ internal fun defaultKbTheme(
         suggestionText = scheme.onSurface,
         secondarySuggestionText = scheme.onSurface,
         secondarySuggestionScale = 1f,
+        suggestionPill = suggestionPillFill(scheme.primary, dark, null),
+        primarySuggestionPill = primarySuggestionPillFill(scheme.primary, dark, null, null),
         secondaryText = scheme.onSurfaceVariant,
         divider = scheme.outlineVariant,
         keyRadiusDp = settings.keyCornerRadiusDp,
@@ -1095,6 +1148,13 @@ private fun specKbTheme(spec: ThemeSpec, settings: KeyboardSettings): KbTheme {
         secondarySuggestionText = spec.secondarySuggestionText?.let(::colorOf) ?: stripText,
         secondarySuggestionScale = (spec.secondarySuggestionScale ?: 1f)
             .coerceIn(SECONDARY_SUGGESTION_SCALE_RANGE),
+        suggestionPill = suggestionPillFill(accent, spec.dark, spec.suggestionPillBackground?.let(::colorOf)),
+        primarySuggestionPill = primarySuggestionPillFill(
+            accent,
+            spec.dark,
+            spec.suggestionPillBackground?.let(::colorOf),
+            spec.primarySuggestionPillBackground?.let(::colorOf),
+        ),
         secondaryText = spec.secondaryText?.let(::colorOf) ?: secondary,
         divider = spec.dividerColor?.let(::colorOf) ?: stripText.copy(alpha = 0.25f),
         keyRadiusDp = spec.keyCornerRadiusDp ?: settings.keyCornerRadiusDp,
@@ -1119,6 +1179,7 @@ private fun specKbTheme(spec: ThemeSpec, settings: KeyboardSettings): KbTheme {
         material = spec.keyMaterial?.let(::resolveMaterial)?.takeUnless { it.isPlain },
         boardEffect = spec.boardEffect?.let { resolveBoardEffect(it, accent, keyText) },
         keyLighting = spec.keyLighting?.let { resolveLighting(it, accent) },
+        touchBloom = spec.touchBloom?.let { resolveTouchBloom(it, accent) },
         keySkin = spec.keySkin?.bounded()?.takeIf { it.slots.isNotEmpty() || it.board != null },
     )
 }
@@ -1173,6 +1234,18 @@ private fun schemeFor(kb: KbTheme): ColorScheme {
         onPrimary = kb.enterKeyText,
         primaryContainer = onBoard(kb.pressedKey),
         onPrimaryContainer = kb.keyText,
+        // The selected chip's fill. Left at the baseline, every theme's undo
+        // and correction chip on the strip (and every selected filter chip in
+        // a panel) was Material's stock purple, green theme or not (Telegram
+        // 5463).
+        secondary = kb.accent,
+        onSecondary = kb.enterKeyText,
+        secondaryContainer = onBoard(kb.chipActive),
+        onSecondaryContainer = kb.chipActiveText,
+        tertiary = kb.accent,
+        onTertiary = kb.enterKeyText,
+        tertiaryContainer = onBoard(kb.chipActive),
+        onTertiaryContainer = kb.chipActiveText,
         background = opaqueBoard,
         // suggestionText, not keyText: this is the "text on the board" role
         // (the strip, panel bodies), and a theme may invert its keys against
@@ -1247,6 +1320,8 @@ private fun KbTheme.mapColors(f: (Color) -> Color): KbTheme = copy(
     chipBorder = chipBorder?.let(f),
     suggestionText = f(suggestionText),
     secondarySuggestionText = f(secondarySuggestionText),
+    suggestionPill = f(suggestionPill),
+    primarySuggestionPill = f(primarySuggestionPill),
     secondaryText = f(secondaryText),
     divider = f(divider),
     keyOverrides = if (keyOverrides.isEmpty()) {
@@ -1261,6 +1336,7 @@ private fun KbTheme.mapColors(f: (Color) -> Color): KbTheme = copy(
     ),
     boardEffect = boardEffect?.copy(colors = boardEffect.colors.map(f)),
     keyLighting = keyLighting?.copy(color = f(keyLighting.color)),
+    touchBloom = touchBloom?.copy(color = f(touchBloom.color)),
 )
 
 /** Near-black or near-white, whichever reads on [background]. */
@@ -1323,6 +1399,7 @@ internal fun KbTheme.accessibilityAdjusted(settings: KeyboardSettings): KbTheme 
             material = null,
             boardEffect = null,
             keyLighting = null,
+            touchBloom = null,
             keySkin = null,
             key = key,
             modifierKey = modifier,
@@ -1342,6 +1419,22 @@ internal fun KbTheme.accessibilityAdjusted(settings: KeyboardSettings): KbTheme 
             toolbarIcon = maxContrastOn(board),
             secondaryText = maxContrastOn(board).copy(alpha = 0.75f),
             divider = maxContrastOn(board).copy(alpha = 0.4f),
+        )
+    }
+
+    // Power saving's moving-theme drop (#1160): everything a theme redraws
+    // per frame stops, and everything it paints once stays. The animated
+    // background shows its first frame as a plain image, the board effect
+    // holds one frame, and the effects that exist only as motion (lighting,
+    // the touch bloom, press particles, the colour cycle) go.
+    if (!settings.accessibility.themeMotion) {
+        kb = kb.copy(
+            backgroundAnimated = false,
+            animation = ThemeAnimation.NONE,
+            keyEffect = null,
+            keyLighting = null,
+            touchBloom = null,
+            boardEffectStill = true,
         )
     }
 
@@ -1955,6 +2048,8 @@ private fun lerpKbTheme(a: KbTheme, b: KbTheme, t: Float): KbTheme {
         suggestionText = lerp(a.suggestionText, b.suggestionText, t),
         secondarySuggestionText = lerp(a.secondarySuggestionText, b.secondarySuggestionText, t),
         secondarySuggestionScale = lerpF(a.secondarySuggestionScale, b.secondarySuggestionScale, t),
+        suggestionPill = lerp(a.suggestionPill, b.suggestionPill, t),
+        primarySuggestionPill = lerp(a.primarySuggestionPill, b.primarySuggestionPill, t),
         secondaryText = lerp(a.secondaryText, b.secondaryText, t),
         divider = lerp(a.divider, b.divider, t),
         oneHandedPanel = lerp(a.oneHandedPanel, b.oneHandedPanel, t),
@@ -1983,7 +2078,9 @@ private fun lerpKbTheme(a: KbTheme, b: KbTheme, t: Float): KbTheme {
         material = if (past) b.material else a.material,
         boardEffect = if (past) b.boardEffect else a.boardEffect,
         keyLighting = if (past) b.keyLighting else a.keyLighting,
+        touchBloom = if (past) b.touchBloom else a.touchBloom,
         keySkin = if (past) b.keySkin else a.keySkin,
+        boardEffectStill = if (past) b.boardEffectStill else a.boardEffectStill,
     )
 }
 
@@ -2195,8 +2292,11 @@ fun BoxScope.BoardBackground(kb: KbTheme) {
         )
     }
     // What moves on the board. Reduce motion (and power saving, which sets
-    // it) keeps the picture and stops the clock.
-    kb.boardEffect?.let { BoardEffectLayer(it, Modifier.matchParentSize(), still = kb.reduceMotion) }
+    // it) keeps the picture and stops the clock; so does power saving's
+    // moving-theme drop on its own.
+    kb.boardEffect?.let {
+        BoardEffectLayer(it, Modifier.matchParentSize(), still = kb.reduceMotion || kb.boardEffectStill)
+    }
 }
 
 /**
@@ -2266,4 +2366,23 @@ fun BoxScope.NavigationBarBackground(kb: KbTheme) {
                 }
             },
     )
+}
+
+/**
+ * A word's pill on a Coloured suggestions strip (#510): the theme's own
+ * [pill] colour when it names one, else the accent washed thin enough that
+ * the word on it stays legible.
+ */
+internal fun suggestionPillFill(accent: Color, dark: Boolean, pill: Color?): Color =
+    pill ?: accent.copy(alpha = if (dark) 0.16f else 0.10f)
+
+/**
+ * The primary word's pill, the deepest on the strip. A theme that names only
+ * the plain [pill] gets that colour laid over itself, so the primary word
+ * still reads deeper without the theme having to pick a second colour.
+ */
+internal fun primarySuggestionPillFill(accent: Color, dark: Boolean, pill: Color?, primary: Color?): Color = when {
+    primary != null -> primary
+    pill != null -> pill.copy(alpha = 1f - (1f - pill.alpha) * (1f - pill.alpha))
+    else -> accent.copy(alpha = if (dark) 0.34f else 0.24f)
 }

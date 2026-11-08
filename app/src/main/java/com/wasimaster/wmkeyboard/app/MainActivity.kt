@@ -56,6 +56,7 @@ import com.wasimaster.wmkeyboard.app.storage.StorageCategoryScreen
 import com.wasimaster.wmkeyboard.app.netlog.NetworkActivityScreen
 import com.wasimaster.wmkeyboard.app.statistics.StatisticsScreen
 import com.wasimaster.wmkeyboard.app.storage.StorageScreen
+import com.wasimaster.wmkeyboard.app.resources.ResourcesScreen
 import com.wasimaster.wmkeyboard.app.storage.storageRoute
 import com.wasimaster.wmkeyboard.app.language.appLanguageSplitCompat
 import com.wasimaster.wmkeyboard.app.launcher.LauncherCombos
@@ -861,11 +862,19 @@ private fun SettingsNavHost(
     // The rows an update brought (#970), worked out once per launch. Off the
     // main thread: it builds the whole search index.
     LaunchedEffect(Unit) { kotlinx.coroutines.withContext(Dispatchers.Default) { NewSettings.load(context) } }
-    // As a search result opens one: flash the row, then go.
-    val openNewSetting: (SettingsSearchEntry) -> Unit = remember(navController) {
+    // As a search result opens one: flash the row, then go. A step is a jump
+    // the way a result is, so it lands over Home alone, with the path the page
+    // really lives at seeded on the trail (#1111). Back after the walk then
+    // returns Home rather than through every page it showed (Telegram 5359),
+    // and the path strip, and a favourite made on the way, name where the
+    // page lives instead of the pages the walk passed through.
+    val walkHomeTitle = stringResource(CommonR.string.common_settings)
+    val openNewSetting: (SettingsSearchEntry) -> Unit = remember(navController, crumbs, walkHomeTitle) {
         { entry ->
-            SettingsHighlight.request(entry.titleRes)
+            SettingsHighlight.request(entry.titleRes, centre = true)
+            crumbs.seed(settingsCrumbSeed(entry, NewSettings.wholeIndex, walkHomeTitle))
             navController.navigate(routeWithExtensions(entry.route, settings.value.extensionsResolved())) {
+                popUpTo(HomeRoute)
                 launchSingleTop = true
             }
         }
@@ -2081,6 +2090,20 @@ private fun SettingsNavGraph(
                 StickerPackScreen(packId, openPicker = true) { route -> navController.navigate(route) }
             }
         }
+        composable("sticker_pack/{packId}/edit/{stickerId}") { backStackEntry ->
+            // The keyboard's hold sheet (#1157): the pack, with one sticker's
+            // title and keywords already open, so a shortcut thought of mid-chat
+            // is two taps away rather than a hunt through the packs.
+            val packId = backStackEntry.arguments?.getString("packId").orEmpty()
+            val stickerId = backStackEntry.arguments?.getString("stickerId")
+            SettingsScreen(
+                stringResource(R.string.home_screen_sticker_pack_edit_title),
+                { navController.popBackStack() },
+                route = stickerPackRoute(packId),
+            ) {
+                StickerPackScreen(packId, editStickerId = stickerId) { route -> navController.navigate(route) }
+            }
+        }
         composable(
             route = "$STICKER_GENERATOR_ROUTE?pack={pack}",
             arguments = listOf(navArgument("pack") { type = NavType.StringType; nullable = true; defaultValue = null }),
@@ -2159,6 +2182,23 @@ private fun SettingsNavGraph(
             val kind = PanelKind.entries.firstOrNull { it.name == backStackEntry.arguments?.getString("panel") }
                 ?: PanelKind.EMOJI
             PanelLayoutJsonScreen(repository, settings, kind) { navController.popBackStack() }
+        }
+        // The keyboard-wide number row and arrow row, set once for every
+        // layout. The argument is the GlobalRow's name; an unknown one opens
+        // the number row.
+        composable("global_row/{row}") { backStackEntry ->
+            val row = globalRowOf(backStackEntry.arguments?.getString("row"))
+            SettingsScreen(
+                stringResource(row.titleRes()),
+                { navController.popBackStack() },
+                route = globalRowRoute(row),
+            ) {
+                GlobalRowEditorScreen(repository, settings, row) { route -> navController.navigate(route) }
+            }
+        }
+        composable("global_row_json/{row}") { backStackEntry ->
+            val row = globalRowOf(backStackEntry.arguments?.getString("row"))
+            GlobalRowJsonScreen(repository, settings, row) { navController.popBackStack() }
         }
         composable("languages") {
             SettingsScreen(
@@ -2507,7 +2547,7 @@ private fun SettingsNavGraph(
                 { navController.popBackStack() },
                 route = "permissions",
             ) {
-                PermissionsSettings()
+                PermissionsSettings(repository)
             }
         }
         composable(AppLockTargets.ROUTE) {
@@ -2867,6 +2907,7 @@ private fun SettingsNavGraph(
                     onOpenLicenseText = { navController.navigate("license_text/$it") },
                     onOpenDebugLog = { navController.navigate("debug_log") },
                     onOpenStorage = { navController.navigate("storage") },
+                    onOpenResources = { navController.navigate("resources") },
                     onOpenImportHub = { navController.navigate("import_hub") },
                     onOpenStatistics = { navController.navigate("statistics") },
                     onOpenEggGame = { navController.navigate("egg_game") },
@@ -2896,6 +2937,15 @@ private fun SettingsNavGraph(
                 route = "storage",
             ) {
                 StorageScreen(repository) { navController.navigate(storageRoute(it)) }
+            }
+        }
+        composable("resources") {
+            SettingsScreen(
+                stringResource(R.string.about_resources_title),
+                { navController.popBackStack() },
+                route = "resources",
+            ) {
+                ResourcesScreen(useRoot = settings.watch { it.launcher.useRoot }) { navController.navigate(it) }
             }
         }
         composable("feature_libraries") {
@@ -3696,7 +3746,7 @@ internal fun SettingsGroup(
     val tucked: (SettingsGroupScope.Entry) -> Boolean =
         { e -> !foldsWhole && (groupAbove || !depth.shows(e.level)) }
     val tuckedCount = scope.items.count { it.visible && tucked(it) }
-    val entries = when {
+    val laidOut = when {
         tuckedCount == 0 -> scope.items
         // Not pointed at: the hidden rows are simply not there.
         !depthControl.hiddenRows && !highlighted -> scope.items.filterNot { tucked(it) }
@@ -3746,6 +3796,8 @@ internal fun SettingsGroup(
             }
         }
     }
+    // A new row another setting hides, drawn greyed while the walk points at it.
+    val entries = peekHiddenRows(laidOut)
     // What the group is showing right now, which is what every count below is
     // about: a hidden conditional row is not a row the reader can see, so it
     // is not a slab in the skeleton and not one of the rows a closed fold

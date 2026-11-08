@@ -137,6 +137,8 @@ open class WMApplication : Application() {
         // look-up from the keyboard or the AI tool alike. Only a path: before
         // the unlock nothing is read, and a look-up then finds nothing.
         com.wasimaster.wmkeyboard.core.tools.offlinedict.OfflineDictionaries.attach(filesDir)
+        // Where the paid services' usage counts are kept (#1135).
+        com.wasimaster.wmkeyboard.core.tools.ServiceUsage.attach(filesDir)
         // The same for the dictionaries the user imported (#765).
         com.wasimaster.wmkeyboard.core.tools.yomichan.YomichanDictionaries.attach(filesDir)
         // Where zinnia's and PaddleOCR's handwriting models are downloaded
@@ -146,6 +148,20 @@ open class WMApplication : Application() {
         // Where offline Whisper keeps its GPU verdicts and the kernels the
         // driver compiled, before the keyboard can dictate. One small read.
         com.wasimaster.wmkeyboard.core.voice.whisper.WhisperCppGpu.attach(this)
+        // Which GPU builds of llama.cpp and whisper.cpp this phone can take:
+        // the Vulkan version the system reports, one package-manager read.
+        com.wasimaster.wmkeyboard.core.util.PhoneGpu.attach(this)
+        // ExecuTorch's QNN build needs the NPU runtime, which lives in
+        // :core:intelligence; :core:voice gets it through these. Nothing runs
+        // until a program exported for the NPU is opened.
+        com.wasimaster.wmkeyboard.core.voice.executorch.EtNative.qnnPossible = {
+            com.wasimaster.wmkeyboard.core.localllm.NpuSupport.soc != null
+        }
+        com.wasimaster.wmkeyboard.core.voice.executorch.EtNative.qnnRuntime = {
+            com.wasimaster.wmkeyboard.core.localllm.NpuSupport.soc?.let {
+                com.wasimaster.wmkeyboard.core.localllm.NpuRuntime.directory(this, it)
+            }
+        }
         // Sync between devices: keeps its jobs in step with the settings and
         // pushes shortly after a synced setting changes. Here because the
         // keyboard and the settings app share this process, and either may be
@@ -160,6 +176,9 @@ open class WMApplication : Application() {
         AskAiSelectionMenu.start(this, repository)
         // The same for "WM Keyboard" and "WM Translate" there (#916).
         TextActionsSelectionMenu.start(this, repository)
+        // WM Keyboard on Android's voice input and assistant lists follows
+        // their switches (#1142, #1143).
+        SystemVoiceComponents.start(this, repository)
         // The clock tool's alarms and timers. Android drops every registered
         // wake-up at a reboot, and the app has no boot receiver on purpose:
         // the keyboard starts at boot anyway, and this puts them back then.

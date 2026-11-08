@@ -137,9 +137,15 @@ A checkbox per AI action, in the AI tool's own order. Each picked action gets a 
 
 The zones the Zones action renders a selected time in, reorderable, with a delete handle each. Below the list, a field searches every zone the device knows by city and by offset; tap a result to add it. With nothing picked the list is UTC and the device's own zone, and deleting everything returns to that. **Sort by time** (off) lists the zones in the Zones action earliest time first instead of in this order.
 
+## From plugins
+
+<SettingsPath path="Advanced / Selection actions / From plugins" />
+
+A switch per action that an installed plugin adds to the bar, each with its plugin's name under it, all on to start with. They are drawn after the built-in actions, in the order the plugins were installed. With none installed, one row leads to the Plugins screen and says whether plugins are turned on. Clink actions are listed here too, since each installs as a plugin. See [Selection actions](/smart/selection-actions/#from-plugins).
+
 ## Details
 
 - **Search, Translate, QR, Grammar and AI follow their tools.** Each is hidden when its tool is switched off on the [Tools](/reference/settings/tools/) screen, which includes tools that [power saving](/typing/power-saving/) or the lock screen have already taken away.
 - **The screens are reachable by link** at `wmkeyboard://settings/selection_macros`, `selection_macros/actions`, `selection_macros/ai` and `selection_macros/zones`. See [Deep links](/reference/deep-links/).
-- **The list resets once on this version.** The list of actions and its order are stored with a version. A list saved by an older version reads as the shipped list, so everyone gets the new actions; the same happens to a backup restored from an older version. Every change you make after that is kept.
+- **Your list survives updates.** The list of actions and its order are stored with a version. When an update adds actions, the ones it turns on by default join your list at the end of your order, and everything you switched on, switched off or moved stays as you left it. A backup restored from an older version is read the same way. Only lists saved before the version that grew the bar to forty-five actions read as the shipped list.
 - **Nothing here is read before your first unlock**, beyond the actions that only touch the field you are typing in. See [Selection actions](/smart/selection-actions/#details-and-edge-cases).

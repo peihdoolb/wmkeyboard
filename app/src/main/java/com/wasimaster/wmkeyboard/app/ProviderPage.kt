@@ -138,6 +138,7 @@ internal val ProviderEndpoints: Map<String, List<ServiceEndpoint>> = mapOf(
     ProviderTypes.DATAMUSE.id to listOf(ServiceEndpoint.DATAMUSE),
     ProviderTypes.CURRENCY_API.id to listOf(ServiceEndpoint.CURRENCY_API, ServiceEndpoint.CURRENCY_API_MIRROR),
     ProviderTypes.FRANKFURTER.id to listOf(ServiceEndpoint.FRANKFURTER),
+    ProviderTypes.ALLRATESTODAY.id to listOf(ServiceEndpoint.ALLRATESTODAY),
     ProviderTypes.ER_API.id to listOf(ServiceEndpoint.ER_API),
     ProviderTypes.COINBASE.id to listOf(ServiceEndpoint.COINBASE),
     ProviderTypes.COINGECKO.id to listOf(ServiceEndpoint.COINGECKO),
@@ -243,6 +244,8 @@ internal fun ProviderPage(
         }
         // The kind's own settings: what used to be appended to the tool's page.
         ProviderOwnSettings(repository, settings, tool, type, row, onNavigate)
+        // What a paid service has cost so far (#1135).
+        if (row != null) ProviderUsageGroup(row, tool)
         ServerFieldsGroup(repository, settings, endpoints = ProviderEndpoints[type.id].orEmpty(), level = SettingLevel.ADVANCED)
         val usedBy = settings.watch { s ->
             row?.let { ProviderEdits.usedBy(s, it.entry.credentialKey, tool, env) }.orEmpty()
@@ -339,10 +342,12 @@ internal fun ProviderOwnSettings(
         }
         ProviderTypes.WHISTLE.id -> if (WhistleEngine.shipped) WhistleModelManager(settings)
         ProviderTypes.ASR4ALL.id, ProviderTypes.PARAKEET.id, ProviderTypes.MOONSHINE.id,
-        ProviderTypes.SHERPA.id, ProviderTypes.OMNILINGUAL.id,
+        ProviderTypes.SHERPA.id, ProviderTypes.OMNILINGUAL.id, ProviderTypes.VOSK.id,
         -> EtEngine.byId(type.id)?.takeIf { it.runtimeShipped }?.let {
             EtModelManager(it, settings)
             if (it == EtEngine.SHERPA) SherpaCustomModels(settings)
+            // Where the engine's phrase ends, next to the engine (#1174).
+            if (it.live) VoicePhraseEndGroup(repository, settings)
         }
         ProviderTypes.TRANSCRIPTION_SERVER.id -> VoiceServerSettings(repository, settings)
         // ---- Translate: the model lists that sat above the list, and DeepL's own use besides translating.

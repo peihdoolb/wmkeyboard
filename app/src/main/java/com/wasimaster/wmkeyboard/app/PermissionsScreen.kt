@@ -23,10 +23,12 @@ import com.wasimaster.wmkeyboard.R
 import com.wasimaster.wmkeyboard.app.updates.UpdateChannel
 import com.wasimaster.wmkeyboard.core.accessibility.KeyboardPassthrough
 import com.wasimaster.wmkeyboard.core.accessibility.ScreenContextService
+import com.wasimaster.wmkeyboard.core.accessibility.SystemButtonsService
 import com.wasimaster.wmkeyboard.core.accessibility.SplitScreenHelperService
 import com.wasimaster.wmkeyboard.ime.AppLaunchModes
 import com.wasimaster.wmkeyboard.core.location.LocationAccess
 import com.wasimaster.wmkeyboard.core.media.hasNotificationAccess
+import com.wasimaster.wmkeyboard.core.settings.SettingsRepository
 
 /**
  * Privacy → Permissions: every permission the app can hold, in one place.
@@ -44,7 +46,7 @@ import com.wasimaster.wmkeyboard.core.media.hasNotificationAccess
  * as it does to the features' own rows.
  */
 @Composable
-internal fun PermissionsSettings() {
+internal fun PermissionsSettings(repository: SettingsRepository) {
     // The screen opens on free-standing text, which brings no spacing of its
     // own the way a group's SectionHeader does.
     Spacer(Modifier.height(12.dp))
@@ -211,6 +213,14 @@ internal fun PermissionsSettings() {
                 { SplitScreenHelperService.isEnabled(it) },
             )
         }
+        item(visible = ChannelFeatures.SYSTEM_BUTTONS, level = SettingLevel.ADVANCED) {
+            SpecialAccessRow(
+                R.string.privacy_permissions_system_buttons_title,
+                R.string.privacy_permissions_system_buttons_subtitle,
+                SpecialAccess.SYSTEM_BUTTONS,
+                { SystemButtonsService.isEnabled(it) },
+            )
+        }
         // Only where the app can install a new version of itself, and only
         // where Android has a per-app switch to send anyone to. Below API 26
         // it is one global setting the system installer raises by itself.
@@ -222,6 +232,9 @@ internal fun PermissionsSettings() {
             ) { it.packageManager.canRequestPackageInstalls() }
         }
     }
+
+    // Shizuku or root: F-Droid and GitHub builds only, nothing in Play's.
+    ShellFeaturesGroup(repository)
 
     SettingsGroup(
         stringResource(R.string.privacy_permissions_install_group_title),

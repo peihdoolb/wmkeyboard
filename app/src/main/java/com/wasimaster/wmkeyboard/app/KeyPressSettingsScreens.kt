@@ -19,6 +19,9 @@ import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Check
 import com.wasimaster.wmkeyboard.core.addons.AddonType
 import com.wasimaster.wmkeyboard.core.settings.AlternateGroup
 import com.wasimaster.wmkeyboard.core.settings.SettingsDefaults
+import com.wasimaster.wmkeyboard.core.settings.GboardHoldSymbols
+import com.wasimaster.wmkeyboard.core.settings.GboardNumberRowHoldSymbols
+import com.wasimaster.wmkeyboard.core.settings.SamsungHoldSymbols
 import com.wasimaster.wmkeyboard.core.settings.SwiftKeyHoldSymbols
 import com.wasimaster.wmkeyboard.core.settings.BackspaceSwipeUnit
 import com.wasimaster.wmkeyboard.core.settings.TopRowHolds
@@ -51,6 +54,7 @@ import com.wasimaster.wmkeyboard.R
 import com.wasimaster.wmkeyboard.common.R as CommonR
 import com.wasimaster.wmkeyboard.feedback.R as FeedbackR
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -559,7 +563,9 @@ private fun InstalledSoundPackSection(
                     title = pack.name,
                     supporting = {
                         val roles = pack.roles
-                        val variants = pluralStringResource(
+                        // Format-safe: Play's machine translation broke these
+                        // placeholders once and the row crashed the screen.
+                        val variants = formatSafePluralStringResource(
                             R.plurals.hardware_sound_pack_variants,
                             pack.variantCount,
                             pack.variantCount,
@@ -567,7 +573,7 @@ private fun InstalledSoundPackSection(
                         val withRoles = if (roles.isEmpty()) {
                             variants
                         } else {
-                            stringResource(
+                            formatSafeStringResource(
                                 R.string.hardware_sound_pack_variants_and_roles,
                                 variants,
                                 roles.joinToString(", "),
@@ -577,7 +583,7 @@ private fun InstalledSoundPackSection(
                         // is the one thing that tells a voice pack apart from a
                         // switch pack at a glance.
                         val counts = if (pack.keyCount > 0) {
-                            pluralStringResource(
+                            formatSafePluralStringResource(
                                 R.plurals.hardware_sound_pack_with_keys,
                                 pack.keyCount,
                                 withRoles,
@@ -591,7 +597,7 @@ private fun InstalledSoundPackSection(
                         // subtitle that reads as a list.
                         Text(
                             if (pack.hasRelease == true) {
-                                stringResource(
+                                formatSafeStringResource(
                                     R.string.hardware_sound_pack_with_release,
                                     counts,
                                 )
@@ -930,6 +936,15 @@ internal fun KeyPressSettings(
                 default = SettingsDefaults.textEditing.backspaceSwipeUpClears,
             ) { scope.launch { repository.setBackspaceSwipeUpClears(it) } }
         }
+        item(level = SettingLevel.STANDARD) {
+            ToggleSetting(
+                R.string.typing_backspace_lines_title,
+                stringResource(R.string.typing_backspace_lines_subtitle),
+                settings.watch { it.textEditing.deleteLineSwipes },
+                info = stringResource(R.string.typing_backspace_lines_info),
+                default = SettingsDefaults.textEditing.deleteLineSwipes,
+            ) { scope.launch { repository.setDeleteLineSwipes(it) } }
+        }
         item(level = SettingLevel.ADVANCED) {
             ToggleSetting(
                 R.string.typing_forward_delete_swipe_title,
@@ -995,6 +1010,15 @@ internal fun KeyPressSettings(
                 info = stringResource(R.string.keypress_alternates_columns_info),
                 default = SettingsDefaults.popup.alternatesColumns,
             ) { scope.launch { repository.setAlternatesColumns(it) } }
+        }
+        item {
+            ToggleSetting(
+                R.string.keypress_alternates_balanced_title,
+                stringResource(R.string.keypress_alternates_balanced_subtitle),
+                settings.watch { it.popup.alternatesBalanced },
+                info = stringResource(R.string.keypress_alternates_balanced_info),
+                default = SettingsDefaults.popup.alternatesBalanced,
+            ) { scope.launch { repository.setAlternatesBalanced(it) } }
         }
         item {
             ToggleSetting(
@@ -1359,10 +1383,9 @@ internal fun KeyPressHapticsSettings(
         // silent with Android's "Touch feedback" switch off. Say so whenever
         // that switch is off, both when the keyboard is getting past it and
         // when it cannot.
-        item(
-            visible = hapticsOn && !respectSystemTouch && !systemTouchOn &&
-                HapticPlayer.isDirectStyle(hapticStyle),
-        ) {
+        val touchWarning = hapticsOn && !respectSystemTouch && !systemTouchOn &&
+            HapticPlayer.isDirectStyle(hapticStyle)
+        item(visible = touchWarning) {
             val bypassing = asHardware && HapticPlayer.canBypassSystemTouch()
             StateBanner(
                 text = stringResource(
@@ -1375,7 +1398,12 @@ internal fun KeyPressHapticsSettings(
                 tone = if (bypassing) BannerTone.INFO else BannerTone.WARNING,
             )
         }
-        item(visible = hapticsOn && !respectSystemTouch && HapticPlayer.canBypassSystemTouch(), level = SettingLevel.ADVANCED) {
+        // The switch the warning above sends the reader to "below": shown at
+        // every depth while that warning is up, or "below" would be nothing.
+        item(
+            visible = hapticsOn && !respectSystemTouch && HapticPlayer.canBypassSystemTouch(),
+            level = if (touchWarning) SettingLevel.BASIC else SettingLevel.ADVANCED,
+        ) {
             ToggleSetting(
                 R.string.keypress_haptics_hardware_title,
                 stringResource(R.string.keypress_haptics_hardware_subtitle),
@@ -1670,6 +1698,7 @@ internal fun KeyPressShortcutsSettings(
             // letters, without editing every layout.
             var editing by remember { mutableStateOf(false) }
             val symbols = settings.watch { it.layoutBehavior.holdSymbols }
+            val numberRowSymbols = settings.watch { it.layoutBehavior.numberRowHoldSymbols }
             WmRow(
                 title = stringResource(R.string.keypress_hold_symbols_title),
                 icon = SettingsRowIcons[R.string.keypress_hold_symbols_title],
@@ -1681,9 +1710,9 @@ internal fun KeyPressShortcutsSettings(
                 onClick = { editing = true },
             )
             if (editing) {
-                HoldSymbolsDialog(symbols, onDismiss = { editing = false }) { chosen ->
+                HoldSymbolsDialog(symbols, numberRowSymbols, onDismiss = { editing = false }) { chosen, numberRow ->
                     editing = false
-                    scope.launch { repository.setHoldSymbols(chosen) }
+                    scope.launch { repository.setHoldSymbols(chosen, numberRow) }
                 }
             }
         }
@@ -1961,18 +1990,29 @@ private val DefaultHoldActions: Set<HoldAction> =
 /** The letter rows of the hold-symbol editor, in QWERTY order. */
 private val HoldSymbolRows = listOf("qwertyuiop", "asdfghjkl", "zxcvbnm")
 
+/** The number row's keys in the hold-symbol editor. */
+private const val HoldSymbolDigits = "1234567890"
+
+/** Room for a popup's worth of symbols in one box, such as Gboard's ten on 1. */
+private const val HoldSymbolMaxLength = 40
+
 /**
- * One box per letter for [LayoutBehaviorSettings.holdSymbols], with SwiftKey's
- * set as a starting point and a way back to every layout's own. A box left
- * empty keeps the layout's symbol for that letter.
+ * One box per letter for [LayoutBehaviorSettings.holdSymbols], then the top
+ * row again for [LayoutBehaviorSettings.numberRowHoldSymbols], then one per
+ * digit of the number row, each taking several symbols split by spaces, with
+ * SwiftKey's, Gboard's and Samsung's sets as starting points and a way back to
+ * every layout's own. A box left empty keeps the layout's symbol for that
+ * letter, or in the second top row the first one's.
  */
 @Composable
 private fun HoldSymbolsDialog(
     initial: Map<String, String>,
+    initialNumberRow: Map<String, String>,
     onDismiss: () -> Unit,
-    onSave: (Map<String, String>) -> Unit,
+    onSave: (Map<String, String>, Map<String, String>) -> Unit,
 ) {
     var symbols by remember { mutableStateOf(initial) }
+    var numberRow by remember { mutableStateOf(initialNumberRow) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.keypress_hold_symbols_title)) },
@@ -1980,33 +2020,93 @@ private fun HoldSymbolsDialog(
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 Text(stringResource(R.string.keypress_hold_symbols_info))
                 for (row in HoldSymbolRows) {
-                    FlowRow(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-                        for (letter in row) {
-                            val key = letter.toString()
-                            OutlinedTextField(
-                                value = symbols[key].orEmpty(),
-                                onValueChange = { text ->
-                                    val symbol = text.trim().take(4)
-                                    symbols = if (symbol.isEmpty()) symbols - key else symbols + (key to symbol)
-                                },
-                                label = { Text(key) },
-                                singleLine = true,
-                                modifier = Modifier.width(64.dp).padding(end = 4.dp),
-                            )
-                        }
-                    }
+                    HoldSymbolBoxes(row, symbols) { symbols = it }
                 }
-                Row(Modifier.padding(top = 8.dp)) {
-                    TextButton(onClick = { symbols = SwiftKeyHoldSymbols }) {
+                Text(
+                    stringResource(R.string.keypress_hold_symbols_number_row),
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+                Text(
+                    stringResource(R.string.keypress_hold_symbols_number_row_info),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                HoldSymbolBoxes(HoldSymbolRows.first(), numberRow) { numberRow = it }
+                Text(
+                    stringResource(R.string.keypress_hold_symbols_digits),
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+                Text(
+                    stringResource(R.string.keypress_hold_symbols_digits_info),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                HoldSymbolBoxes(HoldSymbolDigits, symbols, boxWidth = 132.dp) { symbols = it }
+                FlowRow(Modifier.padding(top = 8.dp)) {
+                    TextButton(
+                        onClick = {
+                            symbols = SwiftKeyHoldSymbols
+                            numberRow = emptyMap()
+                        },
+                    ) {
                         Text(stringResource(R.string.keypress_hold_symbols_swiftkey))
                     }
-                    TextButton(onClick = { symbols = emptyMap() }) {
+                    TextButton(
+                        onClick = {
+                            symbols = GboardHoldSymbols
+                            numberRow = GboardNumberRowHoldSymbols
+                        },
+                    ) {
+                        Text(stringResource(R.string.keypress_hold_symbols_gboard))
+                    }
+                    TextButton(
+                        onClick = {
+                            symbols = SamsungHoldSymbols
+                            numberRow = emptyMap()
+                        },
+                    ) {
+                        Text(stringResource(R.string.keypress_hold_symbols_samsung))
+                    }
+                    TextButton(
+                        onClick = {
+                            symbols = emptyMap()
+                            numberRow = emptyMap()
+                        },
+                    ) {
                         Text(stringResource(R.string.keypress_hold_symbols_clear))
                     }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onSave(symbols) }) { Text(stringResource(android.R.string.ok)) } },
+        confirmButton = {
+            TextButton(onClick = { onSave(symbols, numberRow) }) { Text(stringResource(android.R.string.ok)) }
+        },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) } },
     )
+}
+
+/** One box per letter of [letters], each holding that letter's symbol in [symbols]. */
+@Composable
+private fun HoldSymbolBoxes(
+    letters: String,
+    symbols: Map<String, String>,
+    boxWidth: Dp = 64.dp,
+    onChange: (Map<String, String>) -> Unit,
+) {
+    FlowRow(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+        for (letter in letters) {
+            val key = letter.toString()
+            OutlinedTextField(
+                value = symbols[key].orEmpty(),
+                onValueChange = { text ->
+                    // Several symbols, split by spaces, fill the popup in order.
+                    val symbol = text.trimStart().take(HoldSymbolMaxLength)
+                    onChange(if (symbol.isEmpty()) symbols - key else symbols + (key to symbol))
+                },
+                label = { Text(key) },
+                singleLine = true,
+                modifier = Modifier.width(boxWidth).padding(end = 4.dp),
+            )
+        }
+    }
 }

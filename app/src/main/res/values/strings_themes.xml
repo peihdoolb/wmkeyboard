@@ -197,6 +197,18 @@
     <string name="theme_import_wrong_file_error">That file is not a WM Keyboard theme.</string>
     <!-- Shown after a theme is imported. %1$s is the name of the theme. -->
     <string name="theme_import_done_message">The app imported <xliff:g id="theme_name" example="Midnight">%1$s</xliff:g>.</string>
+    <!-- Shown after the user picks several theme files at once. %d is how many
+         themes the app added. The keyboard does not switch to any of them. -->
+    <plurals name="theme_import_batch_saved">
+        <item quantity="one">The app imported %d theme. Tap it in Your themes to use it.</item>
+        <item quantity="other">The app imported %d themes. Tap one in Your themes to use it.</item>
+    </plurals>
+    <!-- Follows theme_import_batch_saved when some files were not themes.
+         %1$d is how many files, %2$s is their names, separated by commas. -->
+    <plurals name="theme_import_batch_failed">
+        <item quantity="one">The app could not read %1$d file: <xliff:g id="file_names" example="notes.txt">%2$s</xliff:g></item>
+        <item quantity="other">The app could not read %1$d files: <xliff:g id="file_names" example="notes.txt, old.zip">%2$s</xliff:g></item>
+    </plurals>
     <string name="theme_custom_section_title">Your themes</string>
     <string name="theme_builtin_section_title">Built-in</string>
 
@@ -359,6 +371,10 @@
     <string name="theme_other_suggestions_body">The suggestions beside the main one on the strip. On Auto they use the suggestion text colour.</string>
     <string name="theme_other_suggestions_size_title">Other suggestions size</string>
     <string name="theme_other_suggestions_size_body">How big the other suggestions are, as a share of the main one.</string>
+    <string name="theme_suggestion_pill_title">Suggestion pills</string>
+    <string name="theme_suggestion_pill_body">The rounded box behind each word on the strip. Pills show only while Coloured suggestions is on in Typing settings. On Auto they are the accent colour, made faint.</string>
+    <string name="theme_primary_suggestion_pill_title">Main suggestion pill</string>
+    <string name="theme_primary_suggestion_pill_body">The pill behind the main suggestion, the word a space puts in. On Auto it is the Suggestion pills colour laid twice, so it reads a little deeper.</string>
     <string name="theme_card_elevation_title">Card shadow</string>
     <string name="theme_secondary_text_title">Secondary text</string>
     <string name="theme_secondary_text_body">The quieter text beside the main text: the second word of a suggestion, and the kind and time of a clipboard entry.</string>
@@ -782,6 +798,21 @@
     <string name="theme_lighting_hue_span_title">Rainbow spread</string>
     <string name="theme_lighting_hue_span_body">How far the colour turns from the left of the keyboard to the right. At 0 every key has the same colour. At 360 the keys show the whole rainbow.</string>
     <string name="theme_lighting_decay_title">Fade time</string>
+    <string name="theme_motion_held_body">Reduce motion is on, so the moving background holds still, and key lighting, touch bloom and Reacts to typing are off. Turn it off to see them move.</string>
+    <string name="theme_motion_held_system_body">Your phone is set to remove animations, so on the keyboard the moving background holds still, and key lighting, touch bloom and Reacts to typing are off. The preview here still moves.</string>
+    <string name="theme_motion_held_turn_off">Turn off Reduce motion</string>
+    <string name="theme_touch_bloom_section_title">Touch bloom</string>
+    <string name="theme_touch_bloom_section_body">The keyboard answers your finger. A soft light blooms out from where you touch, and the keys near your finger dip and spring back with a small wobble while the rest stay still. When you glide, the light and the dip follow your finger, and the bubble over a pressed key lights up in the same colour. It stops when Reduce motion or power saving is on.</string>
+    <string name="theme_touch_bloom_title">Touch bloom</string>
+    <string name="theme_touch_bloom_subtitle">Light and a springy dip under your finger</string>
+    <string name="theme_touch_bloom_color_title">Light colour</string>
+    <string name="theme_touch_bloom_light_title">Light strength</string>
+    <string name="theme_touch_bloom_radius_title">Reach</string>
+    <string name="theme_touch_bloom_radius_body">How far from your finger the light spreads and the keys dip.</string>
+    <string name="theme_touch_bloom_dip_title">Key dip</string>
+    <string name="theme_touch_bloom_dip_body">How deep the keys near your finger sink. At 0 the keys stay still and only the light shows.</string>
+    <string name="theme_touch_bloom_wobble_title">Wobble</string>
+    <string name="theme_touch_bloom_wobble_body">How much the keys bounce as they spring back. At 0 they settle without bouncing.</string>
     <string name="theme_skin_section_title">Key art</string>
     <string name="theme_skin_section_body">Hand-drawn keys from a file: each kind of key drawn as layers of vector shapes, coloured by the theme\'s own colours. The file layout matches the skin documents of the Kyng keyboard. Key art replaces the key colours, material and border.</string>
     <string name="theme_skin_load_title">Load key art from a file</string>

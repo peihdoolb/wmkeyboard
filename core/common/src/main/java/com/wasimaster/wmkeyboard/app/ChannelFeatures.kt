@@ -41,6 +41,15 @@ object ChannelFeatures {
     val SPLIT_SCREEN_HELPER: Boolean = !BuildConfig.ENABLE_PLAY_STORE
 
     /**
+     * The Screenshot tool (#1148) and the floating button's system button
+     * actions (#1170: Back, recent apps and the rest), behind
+     * SystemButtonsService. Same Play rule again; an accessibility service is
+     * the only way another app can press those buttons, so none of it is in
+     * the Play build.
+     */
+    val SYSTEM_BUTTONS: Boolean = !BuildConfig.ENABLE_PLAY_STORE
+
+    /**
      * The clock tool's ring service, a foreground service of type
      * systemExempted that plays an alarm while it rings. Play keeps that type
      * for apps whose core job is an alarm clock, and a keyboard is not one.

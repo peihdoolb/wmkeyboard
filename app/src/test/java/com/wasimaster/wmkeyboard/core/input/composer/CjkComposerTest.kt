@@ -148,16 +148,38 @@ class CjkComposerTest {
     @Test
     fun `romaji composes hiragana with sokuon and syllabic n`() {
         val c = JapaneseComposer
-        assertEquals("こんにちは", c.composeBuffer("konnichiha"))
+        assertEquals("こんにちは", c.composeBuffer("konnnichiha"))
         assertEquals("ありがとう", c.composeBuffer("arigatou"))
         assertEquals("にほん", c.composeBuffer("nihon"))
         assertEquals("けっこん", c.composeBuffer("kekkon"))
         assertEquals("がっこう", c.composeBuffer("gakkou"))
         assertEquals("しんぶん", c.composeBuffer("shinbun"))
-        assertEquals("おんな", c.composeBuffer("onna"))
+        assertEquals("おんな", c.composeBuffer("onnna"))
         assertEquals("きょう", c.composeBuffer("kyou"))
         assertEquals("し", c.composeBuffer("shi"))
         assertEquals("つ", c.composeBuffer("tsu"))
+    }
+
+    @Test
+    fun `romaji follows mozc for nn and the v row`() {
+        // #1113: `nn` is one ん whatever follows, as in Google Japanese Input.
+        val c = JapaneseComposer
+        assertEquals("こんや", c.composeBuffer("konnya"))
+        assertEquals("こんいん", c.composeBuffer("konnin"))
+        assertEquals("きんえん", c.composeBuffer("kinnen"))
+        assertEquals("しんや", c.composeBuffer("shinnya"))
+        assertEquals("こんや", c.composeBuffer("kon'ya"))
+        assertEquals("こにん", c.composeBuffer("konin"))
+        assertEquals("ゔぉーかる", c.composeBuffer("vo-karu"))
+        assertEquals("ゔぁんがーど", c.composeBuffer("vannga-do"))
+        assertTrue("ヴォーカル" in c.candidates("vo-karu"))
+        assertTrue("ヴァンガード" in c.candidates("vannga-do"))
+        // The rest of Mozc's table comes along.
+        assertEquals("てぃ", c.composeBuffer("thi"))
+        assertEquals("いぇ", c.composeBuffer("ye"))
+        assertEquals("くぁ", c.composeBuffer("kwa"))
+        assertEquals("まっちゃ", c.composeBuffer("matcha"))
+        assertEquals("っ", c.composeBuffer("xtsu"))
     }
 
     @Test
@@ -186,7 +208,7 @@ class CjkComposerTest {
 
         // The spans always sum back to the input length — no romaji char is lost
         // or double-counted, so a whole-buffer choice consumes the whole buffer.
-        for (r in listOf("konnichiha", "arigatou", "nihon", "onna", "n'ya")) {
+        for (r in listOf("konnnichiha", "arigatou", "nihon", "onnna", "n'ya", "xtsu", "t'yu", "matcha")) {
             assertEquals(r.length, Kana.transduce(r).sumOf { it.romajiLen })
             assertEquals(Kana.toHiragana(r), Kana.transduce(r).joinToString("") { it.kana })
         }
@@ -515,6 +537,24 @@ class CjkComposerTest {
         assertEquals(2, PinyinComposer.consumedFor("nihao", "N1"))
         // An unknown candidate falls back to consuming the whole buffer.
         assertEquals(5, PinyinComposer.consumedFor("nihao", "??"))
+    }
+
+    @Test
+    fun `a digit in a pinyin reading is the letter under it on the number row`() {
+        PinyinSyllables.valid = fixtureSyllables
+        CjkDictionaries.pinyin = ConversionDictionary.parse(
+            sequenceOf(
+                "ni\tN1\t100",
+                "hao\tH1\t100",
+                "nihao\tNH\t50",
+            ),
+        )
+        // `9` sits over the `o`: nihao with the last tap a row too high, and
+        // `8` over the `i` (#1107). Before, nothing segmented past the digit.
+        assertEquals(listOf("NH", "N1"), PinyinComposer.candidates("niha9"))
+        assertEquals(listOf("NH", "N1"), PinyinComposer.candidates("n8hao"))
+        assertEquals(5, PinyinComposer.consumedFor("niha9", "NH"))
+        assertEquals(2, PinyinComposer.consumedFor("n8hao", "N1"))
     }
 
     /**

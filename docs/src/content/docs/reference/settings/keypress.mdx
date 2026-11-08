@@ -47,7 +47,7 @@ The Key press screen is a hub. Haptics and sound, Key popup and Press and hold s
 
 **Haptic style** picks how the buzz is produced. Tap and Key hand it to the platform's own haptic call, which is what stock keyboards use, so it follows the vendor's tuning and the system haptic-intensity setting. Tap asks for the keyboard-specific waveform most vendors tune, and it's the default. Key asks for the general button press. Click and Heavy use a hardware-tuned effect (Android 10+). Sharp plays a hardware click primitive whose strength follows the intensity slider (Android 11+). Custom drives the vibration motor straight from the strength and intensity sliders. A style a device can't produce falls back to a hardware Click, then to Custom.
 
-Two of the per-event rows are odd ones out. **Click on key repeat** has nothing to do with vibration at all: it's the sound half of "Vibrate on key repeat", playing the key sound on every auto-repeat while <KeyCap>⌫</KeyCap> or <KeyCap>Space</KeyCap> is held, and it does nothing unless Key sound is on. **Follow the system touch feedback setting** isn't a per-event gate either. It hands the master switch over to Android's own touch-vibration toggle. It ships off, so turning off touch feedback in Android's sound settings leaves the keyboard buzzing. Turn this on if you expect the system switch to cover the keyboard too. **Vibrate past the system touch feedback switch** extends that to the Custom, Sharp, Click and Heavy click styles, which Android otherwise silences with its switch; the System styles never needed it. When Android's switch is off, a note in the group says whether the chosen style still vibrates.
+Two of the per-event rows are odd ones out. **Click on key repeat** has nothing to do with vibration at all: it's the sound half of "Vibrate on key repeat", playing the key sound on every auto-repeat while <KeyCap>⌫</KeyCap> or <KeyCap>Space</KeyCap> is held, and it does nothing unless Key sound is on. **Follow the system touch feedback setting** isn't a per-event gate either. It hands the master switch over to Android's own touch-vibration toggle. It ships off, so turning off touch feedback in Android's sound settings leaves the keyboard buzzing. Turn this on if you expect the system switch to cover the keyboard too. **Vibrate past the system touch feedback switch** extends that to the Custom, Sharp, Click and Heavy click styles, which Android otherwise silences with its switch; the System styles never needed it. When Android's switch is off, a note in the group says whether the chosen style still vibrates. While that note says the style is silent, Vibrate past the system touch feedback switch shows under it at every settings depth, so the switch it names is there to turn on.
 
 <PhoneFrame side caption="Haptic style set to Custom, showing the strength and intensity sliders.">
   <Shot id="reference/settings/keypress-haptic-custom-sliders" alt="Haptic style set to Custom, showing the strength and intensity sliders." />
@@ -128,12 +128,15 @@ A theme can carry a key sound of its own, and where it does, it wins over everyt
 | Word delete distance | Slider, 32–120 dp | 72 dp | Swipe deletes = Words |
 | Character delete distance | Slider, 8–48 dp | 20 dp | Swipe deletes = Characters |
 | Swipe up to clear all | Toggle | Off | always |
+| Swipe up or down to delete lines | Toggle | Off | always |
 | Swipe on forward delete | Toggle | On | always |
 | Backspace as a key press on web pages | Toggle | On | always |
 
 A leftward drag on <KeyCap>⌫</KeyCap> deletes more than the one character a press does, and **Swipe deletes** sets what one step of it takes off. **Word delete distance** is how far you drag before the first word goes, with later words coming off faster on a fixed curve, so that one number tunes the whole gesture; **Character delete distance** is the flat cost of one character, with no curve. **Show what you will delete** makes the swipe select the text and delete it when you lift your finger, so a swipe that went too far can be dragged back.
 
 **Swipe up to clear all** selects everything in the text box when you swipe straight up on <KeyCap>⌫</KeyCap>, and deletes it when you lift. Bring your finger back down first and nothing is deleted. See [Swiping up to clear everything](/typing/gestures/#swiping-up-to-clear-everything).
+
+**Swipe up or down to delete lines** makes a swipe up on <KeyCap>⌫</KeyCap> delete back to the start of the line, or the whole line above when the cursor is at a line's start, and a swipe down delete to the end of the line, then the line below. Held out, it repeats a line at a time. **Swipe up to clear all** keeps the swipe up when both are on.
 
 **Swipe on forward delete** gives <KeyCap>⌦</KeyCap> the same drag pointed the other way: rightward, over the text after the cursor. It has its own on/off switch and then borrows every other row above, so the two delete keys cannot end up tuned differently. No built-in layout carries a <KeyCap>⌦</KeyCap> key; add one in the [layout editor](/languages/custom-layouts/). Full writeup: [Gestures](/typing/gestures/#deleting-more-than-a-character-with-backspace). This group moved here from the [Typing](/reference/settings/typing/) screen: what a key does under a swipe is a key-press matter.
 
@@ -150,6 +153,7 @@ This group is about the press-and-hold popup, not the preview bubble above it. T
 | Alternate key size | Slider | ×0.70–×3.20 | ×1.00 |
 | Alternate key spacing | Slider | 0–32 dp | 10 dp |
 | Alternate key columns | Stepper | Auto, then 3–11 | Auto |
+| Even rows | Toggle | On / Off | Off |
 | Closest to the key first | Toggle | On / Off | Off |
 | Centre on the key | Toggle | On / Off | On |
 | Remember the punctuation key's pick | Toggle | On / Off | Off |
@@ -163,6 +167,8 @@ This group is about the press-and-hold popup, not the preview bubble above it. T
 **Alternate key columns** is Auto by default, which fits as many per row as the screen allows and lets the popup's shape follow the width of the characters. Pick a number instead and every row gets that many equal columns, so a key with a dozen alternates reads as a block and each character stays where you last found it. The stepper walks Auto, 3, 4 and up to 11 one press at a time.
 
 The number you pick is a ceiling. If that many columns at your spacing don't fit across the screen, the spacing on either side of each character shrinks first, evenly, so every character stays whole and centred in its column. If even the bare characters don't fit, for example 11 columns at a big **Alternate key size**, the popup uses as many columns as do fit. Either way the popup keeps a small margin from both edges of the screen, so one as wide as the screen sits centred rather than pushed against a side.
+
+**Even rows** changes what the number means. Off, every row is filled to it, so with 4 columns a key with 5 alternates shows 4 on one row and 1 on its own below. On, the number is the most a row holds: the popup keeps the rows it needs and shares the alternates evenly between them, the longer rows first. With 4 columns, 5 alternates show as 3 and 2, 6 as 3 and 3, and 4 still fit on one row of 4. On Auto it evens out the rows that the screen width makes, as long as every evened row still fits across the screen. A key's own count from the layout editor follows this switch too.
 
 This one is the keyboard-wide default. A single key can carry a count of its own, set on **Columns in the popup** in the [layout editor's key sheet](/languages/custom-layouts/#editing-a-key), and where it does, that wins. Keys start at "From settings", so this row is what they all follow until you say otherwise.
 
@@ -217,7 +223,7 @@ The repeat interval is two sliders, because delete and space are held for opposi
 | All accents on press and hold | Toggle | On / Off | Off |
 | No accents on press and hold | Toggle | On / Off | Off |
 | Top row press and hold | Segmented | Auto / Digits / Symbols / None | Auto |
-| Your hold symbols | Dialog | A symbol per letter, a SwiftKey preset, Clear all | None |
+| Your hold symbols | Dialog | Symbols per letter, the top row again for under a number row, each digit's popup, SwiftKey, Gboard and Samsung presets, Clear all | None |
 | Your language's letters first | Toggle | On / Off | On |
 | Shifted letter on press and hold | Toggle | On / Off | Off |
 | Press and hold ?123 for the number pad | Toggle | On / Off | On |

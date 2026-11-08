@@ -88,7 +88,7 @@ The choice of color for one app is made on the keyboard: the **Appearance** tool
 | Control | What it does |
 |---|---|
 | Create theme | Makes a new custom theme named "My theme", seeded from the first swatch in the theme editor's color row, generated dark or light to match what your phone is showing right now, sets it active, and opens the editor on it right away |
-| Import | Opens a file picker for a theme file, adds it to Your themes under a fresh id, and switches to it immediately (the editor doesn't open) |
+| Import | Opens a file picker for a theme file, adds it to Your themes under a fresh id, and switches to it immediately (the editor doesn't open). Pick several files and each is added without switching, then one message counts them and names any file it could not read. Every file-based import button below takes several files the same way. A `.zip` of themes saved from the picking bar's upload icon imports every theme inside it. See [Several files at once](/themes/sharing/#several-files-at-once) |
 | FlorisBoard | Reads a FlorisBoard `.flex` theme file and converts it into a custom theme. See [Importing other keyboards](/reference/importing-other-keyboards/) |
 | Gboard | Asks **Open a file** (a Gboard theme `.zip` or an Rboard pack) or **Browse Rboard** (the Rboard collection, fetched from GitHub only when that screen opens; not in the Google Play build, where the button opens the file picker). Each theme is previewed with what did not come across, then saved without being switched on. See [Gboard themes and Rboard packs](/reference/importing-other-keyboards/#gboard-themes-and-rboard-packs) |
 | Card tap | Applies that theme to the keyboard immediately. On a family card, tapping a dot applies that look and turns the card's preview to it |
@@ -322,8 +322,10 @@ The strip's section:
 | Suggestion text | Color, Auto → Key text | Auto |
 | Other suggestions | Color, Auto → Suggestion text | Auto |
 | Other suggestions size | Slider, 50–120% in 5% steps | 100% |
+| Suggestion pills | Color with alpha, Auto → accent at 16% (dark) or 10% (light) | Auto |
+| Main suggestion pill | Color with alpha, Auto → Suggestion pills laid twice, or accent at 34% (dark) or 24% (light) | Auto |
 
-**Suggestion strip** also fills the other bars around the keys (the emoji row, the symbol row, the dictionary bar and the rest), and **Suggestion text** also colours the panels' body text. **Other suggestions** and its size row cover every word on the strip except the primary one, as a colour and as a share of the primary's size; the CJK conversion candidates and Avro's candidate list ignore both.
+**Suggestion strip** also fills the other bars around the keys (the emoji row, the symbol row, the dictionary bar and the rest), and **Suggestion text** also colours the panels' body text. **Other suggestions** and its size row cover every word on the strip except the primary one, as a colour and as a share of the primary's size; the CJK conversion candidates and Avro's candidate list ignore both. The two pill rows only show on the keyboard while **Coloured suggestions** is on under Typing.
 
 ### Panels & suggestions
 
@@ -463,6 +465,19 @@ A still picture under reduce motion or power saving.
 | Fade time *(press patterns only)* | Slider | 100–2400 ms | 700 ms |
 
 Off under reduce motion and power saving.
+
+### Touch bloom
+
+| Setting | Control | Range | Default |
+|---|---|---|---|
+| Touch bloom | Toggle | On / Off | Off |
+| Light colour | Colour, or Auto | Any | The accent |
+| Light strength | Slider | 0–100% | 60% |
+| Reach | Slider | 40–240 dp | 96 dp |
+| Key dip | Slider | 0–100% | 50% |
+| Wobble | Slider | 0–100% | 50% |
+
+Light from your finger and the keys near it dipping, following a glide; the key preview bubble lights up in the same colour. Off under reduce motion, power saving and high contrast.
 
 ### Key art
 

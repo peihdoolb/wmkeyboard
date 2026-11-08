@@ -695,6 +695,7 @@ private fun SearchStrings.typingGlideRows(): List<SettingsSearchEntry> {
         row(R.string.typing_glide_start_radius_title, R.string.typing_glide_start_radius_subtitle),
         row(R.string.typing_glide_end_radius_title, R.string.typing_glide_end_radius_subtitle),
         row(R.string.typing_glide_near_radius_title, R.string.typing_glide_near_radius_subtitle),
+        row(R.string.typing_glide_language_radii_title, R.string.typing_glide_language_radii_subtitle),
         row(R.string.typing_glide_dwell_title, R.string.typing_glide_dwell_subtitle),
         row(R.string.typing_glide_loop_title, R.string.typing_glide_loop_subtitle),
         row(R.string.typing_glide_loop_arc_title, R.string.typing_glide_loop_arc_subtitle),
@@ -823,6 +824,7 @@ private fun SearchStrings.typingHardwareRows(): List<SettingsSearchEntry> {
         row(R.string.typing_hw_esc_title, R.string.typing_hw_esc_subtitle),
         row(R.string.typing_hw_digit_chord_title, R.string.typing_hw_digit_chord_subtitle),
         row(R.string.typing_hw_lang_chord_title, R.string.typing_hw_lang_chord_subtitle),
+        row(R.string.typing_hw_lang_ctrl_shift_title, R.string.typing_hw_lang_ctrl_shift_subtitle),
         row(R.string.typing_hw_modifier_words_title, R.string.typing_hw_modifier_words_subtitle),
         row(R.string.typing_hw_picker_timeout_title, R.string.typing_hw_picker_timeout_subtitle),
         row(R.string.typing_hw_suggestion_hotkeys_title, R.string.typing_hw_suggestion_hotkeys_subtitle),
@@ -847,6 +849,7 @@ private fun SearchStrings.keyPressRows(): List<SettingsSearchEntry> {
         row(R.string.typing_backspace_step_title, R.string.typing_backspace_step_subtitle),
         row(R.string.typing_backspace_char_step_title, R.string.typing_backspace_char_step_subtitle),
         row(R.string.typing_backspace_up_clears_title, R.string.typing_backspace_up_clears_subtitle),
+        row(R.string.typing_backspace_lines_title, R.string.typing_backspace_lines_subtitle),
         row(R.string.typing_forward_delete_swipe_title, R.string.typing_forward_delete_swipe_subtitle),
         row(R.string.typing_web_backspace_key_title, R.string.typing_web_backspace_key_subtitle),
         row(R.string.keypress_alternates_size_title, R.string.keypress_alternates_size_subtitle),
@@ -857,6 +860,10 @@ private fun SearchStrings.keyPressRows(): List<SettingsSearchEntry> {
         row(
             R.string.keypress_alternates_columns_title,
             R.string.keypress_alternates_columns_subtitle,
+        ),
+        row(
+            R.string.keypress_alternates_balanced_title,
+            R.string.keypress_alternates_balanced_subtitle,
         ),
         row(
             R.string.keypress_alternates_nearest_title,
@@ -1114,6 +1121,8 @@ private fun SearchStrings.layoutRows(): List<SettingsSearchEntry> {
         row(R.string.layout_arrow_row_title, R.string.layout_arrow_row_subtitle),
         row(R.string.layout_arrow_row_order_title, R.string.layout_arrow_row_order_subtitle),
         row(R.string.layout_arrow_row_on_top_title, R.string.layout_arrow_row_on_top_subtitle),
+        row(R.string.layout_custom_number_row_title, R.string.layout_custom_number_row_caption),
+        row(R.string.layout_custom_arrow_row_title, R.string.layout_custom_arrow_row_caption),
         row(R.string.layout_symbols_return_title, R.string.layout_symbols_return_subtitle),
         row(R.string.layout_symbols_return_chars_title),
         row(R.string.layout_symbols_return_space_title, R.string.layout_symbols_return_space_subtitle),
@@ -1131,6 +1140,7 @@ private fun SearchStrings.layoutRows(): List<SettingsSearchEntry> {
         row(R.string.layout_globe_recent_title, R.string.layout_globe_recent_subtitle),
         row(R.string.layout_globe_guard_title, R.string.layout_globe_guard_subtitle),
         row(R.string.layout_globe_emoji_title, R.string.layout_globe_emoji_subtitle),
+        row(R.string.layout_globe_tool_title, R.string.layout_globe_tool_subtitle),
         row(R.string.layout_swap_comma_globe_title, R.string.layout_swap_comma_globe_subtitle),
         row(R.string.layout_globe_in_one_place_title, R.string.layout_globe_in_one_place_subtitle),
         entry(R.string.layout_editor_import_title, R.string.layout_editor_import_subtitle, R.string.home_keymaps_title, "keymaps"),
@@ -1166,6 +1176,8 @@ private fun SearchStrings.layoutSizeRows(): List<SettingsSearchEntry> {
         row(R.string.layout_board_corner_top_title, R.string.layout_board_corner_top_subtitle),
         row(R.string.layout_board_corner_bottom_title, R.string.layout_board_corner_bottom_subtitle),
         row(R.string.layout_keyboard_width_title, R.string.layout_keyboard_width_subtitle),
+        row(R.string.layout_full_width_bars_title, R.string.layout_full_width_bars_subtitle),
+        row(R.string.layout_toolbar_height_title, R.string.layout_toolbar_height_subtitle),
         row(R.string.layout_keyboard_position_title, R.string.layout_keyboard_position_info),
         row(R.string.layout_variant_follows_portrait_label),
         row(R.string.layout_font_size_title),
@@ -1217,21 +1229,37 @@ private fun SearchStrings.floatingButtonRows(): List<SettingsSearchEntry> {
         title, subtitle, R.string.floating_button_title, FloatingButtonRoute,
         screenParent = R.string.home_advanced_title,
     )
-    return listOf(
+    return listOfNotNull(
         row(R.string.floating_button_enable_title, R.string.floating_button_enable_subtitle),
         row(R.string.floating_button_screen_title, R.string.floating_button_screen_subtitle),
+        row(R.string.floating_button_system_buttons_title, R.string.floating_button_system_buttons_subtitle)
+            .takeIf { ChannelFeatures.SYSTEM_BUTTONS },
         row(R.string.floating_button_tap_title),
         row(R.string.floating_button_double_tap_title),
         row(R.string.floating_button_hold_title),
+        row(R.string.floating_button_docked_title, R.string.floating_button_docked_subtitle),
+        row(R.string.floating_button_flick_up_title),
+        row(R.string.floating_button_flick_up_right_title),
+        row(R.string.floating_button_flick_right_title),
+        row(R.string.floating_button_flick_down_right_title),
+        row(R.string.floating_button_flick_down_title),
+        row(R.string.floating_button_flick_down_left_title),
+        row(R.string.floating_button_flick_left_title),
+        row(R.string.floating_button_flick_up_left_title),
         row(R.string.floating_button_tap_typing_title),
         row(R.string.floating_button_double_tap_typing_title),
         row(R.string.floating_button_menu_add_title),
         row(R.string.floating_button_menu_labels_title, R.string.floating_button_menu_labels_subtitle),
         row(R.string.floating_button_menu_gap_title, R.string.floating_button_menu_gap_subtitle),
         row(R.string.floating_button_menu_animation_title),
+        row(R.string.floating_button_animation_speed_title, R.string.floating_button_animation_speed_subtitle),
         row(R.string.floating_button_menu_reset_title, R.string.floating_button_menu_reset_subtitle),
         row(R.string.floating_button_style_title),
         row(R.string.floating_button_shape_title, R.string.floating_button_shape_subtitle),
+        row(R.string.floating_button_pill_title, R.string.floating_button_pill_subtitle),
+        row(R.string.floating_button_pill_thickness_title, R.string.floating_button_pill_thickness_subtitle),
+        row(R.string.floating_button_pill_length_title, R.string.floating_button_pill_length_subtitle),
+        row(R.string.floating_button_pill_touch_title, R.string.floating_button_pill_touch_subtitle),
         row(R.string.floating_button_size_title, R.string.floating_button_size_subtitle),
         row(R.string.floating_button_opacity_title, R.string.floating_button_opacity_subtitle),
         row(R.string.floating_button_idle_title, R.string.floating_button_idle_subtitle),
@@ -1348,6 +1376,7 @@ private fun SearchStrings.emojiRows(): List<SettingsSearchEntry> {
         // always about the phone.
         row(R.string.langemoji_emoji_hide_unrenderable_title, R.string.langemoji_emoji_hide_unrenderable_subtitle),
         row(R.string.langemoji_emoji_unicode_search_title, R.string.langemoji_emoji_unicode_search_subtitle),
+        row(R.string.langemoji_emoji_unicode_suggestions_title, R.string.langemoji_emoji_unicode_suggestions_subtitle),
     )
 }
 
@@ -1447,12 +1476,20 @@ private fun SearchStrings.voiceRows(): List<SettingsSearchEntry> {
         row(R.string.voice_punctuation_custom_add_title, R.string.voice_punctuation_custom_add_subtitle),
         row(R.string.voice_auto_punctuation_title, R.string.voice_auto_punctuation_subtitle),
         row(R.string.voice_ai_tidy_title, R.string.voice_ai_tidy_subtitle),
+        row(R.string.voice_system_input_title, R.string.voice_system_input_subtitle),
+        row(R.string.voice_system_input_pick_title, R.string.voice_system_input_pick_subtitle),
         // On the engines' own screens, opened from their rows on the list.
         providerEntry(
             ProviderTool.VOICE, ProviderTypes.SYSTEM_RECOGNIZER,
             R.string.voice_system_on_device_title, R.string.voice_system_on_device_subtitle,
         ),
         providerEntry(ProviderTool.VOICE, ProviderTypes.WHISPER, R.string.voice_translate_title, R.string.voice_translate_subtitle),
+        // The pause and the detector, on the page of an engine that shows words as you speak (#1174).
+        providerEntry(
+            ProviderTool.VOICE, ProviderTypes.PARAKEET,
+            R.string.voice_silence_stop_title, R.string.voice_silence_stop_subtitle,
+        ),
+        providerEntry(ProviderTool.VOICE, ProviderTypes.PARAKEET, R.string.voice_vad_title, R.string.voice_vad_subtitle),
         providerEntry(
             ProviderTool.VOICE, ProviderTypes.WHISPER,
             R.string.models_whisper_compute_title, R.string.models_whisper_compute_subtitle,
@@ -1540,6 +1577,7 @@ private fun SearchStrings.clipboardChipsRows(): List<SettingsSearchEntry> {
         row(R.string.clipboard_recent_chips_title, R.string.clipboard_recent_chips_subtitle),
         row(R.string.clipboard_compact_paste_chip_title, R.string.clipboard_compact_paste_chip_subtitle),
         row(R.string.clipboard_suggest_codes_title, R.string.clipboard_suggest_codes_subtitle),
+        row(R.string.clipboard_secret_chip_title, R.string.clipboard_secret_chip_subtitle),
         row(R.string.clipboard_entities_title, R.string.clipboard_entities_subtitle),
         row(R.string.clipboard_entity_icons_title, R.string.clipboard_entity_icons_subtitle),
         row(R.string.clipboard_entity_to_clipboard_title, R.string.clipboard_entity_to_clipboard_subtitle),
@@ -1628,6 +1666,8 @@ private fun SearchStrings.toolPageRowsA(): List<SettingsSearchEntry> = listOfNot
         weight = EntryWeight.MIRROR,
     ),
     toolEntry(ToolbarTool.FLASHLIGHT, R.string.tooldetail_flashlight_auto_off_title, R.string.tooldetail_flashlight_auto_off_subtitle),
+    // Subtitle left off: the drawn one says whether the service is on.
+    toolEntry(ToolbarTool.SCREENSHOT, R.string.tooldetail_screenshot_service_title),
     toolEntry(ToolbarTool.COMPASS, R.string.tooldetail_compass_degrees_title, R.string.tooldetail_compass_degrees_subtitle),
     toolEntry(ToolbarTool.COMPASS, R.string.tooldetail_compass_qibla_title, R.string.tooldetail_compass_qibla_subtitle),
     toolEntry(ToolbarTool.LEVEL, R.string.tooldetail_level_angles_title, R.string.tooldetail_level_angles_subtitle),
@@ -1720,11 +1760,18 @@ private fun SearchStrings.toolPageRowsA(): List<SettingsSearchEntry> = listOfNot
     // #727: the photo-translate provider list.
     toolEntry(ToolbarTool.CAMERA, R.string.tooldetail_camera_translate_group, keywords = R.string.search_kw_photo_translate),
     toolEntry(ToolbarTool.CAMERA, R.string.tooldetail_camera_shutter_title, R.string.tooldetail_camera_shutter_subtitle),
+    // #1156: the scanners as modes of the camera.
+    toolEntry(ToolbarTool.CAMERA, R.string.tooldetail_camera_mode_rail_title, R.string.tooldetail_camera_mode_rail_subtitle),
+    toolEntry(ToolbarTool.CAMERA, R.string.tooldetail_camera_spot_codes_title, R.string.tooldetail_camera_spot_codes_subtitle),
     toolEntry(ToolbarTool.DICTIONARY, R.string.tooldetail_dictionary_auto_title, R.string.tooldetail_dictionary_auto_subtitle),
     toolEntry(ToolbarTool.DICTIONARY, R.string.tooldetail_dictionary_sources_title),
     // #764: the word in other languages.
     toolEntry(ToolbarTool.DICTIONARY, R.string.tooldetail_dictionary_translations_title, R.string.tooldetail_dictionary_translations_subtitle),
     toolEntry(ToolbarTool.DICTIONARY, R.string.tooldetail_dictionary_translation_langs_title),
+    // #1146: people saying the word, from Wiktionary and Forvo.
+    toolEntry(ToolbarTool.DICTIONARY, R.string.lookup_settings_recordings_title, R.string.lookup_settings_recordings_subtitle),
+    toolEntry(ToolbarTool.DICTIONARY, R.string.lookup_settings_keep_recordings_title, R.string.lookup_settings_keep_recordings_subtitle),
+    toolEntry(ToolbarTool.DICTIONARY, R.string.lookup_settings_forvo_title),
     toolEntry(
         ToolbarTool.VOCABULARY,
         R.string.tooldetail_vocab_packs_title,
@@ -1858,6 +1905,7 @@ private fun SearchStrings.toolPageRowsA(): List<SettingsSearchEntry> = listOfNot
     toolEntry(ToolbarTool.TODO, R.string.tooldetail_todo_hide_done_title, R.string.tooldetail_todo_hide_done_subtitle),
     toolEntry(ToolbarTool.TODO, R.string.tooldetail_todo_due_chip_title, R.string.tooldetail_todo_due_chip_subtitle),
     toolEntry(ToolbarTool.TODO, R.string.tooldetail_todo_sync_title, R.string.tooldetail_todo_sync_subtitle),
+    toolEntry(ToolbarTool.TODO, R.string.tooldetail_todo_remove_copies_title, R.string.tooldetail_todo_remove_copies_subtitle),
     toolEntry(ToolbarTool.TODO, R.string.tooldetail_todo_import_title, R.string.tooldetail_todo_import_subtitle),
     toolEntry(ToolbarTool.TODO, R.string.tooldetail_todo_clear_title, R.string.tooldetail_todo_clear_subtitle),
     toolEntry(ToolbarTool.INCOGNITO, R.string.tooldetail_incognito_learning_title, R.string.tooldetail_incognito_learning_subtitle),
@@ -1895,6 +1943,21 @@ private fun SearchStrings.toolPageRowsA(): List<SettingsSearchEntry> = listOfNot
         ToolbarTool.POWER_SAVING,
         R.string.tooldetail_power_drop_media_pin_title,
         R.string.tooldetail_power_drop_media_pin_subtitle,
+    ),
+    toolEntry(
+        ToolbarTool.POWER_SAVING,
+        R.string.tooldetail_power_drop_moving_themes_title,
+        R.string.tooldetail_power_drop_moving_themes_subtitle,
+    ),
+    toolEntry(
+        ToolbarTool.POWER_SAVING,
+        R.string.tooldetail_power_drop_floating_button_title,
+        R.string.tooldetail_power_drop_floating_button_subtitle,
+    ),
+    toolEntry(
+        ToolbarTool.POWER_SAVING,
+        R.string.tooldetail_power_drop_warm_models_title,
+        R.string.tooldetail_power_drop_warm_models_subtitle,
     ),
     toolEntry(
         ToolbarTool.MEDIA_CONTROL,
@@ -1935,6 +1998,16 @@ private fun SearchStrings.toolPageRowsA(): List<SettingsSearchEntry> = listOfNot
     ),
     // Subtitle left off: it counts the pairs.
     toolEntry(ToolbarTool.APP_LAUNCHER, R.string.tooldetail_launcher_combos_title),
+    // Subtitles left off: each says this phone's current state.
+    toolEntry(ToolbarTool.APP_LAUNCHER, R.string.tooldetail_launcher_check_title),
+    toolEntry(
+        ToolbarTool.APP_LAUNCHER,
+        R.string.tooldetail_launcher_float_fallback_title,
+        R.string.tooldetail_launcher_float_fallback_subtitle,
+    ),
+    toolEntry(ToolbarTool.APP_LAUNCHER, R.string.tooldetail_launcher_shizuku_title),
+    toolEntry(ToolbarTool.APP_LAUNCHER, R.string.tooldetail_launcher_root_title, R.string.tooldetail_launcher_root_subtitle),
+    toolEntry(ToolbarTool.APP_LAUNCHER, R.string.tooldetail_launcher_freeform_title),
     toolEntry(ToolbarTool.APP_LAUNCHER, R.string.tooldetail_launcher_sort_title, R.string.tooldetail_launcher_sort_subtitle),
     toolEntry(ToolbarTool.APP_LAUNCHER, R.string.tooldetail_launcher_labels_title, R.string.tooldetail_launcher_labels_subtitle),
     toolEntry(ToolbarTool.APP_LAUNCHER, R.string.tooldetail_launcher_columns_title, R.string.tooldetail_launcher_columns_subtitle),
@@ -1950,7 +2023,10 @@ private fun SearchStrings.toolPageRowsA(): List<SettingsSearchEntry> = listOfNot
     ),
     // Subtitle left off: it counts the hidden apps.
     toolEntry(ToolbarTool.APP_LAUNCHER, R.string.tooldetail_launcher_hidden_title),
+    // #1159: apps with a button of their own on the toolbar.
+    toolEntry(ToolbarTool.APP_LAUNCHER, R.string.tooldetail_launcher_toolbar_title),
     toolEntry(ToolbarTool.APP_LAUNCHER, R.string.tooldetail_launcher_work_title, R.string.tooldetail_launcher_work_subtitle),
+    toolEntry(ToolbarTool.APP_LAUNCHER, R.string.tooldetail_launcher_sole_title, R.string.tooldetail_launcher_sole_subtitle),
     // Subtitle left off: it counts the folders.
     toolEntry(ToolbarTool.APP_LAUNCHER, R.string.tooldetail_launcher_folders_title),
     toolEntry(ToolbarTool.APP_LAUNCHER, R.string.tooldetail_launcher_recents_title, R.string.tooldetail_launcher_recents_subtitle),
@@ -2325,6 +2401,8 @@ private fun SearchStrings.toolPageRowsB(): List<SettingsSearchEntry> = listOfNot
     toolEntry(ToolbarTool.AI, R.string.toolai_research_depth_title, R.string.toolai_research_depth_subtitle),
     toolEntry(ToolbarTool.AI, R.string.toolai_research_review_plan_title, R.string.toolai_research_review_plan_subtitle),
     toolEntry(ToolbarTool.AI, R.string.toolai_ai_selection_menu_title, R.string.toolai_ai_selection_menu_subtitle),
+    toolEntry(ToolbarTool.AI, R.string.toolai_assistant_title, R.string.toolai_assistant_subtitle),
+    toolEntry(ToolbarTool.AI, R.string.toolai_assistant_pick_title, R.string.toolai_assistant_pick_subtitle),
     // The AI history screen's own heading. Indexed on that screen, not on the
     // tool page: the tool page only draws the NavRow that opens it (next).
     entry(
@@ -2354,6 +2432,16 @@ private fun SearchStrings.toolPageRowsB(): List<SettingsSearchEntry> = listOfNot
         screenParent = R.string.home_tools_title,
     ),
     toolEntry(ToolbarTool.TRANSLATE, R.string.toolai_translate_into_title, R.string.toolai_translate_into_subtitle),
+    toolEntry(
+        ToolbarTool.TRANSLATE,
+        R.string.tooldetail_translate_clear_on_insert_title,
+        R.string.tooldetail_translate_clear_on_insert_subtitle,
+    ),
+    toolEntry(
+        ToolbarTool.TRANSLATE,
+        R.string.tooldetail_translate_hint_replaces_title,
+        R.string.tooldetail_translate_hint_replaces_subtitle,
+    ),
 ) + translateEngineRows()
 
 /**
@@ -2526,7 +2614,7 @@ private fun SearchStrings.otherRows(): List<SettingsSearchEntry> {
         plugin(R.string.plugins_allow_title, R.string.plugins_allow_subtitle),
         plugin(R.string.tooldetail_plugins_manage_title, R.string.tooldetail_plugins_manage_subtitle),
         plugin(R.string.plugins_install_file_title, R.string.plugins_install_file_subtitle),
-        plugin(R.string.plugin_ide_entry_title, R.string.plugin_ide_entry_subtitle),
+        plugin(R.string.plugin_ide_entry_title, R.string.plugin_ide_entry_subtitle_python),
         privacy(R.string.privacy_learn_typing_title, R.string.privacy_learn_typing_subtitle),
         privacy(R.string.privacy_system_dictionary_title, R.string.privacy_system_dictionary_subtitle),
         privacy(R.string.privacy_dict_shortcuts_title, R.string.privacy_dict_shortcuts_subtitle),
@@ -2631,6 +2719,10 @@ private fun SearchStrings.otherRows(): List<SettingsSearchEntry> {
             R.string.privacy_permissions_screen_content_title,
             R.string.privacy_permissions_screen_content_subtitle,
         ).takeIf { ChannelFeatures.SCREEN_CONTEXT },
+        permission(
+            R.string.privacy_permissions_system_buttons_title,
+            R.string.privacy_permissions_system_buttons_subtitle,
+        ).takeIf { ChannelFeatures.SYSTEM_BUTTONS },
         permission(
             R.string.privacy_permissions_split_screen_title,
             R.string.privacy_permissions_split_screen_subtitle,
@@ -2812,6 +2904,7 @@ private fun SearchStrings.otherRows(): List<SettingsSearchEntry> {
         entry(R.string.tools_colored_icons_title, R.string.tools_colored_icons_subtitle, R.string.home_tools_title, "tools"),
         entry(R.string.tools_gradient_icons_title, R.string.tools_gradient_icons_subtitle, R.string.home_tools_title, "tools"),
         entry(R.string.tools_split_panels_title, R.string.tools_split_panels_subtitle, R.string.home_tools_title, "tools"),
+        entry(R.string.tools_box_close_outside_title, R.string.tools_box_close_outside_subtitle, R.string.home_tools_title, "tools"),
         if (ChannelFeatures.FILE_MANAGER) {
             entry(R.string.tools_file_manager_title, R.string.tools_file_manager_subtitle, R.string.home_tools_title, "tools")
         } else {
@@ -3203,6 +3296,10 @@ private fun SearchStrings.sectionRows(): List<SettingsSearchEntry> {
         under(
             R.string.about_storage_title, R.string.about_storage_subtitle,
             R.string.home_about_title, "storage", R.string.search_kw_storage,
+        ),
+        under(
+            R.string.about_resources_title, R.string.about_resources_subtitle,
+            R.string.home_about_title, "resources", R.string.search_kw_about_resources,
         ),
         under(
             R.string.feature_libraries_title, R.string.feature_libraries_subtitle,

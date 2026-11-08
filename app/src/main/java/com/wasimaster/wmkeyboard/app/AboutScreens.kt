@@ -245,13 +245,14 @@ private val bundledAttributions: List<Attribution> = buildList {
             "https://github.com/zxing/zxing",
         ),
     )
+    // The interpreter every plugin runs in (native/wm-python), ported from PyMini.
     add(
         Attribution(
-            "LuaJ",
-            R.string.about_bundled_luaj_used,
-            "Copyright (c) 2007 LuaJ. All rights reserved.",
-            "MIT", "mit-luaj.txt",
-            "https://github.com/luaj/luaj",
+            "PyMini",
+            R.string.about_bundled_pymini_plugins,
+            "Copyright (c) 2026 Anti Limited",
+            "MIT", "mit-pymini.txt",
+            "https://github.com/anti-ltd/PyMini",
         ),
     )
     // Spell checking against an imported Hunspell dictionary, in every build:
@@ -274,6 +275,66 @@ private val bundledAttributions: List<Attribution> = buildList {
             "Copyright (c) 2005-2007, Taku Kudo",
             "BSD-3-Clause", "bsd-zinnia.txt",
             "https://github.com/taku910/zinnia",
+        ),
+    )
+    // GiellaLT grammar checkers: divvun-runtime with its VISL CG-3 and HFST
+    // ports, a library of its own, never in an APK (downloaded or Play's
+    // split). GPL-3.0, unlike the rest of the app. See native/divvungrammar-jni;
+    // the checkers themselves are fetched, never shipped.
+    add(
+        Attribution(
+            "divvun-runtime",
+            R.string.about_bundled_divvun_runtime_used,
+            "Copyright UiT The Arctic University of Norway and divvun-runtime contributors",
+            "MIT OR Apache-2.0", "apache-2.0.txt",
+            "https://github.com/divvun/divvun-runtime",
+        ),
+    )
+    add(
+        Attribution(
+            "cg3-rs (VISL CG-3)",
+            R.string.about_bundled_divvun_runtime_used,
+            "Copyright GrammarSoft ApS, UiT The Arctic University of Norway and contributors",
+            "GPL-3.0-or-later", "gpl-3.0.txt",
+            "https://github.com/divvun/cg3-rs",
+        ),
+    )
+    add(
+        Attribution(
+            "hfst-rs (HFST)",
+            R.string.about_bundled_divvun_runtime_used,
+            "Copyright the HFST team, UiT The Arctic University of Norway and contributors",
+            "LGPL-3.0-or-later", "lgpl-3.0.txt",
+            "https://github.com/divvun/hfst-rs",
+        ),
+    )
+    // Language detection on builds without ML Kit: a library of its own,
+    // never in an APK. See native/cld3-jni and native/fasttext-jni.
+    add(
+        Attribution(
+            "CLD3 and protobuf",
+            R.string.about_bundled_cld3_used,
+            "Copyright 2016 Google Inc.; protobuf Copyright 2008 Google Inc.",
+            "Apache-2.0 / BSD-3-Clause", "apache-2.0.txt",
+            "https://github.com/google/cld3",
+        ),
+    )
+    add(
+        Attribution(
+            "fastText",
+            R.string.about_bundled_cld3_used,
+            "Copyright 2016-present Facebook, Inc.",
+            "MIT", "mit-fasttext.txt",
+            "https://github.com/facebookresearch/fastText",
+        ),
+    )
+    add(
+        Attribution(
+            "fastText language identification model (lid.176)",
+            R.string.about_bundled_cld3_used,
+            "Copyright Facebook, Inc.; trained on Wikipedia, Tatoeba and SETimes",
+            "CC-BY-SA-3.0", "cc-by-sa-3.0.txt",
+            "https://fasttext.cc/docs/en/language-identification.html",
         ),
     )
     // GiellaLT spellers, in the same library module as Hunspell. See
@@ -333,6 +394,18 @@ private val bundledAttributions: List<Attribution> = buildList {
             ),
         )
     }
+    // Arm's matrix kernels, compiled into the arm64 builds of llama.cpp,
+    // whisper.cpp, MNN and ExecuTorch (through XNNPACK), and its image kernels
+    // into the document scanner's OpenCV. See native/*/build.sh.
+    add(
+        Attribution(
+            "KleidiAI and KleidiCV",
+            R.string.about_bundled_kleidi_used,
+            "Copyright 2024-2026 Arm Limited and/or its affiliates",
+            "Apache-2.0", "apache-2.0.txt",
+            "https://github.com/ARM-software/kleidiai",
+        ),
+    )
     // The sticker generator's runtime, in every build: packaged, pinned for
     // download, or a Play split. See native/imagegen-jni.
     add(
@@ -605,11 +678,52 @@ private val bundledAttributions: List<Attribution> = buildList {
         )
         add(
             Attribution(
+                "Parakeet Ultra",
+                R.string.about_bundled_parakeet_used,
+                "Moondream, on NVIDIA's Parakeet TDT 0.6B v3",
+                "CC-BY-4.0", "cc-by-4.0-parakeet.txt",
+                "https://huggingface.co/moondream/parakeet-ultra",
+            ),
+        )
+        add(
+            Attribution(
                 "Moonshine",
                 R.string.about_bundled_moonshine_used,
                 "Copyright (c) 2024 Useful Sensors",
                 "MIT", "mit-moonshine.txt",
                 "https://github.com/moonshine-ai/moonshine",
+            ),
+        )
+    }
+    if (com.wasimaster.wmkeyboard.core.voice.vosk.VoskNative.shipped) {
+        // Offline Vosk (#1165): Alpha Cephei's library, fetched from Maven
+        // Central, which carries Kaldi and OpenFst, and the models it
+        // downloads from alphacephei.com.
+        add(
+            Attribution(
+                "Vosk",
+                R.string.about_bundled_vosk_library_used,
+                "Copyright 2019-2025 Alpha Cephei Inc.",
+                "Apache-2.0", "apache-2.0.txt",
+                "https://github.com/alphacep/vosk-api",
+            ),
+        )
+        add(
+            Attribution(
+                "Kaldi",
+                R.string.about_bundled_kaldi_used,
+                "Copyright 2009-2025 Johns Hopkins University and the Kaldi authors",
+                "Apache-2.0", "apache-2.0.txt",
+                "https://github.com/kaldi-asr/kaldi",
+            ),
+        )
+        add(
+            Attribution(
+                "OpenFst",
+                R.string.about_bundled_kaldi_used,
+                "Copyright 2005-2025 Google LLC and the OpenFst authors",
+                "Apache-2.0", "apache-2.0.txt",
+                "https://www.openfst.org",
             ),
         )
     }
@@ -704,6 +818,16 @@ private val bundledAttributions: List<Attribution> = buildList {
                 "Copyright Meta Platforms, Inc.; ONNX conversion by Will Wade",
                 "CC-BY-NC-4.0", "cc-by-nc-4.0.txt",
                 "https://huggingface.co/facebook/mms-tts",
+            ),
+        )
+        // And Kokoro, which reads English and Mandarin ahead of MMS once fetched.
+        add(
+            Attribution(
+                "Kokoro-82M",
+                R.string.about_bundled_kokoro_used,
+                "Copyright hexgrad; ONNX conversion by the k2-fsa project",
+                "Apache-2.0", "apache-2.0.txt",
+                "https://huggingface.co/hexgrad/Kokoro-82M",
             ),
         )
         // Reduce background noise at Strong: the model the phone downloads
@@ -1248,6 +1372,11 @@ private val serviceAttributions: List<Attribution> = listOf(
         "https://www.frankfurter.app/",
     ),
     Attribution(
+        "AllRatesToday", R.string.about_service_currency_used, "",
+        "Provider terms", null,
+        "https://allratestoday.com/terms/#attribution",
+    ),
+    Attribution(
         "Coinbase, currency-api & CoinGecko", R.string.about_service_crypto_used, "",
         "Provider terms", null,
         "https://docs.cdp.coinbase.com/",
@@ -1312,6 +1441,11 @@ private val serviceAttributions: List<Attribution> = listOf(
         "Brave Answers", R.string.about_service_byok_used, "",
         "Brave Search API terms, under your own account", null,
         "https://brave.com/search/api/",
+    ),
+    Attribution(
+        "Privatemode AI", R.string.about_service_byok_used, "",
+        "Privatemode terms, under your own account", null,
+        "https://www.privatemode.ai/terms-of-service",
     ),
     // AiProvider.OPENAI_COMPATIBLE has no fixed endpoint: the address is typed
     // by the user, so the only honest attribution is that whatever they point
@@ -1401,6 +1535,7 @@ internal fun AboutSettings(
     onOpenLicenseText: (String) -> Unit,
     onOpenDebugLog: () -> Unit = {},
     onOpenStorage: () -> Unit = {},
+    onOpenResources: () -> Unit = {},
     onOpenImportHub: () -> Unit = {},
     onOpenStatistics: () -> Unit = {},
     onOpenEggGame: () -> Unit = {},
@@ -1627,6 +1762,14 @@ internal fun AboutSettings(
                 stringResource(R.string.about_storage_subtitle),
                 route = "storage",
                 onClick = onOpenStorage,
+            )
+        }
+        item(level = SettingLevel.STANDARD) {
+            NavRow(
+                R.string.about_resources_title,
+                stringResource(R.string.about_resources_subtitle),
+                route = "resources",
+                onClick = onOpenResources,
             )
         }
         item(visible = FeatureLibraryList.offered, level = SettingLevel.STANDARD) { FeatureLibrariesNavRow() }

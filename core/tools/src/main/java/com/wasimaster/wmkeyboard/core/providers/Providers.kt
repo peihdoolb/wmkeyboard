@@ -546,6 +546,9 @@ object ProviderTypes {
         "frankfurter", FIAT, R.string.core_tools_provider_frankfurter, R.string.core_tools_provider_frankfurter_desc,
         freeSoftware = true,
     )
+    val ALLRATESTODAY = ProviderType(
+        "allratestoday", FIAT, R.string.core_tools_provider_allratestoday, R.string.core_tools_provider_allratestoday_desc,
+    )
     val COINBASE = ProviderType(
         "coinbase", FIAT + COINS, R.string.core_tools_provider_coinbase, R.string.core_tools_provider_coinbase_desc,
     )
@@ -663,6 +666,16 @@ object ProviderTypes {
         CredentialSpec(key = Need.OPTIONAL, url = Need.REQUIRED, model = true, modelRequired = true), multiInstance = true,
     )
 
+    /**
+     * Privatemode AI (#1145): the key, and optionally the address of the
+     * user's own privatemode-proxy. Without one the phone encrypts each
+     * request itself; with one the proxy does, and may hold the key.
+     */
+    val PRIVATEMODE = ProviderType(
+        "privatemode", AI, R.string.core_tools_provider_privatemode, R.string.core_tools_provider_privatemode_desc,
+        CredentialSpec(key = Need.OPTIONAL, url = Need.OPTIONAL, model = true),
+    )
+
     /** The downloaded model the AI page's model manager picked; only where the build carries the runtime. */
     val ON_DEVICE_AI = ProviderType(
         "on_device_ai", AI, R.string.core_tools_provider_on_device_ai, R.string.core_tools_provider_on_device_ai_desc,
@@ -702,6 +715,12 @@ object ProviderTypes {
     )
     val OMNILINGUAL = ProviderType(
         "omnilingual", VOICE, R.string.core_tools_provider_omnilingual, R.string.core_tools_provider_omnilingual_desc,
+        onDevice = true, freeSoftware = true,
+    )
+
+    /** Alpha Cephei's Vosk (#1165): small Kaldi models, one per language. */
+    val VOSK = ProviderType(
+        "vosk", VOICE, R.string.core_tools_provider_vosk, R.string.core_tools_provider_vosk_desc,
         onDevice = true, freeSoftware = true,
     )
 
@@ -909,6 +928,7 @@ object ProviderTypes {
             MOONSHINE.id to "moonshine",
             SHERPA.id to "sherpa",
             OMNILINGUAL.id to "omnilingual",
+            VOSK.id to "vosk",
             TRANSCRIPTION_SERVER.id to ENGINE_SERVER,
         )
     }
@@ -928,11 +948,11 @@ object ProviderTypes {
         DATAMUSE, SIMILAR_WORDS,
         SEARXNG, TAVILY, BRAVE,
         UNSPLASH, PEXELS,
-        ER_API, FRANKFURTER, COINBASE, CURRENCY_API, COINGECKO,
+        ER_API, FRANKFURTER, ALLRATESTODAY, COINBASE, CURRENCY_API, COINGECKO,
         HOME_ASSISTANT, GOOGLE_HOME, SMARTTHINGS, HUE, OPENHAB, TUYA, SWITCHBOT,
         VISION_OCR, RENS,
-        ANTHROPIC, OPENAI, GEMINI, XAI, DEEPSEEK, BRAVE_ANSWERS, OLLAMA, LM_STUDIO, OPENAI_COMPATIBLE, ON_DEVICE_AI,
-        SYSTEM_RECOGNIZER, WHISTLE, WHISPER, ASR4ALL, PARAKEET, MOONSHINE, SHERPA, OMNILINGUAL, TRANSCRIPTION_SERVER,
+        ANTHROPIC, OPENAI, GEMINI, XAI, DEEPSEEK, BRAVE_ANSWERS, PRIVATEMODE, OLLAMA, LM_STUDIO, OPENAI_COMPATIBLE, ON_DEVICE_AI,
+        SYSTEM_RECOGNIZER, WHISTLE, WHISPER, ASR4ALL, PARAKEET, MOONSHINE, SHERPA, OMNILINGUAL, VOSK, TRANSCRIPTION_SERVER,
         HARPER, LANGUAGETOOL,
         ON_DEVICE_IMAGE, POLLINATIONS, AI_HORDE, OPENAI_IMAGE, GEMINI_IMAGE, XAI_IMAGE, STABILITY, BFL, RECRAFT,
         REPLICATE, FAL, TOGETHER, HUGGING_FACE, CLOUDFLARE_AI, AUTOMATIC1111, COMFYUI, OPENAI_COMPATIBLE_IMAGE,

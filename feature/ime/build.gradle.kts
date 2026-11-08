@@ -164,6 +164,7 @@ dependencies {
     api(project(":core:feedback"))
     api(project(":core:plugins"))
     api(project(":core:intelligence"))
+    api(project(":core:shell"))
     api(project(":feature:tools"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
@@ -245,3 +246,4 @@ dependencies {
 // Tests that reach the Rust text engines load libwm_engine_jni for this
 // machine, which :core:language builds; see the comment on its task.
 tasks.withType<Test>().configureEach { dependsOn(":core:language:buildHostEngine") }
+tasks.withType<Test>().configureEach { dependsOn(":core:plugins:buildHostPython") }

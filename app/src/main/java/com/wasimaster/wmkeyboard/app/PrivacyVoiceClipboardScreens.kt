@@ -329,6 +329,7 @@ internal fun VoiceSettings(repository: SettingsRepository, settings: LiveSetting
     // the keyboard no longer does, so it goes; the values stay stored.
     val voiceOn = settings.watch { it.voiceBar.enabled }
     val micSwitchOn = settings.watch { it.voiceBar.micSwitch }
+    val systemInputOn = settings.watch { it.voiceBar.systemInput }
     SettingsGroup {
         item {
             ToggleSetting(
@@ -487,11 +488,7 @@ internal fun VoiceSettings(repository: SettingsRepository, settings: LiveSetting
         }
         // Only the engines that decode as they hear end a phrase by a detector
         // of their own (#976); the others keep the recorder's loudness stop.
-        val liveListed = etListed.any {
-            it == com.wasimaster.wmkeyboard.core.voice.executorch.EtEngine.ASR4ALL ||
-                it == com.wasimaster.wmkeyboard.core.voice.executorch.EtEngine.SHERPA ||
-                it == com.wasimaster.wmkeyboard.core.voice.executorch.EtEngine.OMNILINGUAL
-        }
+        val liveListed = etListed.any { it.live }
         if (liveListed) item(level = SettingLevel.ADVANCED) {
             VoicePhraseEndSetting(repository, settings, scope)
         }
@@ -503,10 +500,10 @@ internal fun VoiceSettings(repository: SettingsRepository, settings: LiveSetting
                 default = SettingsDefaults.voiceSpokenPunctuation,
             ) { scope.launch { repository.setVoiceSpokenPunctuation(it) } }
         }
-        // Only Sherpa and Omnilingual write bare words; plain voice typing
-        // takes the words exactly as said.
+        // Only Sherpa, Omnilingual and Vosk write bare words; plain voice
+        // typing takes the words exactly as said.
         if (typingMode != com.wasimaster.wmkeyboard.core.settings.VoiceBarSettings.TYPING_PLAIN &&
-            etListed.any { it.onnx }
+            etListed.any { it.onnx || it == com.wasimaster.wmkeyboard.core.voice.executorch.EtEngine.VOSK }
         ) {
             item { VoicePunctuationSetting(repository, settings, scope) }
         }
@@ -520,6 +517,25 @@ internal fun VoiceSettings(repository: SettingsRepository, settings: LiveSetting
                 info = stringResource(R.string.voice_ai_tidy_info),
                 default = SettingsDefaults.voiceBar.aiTidy,
             ) { scope.launch { repository.setVoiceAiTidy(it) } }
+        }
+    }
+    // The keyboard's engines for every other app's microphone (#1142).
+    SettingsGroup(stringResource(R.string.voice_other_apps_group)) {
+        item(level = SettingLevel.STANDARD) {
+            ToggleSetting(
+                R.string.voice_system_input_title,
+                stringResource(R.string.voice_system_input_subtitle),
+                systemInputOn,
+                info = stringResource(R.string.voice_system_input_info),
+                default = SettingsDefaults.voiceBar.systemInput,
+            ) { scope.launch { repository.setVoiceSystemInput(it) } }
+        }
+        if (systemInputOn) item(level = SettingLevel.STANDARD) {
+            val context = LocalContext.current
+            NavRow(
+                R.string.voice_system_input_pick_title,
+                stringResource(R.string.voice_system_input_pick_subtitle),
+            ) { openVoiceInputSettings(context) }
         }
     }
     // What most people never change: kept in reach, out of the way.
@@ -654,6 +670,27 @@ internal fun VoiceSettings(repository: SettingsRepository, settings: LiveSetting
                 ) { repository.setVoiceBiasWords(it) }
             }
         }
+    }
+}
+
+/**
+ * Android's own page for the phone's voice input (#1142), where WM Keyboard
+ * is picked once **Voice input for other apps** is on. Phones file it in
+ * different places, so the nearest one that opens is used: voice input,
+ * then default apps, where the digital assistant row holds it, then
+ * Settings itself.
+ */
+internal fun openVoiceInputSettings(context: Context) {
+    val tries = listOf(
+        Settings.ACTION_VOICE_INPUT_SETTINGS,
+        Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS,
+        Settings.ACTION_SETTINGS,
+    )
+    for (action in tries) {
+        val opened = runCatching {
+            context.startActivity(Intent(action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }.isSuccess
+        if (opened) return
     }
 }
 
@@ -1333,6 +1370,15 @@ internal fun ClipboardChipsSettings(
                 default = SettingsDefaults.clipboard.copiedCodeChip,
                 detail = { chip -> ChoiceDetail(stringResource(copiedCodeChipDescRes(chip))) },
             ) { scope.launch { repository.setClipboardCopiedCodeChip(it) } }
+        }
+        item(visible = suggestRecent, level = SettingLevel.STANDARD) {
+            ToggleSetting(
+                R.string.clipboard_secret_chip_title,
+                stringResource(R.string.clipboard_secret_chip_subtitle),
+                settings.watch { it.clipboard.secretChipInPasswordFields },
+                info = stringResource(R.string.clipboard_secret_chip_info),
+                default = SettingsDefaults.clipboard.secretChipInPasswordFields,
+            ) { scope.launch { repository.setClipboardSecretChipInPasswordFields(it) } }
         }
     }
     SettingsGroup(stringResource(R.string.clipboard_entities_group)) {

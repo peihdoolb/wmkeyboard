@@ -106,6 +106,16 @@
             android:name="com.wasimaster.wmkeyboard.core.accessibility.SplitScreenHelperService"
             tools:node="remove" />
 
+        <!--
+           The system buttons service (#1148, #1170), for the same reason
+           again. ChannelFeatures.SYSTEM_BUTTONS keeps the Screenshot tool,
+           the floating button's system button actions and their grant rows
+           out of the Play build.
+        -->
+        <service
+            android:name="com.wasimaster.wmkeyboard.core.accessibility.SystemButtonsService"
+            tools:node="remove" />
+
         <!-- See the permission above. -->
         <service
             android:name="com.wasimaster.wmkeyboard.core.clock.ClockRingService"

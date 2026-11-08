@@ -48,6 +48,9 @@ object ArabicTashkeel {
         }.getOrNull()
     }
 
+    /** Whether the model is loaded; for the Resources screen (#1163). Any thread. */
+    val isLoaded: Boolean get() = session != 0L
+
     /** Frees the model. The next [add] opens it again. */
     @Synchronized
     fun release() {

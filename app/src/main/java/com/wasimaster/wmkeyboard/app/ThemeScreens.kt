@@ -167,6 +167,7 @@ import com.wasimaster.wmkeyboard.core.feedback.SoundPackStore
 import com.wasimaster.wmkeyboard.core.feedback.SoundStore
 import com.wasimaster.wmkeyboard.core.fonts.FontStore
 import com.wasimaster.wmkeyboard.core.settings.KeySoundStyle
+import com.wasimaster.wmkeyboard.core.settings.SystemMotion
 import com.wasimaster.wmkeyboard.core.script.LanguageRegistry
 import com.wasimaster.wmkeyboard.core.script.ScriptId
 import com.wasimaster.wmkeyboard.core.ui.ScalablePreview
@@ -211,6 +212,11 @@ import com.wasimaster.wmkeyboard.core.theme.BoardEffectKind
 import com.wasimaster.wmkeyboard.core.theme.BoardEffectSpec
 import com.wasimaster.wmkeyboard.core.theme.KeyLightingPattern
 import com.wasimaster.wmkeyboard.core.theme.KeyLightingSpec
+import com.wasimaster.wmkeyboard.core.theme.TOUCH_BLOOM_DIP_RANGE
+import com.wasimaster.wmkeyboard.core.theme.TOUCH_BLOOM_LIGHT_RANGE
+import com.wasimaster.wmkeyboard.core.theme.TOUCH_BLOOM_RADIUS_RANGE
+import com.wasimaster.wmkeyboard.core.theme.TOUCH_BLOOM_WOBBLE_RANGE
+import com.wasimaster.wmkeyboard.core.theme.TouchBloomSpec
 import com.wasimaster.wmkeyboard.core.theme.KeyLightingTarget
 import com.wasimaster.wmkeyboard.core.theme.KeyMaterialKind
 import com.wasimaster.wmkeyboard.core.theme.KeyMaterialSpec
@@ -288,6 +294,8 @@ import com.wasimaster.wmkeyboard.core.theme.ThemeCodec
 import com.wasimaster.wmkeyboard.core.theme.FutoTheme
 import com.wasimaster.wmkeyboard.core.theme.FutoThemeResult
 import com.wasimaster.wmkeyboard.core.theme.ThemeSpec
+import com.wasimaster.wmkeyboard.core.theme.alphaFraction
+import com.wasimaster.wmkeyboard.core.theme.withAlphaFraction
 import com.wasimaster.wmkeyboard.core.theme.brush
 import com.wasimaster.wmkeyboard.core.theme.keyShapeFor
 import com.wasimaster.wmkeyboard.core.theme.keyShapeKindOrNull
@@ -1125,6 +1133,36 @@ internal fun themeEditTitle(settings: LiveSettings, themeId: String): String? =
 
 // ---- theme gallery ----
 
+/**
+ * What one picked theme file came to: how many gallery entries it added, 0 when
+ * it could not be read, and what a one-file import says about it. A null
+ * [message] means a dialog of the importer's own takes it from there.
+ */
+private class ThemeFileOutcome(val saved: Int, val message: String?) {
+    companion object {
+        fun failed(message: String) = ThemeFileOutcome(0, message)
+    }
+}
+
+/**
+ * The one message a batch import ends on: how many themes came in, then the
+ * files that did not, by name, so the user knows which to look at.
+ */
+private fun themeBatchSummary(context: android.content.Context, saved: Int, failed: List<String>): String =
+    buildString {
+        append(context.resources.getQuantityString(R.plurals.theme_import_batch_saved, saved, saved))
+        if (failed.isNotEmpty()) {
+            append("\n\n").append(
+                context.resources.getQuantityString(
+                    R.plurals.theme_import_batch_failed,
+                    failed.size,
+                    failed.size,
+                    failed.joinToString(", "),
+                ),
+            )
+        }
+    }
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ThemesScreen(
@@ -1155,75 +1193,156 @@ fun ThemesScreen(
             }
         }
     }
+    // Picked themes, all in one zip of theme files, parked like [pendingExport].
+    var pendingBulkExport by remember { mutableStateOf<List<ThemeSpec>?>(null) }
+    var message by remember { mutableStateOf<String?>(null) }
+    val bulkExportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument(PackBundle.MIME_TYPE)
+    ) { uri ->
+        val themes = pendingBulkExport
+        pendingBulkExport = null
+        if (uri == null || themes == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val ok = withContext(Dispatchers.IO) {
+                runCatching {
+                    context.contentResolver.requireOutputStream(uri).use { out ->
+                        PackBundle.write(
+                            out,
+                            themes.map { theme ->
+                                "${theme.name.ifBlank { "theme" }}.${ThemeCodec.FILE_EXTENSION}" to { stream: java.io.OutputStream ->
+                                    stream.write(ThemeCodec.encode(theme.withEmbeddedImages()).toByteArray())
+                                }
+                            },
+                        )
+                    }
+                }.isSuccess
+            }
+            message = if (ok) {
+                context.resources.getQuantityString(R.plurals.pick_exported_message, themes.size, themes.size)
+            } else {
+                context.getString(R.string.pick_export_error)
+            }
+        }
+    }
     // Whatever the last import had to say, shown in a dialog. A theme file
     // carries no format tag, so a file that is not one decodes to an
     // all-defaults theme or to nothing at all — either way the user has to be
     // told, or picking the wrong file looks like the button doing nothing.
-    var message by remember { mutableStateOf<String?>(null) }
-    val importLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
+    /**
+     * Runs [one] over every file picked, for the import buttons whose picker
+     * takes several files at once. One file says what that importer always
+     * said. Several end on one summary rather than a dialog per file: how many
+     * themes came in, and the names of the files that could not be read.
+     *
+     * Each file gets its own id stem. Files read in the same millisecond would
+     * otherwise share one, and the second would replace the first.
+     */
+    fun importThemeFiles(
+        uris: List<android.net.Uri>,
+        one: suspend (uri: android.net.Uri, id: String, alone: Boolean) -> ThemeFileOutcome,
+    ) {
+        if (uris.isEmpty()) return
         scope.launch {
-            val text = withContext(Dispatchers.IO) {
-                runCatching {
-                    context.contentResolver.readTextCapped(uri)
-                }.getOrNull()
-            }
-            val parsed = text?.let { ThemeCodec.decode(it) }
-            if (parsed == null) {
-                message = context.getString(R.string.theme_import_wrong_file_error)
+            val stamp = System.currentTimeMillis()
+            if (uris.size == 1) {
+                one(uris.single(), "custom_$stamp", true).message?.let { message = it }
                 return@launch
             }
-            val id = "custom_${System.currentTimeMillis()}"
-            // Set the fresh ids first — the parent's and every variant's — so
-            // the extracted image filenames key off them and stay unique
-            // against existing themes.
-            val stored = withContext(Dispatchers.IO) {
-                parsed.withFreshIds(id).withExtractedImages(themeImagesDir(context))
-            }
-            repository.upsertCustomTheme(stored)
-            repository.setKeyboardThemeId(id)
-            message = context.getString(R.string.theme_import_done_message, stored.name)
-        }
-    }
-    val florisLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        scope.launch {
-            val result = withContext(Dispatchers.IO) {
-                runCatching {
-                    context.contentResolver.requireInputStream(uri).use {
-                        FlexTheme.read(it, dynamicSnyggPalette(context))
-                    }
-                }.getOrElse { FlexResult.Unreadable }
-            }
-            if (result !is FlexResult.Converted) {
-                message = context.getString(R.string.import_floris_unreadable_body)
-                return@launch
-            }
-            val dir = withContext(Dispatchers.IO) { themeImagesDir(context) }
-            val base = "custom_${System.currentTimeMillis()}"
-            val stored = withContext(Dispatchers.IO) {
-                result.themes.mapIndexed { index, converted ->
-                    // A day and night pair need distinct ids: the extracted
-                    // image file names are keyed on the id, so a shared one
-                    // would have the second theme overwrite the first's images.
-                    converted.stored(
-                        if (index == 0) base else "${base}_v$index",
-                        dir,
-                        FontStore.get(context),
-                    )
+            var saved = 0
+            val failed = ArrayList<String>()
+            uris.forEachIndexed { index, uri ->
+                val outcome = one(uri, "custom_${stamp}_b$index", false)
+                if (outcome.saved > 0) {
+                    saved += outcome.saved
+                } else {
+                    failed += withContext(Dispatchers.IO) { WMFileTypes.displayName(context, uri) }
                 }
             }
-            // One entry, not N: an extension's themes are the looks of one
-            // theme, named after the extension itself.
-            val entry = groupAsFamily(stored, result.title)
-            repository.upsertCustomTheme(entry)
-            // Saved, not switched to. A converted theme is exactly the thing
-            // worth looking at before it becomes the keyboard.
-            message = if (stored.size >= 2) {
+            message = themeBatchSummary(context, saved, failed)
+        }
+    }
+    suspend fun importWmTheme(uri: android.net.Uri, id: String, alone: Boolean): ThemeFileOutcome {
+        // A zip of theme files, as Export selected writes: every theme in it,
+        // none switched to, the way a batch of files comes in.
+        if (withContext(Dispatchers.IO) { PackBundle.isBundle(context, uri, ThemeCodec.FILE_EXTENSION) }) {
+            val dir = withContext(Dispatchers.IO) { themeImagesDir(context) }
+            val read = withContext(Dispatchers.IO) {
+                val themes = ArrayList<ThemeSpec>()
+                runCatching {
+                    PackBundle.forEachPack(context, uri, ThemeCodec.FILE_EXTENSION) { _, input ->
+                        val parsed = input?.use { it.readBytes().decodeToString() }?.let(ThemeCodec::decode)
+                        if (parsed != null) {
+                            themes += parsed.withFreshIds("${id}_z${themes.size}").withExtractedImages(dir)
+                        }
+                    }
+                }
+                themes
+            }
+            if (read.isEmpty()) {
+                return ThemeFileOutcome.failed(context.getString(R.string.theme_import_wrong_file_error))
+            }
+            for (theme in read) repository.upsertCustomTheme(theme)
+            return ThemeFileOutcome(
+                read.size,
+                context.resources.getQuantityString(R.plurals.pick_import_summary, read.size, read.size),
+            )
+        }
+        val text = withContext(Dispatchers.IO) {
+            runCatching {
+                context.contentResolver.readTextCapped(uri)
+            }.getOrNull()
+        }
+        val parsed = text?.let { ThemeCodec.decode(it) }
+            ?: return ThemeFileOutcome.failed(context.getString(R.string.theme_import_wrong_file_error))
+        // Set the fresh ids first — the parent's and every variant's — so
+        // the extracted image filenames key off them and stay unique
+        // against existing themes.
+        val stored = withContext(Dispatchers.IO) {
+            parsed.withFreshIds(id).withExtractedImages(themeImagesDir(context))
+        }
+        repository.upsertCustomTheme(stored)
+        // One file is applied, as it always was. A batch is not: switching to
+        // each in turn would land on whichever file came last, which is not a
+        // choice the user made.
+        if (alone) repository.setKeyboardThemeId(id)
+        return ThemeFileOutcome(1, context.getString(R.string.theme_import_done_message, stored.name))
+    }
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris -> importThemeFiles(uris) { uri, id, alone -> importWmTheme(uri, id, alone) } }
+    suspend fun importFlorisTheme(uri: android.net.Uri, base: String): ThemeFileOutcome {
+        val result = withContext(Dispatchers.IO) {
+            runCatching {
+                context.contentResolver.requireInputStream(uri).use {
+                    FlexTheme.read(it, dynamicSnyggPalette(context))
+                }
+            }.getOrElse { FlexResult.Unreadable }
+        }
+        if (result !is FlexResult.Converted) {
+            return ThemeFileOutcome.failed(context.getString(R.string.import_floris_unreadable_body))
+        }
+        val dir = withContext(Dispatchers.IO) { themeImagesDir(context) }
+        val stored = withContext(Dispatchers.IO) {
+            result.themes.mapIndexed { index, converted ->
+                // A day and night pair need distinct ids: the extracted
+                // image file names are keyed on the id, so a shared one
+                // would have the second theme overwrite the first's images.
+                converted.stored(
+                    if (index == 0) base else "${base}_v$index",
+                    dir,
+                    FontStore.get(context),
+                )
+            }
+        }
+        // One entry, not N: an extension's themes are the looks of one
+        // theme, named after the extension itself.
+        val entry = groupAsFamily(stored, result.title)
+        repository.upsertCustomTheme(entry)
+        // Saved, not switched to. A converted theme is exactly the thing
+        // worth looking at before it becomes the keyboard.
+        return ThemeFileOutcome(
+            1,
+            if (stored.size >= 2) {
                 context.getString(
                     R.string.import_floris_done_family,
                     themeFamilyName(context, entry),
@@ -1235,183 +1354,192 @@ fun ThemesScreen(
                     stored.size,
                     stored.size,
                 )
-            }
-        }
+            },
+        )
     }
+    val florisLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris -> importThemeFiles(uris) { uri, id, _ -> importFlorisTheme(uri, id) } }
     // A FUTO theme is a ZIP, read and saved the way the file dialog does it.
-    val futoLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        scope.launch {
-            val result = withContext(Dispatchers.IO) {
-                runCatching {
-                    context.contentResolver.requireInputStream(uri).use { FutoTheme.read(it) }
-                }.getOrElse { FutoThemeResult.Unreadable }
-            }
-            message = if (result is FutoThemeResult.Converted) {
-                saveFutoTheme(context, repository, result)
-            } else {
-                context.getString(R.string.import_futo_theme_unreadable_body)
-            }
+    suspend fun importFutoTheme(uri: android.net.Uri, id: String): ThemeFileOutcome {
+        val result = withContext(Dispatchers.IO) {
+            runCatching {
+                context.contentResolver.requireInputStream(uri).use { FutoTheme.read(it) }
+            }.getOrElse { FutoThemeResult.Unreadable }
+        }
+        return if (result is FutoThemeResult.Converted) {
+            ThemeFileOutcome(1, saveFutoTheme(context, repository, result, id))
+        } else {
+            ThemeFileOutcome.failed(context.getString(R.string.import_futo_theme_unreadable_body))
         }
     }
+    val futoLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris -> importThemeFiles(uris) { uri, id, _ -> importFutoTheme(uri, id) } }
     // HeliBoard and LeanType have no theme file: a theme is a line of JSON,
     // copied out of their colour screen and pasted into a forum post. So this
     // import takes text from either source, and the button opens a two-way
     // chooser rather than a file picker.
     var heliChooser by remember { mutableStateOf(false) }
-    suspend fun applyHeliTheme(text: String?) {
+    suspend fun heliTheme(text: String?, id: String): ThemeFileOutcome {
         if (text.isNullOrBlank()) {
-            message = context.getString(R.string.import_heli_clipboard_empty_body)
-            return
+            return ThemeFileOutcome.failed(context.getString(R.string.import_heli_clipboard_empty_body))
         }
         val result = withContext(Dispatchers.Default) { HeliTheme.read(text) }
         if (result !is HeliResult.Converted) {
-            message = context.getString(R.string.import_heli_unreadable_body)
-            return
+            return ThemeFileOutcome.failed(context.getString(R.string.import_heli_unreadable_body))
         }
-        val stored = result.theme.copy(id = "custom_${System.currentTimeMillis()}")
+        val stored = result.theme.copy(id = id)
         repository.upsertCustomTheme(stored)
         // Saved, not switched to, for the reason the FlorisBoard import is:
         // a converted theme is the thing worth looking at first.
-        message = buildString {
-            append(
-                context.getString(
-                    R.string.import_heli_done,
-                    stored.name,
-                    result.coloursUsed,
-                    result.coloursRead,
-                ),
-            )
-            // The same list the other two imports show. "N of M colours" on
-            // its own never said which M − N, and for the all-colours export
-            // it is nearly always the emoji board.
-            if (result.dropped.isNotEmpty()) {
-                append("\n\n").append(context.getString(R.string.import_repairs_pending_title))
-                for (line in result.dropped) append("\n• ").append(heliDroppedLine(context, line))
-            }
-        }
+        return ThemeFileOutcome(
+            1,
+            buildString {
+                append(
+                    context.getString(
+                        R.string.import_heli_done,
+                        stored.name,
+                        result.coloursUsed,
+                        result.coloursRead,
+                    ),
+                )
+                // The same list the other two imports show. "N of M colours" on
+                // its own never said which M − N, and for the all-colours export
+                // it is nearly always the emoji board.
+                if (result.dropped.isNotEmpty()) {
+                    append("\n\n").append(context.getString(R.string.import_repairs_pending_title))
+                    for (line in result.dropped) append("\n• ").append(heliDroppedLine(context, line))
+                }
+            },
+        )
+    }
+    suspend fun applyHeliTheme(text: String?) {
+        message = heliTheme(text, "custom_${System.currentTimeMillis()}").message
     }
     val heliLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        scope.launch {
+        ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris ->
+        importThemeFiles(uris) { uri, id, _ ->
             val text = withContext(Dispatchers.IO) {
                 runCatching {
                     context.contentResolver.readTextCapped(uri)
                 }.getOrNull()
             }
-            applyHeliTheme(text)
+            heliTheme(text, id)
         }
     }
     // Multiling O has no theme file either: a theme is the colours block of its
     // settings export, pasted or saved to a text file, or a link to the
     // community theme page with the block in it. The same two-way chooser.
     var multilingChooser by remember { mutableStateOf(false) }
-    suspend fun applyMultilingTheme(text: String?) {
+    suspend fun multilingTheme(text: String?, id: String): ThemeFileOutcome {
         if (text.isNullOrBlank()) {
-            message = context.getString(R.string.import_heli_clipboard_empty_body)
-            return
+            return ThemeFileOutcome.failed(context.getString(R.string.import_heli_clipboard_empty_body))
         }
         val result = withContext(Dispatchers.Default) { MultilingTheme.read(text) }
         if (result !is MultilingThemeResult.Converted) {
-            message = context.getString(R.string.import_multiling_theme_unreadable_body)
-            return
+            return ThemeFileOutcome.failed(context.getString(R.string.import_multiling_theme_unreadable_body))
         }
-        val stored = result.theme.copy(id = "custom_${System.currentTimeMillis()}")
+        val stored = result.theme.copy(id = id)
         repository.upsertCustomTheme(stored)
         // Saved, not switched to, like the other converted themes.
-        message = buildString {
-            append(
-                context.getString(
-                    R.string.import_heli_done,
-                    stored.name,
-                    result.coloursUsed,
-                    result.coloursRead,
-                ),
-            )
-            if (result.dropped.isNotEmpty()) {
-                append("\n\n").append(context.getString(R.string.import_repairs_pending_title))
-                for (line in result.dropped) append("\n• ").append(multilingDroppedLine(context, line))
-            }
-        }
+        return ThemeFileOutcome(
+            1,
+            buildString {
+                append(
+                    context.getString(
+                        R.string.import_heli_done,
+                        stored.name,
+                        result.coloursUsed,
+                        result.coloursRead,
+                    ),
+                )
+                if (result.dropped.isNotEmpty()) {
+                    append("\n\n").append(context.getString(R.string.import_repairs_pending_title))
+                    for (line in result.dropped) append("\n• ").append(multilingDroppedLine(context, line))
+                }
+            },
+        )
+    }
+    suspend fun applyMultilingTheme(text: String?) {
+        message = multilingTheme(text, "custom_${System.currentTimeMillis()}").message
     }
     val multilingLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        scope.launch {
+        ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris ->
+        importThemeFiles(uris) { uri, id, _ ->
             val text = withContext(Dispatchers.IO) {
                 runCatching {
                     context.contentResolver.readTextCapped(uri)
                 }.getOrNull()
             }
-            applyMultilingTheme(text)
+            multilingTheme(text, id)
         }
     }
     // Kinetica has no theme file: its look is a few settings, and they travel
     // in its backup, a text file. Only the theme is read out of it.
-    val kineticaLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        scope.launch {
-            val result = withContext(Dispatchers.IO) {
-                runCatching {
-                    context.contentResolver.readTextCapped(uri)?.let(KineticaTheme::read)
-                }.getOrNull() ?: KineticaThemeResult.NotATheme
-            }
-            if (result !is KineticaThemeResult.Converted) {
-                message = context.getString(R.string.import_kinetica_unreadable_body)
-                return@launch
-            }
-            // A theme that switched with the phone's dark mode is a family of
-            // two looks, so the ids are minted for the variant too.
-            val stored = result.theme.withFreshIds("custom_${System.currentTimeMillis()}")
-            repository.upsertCustomTheme(stored)
-            // Saved, not switched to, like the other converted themes.
-            message = buildString {
+    suspend fun importKineticaTheme(uri: android.net.Uri, id: String): ThemeFileOutcome {
+        val result = withContext(Dispatchers.IO) {
+            runCatching {
+                context.contentResolver.readTextCapped(uri)?.let(KineticaTheme::read)
+            }.getOrNull() ?: KineticaThemeResult.NotATheme
+        }
+        if (result !is KineticaThemeResult.Converted) {
+            return ThemeFileOutcome.failed(context.getString(R.string.import_kinetica_unreadable_body))
+        }
+        // A theme that switched with the phone's dark mode is a family of
+        // two looks, so the ids are minted for the variant too.
+        val stored = result.theme.withFreshIds(id)
+        repository.upsertCustomTheme(stored)
+        // Saved, not switched to, like the other converted themes.
+        return ThemeFileOutcome(
+            1,
+            buildString {
                 append(context.getString(R.string.import_kinetica_done, stored.familyName ?: stored.name))
                 if (result.dropped.isNotEmpty()) {
                     append("\n\n").append(context.getString(R.string.import_repairs_pending_title))
                     for (line in result.dropped) append("\n• ").append(kineticaDroppedLine(context, line))
                 }
-            }
-        }
+            },
+        )
     }
+    val kineticaLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris -> importThemeFiles(uris) { uri, id, _ -> importKineticaTheme(uri, id) } }
     // A `.clinktheme`, exported from Clink (an iOS keyboard) or downloaded
     // from one of its theme repositories.
-    val clinkLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        scope.launch {
-            val result = withContext(Dispatchers.IO) {
-                runCatching {
-                    context.contentResolver.readTextCapped(uri)?.let(ClinkTheme::read)
-                }.getOrNull() ?: ClinkThemeResult.NotATheme
-            }
-            if (result !is ClinkThemeResult.Converted) {
-                message = context.getString(R.string.import_clink_unreadable_body)
-                return@launch
-            }
-            // A theme that switched with light and dark mode is a family of
-            // two looks, so the ids are minted for the variant too.
-            val stored = result.theme.withFreshIds("custom_${System.currentTimeMillis()}")
-            repository.upsertCustomTheme(stored)
-            // Saved, not switched to, like the other converted themes.
-            message = buildString {
+    suspend fun importClinkTheme(uri: android.net.Uri, id: String): ThemeFileOutcome {
+        val result = withContext(Dispatchers.IO) {
+            runCatching {
+                context.contentResolver.readTextCapped(uri)?.let(ClinkTheme::read)
+            }.getOrNull() ?: ClinkThemeResult.NotATheme
+        }
+        if (result !is ClinkThemeResult.Converted) {
+            return ThemeFileOutcome.failed(context.getString(R.string.import_clink_unreadable_body))
+        }
+        // A theme that switched with light and dark mode is a family of
+        // two looks, so the ids are minted for the variant too.
+        val stored = result.theme.withFreshIds(id)
+        repository.upsertCustomTheme(stored)
+        // Saved, not switched to, like the other converted themes.
+        return ThemeFileOutcome(
+            1,
+            buildString {
                 append(context.getString(R.string.import_clink_done, stored.familyName ?: stored.name))
                 if (result.dropped.isNotEmpty()) {
                     append("\n\n").append(context.getString(R.string.import_repairs_pending_title))
                     for (line in result.dropped) append("\n• ").append(clinkDroppedLine(context, line))
                 }
-            }
-        }
+            },
+        )
     }
-    // A theme read off a screenshot of a keyboard.
+    val clinkLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris -> importThemeFiles(uris) { uri, id, _ -> importClinkTheme(uri, id) } }
+    // A theme read off a screenshot of a keyboard. Not part of the batch
+    // imports: the pictures it takes are several views of one keyboard, read
+    // together into one theme.
     var themeCopyOpen by remember { mutableStateOf(false) }
     if (themeCopyOpen) {
         ThemeCopyDialogs(
@@ -1425,30 +1553,37 @@ fun ThemesScreen(
     // screen. What was read waits in gboardRead for the dialogs to take it.
     var gboardChooser by remember { mutableStateOf(false) }
     var gboardRead by remember { mutableStateOf<GboardResult.Converted?>(null) }
-    val gboardLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        scope.launch {
-            val result = withContext(Dispatchers.IO) {
-                runCatching {
-                    val name = WMFileTypes.displayName(context, uri).substringBeforeLast('.')
-                    context.contentResolver.requireInputStream(uri).use { GboardTheme.read(it, name) }
-                }.getOrElse { GboardResult.Unreadable }
-            }
-            if (result is GboardResult.Converted) {
-                gboardRead = result
-            } else {
-                message = gboardFailureMessage(context, result)
+    suspend fun importGboardTheme(uri: android.net.Uri, id: String, alone: Boolean): ThemeFileOutcome {
+        val result = withContext(Dispatchers.IO) {
+            runCatching {
+                val name = WMFileTypes.displayName(context, uri).substringBeforeLast('.')
+                context.contentResolver.requireInputStream(uri).use { GboardTheme.read(it, name) }
+            }.getOrElse { GboardResult.Unreadable }
+        }
+        if (result !is GboardResult.Converted) {
+            return ThemeFileOutcome.failed(gboardFailureMessage(context, result))
+        }
+        // One file opens the preview, or a pack's list, and the dialogs save
+        // and report it. A batch has no room for a dialog per file, so it
+        // saves every theme in the file, the way the pack list's Add all does.
+        if (alone) {
+            gboardRead = result
+        } else {
+            result.themes.forEachIndexed { index, theme ->
+                saveGboardTheme(context, repository, theme, baseId = if (index == 0) id else "${id}_p$index")
             }
         }
+        return ThemeFileOutcome(result.themes.size, null)
     }
+    val gboardLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris -> importThemeFiles(uris) { uri, id, alone -> importGboardTheme(uri, id, alone) } }
     // The custom theme the community publish dialog is open for.
     var publishing by remember { mutableStateOf<ThemeSpec?>(null) }
     publishing?.let { PublishThemeDialog(it) { publishing = null } }
     fun export(theme: ThemeSpec) {
         pendingExport = theme
-        exportLauncher.launch("${theme.name.ifBlank { "theme" }}.${ThemeCodec.FILE_EXTENSION}")
+        exportLauncher.launchPicker(context, "${theme.name.ifBlank { "theme" }}.${ThemeCodec.FILE_EXTENSION}")
     }
     fun duplicateAndEdit(base: ThemeSpec) {
         scope.launch {
@@ -1735,6 +1870,13 @@ fun ThemesScreen(
                 onClear = { pickedIds = emptySet() },
                 onSelectAll = { pickedIds = customEntries.mapTo(HashSet()) { it.id } },
                 onDelete = { confirmBulkDelete = true },
+                onExport = {
+                    // As a card exports: a family card the family, a flat card its one look.
+                    pendingBulkExport = customEntries.filter { it.id in livePicked }.map { entry ->
+                        if (grouped) entry else entry.copy(variants = emptyList(), familyName = null)
+                    }
+                    bulkExportLauncher.launch(PackBundle.fileName("themes"))
+                },
                 onGroup = if (pickedCards.size >= 2) {
                     {
                         // Named after the first card, as it reads in the
@@ -1844,7 +1986,7 @@ fun ThemesScreen(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        OutlinedButton(onClick = { importLauncher.launch(ThemeCodec.IMPORT_MIME_TYPES) }) {
+        OutlinedButton(onClick = { importLauncher.launch(ThemeCodec.IMPORT_MIME_TYPES + PackBundle.MIME_TYPE) }) {
             Icon(Icons.Outlined.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(6.dp))
             Text(stringResource(CommonR.string.common_import))
@@ -2672,6 +2814,8 @@ private fun ThemePickBar(
     onClear: () -> Unit,
     onSelectAll: () -> Unit,
     onDelete: () -> Unit,
+    /** Saves the picked cards in one zip of theme files. */
+    onExport: () -> Unit,
     /** Gathers the picked cards' looks into one family; null with fewer than two cards. */
     onGroup: (() -> Unit)?,
     /** Lets the picked looks stand alone; null when none of them shares a family. */
@@ -2702,6 +2846,9 @@ private fun ThemePickBar(
             }
             IconButton(onClick = onSelectAll, enabled = !allPicked) {
                 Icon(Icons.Outlined.SelectAll, contentDescription = stringResource(CommonR.string.common_select_all))
+            }
+            IconButton(onClick = onExport) {
+                Icon(Icons.Outlined.FileUpload, contentDescription = stringResource(R.string.pick_export_action))
             }
             IconButton(onClick = onDelete) {
                 Icon(Icons.Outlined.Delete, contentDescription = stringResource(CommonR.string.common_delete))
@@ -3635,6 +3782,35 @@ private fun ThemeEditorContent(
                         val stepped = (it * 20).roundToInt() / 20f
                         update { t -> t.copy(secondarySuggestionScale = stepped.takeIf { s -> s != 1f }) }
                     }
+                }
+                item(level = SettingLevel.STANDARD) {
+                    // The pills under the words while Coloured suggestions is on
+                    // (#510). Auto is the accent washed thin, which is all they were.
+                    NullableColorRow(
+                        R.string.theme_suggestion_pill_title,
+                        look.watch { it.suggestionPillBackground },
+                        fallback = look.watch { it.accent.withAlphaFraction(if (it.dark) 0.16f else 0.10f) },
+                        supportsAlpha = true,
+                        info = stringResource(R.string.theme_suggestion_pill_body),
+                        onChange = { update { t -> t.copy(suggestionPillBackground = it) } },
+                    )
+                }
+                item(level = SettingLevel.STANDARD) {
+                    NullableColorRow(
+                        R.string.theme_primary_suggestion_pill_title,
+                        look.watch { it.primarySuggestionPillBackground },
+                        fallback = look.watch { t ->
+                            // The same resolution the keyboard makes: the plain pill
+                            // laid over itself, or the accent a step deeper.
+                            t.suggestionPillBackground?.let { pill ->
+                                val a = pill.alphaFraction()
+                                pill.withAlphaFraction(1f - (1f - a) * (1f - a))
+                            } ?: t.accent.withAlphaFraction(if (t.dark) 0.34f else 0.24f)
+                        },
+                        supportsAlpha = true,
+                        info = stringResource(R.string.theme_primary_suggestion_pill_body),
+                        onChange = { update { t -> t.copy(primarySuggestionPillBackground = it) } },
+                    )
                 }
             }
         }
@@ -5748,6 +5924,17 @@ private fun ThemeEditorContent(
         }
     }
 
+    // Reduce motion stills the moving background and switches key lighting
+    // and touch bloom off, which reads as "these settings do nothing" unless
+    // the editor says so where they are (#1129). The phone's own Remove
+    // animations does the same on the keyboard, though not in this preview.
+    val anyMotion = look.watch { it.boardEffect != null || it.keyLighting != null || it.touchBloom != null }
+    val motionHeld = settings.watch { it.reduceMotion }
+    val systemStill = remember { SystemMotion.animationsOff(context) }
+    if (anyMotion && (motionHeld || systemStill)) {
+        MotionHeldNote(bySystem = !motionHeld) { scope.launch { repository.setReduceMotion(false) } }
+    }
+
     val boardEffect = look.watch { it.boardEffect }
     fun updateBoardEffect(change: (BoardEffectSpec) -> BoardEffectSpec) =
         update { t -> t.boardEffect?.let { t.copy(boardEffect = change(it)) } ?: t }
@@ -5921,6 +6108,68 @@ private fun ThemeEditorContent(
                         display = { "%d ms".format(it.roundToInt()) },
                     ) { v -> updateLighting { it.copy(decayMs = (v / 20).roundToInt() * 20) } }
                 }
+            }
+        }
+    }
+
+    val bloom = look.watch { it.touchBloom }
+    fun updateBloom(change: (TouchBloomSpec) -> TouchBloomSpec) =
+        update { t -> t.touchBloom?.let { t.copy(touchBloom = change(it)) } ?: t }
+    SettingsGroup(
+        stringResource(R.string.theme_touch_bloom_section_title),
+        foldKey = "theme/touch_bloom",
+        info = stringResource(R.string.theme_touch_bloom_section_body),
+    ) {
+        item {
+            ToggleSetting(
+                R.string.theme_touch_bloom_title,
+                stringResource(R.string.theme_touch_bloom_subtitle),
+                checked = bloom != null,
+            ) { on -> update { t -> t.copy(touchBloom = if (on) t.touchBloom ?: TouchBloomSpec() else null) } }
+        }
+        if (bloom != null) {
+            item {
+                NullableColorRow(
+                    R.string.theme_touch_bloom_color_title,
+                    bloom.color, fallback = look.watch { it.accent },
+                    supportsAlpha = true,
+                    onChange = { c -> updateBloom { it.copy(color = c) } },
+                )
+            }
+            item {
+                SliderRow(
+                    R.string.theme_touch_bloom_light_title,
+                    value = bloom.light,
+                    range = TOUCH_BLOOM_LIGHT_RANGE,
+                    display = { "%d%%".format((it * 100).roundToInt()) },
+                ) { v -> updateBloom { it.copy(light = (v * 20).roundToInt() / 20f) } }
+            }
+            item {
+                SliderRow(
+                    R.string.theme_touch_bloom_radius_title,
+                    value = bloom.radiusDp,
+                    range = TOUCH_BLOOM_RADIUS_RANGE,
+                    display = { "%d dp".format(it.roundToInt()) },
+                    info = stringResource(R.string.theme_touch_bloom_radius_body),
+                ) { v -> updateBloom { it.copy(radiusDp = (v / 4).roundToInt() * 4f) } }
+            }
+            item {
+                SliderRow(
+                    R.string.theme_touch_bloom_dip_title,
+                    value = bloom.dip,
+                    range = TOUCH_BLOOM_DIP_RANGE,
+                    display = { "%d%%".format((it * 100).roundToInt()) },
+                    info = stringResource(R.string.theme_touch_bloom_dip_body),
+                ) { v -> updateBloom { it.copy(dip = (v * 20).roundToInt() / 20f) } }
+            }
+            item(level = SettingLevel.STANDARD) {
+                SliderRow(
+                    R.string.theme_touch_bloom_wobble_title,
+                    value = bloom.wobble,
+                    range = TOUCH_BLOOM_WOBBLE_RANGE,
+                    display = { "%d%%".format((it * 100).roundToInt()) },
+                    info = stringResource(R.string.theme_touch_bloom_wobble_body),
+                ) { v -> updateBloom { it.copy(wobble = (v * 20).roundToInt() / 20f) } }
             }
         }
     }
@@ -7802,3 +8051,22 @@ private fun readKeySkin(text: String): KeySkinSpec? =
         .getOrNull()
         ?.bounded()
         ?.takeIf { it.slots.isNotEmpty() || it.board != null }
+
+/**
+ * Why the moving background, key lighting and touch bloom hold still: Reduce
+ * motion, with the switch to turn it off, or the phone's Remove animations,
+ * which only the phone's own settings can change.
+ */
+@Composable
+private fun MotionHeldNote(bySystem: Boolean, onTurnOff: () -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(
+            stringResource(if (bySystem) R.string.theme_motion_held_system_body else R.string.theme_motion_held_body),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        if (!bySystem) {
+            TextButton(onClick = onTurnOff) { Text(stringResource(R.string.theme_motion_held_turn_off)) }
+        }
+    }
+}

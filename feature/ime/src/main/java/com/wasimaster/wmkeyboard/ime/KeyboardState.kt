@@ -1157,6 +1157,13 @@ data class HandwritingUi(
     /** What this language's model installs to, or 0 when ML Kit lists no size. */
     val modelBytes: Long = 0,
     /**
+     * The recogniser's engine library is not on the phone yet, so a download
+     * fetches it before the model. The offer to download names both.
+     */
+    val libraryNeeded: Boolean = false,
+    /** That library's size, or 0 when it is here or its size is not known (Play). */
+    val libraryBytes: Long = 0,
+    /**
      * The panel is blown up to a see-through canvas over the whole app with
      * the keyboard shrunk to a small bar (issue #386). Kept across a status
      * reset, so a language switch does not drop the user out of it.
@@ -1513,6 +1520,8 @@ sealed interface SizingAction {
         /** The edge pads (issue #82), as fractions of the window width. */
         val sidePadLeftScale: Float? = null,
         val sidePadRightScale: Float? = null,
+        /** The toolbar-width chip: bars at full width over narrowed keys. */
+        val fullWidthBars: Boolean? = null,
     ) : SizingAction
 
     /** Leave the inline resize tool without persisting anything. */
@@ -3340,6 +3349,14 @@ data class KeyboardUiState(
     val fnLocked: Boolean = false,
     val panel: PanelMode = PanelMode.NONE,
     /**
+     * The tool open in the floating box over the app (#1155), as its panel,
+     * or null with none open. The keyboard never opens the same panel while
+     * the box shows it: the two share the tool's state.
+     */
+    val appletPanel: PanelMode? = null,
+    /** The floating box is tucked into the screen's edge (#1155): its text box gives the keys back meanwhile. */
+    val appletTucked: Boolean = false,
+    /**
      * The grid each editable panel draws (issue #63): the user's own layout or
      * the shipped one, already repaired. Defaults to the shipped set so a
      * state built before the first emission — unit tests, the first frame —
@@ -4589,22 +4606,40 @@ data class KeyboardUiState(
      * panel that closed some other way cannot keep the keys.
      */
     val notesEditActive: Boolean
-        get() = panel == PanelMode.NOTES && notes.editing != null
+        get() = toolUp(PanelMode.NOTES) && notes.editing != null
+
+    /**
+     * The tool [mode] is on screen where the keys can type into it: as the
+     * keyboard's own panel, or in the floating box (#1155) while the keyboard
+     * shows only its keys. Over another panel the keys stay that panel's,
+     * and with the box tucked into the edge they go back to the app.
+     */
+    fun toolUp(mode: PanelMode): Boolean =
+        panel == mode || (panel == PanelMode.NONE && appletPanel == mode && !appletTucked)
+
+    /**
+     * Translate is on screen, as the keyboard's panel or in the floating box
+     * (#1155), whatever the keyboard shows. Where a translation lands; only
+     * [toolUp] types into it, since the box shares its text with the
+     * keyboard's own search panels.
+     */
+    val translateShown: Boolean
+        get() = panel == PanelMode.TRANSLATE || appletPanel == PanelMode.TRANSLATE
 
     /**
      * Whether one of the Notes panel's fields has the keys: the editor, or the
      * search pill. The same contract as [notesEditActive].
      */
     val notesTypingActive: Boolean
-        get() = panel == PanelMode.NOTES && (notes.editing != null || notes.searchActive)
+        get() = toolUp(PanelMode.NOTES) && (notes.editing != null || notes.searchActive)
 
     /** Whether the Clock panel's text box has the keys; panel *and* box, as [notesTypingActive]. */
     val clockTypingActive: Boolean
-        get() = panel == PanelMode.CLOCK && clockText != null
+        get() = toolUp(PanelMode.CLOCK) && clockText != null
 
     /** Whether the To-do panel's text box has the keys; panel *and* box, as [clockTypingActive]. */
     val todoTypingActive: Boolean
-        get() = panel == PanelMode.TODO && todoText != null
+        get() = toolUp(PanelMode.TODO) && todoText != null
 
     /** Whether the Home Assistant panel's text box has the keys; panel *and* box, as [clockTypingActive]. */
     val haTypingActive: Boolean
@@ -4767,7 +4802,9 @@ data class KeyboardUiState(
         }
         emojiSearchActive -> CaptureTarget.EMOJI_SEARCH
         panel == PanelMode.APP_LAUNCHER && launcherView.nameDraft != null -> CaptureTarget.LAUNCHER_FOLDER_NAME
-        mediaSearchActive && panel.hasMediaSearch -> CaptureTarget.MEDIA_SEARCH
+        // Translate's text box is the media search box, in the keyboard or
+        // in the floating box (#1155).
+        mediaSearchActive && (panel.hasMediaSearch || toolUp(PanelMode.TRANSLATE)) -> CaptureTarget.MEDIA_SEARCH
         dictionarySearchActive -> CaptureTarget.DICTIONARY_SEARCH
         unicodeQuery != null && panel == PanelMode.SYMBOLS -> CaptureTarget.UNICODE_SEARCH
         clipboardSearchActive -> CaptureTarget.CLIPBOARD_SEARCH

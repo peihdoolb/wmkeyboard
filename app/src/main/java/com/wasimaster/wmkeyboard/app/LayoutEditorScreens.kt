@@ -50,6 +50,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.KeyboardType
 import java.util.Locale
+import androidx.activity.compose.BackHandler
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -211,6 +213,7 @@ import com.wasimaster.wmkeyboard.core.layout.compile
 import com.wasimaster.wmkeyboard.ime.ui.BuiltinIcons
 import com.wasimaster.wmkeyboard.ime.ui.IconDefaults
 import com.wasimaster.wmkeyboard.ime.ui.KeyIcons
+import com.wasimaster.wmkeyboard.ime.ui.fixedAlternateRowSizes
 import com.wasimaster.wmkeyboard.ime.ui.textEditIcon
 import com.wasimaster.wmkeyboard.core.layout.GridUnitStep
 import com.wasimaster.wmkeyboard.core.layout.KeyLabelScaleRange
@@ -649,11 +652,42 @@ internal fun KeyLayoutsScreen(
     // A file of several layouts, read and waiting on the user's answer.
     var confirmBundle by remember { mutableStateOf<List<ImportedLayout>?>(null) }
 
+    // Several files at once: each is read as a layout or a file of several, and
+    // all of them go to the one question the file of several asks. The names of
+    // files that are neither are said after.
+    fun importLayoutFiles(uris: List<android.net.Uri>) {
+        scope.launch {
+            val read = ArrayList<ImportedLayout>()
+            val failed = ArrayList<String>()
+            for (uri in uris) {
+                val text = withContext(Dispatchers.IO) {
+                    runCatching { context.contentResolver.readTextCapped(uri) }.getOrNull()
+                }
+                val one = text?.let { LayoutFile.decode(it) }
+                val several = if (one == null) text?.let { LayoutFile.decodeBundle(it) } else null
+                when {
+                    one != null -> read += one
+                    !several.isNullOrEmpty() -> read += several
+                    else -> failed += withContext(Dispatchers.IO) { WMFileTypes.displayName(context, uri) }
+                }
+            }
+            if (failed.isNotEmpty()) {
+                message = context.getString(R.string.pick_import_failed_files, failed.joinToString(", "))
+            }
+            if (read.isNotEmpty()) confirmBundle = read
+        }
+    }
+
     val importLauncher = rememberLauncherForActivityResult(
-        OpenDocumentAt(PickerPlaces.LAYOUT_IMPORT),
-    ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        PickerPlaces.remember(context, PickerPlaces.LAYOUT_IMPORT, uri)
+        OpenMultipleDocumentsAt(PickerPlaces.LAYOUT_IMPORT),
+    ) { uris ->
+        if (uris.isEmpty()) return@rememberLauncherForActivityResult
+        PickerPlaces.remember(context, PickerPlaces.LAYOUT_IMPORT, uris.first())
+        if (uris.size > 1) {
+            importLayoutFiles(uris)
+            return@rememberLauncherForActivityResult
+        }
+        val uri = uris.single()
         scope.launch {
             val text = withContext(Dispatchers.IO) {
                 runCatching {
@@ -856,6 +890,13 @@ internal fun KeyLayoutsScreen(
         expandedLayouts = if (id in expandedLayouts) expandedLayouts - id else expandedLayouts + id
     }
 
+    // Long-pressing a layout of your own starts picking (the theme gallery's
+    // gesture): taps then tick rows, and the dock exports the ticked ones as
+    // one file or deletes them. Read through the rows on screen, so a layout
+    // deleted from under it drops out of the count.
+    var pickedIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var confirmBulkDelete by remember { mutableStateOf(false) }
+
     fun duplicateAndEdit(base: LayoutSpec) {
         scope.launch {
             val id = "custom_${System.currentTimeMillis()}"
@@ -922,9 +963,59 @@ internal fun KeyLayoutsScreen(
         }
     }
 
+    val pickable = layouts.filter {
+        it.id in customIds && it.id !in shippedIds && it.id !in addonLayoutIds
+    }
+    val livePicked = pickable.filter { it.id in pickedIds }
+    val picking = livePicked.isNotEmpty()
+    BackHandler(enabled = picking) { pickedIds = emptySet() }
+    if (picking) {
+        RegisterDock {
+            PickBar(
+                count = livePicked.size,
+                allPicked = livePicked.size == pickable.size,
+                onClear = { pickedIds = emptySet() },
+                onSelectAll = { pickedIds = pickable.mapTo(HashSet()) { it.id } },
+                onExport = {
+                    // The file Export layouts in use writes, which Import reads back.
+                    pendingBundle = livePicked
+                    bundleLauncher.launch(LayoutFile.bundleFileName(System.currentTimeMillis()))
+                },
+                onDelete = { confirmBulkDelete = true },
+            )
+        }
+    }
+    if (confirmBulkDelete && picking) {
+        val count = livePicked.size
+        AlertDialog(
+            onDismissRequest = { confirmBulkDelete = false },
+            title = { Text(pluralStringResource(R.plurals.pick_delete_title, count, count)) },
+            text = { Text(stringResource(R.string.pick_delete_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmBulkDelete = false
+                    val doomed = livePicked
+                    pickedIds = emptySet()
+                    scope.launch {
+                        for (layout in doomed) {
+                            val others = settings.value.customLayouts
+                            repository.deleteCustomLayout(layout.id)
+                            withContext(Dispatchers.IO) { InputMethodImport.forget(context.filesDir, layout, others) }
+                        }
+                    }
+                }) { Text(stringResource(CommonR.string.common_delete)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmBulkDelete = false }) {
+                    Text(stringResource(CommonR.string.common_cancel))
+                }
+            },
+        )
+    }
+
     // Two kinds of grid can be made here, so the FAB opens a two-line menu
     // rather than guessing which one the press meant.
-    RegisterFab {
+    if (!picking) RegisterFab {
         var open by remember { mutableStateOf(false) }
         Box {
             FloatingActionButton(onClick = { open = true }) {
@@ -993,6 +1084,9 @@ internal fun KeyLayoutsScreen(
                         onPublish = { publishing = layout },
                         expanded = layout.id in expandedLayouts,
                         onToggleLayers = { toggleLayers(layout.id) },
+                        picking = picking,
+                        picked = layout.id in pickedIds,
+                        onPick = { pickedIds = pickedIds.toggled(layout.id) },
                     )
                 }
             }
@@ -1063,6 +1157,9 @@ internal fun KeyLayoutsScreen(
                         onDelete = { confirmDelete = layout },
                         deleteIsReset = false,
                         onPublish = { publishing = layout },
+                        picking = picking,
+                        picked = layout.id in pickedIds,
+                        onPick = { pickedIds = pickedIds.toggled(layout.id) },
                     )
                 }
             }
@@ -1567,8 +1664,14 @@ private fun LayoutRow(
     onToggle: ((Boolean) -> Boolean)? = null,
     /** Opens the community publish dialog; null for a shipped layout, which is not the user's to publish. */
     onPublish: (() -> Unit)? = null,
+    /** Ticks or unticks the row for the dock's bulk actions; null where those cannot act. */
+    onPick: (() -> Unit)? = null,
+    /** The list is picking: a tap ticks rather than opening, and the row's own buttons step aside. */
+    picking: Boolean = false,
+    picked: Boolean = false,
 ) {
     val resources = LocalContext.current.resources
+    val picks = picking && onPick != null
     val exportDesc = stringResource(R.string.layout_editor_export_desc, layout.name)
     val duplicateDesc = stringResource(R.string.layout_editor_duplicate_desc, layout.name)
     val deleteDesc = if (deleteIsReset) {
@@ -1589,7 +1692,7 @@ private fun LayoutRow(
                 )
             }
         },
-        trailing = {
+        trailing = if (picks) null else { {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (onToggle != null && !layout.secondary) {
                     val switchDesc = stringResource(R.string.layout_editor_row_switch_desc, layout.name)
@@ -1657,8 +1760,14 @@ private fun LayoutRow(
                     }
                 }
             }
+        } },
+        leading = if (picks) {
+            { Checkbox(checked = picked, onCheckedChange = null) }
+        } else {
+            null
         },
-        onClick = onEdit,
+        onLongClick = onPick,
+        onClick = if (picks) onPick else onEdit,
     )
 }
 
@@ -1912,6 +2021,7 @@ internal fun editorBottomRowRules(
         globeInOnePlace = settings.layoutBehavior.globeInOnePlace && !secondary,
         swapCommaAndGlobe = settings.swapCommaAndGlobe,
         globeAsEmoji = settings.globeAsEmoji,
+        globeTool = settings.layoutBehavior.globeTool,
         commaAsEmoji = settings.commaAsEmoji && layer == LayoutLayer.LETTERS && !secondary,
     )
 }
@@ -2286,9 +2396,15 @@ internal fun KeyLayoutEditorScreen(
     val storedFillRow = edited.watch { it.layer(layer)?.fillRow }
     val storedArrowRow = edited.watch { it.layer(layer)?.arrowRow }
     val arrowOrder = settings.watch { it.layoutBehavior.arrowRowOrder }
-    val defaultArrowRow = remember(arrowOrder) { arrowOrder.map(::arrowRowKey) }
+    // The keyboard-wide rows from the settings are what a layer without its
+    // own row draws, so they are what the preview shows and the first edit
+    // starts from.
+    val customNumberRow = settings.watch { it.layoutBehavior.customNumberRow }
+    val customArrowRow = settings.watch { it.layoutBehavior.customArrowRow }
+    val defaultArrowRow = remember(arrowOrder, customArrowRow) { customArrowRow ?: arrowOrder.map(::arrowRowKey) }
     fun extraDefault(band: ExtraBand): List<Key> = when (band) {
-        ExtraBand.NUMBER -> BuiltInLayouts.defaultNumberRow(layer)
+        ExtraBand.NUMBER -> customNumberRow?.takeIf { layer != LayoutLayer.SYMBOLS_SHIFTED }
+            ?: BuiltInLayouts.defaultNumberRow(layer)
         ExtraBand.FILL -> BuiltInLayouts.SYMBOLS_FILL_ROW
         ExtraBand.ARROW -> defaultArrowRow
     }
@@ -2399,7 +2515,9 @@ internal fun KeyLayoutEditorScreen(
         IconButton(
             enabled = undo.isNotEmpty(),
             onClick = {
-                val previous = undo.last()
+                // `enabled` is read at composition: a second tap landing
+                // before the next frame finds the history already empty.
+                val previous = undo.lastOrNull() ?: return@IconButton
                 undo = undo.dropLast(1)
                 redo = redo + listOfNotNull(edited.now())
                 stepPushed = false
@@ -2414,7 +2532,7 @@ internal fun KeyLayoutEditorScreen(
         IconButton(
             enabled = redo.isNotEmpty(),
             onClick = {
-                val next = redo.last()
+                val next = redo.lastOrNull() ?: return@IconButton
                 redo = redo.dropLast(1)
                 undo = undo + listOfNotNull(edited.now())
                 stepPushed = false
@@ -2719,6 +2837,7 @@ internal fun KeyLayoutEditorScreen(
     // the grid it was editing; here the key and the grid are on screen together.
     val popupColumns = settings.watch { it.popup.alternatesColumns }
     val popupNearestFirst = settings.watch { it.popup.alternatesNearestFirst }
+    val popupBalanced = settings.watch { it.popup.alternatesBalanced }
     val secondaryLayoutList = secondaryLayouts(settings.watch { it.customLayouts })
     val keyboardModeList = settings.watch { it.keyboardModes }
     val ref = selection
@@ -2835,6 +2954,7 @@ internal fun KeyLayoutEditorScreen(
                 ?.getOrNull(ref.col),
             popupColumns = popupColumns,
             popupNearestFirst = popupNearestFirst,
+            popupBalanced = popupBalanced,
         )
     }
 
@@ -2906,6 +3026,7 @@ internal fun KeyLayoutEditorScreen(
                 keyboardModes = keyboardModeList,
                 popupColumns = popupColumns,
                 popupNearestFirst = popupNearestFirst,
+                popupBalanced = popupBalanced,
             )
         }
         SettingsGroup(stringResource(band.titleRes()), info = stringResource(band.captionRes())) {
@@ -5750,6 +5871,8 @@ internal fun KeyEditSheet(
     popupColumns: Int = 0,
     /** The keyboard draws a popup's first entries on its bottom row. */
     popupNearestFirst: Boolean = false,
+    /** The keyboard shares a popup's entries evenly between its rows (#1169). */
+    popupBalanced: Boolean = false,
 ) {
     var pickingAction by remember { mutableStateOf(false) }
     // Which tool this key opens, when the picker put a tool action on it.
@@ -6036,6 +6159,7 @@ internal fun KeyEditSheet(
                     shown = shown,
                     stored = key,
                     columns = key.alternateColumns.takeIf { it > 0 } ?: popupColumns,
+                    balanced = popupBalanced,
                     nearestFirst = popupNearestFirst,
                     secondaryLayouts = secondaryLayouts,
                     keyboardModes = keyboardModes,
@@ -6467,6 +6591,7 @@ private fun MultiKeySection(
 /**
  * The popup a press and hold opens on this key, drawn the way the keyboard
  * lays it out (issue #769): in [columns] columns (or as the entries fit, at 0),
+ * shared evenly between the rows when [balanced] (#1169),
  * the first entries on the bottom row when [nearestFirst] says so, actions in
  * their place among the characters. The first entry is outlined, since with
  * hold to select it is what a plain press and hold types. An entry the
@@ -6479,6 +6604,7 @@ private fun KeyPopupPreview(
     shown: Key,
     stored: Key,
     columns: Int,
+    balanced: Boolean,
     nearestFirst: Boolean,
     secondaryLayouts: List<LayoutSpec>,
     keyboardModes: List<KeyboardMode>,
@@ -6542,7 +6668,10 @@ private fun KeyPopupPreview(
                 for (index in entries.indices) cell(index)
             }
         } else {
-            val lines = entries.indices.chunked(columns).let { if (nearestFirst) it.reversed() else it }
+            var start = 0
+            val lines = fixedAlternateRowSizes(entries.size, columns, balanced)
+                .map { count -> (start until start + count).toList().also { start += count } }
+                .let { if (nearestFirst) it.reversed() else it }
             Column(modifier = Modifier.padding(top = 4.dp)) {
                 for (line in lines) {
                     Row { for (index in line) cell(index) }
@@ -8064,7 +8193,7 @@ internal val SpecialKeyPresets: List<KeyActionOption> by lazy {
             -> false
             else -> action !in skipped
         }
-    } + TextEditAction.entries.map { op ->
+    } + TextEditAction.entries.filter { it != TextEditAction.NO_SPACE_NEXT }.map { op ->
         KeyActionOption(
             textEditActionTitle(op),
             R.string.layout_editor_action_group_text_edit,
