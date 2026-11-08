@@ -18260,12 +18260,20 @@ class SettingsRepository(private val context: Context) {
         editFloatingButton { it[FLOATING_BUTTON_DOCKED] = value }
 
     /** What a swipe in [direction] from the fixed button does (#1171); null or None unbinds it. */
-    suspend fun setFloatingButtonFlick(direction: FlickDirection, action: FloatingAction?) =
+    suspend fun setFloatingButtonFlick(direction: com.wasimaster.wmkeyboard.core.settings.FlickDirection, action: FloatingAction?) =
         editFloatingButton { prefs ->
             val flicks = decodeFloatingFlicks(prefs[FLOATING_BUTTON_FLICKS]).toMutableMap()
-            if (action == null || action == FloatingAction.None) flicks.remove(direction) else flicks[direction] = action
+            if (action == null || action == FloatingAction.None) {
+                flicks.remove(direction)
+            } else {
+                flicks[direction] = action
+            }
             val encoded = encodeFloatingFlicks(flicks)
-            if (encoded.isEmpty()) prefs.remove(FLOATING_BUTTON_FLICKS) else prefs[FLOATING_BUTTON_FLICKS] = encoded
+            if (encoded.isEmpty()) {
+                prefs.remove(FLOATING_BUTTON_FLICKS)
+            } else {
+                prefs[FLOATING_BUTTON_FLICKS] = encoded
+            }
         }
 
     /** The thin pill against the edge in place of the disc (#1137). */
