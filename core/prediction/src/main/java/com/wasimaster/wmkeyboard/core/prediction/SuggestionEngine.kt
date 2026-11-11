@@ -1952,8 +1952,10 @@ class SuggestionEngine(
      * In nats on the decoder's own scores rather than as a reorder after the
      * context rerank, so a preference the user has taught also widens the
      * gap the ambiguity picker measures: a stroke they have corrected three
-     * times stops asking. A rank adjustment is ten times anything the
-     * outcomes can say, so where the user put a word by hand always wins.
+     * times stops asking. Where the user put a word by hand always wins: a
+     * word with a rank adjustment takes that and no outcome nudge, since a
+     * taught pair lifts by [GlideOutcomes.MAX_TAUGHT_LIFT_NATS], more than a
+     * couple of rank steps.
      */
     private fun shiftGlideScores(decoded: List<GlideBeam.Candidate>): List<GlideBeam.Candidate> {
         if (decoded.isEmpty()) return decoded
@@ -1961,7 +1963,8 @@ class SuggestionEngine(
         if (rankOffsets.isEmpty() && nudges == null) return decoded
         var moved = false
         val shifted = decoded.mapIndexed { i, c ->
-            val shift = rankOffset(c.word) + (nudges?.get(i) ?: 0.0)
+            val hand = rankOffset(c.word)
+            val shift = if (hand != 0.0) hand else nudges?.get(i) ?: 0.0
             if (shift == 0.0) {
                 c
             } else {
@@ -2617,6 +2620,25 @@ class SuggestionEngine(
     }
 
     companion object {
+        /** Digits a word typed at full speed may have slipped onto the number row for. */
+        const val EAGER_DIGIT_SLIPS = 2
+
+        /** The most spellings [fastDigitReading] tries before giving up. */
+        private const val MAX_DIGIT_READINGS = 64
+
+        /** Factor on the confidence gate for a digit-carrying word typed at full speed. */
+        const val EAGER_DIGIT_CONFIDENCE = 0.5
+
+        /**
+         * What follows a number on purpose: ordinals, times, units. A digit
+         * in front of one of these is the number it says.
+         */
+        val NUMBER_SUFFIXES = setOf(
+            "st", "nd", "rd", "th", "am", "pm", "s", "k", "m", "g", "h", "d", "p", "x", "km", "kg", "cm",
+            "mm", "ml", "mg", "gb", "mb", "kb", "tb", "hz", "fps", "mp", "px", "pt", "min", "hr", "hrs",
+            "yr", "yrs", "mo", "wk", "ft", "in", "lb", "lbs", "oz", "ms", "sec", "secs", "mins", "kw",
+        )
+
         /** Language id of bundled English, the only special-cased secondary. */
         private const val EN = "en"
 
@@ -3012,6 +3034,9 @@ class SuggestionEngine(
 
         /** How many spellings [phoneticWalk] asks for; the search returns up to twice this. */
         private const val PHONETIC_FIX_WALK = 16
+
+        /** Readings asked of the walk behind [phoneticKeyedSpelling]: it keeps the first. */
+        private const val KEYED_SPELLING_WALK = 4
 
         /** Corrections shown behind the head when none of them takes the space. */
         private const val PHONETIC_FIX_OFFERS = 2
@@ -4371,6 +4396,13 @@ class SuggestionEngine(
         previousWord: String?,
         previousWord2: String?,
     ): PhoneticReadings {
+        // A mark the rules write as it is (Borno's lone comma) is no part of
+        // the word to look up: ranked without it and given back after.
+        val tail = PhoneticTail.of(composing, backend.scheme.transliterate)
+        if (tail.isNotEmpty()) {
+            val word = phoneticReadings(backend, composing.dropLast(tail.length), limit, previousWord, previousWord2)
+            return PhoneticReadings(word.words.map { it + tail }, word.uncorrected?.let { it + tail })
+        }
         val spellings = backend.spellings
         val index = backend.index
         val phonetic = backend.scheme.transliterate(composing)
@@ -4477,6 +4509,68 @@ class SuggestionEngine(
         return PhoneticWalk(language, typed, gen, found.filter { it.edits > 0 && it.completedChars == 0 })
             .also { lastPhoneticWalk = it }
     }
+
+    /**
+     * What a phonetic layout's keystrokes spelled, when its keys stand for
+     * several letters each: the romanized spelling the key sets and taps most
+     * likely meant, read against [phoneticRomanized]'s spellings the way a T9
+     * buffer is read against a word list. [composing] holds only the anchor of
+     * each key, so everything downstream — Avro's rules, the reading, the
+     * strip, the commit — runs on this instead, as if the spelling had been
+     * typed key for key. One-row Avro is the board that needs it.
+     *
+     * A completion's head counts: mid-word, `valo` is the best reading of
+     * `vak` (keys v, a, k) only because the word goes on. A letter typed in
+     * capitals keeps its case, since Avro reads `T` and `t` as two letters.
+     * [composing] itself when the keys are not ambiguous, the language has no
+     * spellings, or nothing decodes.
+     */
+    fun phoneticKeyedSpelling(
+        language: String,
+        composing: String,
+        touch: List<TouchPoint?>?,
+        keys: KeySets?,
+    ): String {
+        if (keys?.isAmbiguous != true || composing.isEmpty()) return composing
+        val romanized = phoneticRomanized[language]?.takeUnless { it.isEmpty } ?: return composing
+        val gen = generation.get()
+        lastKeyedSpelling?.takeIf {
+            it.generation == gen && it.language == language && it.typed == composing && it.touch == touch &&
+                it.keys == keys
+        }?.let { return it.spelled }
+        val model = touchModelField
+        val scoring = if (model != null && touch != null && touch.any { it != null }) {
+            FuzzyBeamSearch.TouchScoring(model, touch)
+        } else {
+            null
+        }
+        val best = beam.search(
+            romanized.walkSources(), composing.lowercase(), proximity, KEYED_SPELLING_WALK, beamWorkspace.get(),
+            maxEdits = 1, touch = scoring, habits = editHabitsField, keys = keys,
+        ).firstOrNull()
+        val head = best?.let { it.word.substring(0, it.word.length - it.completedChars) }
+        val spelled = when {
+            head.isNullOrEmpty() -> composing
+            head.length != composing.length -> head
+            else -> String(CharArray(head.length) { i ->
+                if (composing[i].isUpperCase() && composing[i].lowercaseChar() == head[i]) composing[i] else head[i]
+            })
+        }
+        lastKeyedSpelling = KeyedSpelling(language, composing, touch, keys, gen, spelled)
+        return spelled
+    }
+
+    private class KeyedSpelling(
+        val language: String,
+        val typed: String,
+        val touch: List<TouchPoint?>?,
+        val keys: KeySets?,
+        val generation: Long,
+        val spelled: String,
+    )
+
+    @Volatile
+    private var lastKeyedSpelling: KeyedSpelling? = null
 
     /** See [phoneticFix]: the word that may take a space, and what else to offer. */
     private class PhoneticFix(val lead: String?, val offers: List<String>)
@@ -5218,6 +5312,11 @@ class SuggestionEngine(
      *        a word ("form" → "from"), which only fires when the context
      *        agrees. Null — a sentence start, or a caller without it — never
      *        applies such a fix.
+     * @param fastTyping the word was typed at full speed, where a digit in it
+     *        is far more likely a thumb landing on the number row than a
+     *        number: up to [EAGER_DIGIT_SLIPS] digits may then be read as the
+     *        letters under them ("y97" → "you"), and each digit fix counts as
+     *        one slip rather than a full edit.
      */
     fun decideCorrection(
         word: String,
@@ -5225,6 +5324,7 @@ class SuggestionEngine(
         timingMultiplier: Double = 1.0,
         previousWord: String? = null,
         keys: KeySets? = null,
+        fastTyping: Boolean = false,
     ): CorrectionDecision {
         val lower = word.lowercase()
         if (caseExact) {
@@ -5232,11 +5332,14 @@ class SuggestionEngine(
         } else if (word == lower) {
             dictionaryCapital(lower)?.let { return it }
         }
-        if (lower.length < 3) return NO_CORRECTION
         // An all-caps word is a deliberate acronym or shout, not a typo of a
         // lowercase word — don't "correct" it away when the user asked us not to.
+        if (lower.length < 3) {
+            if (skipAllCapsAutocorrect && isAllCaps(word)) return NO_CORRECTION
+            return shortAccentFix(word, lower, touch)
+        }
         if (skipAllCapsAutocorrect && isAllCaps(word)) return NO_CORRECTION
-        val ordinary = decideOrdinary(word, lower, touch, timingMultiplier, keys, previousWord)
+        val ordinary = decideOrdinary(word, lower, touch, timingMultiplier, keys, previousWord, fastTyping)
         return withTaughtFix(word, lower, previousWord, ordinary)
     }
 
@@ -5625,6 +5728,38 @@ class SuggestionEngine(
         if (taught.count >= CorrectionMemory.APPLY_AT) return applied()
         if (ordinary.apply?.equals(fixed, ignoreCase = true) == true) return ordinary
         return CorrectionDecision(offer = matchCase(word, fixed))
+    }
+
+    /**
+     * The one fix a word under three letters gets (#1182): its accents put
+     * back. Romanian writes `în` and `și` dozens of times a page, and with
+     * every two-letter word off limits `in` and `si` were never fixed.
+     *
+     * Nothing else is guessed at that length, since a slip in two letters
+     * reaches half the language. An accent twin spends every key as pressed,
+     * so it is safe: it applies when the typed spelling is no word of its own,
+     * or is one only as the twin typed without its accents ([accentShadowed]).
+     * Two twins within [ACCENT_SHADOW_RATIO] of each other are offered, not
+     * applied, and an undone pair is left to the penalty memory as usual.
+     */
+    private fun shortAccentFix(word: String, lower: String, touch: List<TouchPoint?>?): CorrectionDecision {
+        if (lower.length != 2 || lower.any { !it.isLetter() }) return NO_CORRECTION
+        val known = inDictionaries(lower) || userLexicon.isEstablished(lower, learnedWordMinCount)
+        if (known && !accentShadowed(lower, touch)) return NO_CORRECTION
+        if (spellAccepted(word)) return NO_CORRECTION
+        val twins = rankedFor(lower, FuzzyBeamSearch.AUTOCORRECT_K / 2, touch)
+            .filter { it.edits == 0 && it.completedChars == 0 && it.accents > 0 && !suppressed(it.word) }
+            .filter { correctionStats.penalty(lower, it.word) != CorrectionStats.Penalty.BLOCKED }
+            .sortedByDescending { it.dictScore + it.accents * FuzzyBeamSearch.COST_ACCENT }
+        val best = twins.firstOrNull() ?: return NO_CORRECTION
+        val fixed = matchCase(word, best.word)
+        val bestScore = best.dictScore + best.accents * FuzzyBeamSearch.COST_ACCENT
+        val rival = twins.getOrNull(1)?.let { it.dictScore + it.accents * FuzzyBeamSearch.COST_ACCENT }
+        val clear = rival == null || bestScore - rival >= ln(ACCENT_SHADOW_RATIO)
+        if (!clear || correctionStats.penalty(lower, best.word) != CorrectionStats.Penalty.NONE) {
+            return CorrectionDecision(offer = fixed)
+        }
+        return CorrectionDecision(apply = fixed, certainty = 1.0)
     }
 
     /**
@@ -6140,6 +6275,7 @@ class SuggestionEngine(
         timingMultiplier: Double,
         keys: KeySets? = null,
         previousWord: String? = null,
+        fastTyping: Boolean = false,
     ): CorrectionDecision {
         // A shadowed spelling is protected by neither the lists nor the
         // lexicon. The lexicon learned it only because a list vouched for it.
@@ -6163,7 +6299,13 @@ class SuggestionEngine(
         // buffers those); anything more digit-heavy is deliberate input —
         // codes, model numbers — and is never rewritten.
         val digits = lower.count { it.isDigit() }
-        if (digits > 0 && (!digitSlipCorrections || digits > 1)) return NO_CORRECTION
+        if (digits > 0 && !digitSlipsPossible(lower, digits, fastTyping)) return NO_CORRECTION
+        // Two slipped digits in a short word are two edits, past the one a
+        // walk of under five letters is allowed, so "y97" never reached "you".
+        // Read them directly instead: each digit as the letters under it.
+        if (fastTyping && digits >= 2) {
+            fastDigitReading(lower)?.let { return CorrectionDecision(apply = matchCase(word, it), certainty = 1.0) }
+        }
 
         // The walk ranks WALK_K deep for the strip's context boosts, but the
         // silent-replacement decision stays on the same top-8 it has always
@@ -6189,7 +6331,15 @@ class SuggestionEngine(
             // edit is a fix in place, as long as nothing was completed.
             // Slips mixed with a real edit apply only when eager: that mix
             // is what rewrites a correctly typed new word (see [SlipFixes]).
-            val correctionShaped = if (c.slips > 0) {
+            // A word whose only changes are its digits put back as the
+            // letters under them is one kind of slip made once per digit, the
+            // way a run of wide taps is; at full speed it counts as such
+            // whatever the number of digits allowed.
+            val digitFix = fastTyping && digits > 0 && c.completedChars == 0 &&
+                c.edits <= digits && digitSubShape(lower, c.word)
+            val correctionShaped = if (digitFix) {
+                true
+            } else if (c.slips > 0) {
                 c.completedChars == 0 && c.edits - c.slips <= 1 &&
                     (slipFixes == SlipFixes.EAGER || !mixesSlips(c))
             } else when (c.edits) {
@@ -6314,7 +6464,11 @@ class SuggestionEngine(
         val effectiveConfidence = (
             autocorrectConfidence *
                 (if (adaptiveConfidence) correctionStats.confidenceMultiplier() else 1.0) *
-                timingMultiplier
+                timingMultiplier *
+                // A digit between letters at full speed is a thumb on the
+                // number row far more often than a code, so its fix needs
+                // less of a lead.
+                (if (fastTyping && digits > 0) EAGER_DIGIT_CONFIDENCE else 1.0)
             ).coerceIn(MIN_AUTOCORRECT_CONFIDENCE, MAX_AUTOCORRECT_CONFIDENCE)
         val gate = ln(effectiveConfidence)
         val top = candidates.firstOrNull()
@@ -6616,6 +6770,49 @@ class SuggestionEngine(
      * keys over. The walk priced that `y` as any far slip, so `ton3` had
      * `tony` close enough behind `tone` to block it (#1107).
      */
+    /**
+     * Whether a word carrying [digits] digits may still be a slip on the number
+     * row. One digit may be, when the IME buffers them at all; at full speed
+     * ([fastTyping]) up to [EAGER_DIGIT_SLIPS], as long as a letter is left
+     * for the reading to stand on. A digit leading the word is never a run of
+     * them ("10am"), and never ahead of what follows a number: "5pm", "4th"
+     * and "3kg" are what they say.
+     */
+    private fun digitSlipsPossible(lower: String, digits: Int, fastTyping: Boolean): Boolean {
+        if (!digitSlipCorrections) return false
+        val limit = if (fastTyping) EAGER_DIGIT_SLIPS else 1
+        if (digits > limit || digits >= lower.length) return false
+        if (lower[0].isDigit()) {
+            if (lower.length > 1 && lower[1].isDigit()) return false
+            if (lower.substring(1) in NUMBER_SUFFIXES) return false
+        }
+        return true
+    }
+
+    /**
+     * The word [lower] spells with each digit read as a letter next to it on
+     * the number row, when one listed word clearly leads (twice the next
+     * one's frequency); null otherwise. Only ever a handful of spellings: a
+     * digit sits over two or three letters.
+     */
+    private fun fastDigitReading(lower: String): String? {
+        var readings = listOf("")
+        for (ch in lower) {
+            val options = if (ch.isDigit()) proximityField.neighborsOf(ch).filter { it.isLetter() } else ch.toString()
+            if (options.isEmpty()) return null
+            readings = readings.flatMap { head -> options.map { head + it } }
+            if (readings.size > MAX_DIGIT_READINGS) return null
+        }
+        val listed = readings
+            .filter { !suppressed(it) && correctionStats.penalty(lower, it) != CorrectionStats.Penalty.BLOCKED }
+            .map { it to dictionaryFrequencyOf(it) }
+            .filter { it.second > 0 }
+            .sortedByDescending { it.second }
+        val top = listed.firstOrNull() ?: return null
+        val next = listed.getOrNull(1)
+        return top.first.takeIf { next == null || top.second >= next.second * 2 }
+    }
+
     private fun digitSubShape(typed: String, candidate: String): Boolean {
         if (candidate.length != typed.length) return false
         for (i in typed.indices) {

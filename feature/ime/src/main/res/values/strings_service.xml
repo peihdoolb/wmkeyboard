@@ -137,6 +137,8 @@
     <!-- AI panel: what the keyboard says when a request cannot run. -->
     <string name="ime_ai_error_no_text">There is nothing to work on. Type some text first.</string>
     <string name="ime_ai_error_empty_result">The model returned nothing.</string>
+    <!-- The keyboard stayed closed while the on-device or online model was still answering, so the answer was stopped to save battery. -->
+    <string name="ime_ai_error_stopped_hidden">Stopped because the keyboard was closed. Retry to run it again.</string>
     <!-- Data saver held an AI request back. Retry is the panel's own action, and it means yes. -->
     <string name="ime_ai_error_metered_ask">Data saver is on. Retry to send this over mobile data.</string>
     <string name="ime_ai_error_metered_blocked">AI is turned off while you are on mobile data. You can change this in Settings, under Data saver.</string>
@@ -151,6 +153,10 @@
     <string name="ime_service_voice_error_busy">The microphone is busy. Close the other apps that use it and try again.</string>
     <string name="ime_service_voice_error_language">Speech recognition does not support this language on your device.</string>
     <string name="ime_service_voice_error_other">Speech recognition did not work. Try again.</string>
+    <!-- %1$d is the error number Android's speech recognizer gave, for example 5. -->
+    <string name="ime_service_voice_error_code">Speech recognition did not work (error %1$d). Try again, or choose a different voice engine.</string>
+    <!-- The keyboard has the microphone permission; the app that does the recognising does not. -->
+    <string name="ime_service_voice_error_recognizer_permission">The speech recognizer of your phone is not allowed to use the microphone. Allow it in the settings of your phone, or choose a different voice engine.</string>
     <string name="ime_service_voice_mic_error">The keyboard cannot start the microphone. Close the other apps that use it and try again.</string>
     <string name="ime_service_voice_transcribe_error">The transcription did not work. Try again.</string>
     <string name="ime_service_voice_model_download_error">The download of the offline model did not work. Try again later.</string>
@@ -319,6 +325,8 @@
     <string name="ime_disabled_translate_same_language">The text is already in the language you translate to.</string>
     <string name="ime_disabled_media_app_blocks">The app that is playing does not allow this.</string>
     <string name="ime_disabled_voice_undo">Nothing to undo yet. Undo takes back the last phrase you spoke.</string>
+    <string name="ime_disabled_correction_invalid">Type a different word to correct to. The word being corrected needs at least 3 letters, and the fix can be one word, or two for a missed space.</string>
+    <string name="ime_word_correct_saved">\"<xliff:g id="typed" example="kagay">%1$s</xliff:g>\" will be corrected to \"<xliff:g id="fixed" example="lagay">%2$s</xliff:g>\"</string>
     <string name="ime_disabled_spell_unchanged">Change the spelling first. An empty or unchanged spelling has nothing to apply.</string>
     <string name="ime_disabled_clip_tidy">Select a text clip first. Tidy works on text, not on images.</string>
     <string name="ime_disabled_clip_combine">Select two or more text clips to combine them.</string>

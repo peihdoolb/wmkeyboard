@@ -969,6 +969,7 @@ internal fun ToolDetailSettings(
                     subtitle = stringResource(R.string.expander_grid_columns_subtitle),
                     value = settings.watch { it.suggestionStrip.snippetGridColumns }.toFloat(),
                     range = 1f..6f,
+                    steps = wholeSteps(1f..6f),
                     display = { it.roundToInt().toString() },
                     info = stringResource(R.string.expander_grid_columns_info),
                     default = SettingsDefaults.suggestionStrip.snippetGridColumns.toFloat(),
@@ -1729,6 +1730,14 @@ internal fun ToolDetailSettings(
                         info = stringResource(R.string.tooldetail_incognito_private_clipboard_info),
                         default = SettingsDefaults.incognitoPrivateClipboard,
                     ) { scope.launch { repository.setIncognitoPrivateClipboard(it) } }
+                }
+                item {
+                    ToggleSetting(
+                        R.string.tooldetail_incognito_watermark_title,
+                        stringResource(R.string.tooldetail_incognito_watermark_subtitle),
+                        settings.watch { it.incognitoWatermark },
+                        default = SettingsDefaults.incognitoWatermark,
+                    ) { scope.launch { repository.setIncognitoWatermark(it) } }
                 }
                 item {
                     NavRow(
@@ -2824,6 +2833,7 @@ internal fun ToolDetailSettings(
                         subtitle = stringResource(R.string.tooldetail_image_columns_subtitle),
                         value = settings.watch { it.emoji.mediaGridColumns }.toFloat(),
                         range = 2f..5f,
+                        steps = wholeSteps(2f..5f),
                         display = { numberFormat.format(it.roundToInt()) },
                         info = stringResource(R.string.tooldetail_image_columns_info),
                         default = SettingsDefaults.emoji.mediaGridColumns.toFloat(),
@@ -3193,6 +3203,7 @@ internal fun ToolDetailSettings(
                     subtitle = stringResource(R.string.tooldetail_calc_precision_subtitle),
                     value = settings.watch { it.calcPrecision }.toFloat(),
                     range = 0f..12f,
+                    steps = wholeSteps(0f..12f),
                     display = { numberFormat.format(it.roundToInt()) },
                     default = SettingsDefaults.calcPrecision.toFloat(),
                 ) { scope.launch { repository.setCalcPrecision(it.roundToInt()) } }
@@ -3255,6 +3266,7 @@ internal fun ToolDetailSettings(
                         subtitle = stringResource(R.string.tooldetail_currency_decimals_subtitle),
                         value = settings.watch { it.currencyDecimals }.toFloat(),
                         range = 0f..6f,
+                        steps = wholeSteps(0f..6f),
                         display = { numberFormat.format(it.toInt()) },
                         default = SettingsDefaults.currencyDecimals.toFloat(),
                     ) { scope.launch { repository.setCurrencyDecimals(it.toInt()) } }
@@ -3316,6 +3328,7 @@ internal fun ToolDetailSettings(
                             subtitle = stringResource(R.string.tooldetail_crypto_decimals_subtitle),
                             value = settings.watch { it.rateSources.cryptoDecimals }.toFloat(),
                             range = 0f..12f,
+                            steps = wholeSteps(0f..12f),
                             display = {
                                 if (it.toInt() == 0) auto else numberFormat.format(it.toInt())
                             },
@@ -3494,6 +3507,7 @@ internal fun ToolDetailSettings(
                         R.string.tooldetail_passphrase_words_title,
                         value = settings.watch { it.passwordGenerator.ppWordCount }.toFloat(),
                         range = 2f..10f,
+                        steps = wholeSteps(2f..10f),
                         display = { numberFormat.format(it.roundToInt()) },
                         default = SettingsDefaults.passwordGenerator.ppWordCount.toFloat(),
                     ) { scope.launch { repository.setPpWordCount(it.roundToInt()) } }

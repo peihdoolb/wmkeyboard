@@ -151,6 +151,7 @@ Tapping a swatch, or flipping **Dark theme**, reseeds every seed-derived color a
 | Crop image *(image set)* | Opens the [crop dialog](#cropping-an-image) | n/a |
 | Image opacity *(image set)* | Slider, 0–100% | 100% |
 | Image blur *(image set)* | Slider, 0–25 | 0 (off) |
+| Picture on the keys *(image set)* | Toggle; shows the image only on the keys, [details](/themes/backgrounds/#picture-on-the-keys) | Off |
 | Play animated image *(image set)* | Toggle | On for a GIF or animated WebP, off otherwise |
 | Landscape background image | Opens **Select a background**, always shown | None |
 | Crop landscape image *(landscape image set)* | Opens the crop dialog | n/a |
@@ -180,7 +181,7 @@ The last two rows stay hidden until you have started using photos, so a theme wi
 | Refraction *(Liquid)* | Slider, 0–100% | 60% |
 | Color split *(Liquid)* | Slider, 0–100% | 25% |
 | Blur behind the keyboard | Toggle; Android 12 and later, off while the phone's blur, power saving or the floating keyboard is in force | Off |
-| Blur strength | Slider, 4–64 dp; also the blur under popups and menus | 24 dp |
+| Blur strength *(blur behind on)* | Slider, 4–64 dp | 24 dp |
 | Board opacity without blur *(blur behind on)* | Slider, 50–100% | 92% |
 | Glass surfaces | Chips: Letter keys, Modifier keys, Enter key, Space bar, Bars, Tool buttons, Chips, Cards, Popups, Menus | All but Enter key |
 | Behind the glass | Segmented row: Auto / Image / Wallpaper / Nothing | Auto |
@@ -421,19 +422,20 @@ A small particle burst under every key press. With **Emoji**, each character you
 
 | Setting | Control | Range | Default |
 |---|---|---|---|
-| Material | Choice | None / Custom / Key cap / Metal / Wood / Stone / Stitched cloth / Leather / Carbon fibre / Paper cut-out / Letterpress / Neon / Holographic / Terminal / Cartoon / Art glass / Candy / Ceramic / Resin / Arcade button / Typewriter / Instrument panel / Molten | None |
+| Material | Choice | None / Custom / Key cap / Metal / Wood / Stone / Stitched cloth / Leather / Carbon fibre / Paper cut-out / Letterpress / Neon / Holographic / Terminal / Cartoon / Art glass / Candy / Ceramic / Resin / Arcade button / Typewriter / Instrument panel / Molten / Soft (neumorphic) / Pixel block / Dot matrix | None |
 | Key cap height | Slider | 0–8 dp | The material's |
 | Top face inset *(advanced)* | Slider | 0–6 dp | The material's |
 | Cap side shade *(advanced)* | Slider | 0–60% | The material's |
 | Gloss | Slider | 0–100% | The material's |
 | Light direction *(advanced)* | Slider | −60° to 60° | The material's |
-| Surface texture | Choice | None / Grain / Linen / Dots / Scan lines / Brushed / Wood grain / Stone / Paper / Carbon weave / Leather | The material's |
+| Surface texture | Choice | None / Grain / Linen / Dots / Scan lines / Brushed / Wood grain / Stone / Paper / Carbon weave / Leather / Pixels / Planks | The material's |
 | Texture strength | Slider | 0–100% | The material's |
-| Edge | Choice | None / Stitching / Glow / Ink outline / Glazed rim / Pressed in / Double ring | The material's |
+| Edge | Choice | None / Stitching / Glow / Ink outline / Glazed rim / Pressed in / Double ring / Dotted / Pixel bevel | The material's |
 | Edge colour | Colour, or Auto | Any | Auto |
 | Edge width *(advanced)* | Slider | 0.5–6 dp | The material's |
-| Label effect | Choice | None / Glow / Pressed in / Raised / Shadow | The material's |
+| Label effect | Choice | None / Glow / Pressed in / Raised / Shadow / Dot matrix | The material's |
 | Rainbow sheen | Slider | 0–100% | The material's |
+| Soft shadow | Slider | 0–100% | The material's |
 
 Every control after the first shows the material's own value until you change it. Picking another material clears the changes.
 
@@ -441,22 +443,23 @@ Every control after the first shows the material's own value until you change it
 
 | Setting | Control | Range | Default |
 |---|---|---|---|
-| Effect | Choice | None / Snow / Rain / Code rain / Bokeh / Stars / Warp speed / Fireflies / Dust / Embers / Bubbles / Confetti / Fireworks / Aurora / Nebula / Lava lamp / Waves / Smoke / Dot grid / Contour lines / Equaliser / Scanner / Sheen / Ripples | None |
+| Effect | Choice | None / Snow / Rain / Code rain / Bokeh / Stars / Warp speed / Fireflies / Dust / Embers / Bubbles / Confetti / Fireworks / Aurora / Nebula / Lava lamp / Waves / Smoke / Dot grid / Contour lines / Equaliser / Scanner / Sheen / Ripples / Colour orbs / Paint splash / Ink blot / Light pool / Colour flood / Smoke puff / Glint / Pop / Swoosh / Specks / Meld | None |
 | Amount | Slider | 0–100% | 50% |
 | Speed | Slider | 0–3× | 1× |
 | Brightness | Slider | 0–100% | 60% |
 | Size | Slider | 0.5–2× | 1× |
-| Reacts to typing | Slider | 0–100% | 0% |
-| First colour, Second colour | Colour, or Auto | Any | The accent, the label colour |
+| Reacts to typing *(not on splashes)* | Slider | 0–100% | 0% |
+| First colour, Second colour | Colour, or Auto | Any | The accent, the label colour; on a splash, a new colour for each press |
 
-A still picture under reduce motion or power saving.
+A still picture under reduce motion or power saving. The splashes, from Paint splash to Meld, are drawn over the keys only while you type, and not at all under reduce motion or power saving.
 
 ### Key lighting
 
 | Setting | Control | Range | Default |
 |---|---|---|---|
 | Pattern | Choice | None / Steady / Breathe / Wave / Sweep / Twinkle / Heartbeat / Pressed key / Ripple / Echo / Splash / Cross / Rain | None |
-| Light on | Choice | Key faces / Key edges / Behind the keys | Behind the keys |
+| Light on | Choice | Key faces / Key edges / Behind the keys / Filled key / Two-tone fill / Glitter | Behind the keys |
+| Colour choice | Choice | Light colour / Bright, each press / Pastel, each press | Light colour |
 | Light colour | Colour, or Auto | Any | The accent |
 | Brightness | Slider | 0–100% | 60% |
 | Glow size | Slider | 0–24 dp | 8 dp |
@@ -471,6 +474,7 @@ Off under reduce motion and power saving.
 | Setting | Control | Range | Default |
 |---|---|---|---|
 | Touch bloom | Toggle | On / Off | Off |
+| Key motion | Choice | Sink / Grow / Shrink / Rise / Tilt / Jelly / Pop / Squish / Fade | Sink |
 | Light colour | Colour, or Auto | Any | The accent |
 | Light strength | Slider | 0–100% | 60% |
 | Reach | Slider | 40–240 dp | 96 dp |

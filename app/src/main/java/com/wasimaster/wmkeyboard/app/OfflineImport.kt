@@ -59,6 +59,8 @@ import com.wasimaster.wmkeyboard.core.xlit.IndicXlitModels
 import com.wasimaster.wmkeyboard.core.voice.executorch.EtDownloadManager
 import com.wasimaster.wmkeyboard.core.voice.executorch.EtImport
 import com.wasimaster.wmkeyboard.core.voice.futoswipe.FutoSwipe
+import com.wasimaster.wmkeyboard.core.voice.whisper.WhisperCatalog
+import com.wasimaster.wmkeyboard.core.voice.whisper.WhisperCustomModels
 import com.wasimaster.wmkeyboard.core.voice.whisper.WhisperDownloadManager
 import com.wasimaster.wmkeyboard.core.voice.whistle.WhistleModelDownloadManager
 import com.wasimaster.wmkeyboard.core.voice.whistle.WhistleModelStore
@@ -163,7 +165,7 @@ object OfflineImport {
                 CjkDictCatalog.byFileName(leaf) != null ||
                 ContextModelCatalog.byFileName(leaf) != null ||
                 leaf == AvroDictionaryDownloads.PUBLISHED_NAME ||
-                leaf == KhiproGlideDownloads.PUBLISHED_NAME ||
+                KhiproGlideDownloads.byPublishedName(leaf) != null ||
                 KhiproSpecs.isSetFile(leaf) ||
                 PhoneticIndexDownloads.languageOfPublishedName(leaf) != null -> Kind.LANGUAGE_FILES
             OfflineDictionaries.recognises(leaf) -> Kind.DICTIONARY
@@ -206,7 +208,8 @@ object OfflineImport {
 
     /**
      * [recognises], plus the files told by their name *and* their size, or
-     * by an extension nothing else uses: a Whisper model or its vocabulary,
+     * by an extension nothing else uses: a Whisper model or its vocabulary
+     * (any `ggml*.bin`, which [run] then checks is a whisper.cpp model),
      * the Whistle model, OCR data, the background remover, an on-device AI
      * model, a handwriting pack, and by size alone a file of one of the
      * other dictation engines' models ([EtImport]). [size] is -1 when the provider does not
@@ -222,6 +225,8 @@ object OfflineImport {
         val leaf = name.substringAfterLast('/').substringAfterLast('\\')
         val extension = leaf.substringAfterLast('.', "").lowercase()
         val model = (size > 0 && WhisperDownloadManager.recognises(leaf, size)) ||
+            // A whisper.cpp model of the user's own (#1224), by the name they come under.
+            (WhisperCatalog.cppAvailable && leaf.startsWith("ggml", ignoreCase = true) && extension == "bin") ||
             leaf == WhistleModelStore.MODEL_FILE_NAME || leaf == CutoutModel.FILE_NAME ||
             PaddleOcrModel.partOf(leaf) != null || OcrPacks.packOf(leaf) != null || InkOcrModels.partOf(leaf) != null ||
             IndicXlitModels.partOf(leaf) != null || FutoSwipe.sizeMatches(size) ||
@@ -606,6 +611,16 @@ object OfflineImport {
                 }
             }
         }
+        // Any other whisper.cpp model (#1224): a fine-tune in no catalog, told
+        // by its header whatever it is called, and kept as the user's own.
+        if (WhisperCatalog.cppAvailable) {
+            WhisperCustomModels.header(file)?.let { header ->
+                return attempt(name, busy = WhisperDownloadManager.isBusy) {
+                    val model = WhisperDownloadManager.installCustom(filesDir, file, name, header)
+                    Outcome(name, true, R.string.offline_import_whisper_custom_ready, listOf(model.displayName))
+                }
+            }
+        }
         // A language's context model (#1000), by the name it is published under.
         ContextModelCatalog.byFileName(name)?.let { entry ->
             return attempt(name) {
@@ -678,9 +693,9 @@ object OfflineImport {
                 Outcome(name, true, R.string.offline_import_avro_done)
             }
         }
-        if (name == KhiproGlideDownloads.PUBLISHED_NAME) {
-            return attempt(name, busy = KhiproGlideDownloads.isBusy) {
-                KhiproGlideDownloads.install(filesDir, file)
+        KhiproGlideDownloads.byPublishedName(name)?.let { table ->
+            return attempt(name, busy = table.isBusy) {
+                table.install(filesDir, file)
                 Outcome(name, true, R.string.offline_import_khipro_glide_done)
             }
         }

@@ -173,6 +173,22 @@ data class LayerSpec(
      * a Keyman layout. Null everywhere else.
      */
     val keymanFrames: Map<String, KeymanTarget>? = null,
+    /**
+     * The page of this layout drawn in place of the letters while the text
+     * before the caret ends in a consonant, by its key in [LayoutSpec.layers]:
+     * the page of vowel signs on an Indic layout, the way Samsung's keyboards
+     * turn अ आ इ into क् का कि the moment क is typed. Each vowel-sign key on
+     * that page then shows the syllable a tap would write, and a tap replaces
+     * the vowel sign already on the syllable rather than stacking a second one
+     * (see `IndicSyllable`). Pressing that page's way back to the letters
+     * keeps the letters up until the next key, for an independent vowel after
+     * a consonant (कई).
+     *
+     * Only read on the letters layer. Null, every other layout, keeps the
+     * letters whatever was typed. A key naming a page the layout does not
+     * have is ignored. Additive and defaulted, so no format-version bump.
+     */
+    val afterConsonant: String? = null,
 )
 
 /**
@@ -378,6 +394,18 @@ data class LayoutSpec(
      * [tabletExpand] gives.
      */
     val handwriting: Boolean = false,
+    /**
+     * A one-row strip of letters in the manner of Minuum: the letters row
+     * keeps one key's height instead of growing to fill the rows the other
+     * layers reserve, so the keyboard is as short as the strip, and its
+     * letters are drawn bare on the board at one size, staggered by
+     * [Key.labelShiftY]. The other layers keep their own height, so ?123
+     * makes the keyboard taller while it is up.
+     *
+     * Additive and defaulted, so no format-version bump, for the reason
+     * [tabletExpand] gives.
+     */
+    val strip: Boolean = false,
     /**
      * A theme of this layout's own (a `ThemeSpec.id`), used while any of its
      * layers is on screen, in place of the theme the settings select and of an

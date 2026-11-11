@@ -59,6 +59,10 @@
     <string name="llamagpu_module_title">llama.cpp for Adreno GPUs</string>
     <string name="divvungrammar_module_title">GiellaLT grammar checking</string>
     <string name="executorchqnn_module_title">ExecuTorch for Snapdragon NPUs</string>
+    <!-- :feature:sherpaqnn, sherpa-onnx built for the Snapdragon NPU (NPU builds
+         of offline Parakeet and Moonshine). sherpa-onnx and Snapdragon stay in
+         Latin letters. -->
+    <string name="sherpaqnn_module_title">sherpa-onnx for Snapdragon NPUs</string>
     <string name="executorchvulkan_module_title">ExecuTorch for GPUs</string>
     <string name="executorchneuron_module_title">ExecuTorch for MediaTek NPUs</string>
     <string name="langid_module_title">Language detection</string>
@@ -119,6 +123,7 @@
     <string name="shortcut_tools_long">Keyboard tools</string>
     <!-- Importing downloads fetched on another device (offline import) -->
     <string name="offline_import_row_title">Import from a file</string>
+    <string name="offline_import_bergamot_browser_note">These links go to WM Keyboard\'s copy of Mozilla\'s files on GitHub, which opens in any browser.</string>
     <string name="offline_import_bergamot_subtitle">A direction\'s three or four files fetched on another device, all at once</string>
     <!-- %1$s names language directions, such as "French → English". -->
     <string name="offline_import_bergamot_waiting">Kept for %1$s. It still needs its other files, or the Firefox Translations library</string>
@@ -151,6 +156,7 @@
     <!-- A zip of RIME schemas the user made or found; %1$s lists the schema ids it brought. -->
     <string name="offline_import_rime_done">RIME schemas: %1$s. They are compiled the next time the RIME screen is open.</string>
     <string name="offline_import_whisper_ready">Voice model %1$s is ready</string>
+    <string name="offline_import_whisper_custom_ready">Your own voice model %1$s is ready. Choose it for a language under Model per language</string>
     <!-- Whistle is the name of a voice model and is not translated. -->
     <string name="offline_import_whistle_ready">The Whistle voice model is ready</string>
     <string name="offline_import_context_model_done">Context model for %1$s is ready</string>
@@ -202,7 +208,7 @@
     <string name="offline_import_handwriting_subtitle">A language\'s handwriting files fetched on another device, as .zip files</string>
     <string name="offline_import_handwriting_link_label">%1$s, file %2$d of %3$d</string>
     <string name="offline_import_ocr_subtitle">Text recognition data fetched on another device: .traineddata files, or the three PaddleOCR files</string>
-    <string name="offline_import_whisper_subtitle">A model\'s files fetched on another device: one .bin, or a .tflite with its filters_vocab .bin</string>
+    <string name="offline_import_whisper_subtitle">A model\'s files fetched on another device: one .bin, or a .tflite with its filters_vocab .bin. Any whisper.cpp ggml .bin works too, a fine-tuned one included</string>
     <string name="offline_import_whisper_vocab_label">Vocabulary, %1$s</string>
     <string name="offline_import_language_pack_title">Language pack</string>
     <string name="offline_import_language_pack_subtitle">Word list, word pairs and emoji names in one file, to fetch anywhere and import here</string>

@@ -48,10 +48,26 @@ enum class KeyMaterialKind {
     TYPEWRITER,
     INSTRUMENT,
     MOLTEN,
+    /**
+     * Soft plastic pressed out of the board itself: the key is the board's own
+     * colour, lifted by a light shadow on one side and a dark one on the other
+     * (neumorphism). After Expressive Keyboard's Neumorphism design.
+     */
+    NEUMORPH,
+    /** A blocky game button: hard-edged light and shade bands that swap when pressed. */
+    PIXEL,
+    /** Labels made of dots, as on a dot-matrix display, with a dotted outline. */
+    DOT_MATRIX,
 }
 
 /** A procedural tile laid over the key face. Drawn in greys, so it takes the key's own colour. */
-enum class MaterialTexture { NONE, NOISE, LINEN, DOTS, SCANLINES, BRUSHED, WOOD, STONE, PAPER, CARBON, LEATHER }
+enum class MaterialTexture {
+    NONE, NOISE, LINEN, DOTS, SCANLINES, BRUSHED, WOOD, STONE, PAPER, CARBON, LEATHER,
+    /** Square cells of light and shade, like a game block's texture. */
+    PIXELS,
+    /** Boards with dark seams between them and a few knots. */
+    PLANKS,
+}
 
 /** What happens at a key's edge. */
 enum class MaterialEdge {
@@ -68,10 +84,22 @@ enum class MaterialEdge {
     INSET,
     /** A second outline inside the first: typewriter rings, instrument bezels. */
     DOUBLE,
+    /** An outline of round dots. */
+    DOTTED,
+    /**
+     * Hard light bands along the top and left and shade along the bottom and
+     * right, snapped to whole pixels; a press swaps them, so the key reads as
+     * pushed in. The game-block button.
+     */
+    BEVEL,
 }
 
 /** How a key's label is drawn on the material. */
-enum class MaterialLabel { NONE, GLOW, DEBOSS, EMBOSS, SHADOW }
+enum class MaterialLabel {
+    NONE, GLOW, DEBOSS, EMBOSS, SHADOW,
+    /** The label drawn as a grid of dots, as on a dot-matrix display. */
+    DOTS,
+}
 
 /**
  * A key material. [kind] picks the preset; every other field left null takes
@@ -105,6 +133,12 @@ data class KeyMaterialSpec(
     val labelColor: Long? = null,
     /** Iridescent rainbow sheen across the face, 0..1. */
     val iridescence: Float? = null,
+    /**
+     * A soft light shadow up and to the left of the key and a dark one down
+     * and to the right, 0..1: what lifts a neumorphic key off a board of its
+     * own colour. A press flattens it.
+     */
+    val softShadow: Float? = null,
 )
 
 /** A [KeyMaterialSpec] with its preset applied and every range enforced. */
@@ -122,11 +156,12 @@ data class ResolvedMaterial(
     val label: MaterialLabel,
     val labelColor: Long?,
     val iridescence: Float,
+    val softShadow: Float = 0f,
 ) {
     /** Nothing to draw: the plain key the theme would have had without a material. */
     val isPlain: Boolean
         get() = bevelDp == 0f && gloss == 0f && (texture == MaterialTexture.NONE || textureOpacity == 0f) &&
-            edge == MaterialEdge.NONE && label == MaterialLabel.NONE && iridescence == 0f
+            edge == MaterialEdge.NONE && label == MaterialLabel.NONE && iridescence == 0f && softShadow == 0f
 }
 
 val MATERIAL_BEVEL_RANGE = 0f..8f
@@ -137,6 +172,7 @@ val MATERIAL_LIGHT_RANGE = -60f..60f
 val MATERIAL_TEXTURE_OPACITY_RANGE = 0f..1f
 val MATERIAL_EDGE_WIDTH_RANGE = 0.5f..6f
 val MATERIAL_IRIDESCENCE_RANGE = 0f..1f
+val MATERIAL_SOFT_SHADOW_RANGE = 0f..1f
 
 fun keyMaterialKindOrNull(name: String?): KeyMaterialKind? =
     name?.let { wanted -> KeyMaterialKind.entries.firstOrNull { it.name.equals(wanted, ignoreCase = true) } }
@@ -223,6 +259,14 @@ fun materialPreset(kind: KeyMaterialKind): ResolvedMaterial {
             bevelDp = 1.5f, texture = MaterialTexture.STONE, textureOpacity = 0.4f, edge = MaterialEdge.GLOW,
             edgeColor = 0xFFFF7A1A, edgeWidthDp = 2f, label = MaterialLabel.GLOW, labelColor = 0xFFFFA040,
         )
+        KeyMaterialKind.NEUMORPH -> base.copy(lightAngleDeg = 45f, softShadow = 0.7f)
+        KeyMaterialKind.PIXEL -> base.copy(
+            texture = MaterialTexture.PIXELS, textureOpacity = 0.55f, edge = MaterialEdge.BEVEL, edgeWidthDp = 3f,
+            label = MaterialLabel.SHADOW, labelColor = 0xFF3F3F3F,
+        )
+        KeyMaterialKind.DOT_MATRIX -> base.copy(
+            edge = MaterialEdge.DOTTED, edgeWidthDp = 1.2f, label = MaterialLabel.DOTS,
+        )
     }
 }
 
@@ -243,13 +287,20 @@ fun resolveMaterial(spec: KeyMaterialSpec): ResolvedMaterial {
         label = materialLabelOrNull(spec.label) ?: preset.label,
         labelColor = spec.labelColor ?: preset.labelColor,
         iridescence = (spec.iridescence ?: preset.iridescence).coerceIn(MATERIAL_IRIDESCENCE_RANGE),
+        softShadow = (spec.softShadow ?: preset.softShadow).coerceIn(MATERIAL_SOFT_SHADOW_RANGE),
     )
 }
 
 // ---- board effects ----------------------------------------------------------
 
-/** Something that moves on the board behind the keys. */
-enum class BoardEffectKind {
+/**
+ * Something that moves on the board behind the keys, or, for the kinds marked
+ * [onPress], a splash that a key press throws over the keys and that is gone
+ * again a second later. The press kinds draw nothing while nobody types, run
+ * no clock between presses and, having no still picture, draw nothing at all
+ * under reduce motion or power saving.
+ */
+enum class BoardEffectKind(val onPress: Boolean = false) {
     SNOW,
     RAIN,
     CODE_RAIN,
@@ -273,11 +324,53 @@ enum class BoardEffectKind {
     SCAN,
     SHEEN,
     RIPPLES,
+
+    /**
+     * Big soft blobs of colour that drift slowly behind the keys, the colour
+     * pools Expressive Keyboard lays under its glass. Speed 0 holds them still.
+     */
+    ORBS,
+
+    /** A splat of paint with flung drops and drips running down. */
+    PAINT(onPress = true),
+
+    /** A soft, uneven blot of ink that blooms out and fades. */
+    INK(onPress = true),
+
+    /** A round pool of soft light a few keys wide. */
+    LIGHT_POOL(onPress = true),
+
+    /** A wash of colour that spreads from the key across the whole board. */
+    FLOOD(onPress = true),
+
+    /** A puff of smoke that drifts up and thins out. */
+    PUFF(onPress = true),
+
+    /** A four-point glint of light on the key. */
+    GLINT(onPress = true),
+
+    /** A ring that pops outward and throws small bits. */
+    POP(onPress = true),
+
+    /** Short curved strokes that sweep round the key. */
+    SWOOSH(onPress = true),
+
+    /** A scatter of tiny specks round the key. */
+    SPECKS(onPress = true),
+
+    /**
+     * The pressed key reaching out to its neighbours in glassy bridges, like
+     * drops of liquid running together, and letting go as it is released.
+     * After Expressive Keyboard's glass merge. Android 13 and later draw it
+     * with a shader; older phones a plainer bridge.
+     */
+    MELD(onPress = true),
 }
 
 /**
  * A moving board. [colors] are one to four ARGB colours; empty takes the
- * theme's accent and label colour. [reactive] is how much typing drives it:
+ * theme's accent and label colour, except on a press kind, where empty gives
+ * every press a colour of its own. [reactive] is how much typing drives it:
  * each press adds energy that speeds the effect up and brightens it, and the
  * energy halves every [halfLifeMs].
  */
@@ -340,6 +433,25 @@ enum class KeyLightingTarget {
     EDGE,
     /** A halo behind each key, showing in the gaps. */
     GLOW,
+    /** The key face filled with the colour, the label showing through. */
+    FILL,
+    /** The key face filled with two tones running corner to corner. */
+    GRADIENT,
+    /** Twinkling specks of glitter scattered over the key. */
+    GLITTER,
+}
+
+/**
+ * Where the light's colour comes from. [FIXED] is the one colour (turned by
+ * the rainbow spread); the others give each press, or on the patterns that
+ * run on their own each key, a colour of its own.
+ */
+enum class KeyLightingColorMode {
+    FIXED,
+    /** Bright colours, a different one each time. */
+    RANDOM,
+    /** Soft pale colours, a different one each time. */
+    PASTEL,
 }
 
 @Serializable
@@ -360,6 +472,8 @@ data class KeyLightingSpec(
     val hueSpanDeg: Float = 0f,
     /** How long a press stays lit, for the patterns that answer presses. */
     val decayMs: Int = 700,
+    /** A [KeyLightingColorMode] name; null is [KeyLightingColorMode.FIXED]. */
+    val colorMode: String? = null,
 )
 
 val LIGHTING_INTENSITY_RANGE = 0f..1f
@@ -370,6 +484,7 @@ val LIGHTING_DECAY_RANGE = 100..2400
 
 fun keyLightingPatternOrNull(name: String?): KeyLightingPattern? = enumOrNull<KeyLightingPattern>(name)
 fun keyLightingTargetOrNull(name: String?): KeyLightingTarget? = enumOrNull<KeyLightingTarget>(name)
+fun keyLightingColorModeOrNull(name: String?): KeyLightingColorMode? = enumOrNull<KeyLightingColorMode>(name)
 
 // ---- touch bloom ------------------------------------------------------------
 
@@ -395,7 +510,41 @@ data class TouchBloomSpec(
     val dip: Float = 0.5f,
     /** How much the keys wobble as they spring back, 0..1; 0 settles with no overshoot. */
     val wobble: Float = 0.5f,
+    /**
+     * How the keys move, as a [KeyPressMotion] name; null is
+     * [KeyPressMotion.SINK], the dip every theme written before the field had.
+     */
+    val motion: String? = null,
 )
+
+/**
+ * How a key moves under the finger. [SINK] moves every key within the reach,
+ * the nearer the deeper; the rest move only the key under the finger.
+ * [TouchBloomSpec.dip] sets how far, [TouchBloomSpec.wobble] how much it rings
+ * on the way back.
+ */
+enum class KeyPressMotion {
+    /** The keys near the finger sink a little and drop. */
+    SINK,
+    /** The key grows larger. */
+    GROW,
+    /** The key shrinks. */
+    SHRINK,
+    /** The key lifts up off the board. */
+    RISE,
+    /** The key tips toward the side the finger landed on. */
+    TILT,
+    /** The key squashes flat and wide, like jelly. */
+    JELLY,
+    /** The key grows and hops up off the board. */
+    POP,
+    /** The key squashes much wider and flatter and sinks, then springs back. */
+    SQUISH,
+    /** The key fades back and shrinks a little. */
+    FADE,
+}
+
+fun keyPressMotionOrNull(name: String?): KeyPressMotion? = enumOrNull<KeyPressMotion>(name)
 
 val TOUCH_BLOOM_LIGHT_RANGE = 0f..1f
 val TOUCH_BLOOM_RADIUS_RANGE = 40f..240f
