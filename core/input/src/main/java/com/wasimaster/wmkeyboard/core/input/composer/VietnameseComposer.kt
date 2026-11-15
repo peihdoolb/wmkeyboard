@@ -783,6 +783,9 @@ internal object VietnameseEngine {
     }
 }
 
+const val VIETNAMESE_ACCENTED_CHARS = "àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴĐ"
+val VIETNAMESE_ACCENTED_CODEPOINTS: Set<Int> = VIETNAMESE_ACCENTED_CHARS.map { it.code }.toSet()
+
 /** Vietnamese Telex: letters spell the diacritics (`as`→á, `aw`→ă, `dd`→đ). */
 object VietnameseTelexComposer : Composer {
     override val isTransliterating: Boolean get() = true
@@ -794,6 +797,7 @@ object VietnameseTelexComposer : Composer {
     override fun buffersChar(c: Char): Boolean = VietnameseEngine.isToneChar(c)
     override fun isPlausibleWord(word: String): Boolean = VietnameseOrthography.isSyllable(word)
     override fun composeBuffer(buffer: String): String = VietnameseEngine.transduce(buffer, vni = false)
+    override val glideKeys: Set<Int> get() = VIETNAMESE_ACCENTED_CODEPOINTS
 }
 
 /** Vietnamese VNI: digits spell the diacritics (`a8`→ă, `a1`→á, `d9`→đ). */
@@ -806,4 +810,5 @@ object VietnameseVniComposer : Composer {
     override fun buffersChar(c: Char): Boolean = VietnameseEngine.isToneChar(c)
     override fun isPlausibleWord(word: String): Boolean = VietnameseOrthography.isSyllable(word)
     override fun composeBuffer(buffer: String): String = VietnameseEngine.transduce(buffer, vni = true)
+    override val glideKeys: Set<Int> get() = VIETNAMESE_ACCENTED_CODEPOINTS
 }

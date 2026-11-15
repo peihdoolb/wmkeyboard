@@ -20063,11 +20063,11 @@ private fun KeyRows(
                                     boxOrigin,
                                 ),
                                 extraCenters = liveGlideKeys.value.mapNotNull { codePoint ->
-                                    liveCenters.value[codePoint]?.let { codePoint to (it.x to it.y) }
+                                    (liveCenters.value[codePoint] ?: liveCenters.value[baseCodePoint(codePoint)])?.let { codePoint to (it.x to it.y) }
                                 },
                                 carriers = liveCarriers.value.map { (key, c) -> key to (c.x to c.y) },
                             ) { codePoint ->
-                                liveCenters.value[codePoint]?.let { it.x to it.y }
+                                (liveCenters.value[codePoint] ?: liveCenters.value[baseCodePoint(codePoint)])?.let { it.x to it.y }
                             }
                         },
                         onGesture = onGesture,
@@ -20352,11 +20352,11 @@ private fun KeyRows(
                                 boxOrigin,
                             ),
                             extraCenters = liveGlideKeys.value.mapNotNull { codePoint ->
-                                liveCenters.value[codePoint]?.let { codePoint to (it.x to it.y) }
+                                (liveCenters.value[codePoint] ?: liveCenters.value[baseCodePoint(codePoint)])?.let { codePoint to (it.x to it.y) }
                             },
                             carriers = liveCarriers.value.map { (key, c) -> key to (c.x to c.y) },
                         ) { codePoint ->
-                            liveCenters.value[codePoint]?.let { it.x to it.y }
+                            (liveCenters.value[codePoint] ?: liveCenters.value[baseCodePoint(codePoint)])?.let { it.x to it.y }
                         }
                     }
                     while (true) {

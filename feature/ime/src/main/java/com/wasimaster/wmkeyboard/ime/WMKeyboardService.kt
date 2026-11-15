@@ -3512,7 +3512,7 @@ open class WMKeyboardService : InputMethodService() {
         val engine = suggestionEngine ?: return
         val state = _uiState.value
         if (!state.allowsTypingIntelligence || !state.settings.suggestions) return
-        if (state.composer.isTransliterating || state.composer.isConversion) return
+        if ((state.composer.isTransliterating && !isVietnameseTransliterator(state)) || state.composer.isConversion) return
         if (state.captureTarget() != null || state.panel != PanelMode.NONE) return
         if (selEnd - selStart !in 1..MAX_SELECTED_WORD) return
         val ic = currentInputConnection ?: return
@@ -14451,7 +14451,7 @@ open class WMKeyboardService : InputMethodService() {
      */
     private fun joinDotSuffix(ic: InputConnection, typed: String, state: KeyboardUiState): Boolean {
         if (!state.settings.autoText.spaceAfterPunctuation || !state.allowsTypingIntelligence ||
-            state.composer.isTransliterating || state.layouts.ambiguousKeys
+            (state.composer.isTransliterating && !isVietnameseTransliterator(state)) || state.layouts.ambiguousKeys
         ) {
             return false
         }
@@ -22989,18 +22989,20 @@ open class WMKeyboardService : InputMethodService() {
         val joined = state.joinSuggestion ?: return
         val (prev, separator, typedAt) = joinContext ?: return
         val typed = composing.toString()
+        val fieldText = composedPreview(state, typed)
         // The chip was computed for this exact composing text.
-        if (!typed.equals(typedAt, ignoreCase = true)) return
+        if (!typed.equals(typedAt, ignoreCase = true) && !fieldText.equals(typedAt, ignoreCase = true)) return
         val ic = currentInputConnection ?: return
         ic.beginBatchEdit()
         try {
             ic.finishComposingText()
             // Verify the field really ends "prev typed" (plus derive the next
             // bigram context from what precedes it), or do nothing at all.
-            val span = prev.length + separator.length + typed.length
+            val effectiveTyped = if (fieldText.equals(typedAt, ignoreCase = true)) fieldText else typed
+            val span = prev.length + separator.length + effectiveTyped.length
             val window = ic.getTextBeforeCursor(span + 48, 0)?.toString()
             val tail = window?.takeLast(span)
-            if (tail == null || !tail.equals("$prev$separator$typed", ignoreCase = true) ||
+            if (tail == null || !tail.equals("$prev$separator$effectiveTyped", ignoreCase = true) ||
                 tail.substring(prev.length, prev.length + separator.length) != separator
             ) {
                 return
@@ -27359,13 +27361,14 @@ open class WMKeyboardService : InputMethodService() {
     ): OctopusBoard {
         val octopus = state.settings.octopus
         if (!octopus.enabled || !state.allowsTypingIntelligence) return emptyMap()
-        if ((state.composer.isConversion && !latinOnConversion) || state.composer.isTransliterating) return emptyMap()
+        if ((state.composer.isConversion && !latinOnConversion) || (state.composer.isTransliterating && !isVietnameseTransliterator(state))) return emptyMap()
         if (state.layoutMode != LayoutMode.LETTERS) return emptyMap()
         val engine = suggestionEngine ?: return emptyMap()
         val anchors = state.layouts.keyAnchors(octopus.longPressKeys)
         if (anchors.isEmpty()) return emptyMap()
+        val composingWord = if (isVietnameseTransliterator(state)) state.composer.composeBuffer(typed) else typed
         return engine.octopusWords(
-            composing = typed,
+            composing = composingWord,
             previousWord = previous,
             previousWord2 = previous2,
             keys = keys,
@@ -27375,7 +27378,7 @@ open class WMKeyboardService : InputMethodService() {
             // that is not an English one.
             dense = octopus.dense && !latinOnConversion,
             pool = pool,
-            keyOf = { codePoint -> anchors[codePoint] ?: -1 },
+            keyOf = { codePoint -> anchors[codePoint] ?: anchors[baseCodePoint(codePoint)] ?: -1 },
             perKey = octopus.wordsPerKey,
         ).toOctopusBoard()
     }
@@ -27422,7 +27425,7 @@ open class WMKeyboardService : InputMethodService() {
             words,
             { composer.predictionKey(words[it]) },
             emptyList(),
-            { codePoint -> anchors[codePoint] ?: -1 },
+            { codePoint -> anchors[codePoint] ?: anchors[baseCodePoint(codePoint)] ?: -1 },
             octopus.density,
             octopus.wordsPerKey,
             OctopusKind.NEXT_WORD,
@@ -28239,9 +28242,17 @@ open class WMKeyboardService : InputMethodService() {
                 val bias = if (
                     state.settings.layoutBehavior.smartHitDetection &&
                     typed.isNotEmpty() &&
-                    !state.composer.isTransliterating
+                    (!state.composer.isTransliterating || isVietnameseTransliterator(state))
                 ) {
-                    rankedNextLetters(typed, deepAll).ifEmpty { engine.nextLetterWeights(typed) }
+                    if (isVietnameseTransliterator(state)) {
+                        vietnameseNextLetters(
+                            typed,
+                            deepAll,
+                            vni = state.composer === VietnameseVniComposer,
+                        ).ifEmpty { rankedNextLetters(typed, deepAll) }.ifEmpty { engine.nextLetterWeights(typed) }
+                    } else {
+                        rankedNextLetters(typed, deepAll).ifEmpty { engine.nextLetterWeights(typed) }
+                    }
                 } else {
                     emptyMap()
                 }
@@ -28390,13 +28401,14 @@ open class WMKeyboardService : InputMethodService() {
             }
             // Join chip: "some" committed, "thing" composing, "something" a
             // clearly better word. A handful of map hits — fine on main.
-            val joinable = typed.isNotEmpty() && !state.composer.isTransliterating &&
+            val joinable = typed.isNotEmpty() && (!state.composer.isTransliterating || isVietnameseTransliterator(state)) &&
                 !state.composer.isConversion && state.allowsTypingIntelligence
-            val plainJoin = if (joinable) engine.joinCandidate(previousWord, typed) else null
+            val joinTyped = if (isVietnameseTransliterator(state)) state.composer.composeBuffer(typed) else typed
+            val plainJoin = if (joinable) engine.joinCandidate(previousWord, joinTyped) else null
             // Across a double-space full stop (#1107), when no plain join came up.
-            val slipJoin = if (joinable && plainJoin == null) periodSlipJoin(engine, typed) else null
+            val slipJoin = if (joinable && plainJoin == null) periodSlipJoin(engine, joinTyped) else null
             val join = plainJoin ?: slipJoin?.first
-            joinContext = if (plainJoin != null) JoinContext(previousWord.orEmpty(), " ", typed) else slipJoin?.second
+            joinContext = if (plainJoin != null) JoinContext(previousWord.orEmpty(), " ", joinTyped) else slipJoin?.second
             // Revision chip: the word just committed sometimes proves the one
             // before it wrong ("their going" → "they're"). Empty-composing
             // only — the moment of the space is when the evidence lands — and
@@ -31472,7 +31484,7 @@ open class WMKeyboardService : InputMethodService() {
             combine(_uiState, glideSourcesEpoch) { state, epoch ->
                 GlideGate(
                     languageId = state.language.id,
-                    converts = state.composer.isTransliterating || state.composer.isConversion,
+                    converts = (state.composer.isTransliterating && !isVietnameseTransliterator(state)) || state.composer.isConversion,
                     phonetic = state.composer.phoneticLanguage
                         // Each edition glides on its own spellings: Dark
                         // leaves consonants apart where Classic joins them,
@@ -31918,7 +31930,7 @@ open class WMKeyboardService : InputMethodService() {
      * is not the word itself (a transliterator, a conversion IME, a keypad).
      */
     private fun swipeJoinsWord(state: KeyboardUiState): Boolean {
-        if (state.composer.isTransliterating || state.composer.isConversion) return false
+        if ((state.composer.isTransliterating && !isVietnameseTransliterator(state)) || state.composer.isConversion) return false
         if (state.layouts.ambiguousKeys) return false
         val gesture = state.settings.gesture
         return gesture.twoThumbGlide || (gesture.swipeContinuesTyped && composingIsTyped())
@@ -59801,6 +59813,33 @@ private fun rankedNextLetters(typed: String, ranked: List<String>): Map<Char, Fl
         if (word.length > typed.length && word.startsWith(typed, ignoreCase = true)) {
             val ch = word[typed.length]
             if (ch.isLetter() && !ch.isSurrogate()) {
+                val key = ch.lowercaseChar()
+                tally[key] = (tally[key] ?: 0f) + weight
+            }
+        }
+        weight *= RANKED_LETTER_DECAY
+    }
+    val max = tally.values.maxOrNull() ?: return emptyMap()
+    return tally.mapValues { it.value / max }
+}
+
+/**
+ * [rankedNextLetters] for Vietnamese transliterating composers (Telex and VNI).
+ * Maps candidate words back to their keystroke spellings so next-letter bias weights the keys
+ * the user will actually press (consonants, vowels, or Telex/VNI tone/accent keys).
+ */
+private fun vietnameseNextLetters(
+    typed: String,
+    ranked: List<String>,
+    vni: Boolean,
+): Map<Char, Float> {
+    val tally = HashMap<Char, Float>()
+    var weight = 1f
+    for (word in ranked) {
+        val keys = com.wasimaster.wmkeyboard.core.input.composer.VietnameseEngine.toKeystrokes(word, vni) ?: word
+        if (keys.length > typed.length && keys.startsWith(typed, ignoreCase = true)) {
+            val ch = keys[typed.length]
+            if ((ch.isLetter() || (vni && ch.isDigit())) && !ch.isSurrogate()) {
                 val key = ch.lowercaseChar()
                 tally[key] = (tally[key] ?: 0f) + weight
             }

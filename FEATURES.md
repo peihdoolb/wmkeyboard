@@ -399,7 +399,7 @@ something only some of them do. Unmarked means Gboard or SwiftKey has it too.
     - Compiled out of Play — `src/nouserlib` stands in for the loader on the Play channel (Play forbids loading code from outside Play); quality not measured on a phone
   - Per-language glide readiness gate `RARE` — Glide enables itself only where it can decode honestly; measured, not flagged
     - Coverage measurement — Top 1500 words per word source; grid must be able to spell 90% of them
-    - Converting-layout block — Off on Avro, Hangul, Vietnamese and every CJK conversion layout — a stroke there spells a reading, not a word
+    - Converting-layout block — Off on Avro, Hangul and every CJK conversion layout — a stroke there spells a reading, not a word
     - Re-checked on dictionary download — Source epoch bumps re-ask the coverage question
   - Bengali phonetic glide `RARE` — Swipe roman letters on the Avro grid, get Bengali words back via RomanizedIndex
   - Multi-word glide across the spacebar `uncommon` — One unbroken stroke crossing space commits several words; spacebar points anchor no letter and are dropped; the walks either side are open ends, straight or diagonal, and the stroke is read as a phrase, each word judged by the words after it as well as before through trigrams, bigrams and the context model

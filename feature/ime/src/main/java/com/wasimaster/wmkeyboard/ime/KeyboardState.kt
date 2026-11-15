@@ -5389,6 +5389,18 @@ fun decomposedKeyChars(label: String): List<Char>? {
     return cached.takeIf { it.isNotEmpty() }?.map { it.lowercaseChar() }
 }
 
+/**
+ * Maps a potentially accented or modified code point back to its base ASCII letter code point.
+ * Used by glide and octopus to resolve keys for letters not drawn individually on the layout.
+ */
+internal fun baseCodePoint(codePoint: Int): Int {
+    if (codePoint == 'đ'.code || codePoint == 'Đ'.code) return 'd'.code
+    if (codePoint <= 0x7F) return codePoint
+    val s = String(Character.toChars(codePoint))
+    val nfd = java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD)
+    return if (nfd.isNotEmpty()) nfd[0].lowercaseChar().code else codePoint
+}
+
 private val composedCache = java.util.concurrent.ConcurrentHashMap<String, Char>()
 
 private val decomposedCache = java.util.concurrent.ConcurrentHashMap<String, String>()
