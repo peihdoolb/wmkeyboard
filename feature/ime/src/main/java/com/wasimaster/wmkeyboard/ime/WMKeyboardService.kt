@@ -28248,7 +28248,7 @@ open class WMKeyboardService : InputMethodService() {
                         vietnameseNextLetters(
                             typed,
                             deepAll,
-                            vni = state.composer === VietnameseVniComposer,
+                            composer = state.composer,
                         ).ifEmpty { rankedNextLetters(typed, deepAll) }.ifEmpty { engine.nextLetterWeights(typed) }
                     } else {
                         rankedNextLetters(typed, deepAll).ifEmpty { engine.nextLetterWeights(typed) }
@@ -59831,15 +59831,16 @@ private fun rankedNextLetters(typed: String, ranked: List<String>): Map<Char, Fl
 private fun vietnameseNextLetters(
     typed: String,
     ranked: List<String>,
-    vni: Boolean,
+    composer: Composer,
 ): Map<Char, Float> {
+    val isVni = composer === VietnameseVniComposer
     val tally = HashMap<Char, Float>()
     var weight = 1f
     for (word in ranked) {
-        val keys = com.wasimaster.wmkeyboard.core.input.composer.VietnameseEngine.toKeystrokes(word, vni) ?: word
+        val keys = composer.resumeBuffer(word) ?: word
         if (keys.length > typed.length && keys.startsWith(typed, ignoreCase = true)) {
             val ch = keys[typed.length]
-            if ((ch.isLetter() || (vni && ch.isDigit())) && !ch.isSurrogate()) {
+            if ((ch.isLetter() || (isVni && ch.isDigit())) && !ch.isSurrogate()) {
                 val key = ch.lowercaseChar()
                 tally[key] = (tally[key] ?: 0f) + weight
             }
