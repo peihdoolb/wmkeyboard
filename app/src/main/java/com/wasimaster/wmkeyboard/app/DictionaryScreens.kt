@@ -4,6 +4,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import com.wasimaster.wmkeyboard.core.snippets.GboardDictionary
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -43,6 +47,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -50,6 +55,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -113,6 +119,24 @@ private const val DICTIONARY_SEARCH_THRESHOLD = 12
 /** Rows the word lists draw per page; the next page is a tap away. */
 private const val WORD_LIST_PAGE = 100
 /** The "Show N more" row at the foot of a paged word list. */
+/**
+ * The shortcuts given to personal-dictionary words (#1343), by the word they
+ * offer: the snippets in [com.wasimaster.wmkeyboard.core.snippets.DictionaryShortcuts]'s
+ * folder, keyed in lower case. Empty when there is none, or the snippets
+ * cannot be read.
+ */
+private fun dictionaryShortcuts(context: android.content.Context): Map<String, List<String>> = runCatching {
+    val store = com.wasimaster.wmkeyboard.core.snippets.SnippetStore(
+        java.io.File(context.filesDir, "snippets/snippets.json"),
+    )
+    val folder = store.folders()
+        .firstOrNull { it.name == com.wasimaster.wmkeyboard.core.snippets.DictionaryShortcuts.FOLDER_NAME }
+        ?: return@runCatching emptyMap()
+    store.items()
+        .filter { it.folderId == folder.id && !it.trigger.isNullOrBlank() }
+        .groupBy({ it.text.trim().lowercase() }, { it.trigger.orEmpty() })
+}.getOrDefault(emptyMap())
+
 @Composable
 private fun ShowMoreWordsRow(remaining: Int, onClick: () -> Unit) {
     WmRow(
@@ -400,27 +424,18 @@ internal fun DictionarySettings(repository: SettingsRepository, settings: LiveSe
     // count-sorted list, which made finding a single word to delete a scroll
     // through everything the keyboard has ever learned.
     var query by remember { mutableStateOf("") }
-    if (words.size > DICTIONARY_SEARCH_THRESHOLD || query.isNotEmpty()) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            label = { Text(stringResource(CommonR.string.common_search)) },
-            singleLine = true,
-            leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-            trailingIcon = {
-                if (query.isNotEmpty()) {
-                    IconButton(onClick = { query = "" }) {
-                        Icon(
-                            Icons.Outlined.Close,
-                            contentDescription = stringResource(CommonR.string.common_clear),
-                        )
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-        )
+    // The shortcuts given to words (#1343), which live in the snippets'
+    // "Personal dictionary" folder: read back here so a word can be found by
+    // its shortcut, and the words that have one listed on their own. Read
+    // again whenever the words change, which an add with a shortcut does.
+    val shortcuts by produceState(emptyMap<String, List<String>>(), words) {
+        value = withContext(Dispatchers.IO) { dictionaryShortcuts(context) }
+    }
+    var onlyShortcuts by remember { mutableStateOf(false) }
+    var regex by rememberSaveable { mutableStateOf(false) }
+    val search = remember(query, regex) { WordSearch(query, regex) }
+    if (words.size > DICTIONARY_SEARCH_THRESHOLD || query.isNotEmpty() || shortcuts.isNotEmpty()) {
+        WordSearchField(query, { query = it }, regex, { regex = it }, search.invalid)
     }
     // The list's order (#194): a key, and under it a button that names the
     // direction and reverses it. The direction is not a second press on the
@@ -461,17 +476,26 @@ internal fun DictionarySettings(repository: SettingsRepository, settings: LiveSe
     LaunchedEffect(groups) {
         if (filter != null && groups.none { it.languageId == filter?.languageId }) filter = null
     }
-    if (groups.size > 1) {
+    val withShortcut = remember(words, shortcuts) { words.count { shortcuts.containsKey(it.first.lowercase()) } }
+    if (onlyShortcuts && withShortcut == 0) onlyShortcuts = false
+    if (groups.size > 1 || withShortcut > 0) {
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
         ) {
             FilterChip(
-                selected = filter == null,
-                onClick = { filter = null },
+                selected = filter == null && !onlyShortcuts,
+                onClick = { filter = null; onlyShortcuts = false },
                 label = { Text(stringResource(R.string.backup_dictionary_filter_everything)) },
             )
-            for (group in groups) {
+            if (withShortcut > 0) {
+                FilterChip(
+                    selected = onlyShortcuts,
+                    onClick = { onlyShortcuts = !onlyShortcuts },
+                    label = { Text(stringResource(R.string.backup_dictionary_filter_shortcuts, withShortcut)) },
+                )
+            }
+            for (group in groups.takeIf { it.size > 1 }.orEmpty()) {
                 FilterChip(
                     selected = filter == LanguageFilter(group.languageId),
                     onClick = { filter = LanguageFilter(group.languageId) },
@@ -500,10 +524,17 @@ internal fun DictionarySettings(repository: SettingsRepository, settings: LiveSe
     }
     val sorted = sortedFrom?.second.orEmpty()
     val sortedNow = sortedFrom?.first === words
-    val shown = remember(sorted, query, filter, langs) {
-        val needle = query.trim().lowercase()
+    val shown = remember(sorted, search, filter, langs, shortcuts, onlyShortcuts) {
         val inLanguage = filter?.let { f -> sorted.filter { langs[it.first] == f.languageId } } ?: sorted
-        if (needle.isEmpty()) inLanguage else inLanguage.filter { needle in it.first.lowercase() }
+        val inShortcuts = if (onlyShortcuts) inLanguage.filter { shortcuts.containsKey(it.first.lowercase()) } else inLanguage
+        // A search finds a word by its shortcut too (#1343).
+        if (search.empty) {
+            inShortcuts
+        } else {
+            inShortcuts.filter { (word, _) ->
+                search.matches(word) || shortcuts[word.lowercase()].orEmpty().any { search.matches(it) }
+            }
+        }
     }
     if (words.isEmpty()) {
         CaptionText(stringResource(R.string.backup_dictionary_empty))
@@ -529,11 +560,14 @@ internal fun DictionarySettings(repository: SettingsRepository, settings: LiveSe
                 } else {
                     seen
                 }
-                val kept = if (word in pinned) {
+                val pinnedOrNot = if (word in pinned) {
                     stringResource(R.string.backup_dictionary_pinned_subtitle, standing)
                 } else {
                     standing
                 }
+                val kept = shortcuts[word.lowercase()]?.let {
+                    stringResource(R.string.backup_dictionary_shortcut_subtitle, pinnedOrNot, it.joinToString(", "))
+                } ?: pinnedOrNot
                 WmRow(
                     title = word,
                     // The language leads (#930), so a list mixing them reads
@@ -892,7 +926,9 @@ private fun wordsTheListsHold(
         if (!listCapitals || !shipped(langId)) {
             key
         } else {
-            capitalsOf(langId).firstNotNullOfOrNull { DictionaryCapitals.spelling(it, key) } ?: key
+            capitalsOf(langId).firstNotNullOfOrNull {
+                DictionaryCapitals.spelling(it, key, com.wasimaster.wmkeyboard.core.prediction.TurkicCase.applies(langId))
+            } ?: key
         }
     return words.filter { word ->
         val key = WordKey.of(word)
@@ -969,6 +1005,73 @@ private fun PickWordsDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(CommonR.string.common_cancel)) }
         },
+    )
+}
+
+/**
+ * A word list's search (#1343): the text anywhere in the word, any case, or
+ * with [regex] a regular expression, also any case, so `^i$` finds the one
+ * lone "i" in a list of thousands. A pattern that does not parse matches
+ * nothing, and [invalid] says so under the box.
+ */
+private class WordSearch(query: String, private val regex: Boolean) {
+    private val needle = query.trim()
+    private val lower = needle.lowercase()
+    private val pattern: Regex? =
+        if (regex && needle.isNotEmpty()) runCatching { Regex(needle, RegexOption.IGNORE_CASE) }.getOrNull() else null
+
+    val empty: Boolean = needle.isEmpty()
+    val invalid: Boolean = regex && needle.isNotEmpty() && pattern == null
+
+    fun matches(text: String): Boolean = when {
+        empty -> true
+        regex -> pattern?.containsMatchIn(text) == true
+        else -> lower in text.lowercase()
+    }
+}
+
+/** The search box over a word list, with its regular-expression switch (#1343). */
+@Composable
+private fun WordSearchField(
+    query: String,
+    onQuery: (String) -> Unit,
+    regex: Boolean,
+    onRegex: (Boolean) -> Unit,
+    invalid: Boolean,
+) {
+    val regexDesc = stringResource(R.string.backup_dictionary_search_regex_desc)
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQuery,
+        label = { Text(stringResource(CommonR.string.common_search)) },
+        singleLine = true,
+        isError = invalid,
+        supportingText = if (invalid) ({ Text(stringResource(R.string.backup_dictionary_search_regex_invalid)) }) else null,
+        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+        trailingIcon = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconToggleButton(
+                    checked = regex,
+                    onCheckedChange = onRegex,
+                    modifier = Modifier.semantics { contentDescription = regexDesc },
+                ) {
+                    Text(
+                        ".*",
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                        color = if (regex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                if (query.isNotEmpty()) {
+                    IconButton(onClick = { onQuery("") }) {
+                        Icon(Icons.Outlined.Close, contentDescription = stringResource(CommonR.string.common_clear))
+                    }
+                }
+            }
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
     )
 }
 
@@ -1510,31 +1613,13 @@ internal fun BlacklistSettings(repository: SettingsRepository, settings: LiveSet
     // once — hundreds of blacklisted words composed in one go ran the app
     // out of memory (#75).
     var query by remember { mutableStateOf("") }
+    var regex by rememberSaveable { mutableStateOf(false) }
+    val search = remember(query, regex) { WordSearch(query, regex) }
     if (entries.size > DICTIONARY_SEARCH_THRESHOLD || query.isNotEmpty()) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            label = { Text(stringResource(CommonR.string.common_search)) },
-            singleLine = true,
-            leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-            trailingIcon = {
-                if (query.isNotEmpty()) {
-                    IconButton(onClick = { query = "" }) {
-                        Icon(
-                            Icons.Outlined.Close,
-                            contentDescription = stringResource(CommonR.string.common_clear),
-                        )
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-        )
+        WordSearchField(query, { query = it }, regex, { regex = it }, search.invalid)
     }
-    val shown = remember(entries, query) {
-        val needle = query.trim().lowercase()
-        if (needle.isEmpty()) entries else entries.filter { needle in it.word }
+    val shown = remember(entries, search) {
+        if (search.empty) entries else entries.filter { search.matches(it.word) }
     }
     // Keyed on the query, not the list, so a deletion keeps the pages open (#85).
     var visible by remember(query) { mutableIntStateOf(WORD_LIST_PAGE) }
@@ -2238,34 +2323,16 @@ internal fun LearnedCorrectionsSettings(repository: SettingsRepository, settings
     val undone = learned.undone
 
     var query by remember { mutableStateOf("") }
+    var regex by rememberSaveable { mutableStateOf(false) }
+    val search = remember(query, regex) { WordSearch(query, regex) }
     if (pairs.size + undone.size > DICTIONARY_SEARCH_THRESHOLD || query.isNotEmpty()) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            label = { Text(stringResource(CommonR.string.common_search)) },
-            singleLine = true,
-            leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-            trailingIcon = {
-                if (query.isNotEmpty()) {
-                    IconButton(onClick = { query = "" }) {
-                        Icon(
-                            Icons.Outlined.Close,
-                            contentDescription = stringResource(CommonR.string.common_clear),
-                        )
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-        )
+        WordSearchField(query, { query = it }, regex, { regex = it }, search.invalid)
     }
-    val needle = query.trim().lowercase()
-    val shown = remember(pairs, needle) {
-        if (needle.isEmpty()) pairs else pairs.filter { needle in it.first || needle in it.second.fixed }
+    val shown = remember(pairs, search) {
+        if (search.empty) pairs else pairs.filter { search.matches(it.first) || search.matches(it.second.fixed) }
     }
-    val shownUndone = remember(undone, needle) {
-        if (needle.isEmpty()) undone else undone.filter { needle in it.typed || needle in it.fixed }
+    val shownUndone = remember(undone, search) {
+        if (search.empty) undone else undone.filter { search.matches(it.typed) || search.matches(it.fixed) }
     }
     // Keyed on the query, not the list, so a deletion keeps the pages open (#85).
     var visible by remember(query) { mutableIntStateOf(WORD_LIST_PAGE) }

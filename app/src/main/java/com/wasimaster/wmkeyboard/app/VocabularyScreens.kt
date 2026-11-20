@@ -364,6 +364,7 @@ internal fun VocabularyToolSettings(
                 stringResource(R.string.tooldetail_vocab_nudges_subtitle),
                 nudges,
                 default = d.nudges,
+                info = stringResource(R.string.tooldetail_vocab_nudges_info),
             ) {
                 scope.launch { repository.setVocabNudges(it) }
             }
@@ -374,6 +375,7 @@ internal fun VocabularyToolSettings(
                 stringResource(R.string.tooldetail_vocab_nudge_self_subtitle),
                 settings.watch { it.vocabulary.nudgeOnVocabWord },
                 default = d.nudgeOnVocabWord,
+                info = stringResource(R.string.tooldetail_vocab_nudge_self_info),
             ) { scope.launch { repository.setVocabNudgeOnVocabWord(it) } }
         }
         item(visible = nudges, level = SettingLevel.STANDARD) {
@@ -386,6 +388,7 @@ internal fun VocabularyToolSettings(
                 ),
                 selected = settings.watch { it.vocabulary.chipTapAction },
                 default = d.chipTapAction,
+                info = stringResource(R.string.tooldetail_vocab_tap_info),
             ) { scope.launch { repository.setVocabChipTapAction(it) } }
         }
         item(visible = nudges, level = SettingLevel.ADVANCED) {
@@ -398,6 +401,7 @@ internal fun VocabularyToolSettings(
                 ),
                 selected = settings.watch { it.vocabulary.nudgeScope },
                 default = d.nudgeScope,
+                info = stringResource(R.string.tooldetail_vocab_scope_info),
             ) { scope.launch { repository.setVocabNudgeScope(it) } }
         }
         item(visible = nudges, level = SettingLevel.STANDARD) {
@@ -411,6 +415,7 @@ internal fun VocabularyToolSettings(
                 ),
                 selected = settings.watch { it.vocabulary.nudgeLevel },
                 default = d.nudgeLevel,
+                info = stringResource(R.string.tooldetail_vocab_level_info),
             ) { scope.launch { repository.setVocabNudgeLevel(it) } }
         }
         item(visible = nudges, level = SettingLevel.STANDARD) {
@@ -423,6 +428,7 @@ internal fun VocabularyToolSettings(
                 ),
                 selected = settings.watch { it.vocabulary.cooldown },
                 default = d.cooldown,
+                info = stringResource(R.string.tooldetail_vocab_cooldown_info),
             ) { scope.launch { repository.setVocabCooldown(it) } }
         }
     }
@@ -486,6 +492,7 @@ internal fun VocabularyToolSettings(
                 ),
                 selected = settings.watch { it.vocabulary.relatedTap },
                 default = d.relatedTap,
+                info = stringResource(R.string.tooldetail_vocab_related_info),
             ) { scope.launch { repository.setVocabRelatedTap(it) } }
         }
         item {
@@ -536,6 +543,7 @@ internal fun VocabularyToolSettings(
                 ),
                 selected = settings.watch { it.vocabulary.audioSource },
                 default = d.audioSource,
+                info = stringResource(R.string.tooldetail_vocab_audio_source_info),
             ) { scope.launch { repository.setVocabAudioSource(it) } }
         }
         item {
@@ -548,6 +556,7 @@ internal fun VocabularyToolSettings(
                 ),
                 selected = settings.watch { it.vocabulary.accent },
                 default = d.accent,
+                info = stringResource(R.string.tooldetail_vocab_accent_info),
             ) { scope.launch { repository.setVocabAccent(it) } }
         }
         item(visible = ttsTunable, level = SettingLevel.ADVANCED) {
@@ -557,6 +566,7 @@ internal fun VocabularyToolSettings(
                 range = VocabularySettings.MIN_TTS..VocabularySettings.MAX_TTS,
                 display = { speedFormat.format(it) },
                 default = d.ttsRate,
+                info = stringResource(R.string.tooldetail_vocab_tts_rate_info),
             ) { scope.launch { repository.setVocabTtsRate(it) } }
         }
         item(visible = ttsTunable, level = SettingLevel.ADVANCED) {
@@ -566,6 +576,7 @@ internal fun VocabularyToolSettings(
                 range = VocabularySettings.MIN_TTS..VocabularySettings.MAX_TTS,
                 display = { speedFormat.format(it) },
                 default = d.ttsPitch,
+                info = stringResource(R.string.tooldetail_vocab_tts_pitch_info),
             ) { scope.launch { repository.setVocabTtsPitch(it) } }
         }
         item {
@@ -603,6 +614,7 @@ internal fun VocabularyToolSettings(
                         ),
                     )
                 },
+                info = stringResource(R.string.tooldetail_vocab_scheduler_info),
             ) { scope.launch { repository.setVocabScheduler(it) } }
         }
         item {
@@ -613,6 +625,7 @@ internal fun VocabularyToolSettings(
                 range = VocabularySettings.MIN_DAILY_GOAL.toFloat()..VocabularySettings.MAX_DAILY_GOAL.toFloat(),
                 display = { numberFormat.format(it.roundToInt()) },
                 default = d.dailyGoal.toFloat(),
+                info = stringResource(R.string.tooldetail_vocab_goal_info),
             ) { scope.launch { repository.setVocabDailyGoal(it.roundToInt()) } }
         }
     }
@@ -624,6 +637,7 @@ internal fun VocabularyToolSettings(
                 stringResource(R.string.tooldetail_vocab_wotd_card_subtitle),
                 settings.watch { it.vocabulary.wordOfTheDayCard },
                 default = d.wordOfTheDayCard,
+                info = stringResource(R.string.tooldetail_vocab_wotd_card_info),
             ) {
                 scope.launch { repository.setVocabWordOfTheDayCard(it) }
             }
@@ -634,6 +648,7 @@ internal fun VocabularyToolSettings(
                 stringResource(R.string.tooldetail_vocab_wotd_chip_subtitle),
                 wordChip,
                 default = d.wordOfTheDayChip,
+                info = stringResource(R.string.tooldetail_vocab_wotd_chip_info),
             ) {
                 scope.launch { repository.setVocabWordOfTheDayChip(it) }
             }
@@ -653,6 +668,7 @@ internal fun VocabularyToolSettings(
                 ),
                 selected = settings.watch { it.vocabulary.wordInterval },
                 default = d.wordInterval,
+                info = stringResource(R.string.tooldetail_vocab_wotd_interval_info),
             ) { scope.launch { repository.setVocabWordInterval(it) } }
         }
         item(visible = wordChip, level = SettingLevel.ADVANCED) {
@@ -663,6 +679,7 @@ internal fun VocabularyToolSettings(
                 range = VocabularySettings.MIN_CHIP_TIMES.toFloat()..VocabularySettings.MAX_CHIP_TIMES.toFloat(),
                 display = { numberFormat.format(it.roundToInt()) },
                 default = d.chipTimesPerWord.toFloat(),
+                info = stringResource(R.string.tooldetail_vocab_wotd_chip_times_info),
             ) { scope.launch { repository.setVocabChipTimesPerWord(it.roundToInt()) } }
         }
     }
@@ -788,6 +805,25 @@ internal fun VocabPacksScreen(
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         scope.launch {
+            // Several lists in one zip (the lists screen's pick bar exports
+            // them so): each comes in on its own, and one message says how many.
+            val bundled = withContext(Dispatchers.IO) {
+                if (!PackBundle.isBundle(context, uri, VocabPackFile.FILE_EXTENSION)) return@withContext null
+                val failed = ArrayList<String>()
+                var imported = 0
+                runCatching {
+                    PackBundle.forEachPack(context, uri, VocabPackFile.FILE_EXTENSION) { entry, input ->
+                        val got = input?.use { runCatching { VocabPacks.import(context.filesDir, "en", entry, it) }.getOrNull() }
+                        if (got is VocabPacks.ImportResult.Imported) imported++ else failed += entry
+                    }
+                }
+                imported to failed
+            }
+            if (bundled != null) {
+                message = bulkImportSummary(context, bundled.first, bundled.second)
+                revision++
+                return@launch
+            }
             val result = withContext(Dispatchers.IO) {
                 runCatching {
                     val name = context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
@@ -1125,6 +1161,87 @@ internal fun VocabListsScreen(
         }
     }
 
+    // A long press on a list starts picking: taps then tick lists, and the
+    // dock exports every ticked one in one zip or deletes them all.
+    var pickedFiles by remember { mutableStateOf<Set<File>>(emptySet()) }
+    var confirmBulkDelete by remember { mutableStateOf(false) }
+    var message by remember { mutableStateOf<String?>(null) }
+    val livePicked = lists.filter { it.file in pickedFiles }
+    val picking = livePicked.isNotEmpty()
+    var pendingExport by remember { mutableStateOf<List<UserVocabList>?>(null) }
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(PackBundle.MIME_TYPE)) { uri ->
+        val picked = pendingExport
+        pendingExport = null
+        if (uri == null || picked == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val ok = withContext(Dispatchers.IO) {
+                runCatching {
+                    context.contentResolver.requireOutputStream(uri).use { out ->
+                        PackBundle.write(
+                            out,
+                            picked.map { list ->
+                                VocabPackFile.fileName(list.pack.meta) to { stream: java.io.OutputStream ->
+                                    stream.use {
+                                        it.write(VocabPackFile.encode(list.pack, BuildConfig.VERSION_CODE, BuildConfig.VERSION_NAME).toByteArray())
+                                    }
+                                }
+                            },
+                        )
+                    }
+                }.isSuccess
+            }
+            pickedFiles = emptySet()
+            message = if (ok) {
+                context.resources.getQuantityString(R.plurals.vocab_lists_exported, picked.size, picked.size)
+            } else {
+                context.getString(R.string.vocab_list_export_error)
+            }
+        }
+    }
+    androidx.activity.compose.BackHandler(enabled = picking) { pickedFiles = emptySet() }
+    if (picking) {
+        RegisterDock {
+            PickBar(
+                count = livePicked.size,
+                allPicked = livePicked.size == lists.size,
+                onClear = { pickedFiles = emptySet() },
+                onSelectAll = { pickedFiles = lists.mapTo(HashSet()) { it.file } },
+                onExport = {
+                    pendingExport = livePicked
+                    exportLauncher.launch(PackBundle.fileName("vocabulary-lists"))
+                },
+                onDelete = { confirmBulkDelete = true },
+            )
+        }
+    }
+    if (confirmBulkDelete && picking) {
+        val count = livePicked.size
+        AlertDialog(
+            onDismissRequest = { confirmBulkDelete = false },
+            title = { Text(pluralStringResource(R.plurals.pick_delete_title, count, count)) },
+            text = { Text(stringResource(R.string.pick_delete_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmBulkDelete = false
+                    val doomed = livePicked
+                    pickedFiles = emptySet()
+                    scope.launch {
+                        withContext(Dispatchers.IO) { doomed.forEach { VocabPacks.remove(it.file) } }
+                        revision++
+                    }
+                }) { Text(stringResource(CommonR.string.common_delete)) }
+            },
+            dismissButton = { TextButton(onClick = { confirmBulkDelete = false }) { Text(stringResource(CommonR.string.common_cancel)) } },
+        )
+    }
+    message?.let { text ->
+        AlertDialog(
+            onDismissRequest = { message = null },
+            text = { Text(text) },
+            confirmButton = { TextButton(onClick = { message = null }) { Text(stringResource(CommonR.string.common_ok)) } },
+        )
+    }
+
     RegisterAddFab(stringResource(R.string.vocab_lists_add_action)) { newName = "" }
 
     SettingsGroup(stringResource(R.string.vocab_lists_title), info = stringResource(R.string.vocab_lists_info)) {
@@ -1136,9 +1253,15 @@ internal fun VocabListsScreen(
                 WmRow(
                     title = list.pack.name,
                     subtitle = stringResource(R.string.vocab_list_subtitle, list.pack.words.size, list.learnt),
-                    icon = Icons.Outlined.PlaylistAdd,
+                    icon = if (picking) null else Icons.Outlined.PlaylistAdd,
+                    leading = if (picking) {
+                        { androidx.compose.material3.Checkbox(checked = list.file in pickedFiles, onCheckedChange = null) }
+                    } else {
+                        null
+                    },
+                    onLongClick = { pickedFiles = pickedFiles.toggled(list.file) },
                     trailing = {
-                        Switch(
+                        if (!picking) Switch(
                             checked = VocabPacks.isEnabled(list.file),
                             onCheckedChange = { on ->
                                 scope.launch {
@@ -1148,7 +1271,9 @@ internal fun VocabListsScreen(
                             },
                         )
                     },
-                    onClick = { onNavigate(vocabListRoute(VocabPacks.packIdOf(list.file))) },
+                    onClick = {
+                        if (picking) pickedFiles = pickedFiles.toggled(list.file) else onNavigate(vocabListRoute(VocabPacks.packIdOf(list.file)))
+                    },
                 )
             }
         }

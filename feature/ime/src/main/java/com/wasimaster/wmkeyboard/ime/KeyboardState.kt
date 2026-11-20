@@ -889,6 +889,13 @@ enum class PanelMode {
     FILES,
 
     /**
+     * The notes vault (#1211): an Obsidian or Zettel Notes folder, opened from
+     * the Notes panel. Its state is the controller's, see `ime.vault.VaultUi`;
+     * its box takes the keys through [CaptureTarget.VAULT_TEXT].
+     */
+    NOTES_VAULT,
+
+    /**
      * The Text repeat tool: a piece of text written out many times. Its text
      * and custom separator take the keys through [CaptureTarget.REPEAT_TEXT]
      * and [CaptureTarget.REPEAT_SEPARATOR]; see [TextRepeatUi].
@@ -1112,6 +1119,8 @@ fun panelFocusRegions(panel: PanelMode): List<FocusRegion> = when (panel) {
     PanelMode.GALLERY -> listOf(FocusRegion.CHIPS, FocusRegion.RESULTS, FocusRegion.ACTIONS)
     // The rows; the bar under them is touch, and typing reaches the box.
     PanelMode.FILES -> listOf(FocusRegion.RESULTS)
+    // The folder's rows; the header's chips are touch, and typing reaches the box.
+    PanelMode.NOTES_VAULT -> listOf(FocusRegion.RESULTS)
     PanelMode.PASSWORD_GEN ->
         listOf(FocusRegion.CHIPS, FocusRegion.ACTIONS, FocusRegion.RESULTS)
     // The mode tabs, the text pills, Insert/Copy/Undo, then the option chips.
@@ -1143,6 +1152,8 @@ fun panelFocusRegions(panel: PanelMode): List<FocusRegion> = when (panel) {
     PanelMode.DOC_SCAN -> emptyList()
     // The tab chips, then the result card's insert chips.
     PanelMode.MUSIC_ID -> listOf(FocusRegion.CHIPS, FocusRegion.ACTIONS)
+    // The face's buttons (the dial, Cancel, Send to Again), then the ticket's chips.
+    PanelMode.SPEED_TEST -> listOf(FocusRegion.ACTIONS, FocusRegion.CHIPS)
     // The search, Copy/Open/More, the pinned and recent row, then every app.
     PanelMode.SHARE -> listOf(FocusRegion.SEARCH, FocusRegion.ACTIONS, FocusRegion.CHIPS, FocusRegion.RESULTS)
     // Panels with nothing to drive. The sensor trio has zero controls at all;
@@ -1153,9 +1164,6 @@ fun panelFocusRegions(panel: PanelMode): List<FocusRegion> = when (panel) {
     // TRACKPAD is a pointing surface and nothing else.
     PanelMode.NONE, PanelMode.TEXT_EDIT, PanelMode.TRACKPAD, PanelMode.COMPASS, PanelMode.LEVEL,
     PanelMode.MOON_PHASE, PanelMode.NUMPAD, PanelMode.HANDWRITING, PanelMode.CUSTOM_LAYOUTS,
-    // The speed test's chips are touch targets with no [PanelFocusTarget]
-    // yet; a ring here would be an empty one. Add the regions with the targets.
-    PanelMode.SPEED_TEST,
     // AI reply publishes no ring yet (#234): its three bands are all touch
     // targets and none of them has a [PanelFocusTarget], so a ring here would
     // be an empty one. Add the regions with the targets, not before.
@@ -1375,7 +1383,26 @@ data class VoiceUi(
     val engineChoices: List<com.wasimaster.wmkeyboard.core.voice.VoiceChoice> = emptyList(),
     /** [engineLanguage]'s stored pick (`engine` or `engine:modelId`), empty when it follows the global engine. */
     val engineChoice: String = "",
+    /**
+     * What is left to try when the phone's recognizer would not start at all
+     * (a last resort, shown with the error): another keyboard's voice typing,
+     * or the phone's own voice window. Null when there is neither.
+     */
+    val lastResort: VoiceLastResort? = null,
 )
+
+/** A way to dictate past a recognizer that will not start; see [VoiceUi.lastResort]. */
+data class VoiceLastResort(
+    val kind: Kind,
+    /** The button's words: "Use Gboard's voice typing", "Open the voice window". */
+    val label: String,
+    /** The other keyboard's id, or the voice window's flattened component. */
+    val target: String,
+    /** The other keyboard's voice subtype, by hash code; 0 for the window. */
+    val subtype: Int = 0,
+) {
+    enum class Kind { OTHER_KEYBOARD, VOICE_WINDOW }
+}
 
 /** The session records a whole clip and transcribes it after the stop tap. */
 val VoiceUi.clipBased: Boolean get() = whisper || remote
@@ -1554,6 +1581,9 @@ sealed interface VoiceBarAction {
 
     /** The voice panel's microphone chip (#581): listen through the next microphone plugged in. */
     data object CycleMic : VoiceBarAction
+
+    /** The error's way past a recognizer that would not start ([VoiceUi.lastResort]). */
+    data object LastResort : VoiceBarAction
 
     /**
      * A pick off the voice panel's engine chip: [languageId] dictates with
@@ -3041,6 +3071,11 @@ data class ClipEdit(
      * thing to save: it takes every tag off.
      */
     val tags: Boolean = false,
+    /**
+     * The clipboard search this editor was opened from (#612), to go back
+     * to when it closes, saved or not; null when it was not opened from one.
+     */
+    val returnQuery: String? = null,
 ) {
     /** Whether saving would change anything. Blank never saves a text. */
     val canSave: Boolean get() = if (tags) draft.trim().trimEnd(',').trim() != original else draft.isNotBlank() && draft.trim() != original
@@ -3086,6 +3121,8 @@ data class ClipCombineDraft(
     /** Combine deletes the clips it joined (#612). */
     val deleteOriginals: Boolean = false,
     val focused: ClipCombineField = ClipCombineField.JOINER,
+    /** The clipboard search Combine was opened from (#612), to go back to; null for none. */
+    val returnQuery: String? = null,
 ) {
     /** The box [focused] names. */
     val focusedText: String
@@ -4080,6 +4117,8 @@ data class KeyboardUiState(
      */
     val hiddenEmoji: Set<String> = emptySet(),
     val clipboardItems: List<ClipItem> = emptyList(),
+    /** Whether the Retype button (#1189) has a word to take; it is drawn greyed while not. */
+    val retypeReady: Boolean = true,
     /** Live query for the clipboard panel's search bar (feature-gated). */
     val clipboardQuery: String = "",
     /**
@@ -4607,6 +4646,7 @@ data class KeyboardUiState(
     val haText: com.wasimaster.wmkeyboard.ime.homeassistant.HaTextEntry? get() = toolText.ha
     val galleryText: com.wasimaster.wmkeyboard.ime.gallery.GalleryTextEntry? get() = toolText.gallery
     val filesText: com.wasimaster.wmkeyboard.ime.files.FilesTextEntry? get() = toolText.files
+    val vaultText: com.wasimaster.wmkeyboard.ime.vault.VaultTextEntry? get() = toolText.vault
     val calendarText: com.wasimaster.wmkeyboard.ime.calendar.CalendarTextEntry? get() = toolText.calendar
     val kaomojiText: com.wasimaster.wmkeyboard.ime.kaomoji.KaomojiTextEntry? get() = toolText.kaomoji
     val sendText: com.wasimaster.wmkeyboard.ime.send.SendTextEntry? get() = toolText.send
@@ -5010,6 +5050,10 @@ data class KeyboardUiState(
     val filesTypingActive: Boolean
         get() = panel == PanelMode.FILES && filesText != null
 
+    /** Whether the notes vault's box has the keys; panel *and* box, as [filesTypingActive]. */
+    val vaultTypingActive: Boolean
+        get() = panel == PanelMode.NOTES_VAULT && vaultText != null
+
     /** Whether the kaomoji tab's text box has the keys; panel *and* box, as [clockTypingActive]. */
     val kaomojiTypingActive: Boolean
         get() = panel == PanelMode.EMOJI && kaomojiText != null
@@ -5091,6 +5135,7 @@ data class KeyboardUiState(
      */
     fun panelFieldTarget(): CaptureTarget? = when {
         toolText.snippetAsk != null -> CaptureTarget.SNIPPET_ASK
+        toolText.clipWrite != null -> CaptureTarget.CLIP_WRITE
         typingTestActive -> CaptureTarget.TYPING_TEST
         aiCustomInputActive -> CaptureTarget.AI_CUSTOM
         aiChatComposing -> CaptureTarget.AI_CHAT
@@ -5121,6 +5166,7 @@ data class KeyboardUiState(
         todoTypingActive -> CaptureTarget.TODO_TEXT
         galleryTypingActive -> CaptureTarget.GALLERY_TEXT
         filesTypingActive -> CaptureTarget.FILES_TEXT
+        vaultTypingActive -> CaptureTarget.VAULT_TEXT
         calendarTypingActive -> when (calendarText?.field) {
             com.wasimaster.wmkeyboard.ime.calendar.CalendarTextField.LOCATION -> CaptureTarget.CALENDAR_LOCATION
             com.wasimaster.wmkeyboard.ime.calendar.CalendarTextField.NOTES -> CaptureTarget.CALENDAR_NOTES
@@ -5233,6 +5279,7 @@ data class KeyboardUiState(
         CaptureTarget.CLIP_APPEND -> clipCombine?.append.orEmpty()
         CaptureTarget.SNIPPET_SEARCH -> snippetQuery
         CaptureTarget.SNIPPET_ASK -> toolText.snippetAsk?.text.orEmpty()
+        CaptureTarget.CLIP_WRITE -> toolText.clipWrite.orEmpty()
         CaptureTarget.NOTE_SEARCH -> notes.query
         CaptureTarget.NOTE_TITLE -> notes.editing?.titleDraft.orEmpty()
         CaptureTarget.NOTE_BODY -> notes.editing?.bodyDraft.orEmpty()
@@ -5244,6 +5291,7 @@ data class KeyboardUiState(
         CaptureTarget.REPEAT_SEPARATOR -> textRepeat.customSeparator
         CaptureTarget.GALLERY_TEXT -> galleryText?.text.orEmpty()
         CaptureTarget.FILES_TEXT -> filesText?.text.orEmpty()
+        CaptureTarget.VAULT_TEXT -> vaultText?.text.orEmpty()
         CaptureTarget.CALENDAR_TITLE, CaptureTarget.CALENDAR_LOCATION,
         CaptureTarget.CALENDAR_NOTES, CaptureTarget.CALENDAR_GUEST,
         -> calendarText?.text.orEmpty()
@@ -5657,10 +5705,19 @@ data class ToolTextEntries(
      * (#1077). The rest of the tool's state is the controller's.
      */
     val wmPass: com.wasimaster.wmkeyboard.ime.wmpass.WmPassTextEntry? = null,
+    /** The notes vault's box while it has the keys: a new note's name, a note's text, a capture (#1211). */
+    val vault: com.wasimaster.wmkeyboard.ime.vault.VaultTextEntry? = null,
     /**
      * The fill-in row of a snippet that asks for `{ask:Name}` values as it
      * expands. Over every other field while it is up: the snippet is waiting
      * to go into the app's field, and only Enter or Cancel lets it.
      */
     val snippetAsk: SnippetAskEntry? = null,
+    /**
+     * A clip being written in the strip's place (#1339), from the floating
+     * button's Write a clip: empty while nothing is typed yet, null when the
+     * row is not up. The keys type here and nowhere else, so the app behind
+     * is never touched; Enter or the tick copies it as a new clip.
+     */
+    val clipWrite: String? = null,
 )

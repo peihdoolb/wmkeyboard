@@ -56,6 +56,9 @@ sealed interface ToolPrefill {
      */
     data class Translate(val text: String, val target: String?, val textLength: Int, val hintLength: Int) : ToolPrefill
 
+    /** An app the app chip opens (#656), by package and launcher activity. */
+    data class OpenApp(val packageName: String, val activityName: String) : ToolPrefill
+
     /** A sentence the Home Assistant panel sends to Assist as it opens. */
     data class Assist(val sentence: String) : ToolPrefill
 
@@ -109,11 +112,11 @@ object SmartSuggest {
      * with a call face and a message button, and so is [REPEAT] (the same
      * text typed several times over), which opens the Text repeat tool.
      */
-    enum class Kind { CALC, CURRENCY, UNIT, NUMBER, DATE, WEATHER, TOOL, LOOKUP, INTENT, VOCAB, CONTACT, REPEAT, SEND_LINK, SEARCH }
+    enum class Kind { CALC, CURRENCY, UNIT, NUMBER, DATE, WEATHER, TOOL, LOOKUP, INTENT, VOCAB, CONTACT, REPEAT, SEND_LINK, SEARCH, APP }
 
     /** The kinds that only claim the space their label needs. */
     val narrowKinds: Set<Kind> =
-        setOf(Kind.TOOL, Kind.LOOKUP, Kind.INTENT, Kind.VOCAB, Kind.CONTACT, Kind.REPEAT, Kind.SEND_LINK, Kind.SEARCH)
+        setOf(Kind.TOOL, Kind.LOOKUP, Kind.INTENT, Kind.VOCAB, Kind.CONTACT, Kind.REPEAT, Kind.SEND_LINK, Kind.SEARCH, Kind.APP)
 
     /**
      * A switch under Smart chips, as far as the tools behind it go. The
@@ -319,6 +322,8 @@ object SmartSuggest {
         /** Offer to receive a Send share link typed or pasted into the field (#729). */
         val sendLinkChips: Boolean = false,
         val contacts: ContactPhones? = null,
+        /** The installed apps by name, for the chip that opens one (#656); null while that is off. */
+        val apps: AppNames? = null,
         // ---- repeated text ----
         /** "no no no" → the Text repeat tool, opened on that text. */
         val repeatChips: Boolean = true,
@@ -365,7 +370,7 @@ object SmartSuggest {
         if (ctx.currencyEnabled) detectCurrency(tail, ctx)?.let { return it }
         if (ctx.unitsEnabled) detectUnit(tail, ctx)?.let { return it }
         if (ctx.calcEnabled) detectCalcPhrase(tail, ctx)?.let { return it }
-        if (ctx.calcEnabled) detectCalc(tail, ctx)?.let { return it }
+        if (ctx.calcEnabled) detectCalc(tail, ctx, text)?.let { return it }
         if (ctx.numberChips) detectNumber(tail, ctx)?.let { return it }
         if (ctx.dateChips) detectDate(tail, ctx)?.let { return it }
         if (ctx.weatherChips) detectWeather(tail, ctx)?.let { return it }
@@ -380,6 +385,9 @@ object SmartSuggest {
         // has more to offer.
         ctx.contacts?.let { contacts ->
             detectContact(tail, contacts, truncated)?.let { return it }
+        }
+        ctx.apps?.let { apps ->
+            detectApp(tail, apps, truncated)?.let { return it }
         }
         // Last: a nudge is advice, and every explicit trigger above outranks it.
         if (ctx.vocabChips) detectVocab(tail, ctx)?.let { return it }
@@ -1222,14 +1230,36 @@ object SmartSuggest {
      * genuine expression is still preferred, and a second sum on the same line
      * is found instead of being shadowed by the first one's result.
      */
-    private fun detectCalc(tail: String, ctx: Context): SmartHit? {
+    private fun detectCalc(tail: String, ctx: Context, text: String = tail): SmartHit? {
+        // [tail] is the end of [text]; the link check reads [text] so it can
+        // still see a scheme the 48-character window has cut off.
+        val offset = text.length - tail.length
         var from = 0
         while (from <= tail.length) {
             val match = CALC_TAIL.find(tail, from) ?: return null
-            calcHit(match, ctx)?.let { return it }
+            if (!insideLink(text, offset + match.range.first)) calcHit(match, ctx)?.let { return it }
             from = match.range.first + 1
         }
         return null
+    }
+
+    /**
+     * What, earlier in the same word, says the digits belong to a link or a
+     * path: a scheme, "www.", a domain followed by its path or query, or a
+     * letter before a slash. "nature.com/articles/d41586-026-03638-3" ends in
+     * a run the sum scanner reads as "026-03638-3", which is part of an
+     * address and not a subtraction.
+     */
+    private val LINK_PREFIX = Regex(
+        """://|^www\.|\p{L}[\p{L}\d-]*\.\p{L}{2,}[/:?#]|\p{L}[^/\s]*/""",
+        RegexOption.IGNORE_CASE,
+    )
+
+    /** True when the word holding [start] in [text] reads as a link before it. */
+    private fun insideLink(text: String, start: Int): Boolean {
+        var wordStart = start
+        while (wordStart > 0 && !text[wordStart - 1].isWhitespace()) wordStart--
+        return wordStart < start && LINK_PREFIX.containsMatchIn(text.substring(wordStart, start))
     }
 
     private fun calcHit(match: MatchResult, ctx: Context): SmartHit? {
@@ -1321,7 +1351,9 @@ object SmartSuggest {
      * offers nothing.
      */
     private fun detectNumber(tail: String, ctx: Context): SmartHit? {
-        val glyphs = ctx.numberDigits
+        // Read char by char, so a system outside the BMP (Warang Citi) is left
+        // out: its digits are not offered back, ASCII ones still are.
+        val glyphs = ctx.numberDigits?.takeIf { it.length == 10 }
         fun digitsLeftOf(index: Int): Int {
             var i = index
             while (i > 0 && digitValue(tail[i - 1], glyphs) >= 0) i--
@@ -1989,6 +2021,40 @@ object SmartSuggest {
                 // the keyboard calls or texts a number.
                 tool = ToolbarTool.SELECTION_ACTIONS,
                 prefill = ToolPrefill.Contact(contact.name, contact.number),
+            )
+        }
+        return null
+    }
+
+    /**
+     * An installed app's name just typed: the chip offers to open it (#656).
+     * The longest run of trailing words that names an app wins ("google
+     * maps", not "maps"), with one trailing space allowed, as for a contact.
+     * The text is never touched.
+     */
+    private fun detectApp(tail: String, apps: AppNames, truncated: Boolean): SmartHit? {
+        if (apps.isEmpty) return null
+        val body = if (tail.endsWith(' ')) tail.dropLast(1) else tail
+        if (body.isEmpty() || body.last().isWhitespace()) return null
+        val tokens = body.split(' ', '\t', '\n')
+        val words = ArrayList<String>()
+        for (index in tokens.indices.reversed()) {
+            val token = tokens[index]
+            if (truncated && index == 0) break
+            if (token.isEmpty() || token.any { it.isWhitespace() }) break
+            words.add(0, token)
+            if (words.size == AppNames.MAX_WORDS) break
+        }
+        for (n in words.size downTo 1) {
+            val app = apps.match(words.takeLast(n).joinToString(" ")) ?: continue
+            return SmartHit(
+                kind = Kind.APP,
+                query = app.label,
+                result = null,
+                insert = null,
+                replaceSpan = 0,
+                tool = ToolbarTool.APP_LAUNCHER,
+                prefill = ToolPrefill.OpenApp(app.packageName, app.activityName),
             )
         }
         return null

@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.wasimaster.wmkeyboard.core.ui.DisabledReason
 import com.wasimaster.wmkeyboard.R
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.ChevronRight
 import com.wasimaster.wmkeyboard.core.settings.AutoBackupIntervals
@@ -122,6 +123,7 @@ internal fun BackupLocationSettings(repository: SettingsRepository, settings: Li
                 stringResource(R.string.backup_location_backup_here_subtitle),
                 location.backup,
                 default = true,
+                info = stringResource(R.string.backup_location_backup_here_info),
             ) { on -> update { l, _ -> l.copy(backup = on) } }
         }
     }
@@ -144,6 +146,7 @@ internal fun BackupLocationSettings(repository: SettingsRepository, settings: Li
                 },
                 ownSchedule != null,
                 default = false,
+                info = stringResource(R.string.backup_location_own_schedule_info),
             ) { on -> update { l, auto -> l.copy(schedule = if (on) LocationSchedule.from(auto) else null) } }
         }
         if (ownSchedule != null) {
@@ -155,6 +158,7 @@ internal fun BackupLocationSettings(repository: SettingsRepository, settings: Li
                     display = { backupIntervalLabel(context, intervalAt(it)) },
                     typed = false,
                     default = intervalSliderIndex(shared.intervalHours).toFloat(),
+                    info = stringResource(R.string.backup_auto_interval_info),
                 ) { index -> schedule { it.copy(intervalHours = intervalAt(index)) } }
             }
             item {
@@ -167,6 +171,7 @@ internal fun BackupLocationSettings(repository: SettingsRepository, settings: Li
                         context.resources.getQuantityString(R.plurals.backup_auto_keep_value, kept.roundToInt(), kept.roundToInt())
                     },
                     default = shared.keep.toFloat(),
+                    info = stringResource(R.string.backup_auto_keep_info),
                 ) { kept -> schedule { it.copy(keep = kept.roundToInt()) } }
             }
             item(level = SettingLevel.ADVANCED) {
@@ -217,6 +222,7 @@ internal fun BackupLocationSettings(repository: SettingsRepository, settings: Li
                 ),
                 ownContents != null,
                 default = false,
+                info = stringResource(R.string.backup_location_own_contents_info),
             ) { on -> update { l, auto -> l.copy(contents = if (on) LocationContents.from(auto) else null) } }
         }
         if (ownContents != null) {
@@ -228,7 +234,12 @@ internal fun BackupLocationSettings(repository: SettingsRepository, settings: Li
                     ),
                     ownContents.encrypt && hasPassphrase,
                     enabled = hasPassphrase,
+                    disabledReason = DisabledReason(
+                        stringResource(R.string.backup_location_encrypt_needs_passphrase),
+                        route = "backup/auto",
+                    ),
                     default = false,
+                    info = stringResource(R.string.backup_auto_encrypt_info),
                 ) { on -> contents { it.copy(encrypt = on) } }
             }
             val ofThis = { s: KeyboardSettings ->

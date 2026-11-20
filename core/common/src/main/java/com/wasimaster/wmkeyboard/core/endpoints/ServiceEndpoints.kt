@@ -42,6 +42,12 @@ enum class ServiceEndpoint(
 
     /** Mwmbl's free search API (#1207): its own index, no key. */
     MWMBL("mwmbl", "https://api.mwmbl.org", ServiceGroup.SEARCH),
+
+    /** Wiby's JSON search: keyless, GPLv2, self-hostable. */
+    WIBY("wiby", "https://wiby.me", ServiceGroup.SEARCH),
+
+    /** Marginalia Search's API: a free non-commercial key by e-mail, else the shared `public` one. */
+    MARGINALIA("marginalia", "https://api2.marginalia-search.com", ServiceGroup.SEARCH),
     KLIPY("klipy", "https://api.klipy.com", ServiceGroup.MEDIA),
     GIPHY("giphy", "https://api.giphy.com", ServiceGroup.MEDIA),
 
@@ -76,6 +82,9 @@ enum class ServiceEndpoint(
     WIKTIONARY("wiktionary", "https://en.wiktionary.org", ServiceGroup.VOCABULARY),
     OPEN_METEO("open_meteo", "https://api.open-meteo.com", ServiceGroup.WEATHER),
     OPEN_METEO_GEOCODING("open_meteo_geocoding", "https://geocoding-api.open-meteo.com", ServiceGroup.WEATHER),
+
+    /** Open-Meteo's air quality forecast, for the Weather panel's hours and days (#1369). */
+    OPEN_METEO_AIR_QUALITY("open_meteo_air_quality", "https://air-quality-api.open-meteo.com", ServiceGroup.WEATHER),
 
     /**
      * The Location tool's address lookup (#350): any server that answers

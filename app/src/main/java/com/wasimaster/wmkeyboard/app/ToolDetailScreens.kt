@@ -252,6 +252,7 @@ private fun ToolHoldRow(
             ToolHoldAction.None -> stringResource(R.string.tooldetail_hold_nothing_value)
             ToolHoldAction.Floating -> stringResource(R.string.tooldetail_hold_floating_title)
             is ToolHoldAction.Run -> stringResource(toolTitle(resolved.tool))
+            is ToolHoldAction.RunCustom -> customButtonName(resolved.id)
         },
     ) { editing = true }
     if (editing) {
@@ -292,6 +293,12 @@ private fun ToolHoldRow(
             onPickNothing = {
                 editing = false
                 scope.launch { repository.setToolHoldAction(tool, ToolHoldAction.None) }
+            },
+            // The user's own buttons (#1300): an app shortcut, a switch, a page.
+            customCurrent = (bound as? ToolHoldAction.RunCustom)?.id,
+            onPickCustom = { id ->
+                editing = false
+                scope.launch { repository.setToolHoldAction(tool, ToolHoldAction.RunCustom(id)) }
             },
             memoryKey = "tool-hold",
         )
@@ -334,6 +341,12 @@ internal fun ToolPickerDialog(
     onPickFloating: () -> Unit = {},
     /** Which remembered folds and scroll the page opens with; see [ActionPickerPage]. */
     memoryKey: String = "tools",
+    /**
+     * Offers the user's custom buttons as a group of their own (#1300) when
+     * set; [customCurrent] is the one picked now, if it is one of them.
+     */
+    customCurrent: String? = null,
+    onPickCustom: ((String) -> Unit)? = null,
 ) {
     // A page of its own now (#665), grouped the way the Tools screen groups
     // them, with the answers that are not a tool above the groups.
@@ -403,8 +416,36 @@ internal fun ToolPickerDialog(
                 ),
             )
         }
+        val yours = com.wasimaster.wmkeyboard.ime.ui.CustomButtonFaces.buttons.filter { it.usable }
+        if (onPickCustom != null && yours.isNotEmpty()) {
+            add(
+                PickerGroup(
+                    "group-custom",
+                    stringResource(R.string.custombuttons_yours_title),
+                    yours.map { button ->
+                        val action = com.wasimaster.wmkeyboard.core.settings.FloatingAction.Custom(button.id)
+                        PickerRow(
+                            key = "custom:${button.id}",
+                            title = customButtonName(button.id),
+                            subtitle = stringResource(R.string.floating_button_pick_custom_subtitle),
+                            selected = customCurrent == button.id,
+                            leading = { FloatingActionGlyph(action, Modifier.size(24.dp)) },
+                            onPick = { onPickCustom(button.id) },
+                        )
+                    },
+                ),
+            )
+        }
     }
     ActionPickerPage(memoryKey = memoryKey, title = title, groups = groups, onDismiss = onDismiss)
+}
+
+/** A custom button's name (#1300), as the toolbar and the floating button give it. */
+@Composable
+internal fun customButtonName(id: String): String {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val buttons = com.wasimaster.wmkeyboard.ime.ui.CustomButtonFaces.buttons
+    return remember(buttons, id) { com.wasimaster.wmkeyboard.ime.ui.customToolName(context, buttons, id) }
 }
 
 /** One tool as a picker row: its name, what it does, and its glyph. */
@@ -462,6 +503,7 @@ private fun WordStepsGroup(repository: SettingsRepository, settings: LiveSetting
                 stringResource(R.string.tooldetail_word_steps_capitals_subtitle),
                 settings.watch { it.textEditing.cursorWordStopsAtCapitals },
                 default = SettingsDefaults.textEditing.cursorWordStopsAtCapitals,
+                info = stringResource(R.string.tooldetail_word_steps_capitals_info),
             ) { scope.launch { repository.setCursorWordStopsAtCapitals(it) } }
         }
         item(visible = steps != CursorWordSteps.APP, level = SettingLevel.ADVANCED) {
@@ -470,6 +512,7 @@ private fun WordStepsGroup(repository: SettingsRepository, settings: LiveSetting
                 stringResource(R.string.tooldetail_word_steps_digits_subtitle),
                 settings.watch { it.textEditing.cursorWordStopsAtDigits },
                 default = SettingsDefaults.textEditing.cursorWordStopsAtDigits,
+                info = stringResource(R.string.tooldetail_word_steps_digits_info),
             ) { scope.launch { repository.setCursorWordStopsAtDigits(it) } }
         }
     }
@@ -555,6 +598,16 @@ internal fun ToolDetailSettings(
                 ) { onNavigate("statistics") }
             }
         }
+        // The same for the Resources screen (#1380).
+        ToolbarTool.RESOURCES -> SettingsGroup {
+            item {
+                NavRow(
+                    R.string.about_resources_title,
+                    stringResource(R.string.about_resources_subtitle),
+                    route = "resources",
+                ) { onNavigate("resources") }
+            }
+        }
         // The search history lives in its own file, not in the settings (see
         // FindHistoryPrefs), so this page reads and writes that file directly.
         ToolbarTool.FIND_REPLACE -> {
@@ -569,6 +622,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_find_history_subtitle),
                         remembering,
                         default = true,
+                        info = stringResource(R.string.tooldetail_find_history_info),
                     ) {
                         history.enabled = it
                         remembering = it
@@ -768,6 +822,7 @@ internal fun ToolDetailSettings(
                         ),
                         selected = settings.watch { it.launcher.sortOrder },
                         default = SettingsDefaults.launcher.sortOrder,
+                        info = stringResource(R.string.tooldetail_launcher_sort_info),
                     ) { scope.launch { repository.setLauncherSortOrder(it) } }
                 }
                 item(level = SettingLevel.ADVANCED) {
@@ -776,6 +831,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_launcher_labels_subtitle),
                         settings.watch { it.launcher.showLabels },
                         default = SettingsDefaults.launcher.showLabels,
+                        info = stringResource(R.string.tooldetail_launcher_labels_info),
                     ) { scope.launch { repository.setLauncherShowLabels(it) } }
                 }
                 item(level = SettingLevel.STANDARD) {
@@ -937,6 +993,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_launcher_sole_subtitle),
                         settings.watch { it.launcher.openSoleMatch },
                         default = SettingsDefaults.launcher.openSoleMatch,
+                        info = stringResource(R.string.tooldetail_launcher_sole_info),
                     ) { scope.launch { repository.setLauncherOpenSoleMatch(it) } }
                 }
                 item(level = SettingLevel.STANDARD) {
@@ -1004,6 +1061,7 @@ internal fun ToolDetailSettings(
                     stringResource(R.string.expander_titles_only_subtitle),
                     settings.watch { it.suggestionStrip.snippetTitlesOnly },
                     default = SettingsDefaults.suggestionStrip.snippetTitlesOnly,
+                    info = stringResource(R.string.expander_titles_only_info),
                 ) { scope.launch { repository.setSnippetTitlesOnly(it) } }
             }
             item(level = SettingLevel.STANDARD) {
@@ -1012,6 +1070,7 @@ internal fun ToolDetailSettings(
                     stringResource(R.string.expander_panel_stays_subtitle),
                     settings.watch { it.suggestionStrip.snippetPanelStays },
                     default = SettingsDefaults.suggestionStrip.snippetPanelStays,
+                    info = stringResource(R.string.expander_panel_stays_info),
                 ) { scope.launch { repository.setSnippetPanelStays(it) } }
             }
             item {
@@ -1080,6 +1139,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_compass_degrees_subtitle),
                         settings.watch { it.sensorTools.compassDegrees },
                         default = SettingsDefaults.sensorTools.compassDegrees,
+                        info = stringResource(R.string.tooldetail_compass_degrees_info),
                     ) { scope.launch { repository.setCompassShowDegrees(it) } }
                 }
                 item {
@@ -1107,6 +1167,7 @@ internal fun ToolDetailSettings(
                     stringResource(R.string.tooldetail_level_angles_subtitle),
                     settings.watch { it.sensorTools.levelAngles },
                     default = SettingsDefaults.sensorTools.levelAngles,
+                    info = stringResource(R.string.tooldetail_level_angles_info),
                 ) { scope.launch { repository.setLevelShowAngles(it) } }
             }
         }
@@ -1132,6 +1193,7 @@ internal fun ToolDetailSettings(
                     // region, so reset has to land back on that and not on
                     // the northern hemisphere the data class declares.
                     default = isSouthernHemisphere(repository.deviceRegion),
+                    info = stringResource(R.string.tooldetail_moon_southern_info),
                 ) { scope.launch { repository.setMoonSouthernHemisphere(it) } }
             }
             item {
@@ -1140,6 +1202,7 @@ internal fun ToolDetailSettings(
                     stringResource(R.string.tooldetail_moon_arabic_subtitle),
                     settings.watch { it.sensorTools.moonArabicNames },
                     default = SettingsDefaults.sensorTools.moonArabicNames,
+                    info = stringResource(R.string.tooldetail_moon_arabic_info),
                 ) { scope.launch { repository.setMoonArabicNames(it) } }
             }
         }
@@ -1155,6 +1218,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_weather_fahrenheit_subtitle),
                         settings.watch { it.weather.fahrenheit },
                         default = SettingsDefaults.weather.fahrenheit,
+                        info = stringResource(R.string.tooldetail_weather_fahrenheit_info),
                     ) { scope.launch { repository.setWeatherFahrenheit(it) } }
                 }
                 item(level = SettingLevel.STANDARD) {
@@ -1262,6 +1326,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_camera_front_subtitle),
                         settings.watch { it.camera.preferFront },
                         default = SettingsDefaults.camera.preferFront,
+                        info = stringResource(R.string.tooldetail_camera_front_info),
                     ) { scope.launch { repository.setCameraPreferFront(it) } }
                 }
                 item(level = SettingLevel.STANDARD) {
@@ -1361,6 +1426,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.location_camera_stamp_subtitle),
                         settings.watch { it.camera.locationStamp },
                         default = SettingsDefaults.camera.locationStamp,
+                        info = stringResource(R.string.location_camera_stamp_info),
                     ) { scope.launch { repository.setCameraLocationStamp(it) } }
                 }
                 item {
@@ -1384,6 +1450,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_camera_search_button_subtitle),
                         settings.watch { it.camera.searchButton },
                         default = SettingsDefaults.camera.searchButton,
+                        info = stringResource(R.string.tooldetail_camera_search_button_info),
                     ) { scope.launch { repository.setCameraSearchButton(it) } }
                 }
                 item {
@@ -1463,6 +1530,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_camera_shutter_subtitle),
                         settings.watch { it.camera.shutterSound },
                         default = SettingsDefaults.camera.shutterSound,
+                        info = stringResource(R.string.tooldetail_camera_shutter_info),
                     ) { scope.launch { repository.setCameraShutterSound(it) } }
                 }
             }
@@ -1478,6 +1546,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_camera_mode_rail_subtitle),
                         settings.watch { it.camera.modeRail },
                         default = SettingsDefaults.camera.modeRail,
+                        info = stringResource(R.string.tooldetail_camera_mode_rail_info),
                     ) { scope.launch { repository.setCameraModeRail(it) } }
                 }
                 item {
@@ -1486,6 +1555,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_camera_spot_codes_subtitle),
                         settings.watch { it.camera.spotCodes },
                         default = SettingsDefaults.camera.spotCodes,
+                        info = stringResource(R.string.tooldetail_camera_spot_codes_info),
                     ) { scope.launch { repository.setCameraSpotCodes(it) } }
                 }
             }
@@ -1501,6 +1571,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_dictionary_auto_subtitle),
                         settings.watch { it.dictionaryAutoLookup },
                         default = SettingsDefaults.dictionaryAutoLookup,
+                        info = stringResource(R.string.tooldetail_dictionary_auto_info),
                     ) { scope.launch { repository.setDictionaryAutoLookup(it) } }
                 }
             }
@@ -1529,6 +1600,7 @@ internal fun ToolDetailSettings(
                     range = 30f..200f,
                     display = { msFormat.format(it.toInt()) },
                     default = SettingsDefaults.textEditing.repeatMs.toFloat(),
+                    info = stringResource(R.string.tooldetail_text_edit_repeat_info),
                 ) { scope.launch { repository.setTextEditRepeatMs(it.toInt()) } }
             }
             // The panel's grid is a panel layout (issue #63), edited in the
@@ -1562,6 +1634,7 @@ internal fun ToolDetailSettings(
                         range = 4f..48f,
                         display = { dpFormat.format(it.toInt()) },
                         default = SettingsDefaults.trackpad.stepXDp.toFloat(),
+                        info = stringResource(R.string.tooldetail_trackpad_step_x_info),
                     ) { scope.launch { repository.setTrackpadStepXDp(it.toInt()) } }
                 }
                 item(level = SettingLevel.ADVANCED) {
@@ -1572,6 +1645,7 @@ internal fun ToolDetailSettings(
                         range = 8f..96f,
                         display = { dpFormat.format(it.toInt()) },
                         default = SettingsDefaults.trackpad.stepYDp.toFloat(),
+                        info = stringResource(R.string.tooldetail_trackpad_step_y_info),
                     ) { scope.launch { repository.setTrackpadStepYDp(it.toInt()) } }
                 }
                 item {
@@ -1589,6 +1663,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_trackpad_taps_subtitle),
                         settings.watch { it.trackpad.multiTap },
                         default = SettingsDefaults.trackpad.multiTap,
+                        info = stringResource(R.string.tooldetail_trackpad_taps_info),
                     ) { scope.launch { repository.setTrackpadMultiTap(it) } }
                 }
                 item {
@@ -1597,6 +1672,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_trackpad_haptics_subtitle),
                         settings.watch { it.trackpad.haptics },
                         default = SettingsDefaults.trackpad.haptics,
+                        info = stringResource(R.string.tooldetail_trackpad_haptics_info),
                     ) { scope.launch { repository.setTrackpadHaptics(it) } }
                 }
                 item {
@@ -1605,6 +1681,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_trackpad_trail_subtitle),
                         settings.watch { it.trackpad.trail },
                         default = SettingsDefaults.trackpad.trail,
+                        info = stringResource(R.string.tooldetail_trackpad_trail_info),
                     ) { scope.launch { repository.setTrackpadTrail(it) } }
                 }
                 item {
@@ -1705,6 +1782,7 @@ internal fun ToolDetailSettings(
                             range = 30f..200f,
                             display = { msFormat.format(it.toInt()) },
                             default = SettingsDefaults.textEditing.repeatMs.toFloat(),
+                            info = stringResource(R.string.tooldetail_text_edit_repeat_info),
                         ) { scope.launch { repository.setTextEditRepeatMs(it.toInt()) } }
                     }
                 }
@@ -1720,6 +1798,7 @@ internal fun ToolDetailSettings(
                     stringResource(R.string.tooldetail_numpad_calc_subtitle),
                     settings.watch { it.numpadCalculatorLayout },
                     default = SettingsDefaults.numpadCalculatorLayout,
+                    info = stringResource(R.string.tooldetail_numpad_calc_info),
                 ) { scope.launch { repository.setNumpadCalculatorLayout(it) } }
             }
             item(level = SettingLevel.ADVANCED) {
@@ -1747,6 +1826,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_incognito_learning_subtitle),
                         settings.watch { it.incognitoPausesLearning },
                         default = SettingsDefaults.incognitoPausesLearning,
+                        info = stringResource(R.string.tooldetail_incognito_learning_info),
                     ) { scope.launch { repository.setIncognitoPausesLearning(it) } }
                 }
                 item {
@@ -1755,6 +1835,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_incognito_clipboard_subtitle),
                         settings.watch { it.incognitoPausesClipboard },
                         default = SettingsDefaults.incognitoPausesClipboard,
+                        info = stringResource(R.string.tooldetail_incognito_clipboard_info),
                     ) { scope.launch { repository.setIncognitoPausesClipboard(it) } }
                 }
                 item {
@@ -1772,6 +1853,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_incognito_watermark_subtitle),
                         settings.watch { it.incognitoWatermark },
                         default = SettingsDefaults.incognitoWatermark,
+                        info = stringResource(R.string.tooldetail_incognito_watermark_info),
                     ) { scope.launch { repository.setIncognitoWatermark(it) } }
                 }
                 item {
@@ -1780,6 +1862,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_incognito_badge_subtitle),
                         settings.watch { it.incognitoBadge },
                         default = SettingsDefaults.incognitoBadge,
+                        info = stringResource(R.string.tooldetail_incognito_badge_info),
                     ) { scope.launch { repository.setIncognitoBadge(it) } }
                 }
                 item {
@@ -1802,6 +1885,7 @@ internal fun ToolDetailSettings(
                         R.string.tooldetail_privacy_shade_on_title,
                         stringResource(R.string.tooldetail_privacy_shade_on_subtitle),
                         settings.watch { it.privacyShade.on },
+                        info = stringResource(R.string.tooldetail_privacy_shade_on_info),
                     ) { scope.launch { repository.setPrivacyShadeOn(it) } }
                 }
                 item {
@@ -1815,6 +1899,7 @@ internal fun ToolDetailSettings(
                         ),
                         selected = settings.watch { it.privacyShade.style },
                         default = SettingsDefaults.privacyShade.style,
+                        info = stringResource(R.string.tooldetail_privacy_shade_style_info),
                     ) { scope.launch { repository.setPrivacyShadeStyle(it) } }
                 }
                 item {
@@ -1825,6 +1910,7 @@ internal fun ToolDetailSettings(
                         range = PrivacyShadeSettings.MIN_OPACITY * 100f..100f,
                         display = { percentFormat.format(it.toInt()) },
                         default = SettingsDefaults.privacyShade.opacity * 100f,
+                        info = stringResource(R.string.tooldetail_privacy_shade_opacity_info),
                     ) { scope.launch { repository.setPrivacyShadeOpacity(it / 100f) } }
                 }
                 item {
@@ -1839,6 +1925,7 @@ internal fun ToolDetailSettings(
                         ),
                         settings.watch { it.privacyShade.touchThrough },
                         default = SettingsDefaults.privacyShade.touchThrough,
+                        info = stringResource(R.string.tooldetail_privacy_shade_touch_info),
                     ) { scope.launch { repository.setPrivacyShadeTouchThrough(it) } }
                 }
             }
@@ -1893,6 +1980,7 @@ internal fun ToolDetailSettings(
                             range = 5f..50f,
                             display = { percentFormat.format(it.toInt()) },
                             default = SettingsDefaults.powerSaving.batteryPercent.toFloat(),
+                            info = stringResource(R.string.tooldetail_power_battery_info),
                         ) { scope.launch { repository.setPowerSavingBatteryPercent(it.toInt()) } }
                     }
                 }
@@ -1931,6 +2019,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_power_drop_haptics_subtitle),
                         settings.watch { it.powerSaving.dropHaptics },
                         default = SettingsDefaults.powerSaving.dropHaptics,
+                        info = stringResource(R.string.tooldetail_power_drop_haptics_info),
                     ) { scope.launch { repository.setPowerSavingDropHaptics(it) } }
                 }
                 item {
@@ -1939,6 +2028,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_power_drop_sound_subtitle),
                         settings.watch { it.powerSaving.dropKeySound },
                         default = SettingsDefaults.powerSaving.dropKeySound,
+                        info = stringResource(R.string.tooldetail_power_drop_sound_info),
                     ) { scope.launch { repository.setPowerSavingDropKeySound(it) } }
                 }
                 item {
@@ -1947,6 +2037,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_power_drop_anim_subtitle),
                         settings.watch { it.powerSaving.dropAnimations },
                         default = SettingsDefaults.powerSaving.dropAnimations,
+                        info = stringResource(R.string.tooldetail_power_drop_anim_info),
                     ) { scope.launch { repository.setPowerSavingDropAnimations(it) } }
                 }
                 item {
@@ -1964,6 +2055,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_power_drop_glass_blur_subtitle),
                         settings.watch { it.powerSaving.dropGlassBlur },
                         default = SettingsDefaults.powerSaving.dropGlassBlur,
+                        info = stringResource(R.string.tooldetail_power_drop_glass_blur_info),
                     ) { scope.launch { repository.setPowerSavingDropGlassBlur(it) } }
                 }
                 item {
@@ -2001,6 +2093,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_power_drop_emoji_subtitle),
                         settings.watch { it.powerSaving.dropEmojiPrediction },
                         default = SettingsDefaults.powerSaving.dropEmojiPrediction,
+                        info = stringResource(R.string.tooldetail_power_drop_emoji_info),
                     ) { scope.launch { repository.setPowerSavingDropEmojiPrediction(it) } }
                 }
                 item {
@@ -2009,6 +2102,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_power_drop_chips_subtitle),
                         settings.watch { it.powerSaving.dropSmartChips },
                         default = SettingsDefaults.powerSaving.dropSmartChips,
+                        info = stringResource(R.string.tooldetail_power_drop_chips_info),
                     ) { scope.launch { repository.setPowerSavingDropSmartChips(it) } }
                 }
                 item {
@@ -2037,6 +2131,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_power_drop_screenshot_subtitle),
                         settings.watch { it.powerSaving.dropScreenshotWatch },
                         default = SettingsDefaults.powerSaving.dropScreenshotWatch,
+                        info = stringResource(R.string.tooldetail_power_drop_screenshot_info),
                     ) { scope.launch { repository.setPowerSavingDropScreenshotWatch(it) } }
                 }
                 item {
@@ -2054,6 +2149,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_power_drop_media_pin_subtitle),
                         settings.watch { it.powerSaving.dropMediaPin },
                         default = SettingsDefaults.powerSaving.dropMediaPin,
+                        info = stringResource(R.string.tooldetail_power_drop_media_pin_info),
                     ) { scope.launch { repository.setPowerSavingDropMediaPin(it) } }
                 }
                 item {
@@ -2083,6 +2179,7 @@ internal fun ToolDetailSettings(
                     stringResource(R.string.tooldetail_autocorrect_subtitle),
                     settings.watch { it.correction.enabled },
                     default = SettingsDefaults.correction.enabled,
+                    info = stringResource(R.string.tooldetail_autocorrect_info),
                 ) { scope.launch { repository.setAutocorrect(it) } }
             }
             item {
@@ -2123,6 +2220,7 @@ internal fun ToolDetailSettings(
                     stringResource(R.string.tooldetail_selection_actions_subtitle),
                     settings.watch { it.selectionMacros.enabled },
                     default = SettingsDefaults.selectionMacros.enabled,
+                    info = stringResource(R.string.tooldetail_selection_actions_info),
                 ) { scope.launch { repository.setSelectionMacrosEnabled(it) } }
             }
             item {
@@ -2245,6 +2343,7 @@ internal fun ToolDetailSettings(
                     stringResource(R.string.hardware_sound_key_subtitle),
                     settings.watch { it.sound.enabled },
                     default = SettingsDefaults.sound.enabled,
+                    info = stringResource(R.string.hardware_sound_key_info),
                 ) { scope.launch { repository.setKeySound(it) } }
             }
             item {
@@ -2273,6 +2372,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_handwriting_auto_space_subtitle),
                         settings.watch { it.handwritingAutoSpace },
                         default = SettingsDefaults.handwritingAutoSpace,
+                        info = stringResource(R.string.tooldetail_handwriting_auto_space_info),
                     ) { scope.launch { repository.setHandwritingAutoSpace(it) } }
                 }
                 // Only a choice where ML Kit is in the build: without it
@@ -2305,6 +2405,7 @@ internal fun ToolDetailSettings(
                         range = HandwritingPenWidthRange.start..HandwritingPenWidthRange.endInclusive,
                         display = { penFormat.format(it.roundToInt()) },
                         default = SettingsDefaults.handwritingInk.penWidthDp,
+                        info = stringResource(R.string.tooldetail_handwriting_pen_width_info),
                     ) { scope.launch { repository.setHandwritingPenWidth(it) } }
                 }
                 item(level = SettingLevel.STANDARD) {
@@ -2313,6 +2414,7 @@ internal fun ToolDetailSettings(
                         subtitle = stringResource(R.string.tooldetail_handwriting_pen_color_subtitle),
                         color = settings.watch { it.handwritingInk.penColor },
                         fallback = 0xFF6750A4L,
+                        info = stringResource(R.string.tooldetail_handwriting_pen_color_info),
                     ) { color -> scope.launch { repository.setHandwritingPenColor(color) } }
                 }
                 item(level = SettingLevel.STANDARD) {
@@ -2328,6 +2430,7 @@ internal fun ToolDetailSettings(
                         ),
                         selected = settings.watch { it.handwritingInk.fade },
                         default = SettingsDefaults.handwritingInk.fade,
+                        info = stringResource(R.string.tooldetail_handwriting_ink_fade_info),
                     ) { fade -> scope.launch { repository.setHandwritingInkFade(fade) } }
                 }
                 item(level = SettingLevel.STANDARD) {
@@ -2343,6 +2446,7 @@ internal fun ToolDetailSettings(
                             if (dp == 0) none else taller.format(dp)
                         },
                         default = SettingsDefaults.handwritingInk.panelExtraHeightDp.toFloat(),
+                        info = stringResource(R.string.tooldetail_handwriting_height_info),
                     ) { scope.launch { repository.setHandwritingPanelExtraHeight(it.roundToInt()) } }
                 }
                 // The canvas and the keys around it are a panel layout (#568),
@@ -2473,6 +2577,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_translate_clear_on_insert_subtitle),
                         settings.watch { it.translate.clearOnInsert },
                         default = SettingsDefaults.translate.clearOnInsert,
+                        info = stringResource(R.string.tooldetail_translate_clear_on_insert_info),
                     ) { scope.launch { repository.setTranslateClearOnInsert(it) } }
                 }
                 // Issue #1226: a provider with a request limit, sent every pause in the typing.
@@ -2495,6 +2600,7 @@ internal fun ToolDetailSettings(
                         steps = (TRANSLATE_LIVE_DELAY_RANGE.last - TRANSLATE_LIVE_DELAY_RANGE.first) / 100 - 1,
                         display = { msFormat.format(it.roundToInt()) },
                         default = SettingsDefaults.translate.liveDelayMs.toFloat(),
+                        info = stringResource(R.string.tooldetail_translate_live_delay_info),
                     ) { scope.launch { repository.setTranslateLiveDelay(it.roundToInt()) } }
                 }
                 item {
@@ -2503,7 +2609,18 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_translate_hint_replaces_subtitle),
                         settings.watch { it.translate.hintReplaces },
                         default = SettingsDefaults.translate.hintReplaces,
+                        info = stringResource(R.string.tooldetail_translate_hint_replaces_info),
                     ) { scope.launch { repository.setTranslateHintReplaces(it) } }
+                }
+                // Issue #1085: the word at the caret, without selecting it first.
+                item {
+                    ToggleSetting(
+                        R.string.tooldetail_translate_word_at_caret_title,
+                        stringResource(R.string.tooldetail_translate_word_at_caret_subtitle),
+                        settings.watch { it.translate.wordAtCaret },
+                        default = SettingsDefaults.translate.wordAtCaret,
+                        info = stringResource(R.string.tooldetail_translate_word_at_caret_info),
+                    ) { scope.launch { repository.setTranslateWordAtCaret(it) } }
                 }
                 // The offline build has only the device to choose.
                 if (onDevice && !offlineBuild) {
@@ -2557,6 +2674,7 @@ internal fun ToolDetailSettings(
                             stringResource(R.string.tooldetail_translate_downloaded_first_subtitle),
                             settings.watch { it.translate.downloadedFirst },
                             default = SettingsDefaults.translate.downloadedFirst,
+                            info = stringResource(R.string.tooldetail_translate_downloaded_first_info),
                         ) { scope.launch { repository.setTranslateDownloadedFirst(it) } }
                     }
                     item {
@@ -2565,6 +2683,7 @@ internal fun ToolDetailSettings(
                             stringResource(R.string.tooldetail_translate_only_downloaded_subtitle),
                             settings.watch { it.translate.onlyDownloaded },
                             default = SettingsDefaults.translate.onlyDownloaded,
+                            info = stringResource(R.string.tooldetail_translate_only_downloaded_info),
                         ) { scope.launch { repository.setTranslateOnlyDownloaded(it) } }
                     }
                 }
@@ -2637,6 +2756,7 @@ internal fun ToolDetailSettings(
                                         ),
                                     )
                                 },
+                                info = stringResource(R.string.tooldetail_sticker_suggest_style_info),
                             ) { scope.launch { repository.setStickerSuggestStyle(it) } }
                         }
                         item(level = SettingLevel.ADVANCED) {
@@ -2661,6 +2781,7 @@ internal fun ToolDetailSettings(
                                         ),
                                     )
                                 },
+                                info = stringResource(R.string.tooldetail_sticker_suggest_trigger_info),
                             ) { scope.launch { repository.setStickerSuggestTrigger(it) } }
                         }
                         item(level = SettingLevel.ADVANCED) {
@@ -2669,6 +2790,7 @@ internal fun ToolDetailSettings(
                                 stringResource(R.string.tooldetail_sticker_suggest_magnify_subtitle),
                                 settings.watch { it.gif.stickerSuggestMagnify },
                                 default = SettingsDefaults.gif.stickerSuggestMagnify,
+                                info = stringResource(R.string.tooldetail_sticker_suggest_magnify_info),
                             ) { scope.launch { repository.setStickerSuggestMagnify(it) } }
                         }
                     }
@@ -2717,6 +2839,7 @@ internal fun ToolDetailSettings(
                         range = MediaGridSpacingRange.first.toFloat()..MediaGridSpacingRange.last.toFloat(),
                         display = { spacing.format(it.roundToInt()) },
                         default = SettingsDefaults.gif.gridSpacing.toFloat(),
+                        info = stringResource(R.string.tooldetail_media_spacing_info),
                     ) { scope.launch { repository.setMediaGridSpacing(it.roundToInt()) } }
                 }
                 item {
@@ -2912,6 +3035,7 @@ internal fun ToolDetailSettings(
                         range = 6f..48f,
                         display = { numberFormat.format(it.roundToInt()) },
                         default = SettingsDefaults.gif.resultLimit.toFloat(),
+                        info = stringResource(R.string.tooldetail_media_limit_info),
                     ) { scope.launch { repository.setGifResultLimit(it.roundToInt()) } }
                 }
             }
@@ -2944,6 +3068,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_search_safe_subtitle),
                         settings.watch { it.webSearch.safe },
                         default = SettingsDefaults.webSearch.safe,
+                        info = stringResource(R.string.tooldetail_search_safe_info),
                     ) { scope.launch { repository.setSearchSafe(it) } }
                 }
                 item(level = SettingLevel.ADVANCED) {
@@ -2954,6 +3079,7 @@ internal fun ToolDetailSettings(
                         range = 1f..MAX_SEARCH_RESULTS.toFloat(),
                         display = { numberFormat.format(it.roundToInt()) },
                         default = SettingsDefaults.webSearch.resultCount.toFloat(),
+                        info = stringResource(R.string.tooldetail_search_count_info),
                     ) { scope.launch { repository.setSearchResultCount(it.roundToInt()) } }
                 }
                 item(level = SettingLevel.STANDARD) {
@@ -2987,6 +3113,7 @@ internal fun ToolDetailSettings(
                                 ),
                             )
                         },
+                        info = stringResource(R.string.tooldetail_search_open_browser_info),
                     ) { scope.launch { repository.setSearchResultTap(it) } }
                 }
                 item(level = SettingLevel.STANDARD) {
@@ -3015,47 +3142,22 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_ocr_select_all_subtitle),
                         settings.watch { it.scanner.ocrAutoSelectWords },
                         default = SettingsDefaults.scanner.ocrAutoSelectWords,
+                        info = stringResource(R.string.tooldetail_ocr_select_all_info),
                     ) { scope.launch { repository.setOcrAutoSelectWords(it) } }
-                }
-                item(level = SettingLevel.ADVANCED) {
-                    ChoiceSetting(
-                        R.string.tooldetail_ocr_engine_title,
-                        info = stringResource(
-                            // F-Droid's build: PaddleOCR or online, nothing else.
-                            if (BuildConfig.ENABLE_ML_KIT_SCANNERS || TesseractOcr.available) R.string.tooldetail_ocr_engine_info
-                            else R.string.tooldetail_ocr_engine_info_paddle,
-                        ),
-                        // Only what this build has: F-Droid's has neither
-                        // ML Kit nor Tesseract, and a choice of either
-                        // restored from a backup reads as Automatic.
-                        options = OcrLanguages.engines(TesseractOcr.available).map { engine ->
-                            engine to stringResource(
-                                when (engine) {
-                                    OcrEngine.AUTO -> R.string.tooldetail_ocr_engine_auto
-                                    OcrEngine.ML_KIT -> R.string.tooldetail_ocr_engine_mlkit
-                                    OcrEngine.TESSERACT -> R.string.tooldetail_ocr_engine_tesseract
-                                    OcrEngine.ONLINE -> R.string.tooldetail_ocr_engine_online
-                                },
-                            )
-                        },
-                        selected = settings.watch { OcrLanguages.usable(it.scanner.ocrEngine, TesseractOcr.available) },
-                        default = SettingsDefaults.scanner.ocrEngine,
-                    ) { scope.launch { repository.setOcrEngine(it) } }
                 }
             }
             // Issue #469: a model that reads images, behind an
             // OpenAI-compatible address of the user's choosing; #727 adds
-            // Rens servers. Readers are a provider list, asked in order or
-            // chosen in the panel.
-            if (settings.watch { it.scanner.ocrEngine == OcrEngine.ONLINE }) {
-                ProvidersGroup(
-                    repository,
-                    settings,
-                    ProviderTool.OCR,
-                    titleRes = R.string.tooldetail_ocr_online_group,
-                    info = stringResource(R.string.tooldetail_ocr_online_info),
-                )
-            }
+            // Rens servers. The engines on the phone are rows of the same
+            // list now: the first row that is on reads, and the old engine
+            // setting is derived from it.
+            ProvidersGroup(
+                repository,
+                settings,
+                ProviderTool.OCR,
+                titleRes = R.string.tooldetail_ocr_readers_group,
+                info = stringResource(R.string.tooldetail_ocr_readers_info),
+            )
             val usableEngine = settings.watch { OcrLanguages.usable(it.scanner.ocrEngine, TesseractOcr.available) }
             if (usableEngine != OcrEngine.ML_KIT && usableEngine != OcrEngine.ONLINE) {
                 SectionHeader(
@@ -3083,6 +3185,7 @@ internal fun ToolDetailSettings(
                             stringResource(R.string.tooldetail_qr_scan_zxing_subtitle),
                             settings.watch { it.scanner.qrZxing },
                             default = SettingsDefaults.scanner.qrZxing,
+                            info = stringResource(R.string.tooldetail_qr_scan_zxing_info),
                         ) { scope.launch { repository.setQrScanZxing(it) } }
                     }
                 }
@@ -3092,6 +3195,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_qr_scan_auto_subtitle),
                         settings.watch { it.scanner.qrScanAutoInsert },
                         default = SettingsDefaults.scanner.qrScanAutoInsert,
+                        info = stringResource(R.string.tooldetail_qr_scan_auto_info),
                     ) { scope.launch { repository.setQrScanAutoInsert(it) } }
                 }
                 item(level = SettingLevel.ADVANCED) {
@@ -3100,6 +3204,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_qr_scan_haptics_subtitle),
                         settings.watch { it.scanner.qrScanHaptics },
                         default = SettingsDefaults.scanner.qrScanHaptics,
+                        info = stringResource(R.string.tooldetail_qr_scan_haptics_info),
                     ) { scope.launch { repository.setQrScanHaptics(it) } }
                 }
                 item {
@@ -3108,6 +3213,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_qr_scan_preview_subtitle),
                         settings.watch { it.scanner.qrScanLinkPreviews },
                         default = SettingsDefaults.scanner.qrScanLinkPreviews,
+                        info = stringResource(R.string.tooldetail_qr_scan_preview_info),
                     ) { scope.launch { repository.setQrScanLinkPreviews(it) } }
                 }
             }
@@ -3129,6 +3235,7 @@ internal fun ToolDetailSettings(
                             stringResource(R.string.tooldetail_doc_scan_builtin_subtitle),
                             settings.watch { it.scanner.docBuiltIn },
                             default = SettingsDefaults.scanner.docBuiltIn,
+                            info = stringResource(R.string.tooldetail_doc_scan_builtin_info),
                         ) { scope.launch { repository.setDocScanBuiltIn(it) } }
                     }
                 }
@@ -3140,6 +3247,7 @@ internal fun ToolDetailSettings(
                             stringResource(R.string.tooldetail_doc_scan_in_keyboard_subtitle),
                             settings.watch { it.scanner.docInKeyboard },
                             default = SettingsDefaults.scanner.docInKeyboard,
+                            info = stringResource(R.string.tooldetail_doc_scan_in_keyboard_info),
                         ) { scope.launch { repository.setDocScanInKeyboard(it) } }
                     }
                 }
@@ -3149,6 +3257,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_doc_scan_gallery_subtitle),
                         settings.watch { it.scanner.docSaveToGallery },
                         default = SettingsDefaults.scanner.docSaveToGallery,
+                        info = stringResource(R.string.tooldetail_doc_scan_gallery_info),
                     ) { scope.launch { repository.setDocScanSaveToGallery(it) } }
                 }
             }
@@ -3185,6 +3294,7 @@ internal fun ToolDetailSettings(
                         options = GrammarDialect.entries.map { it to stringResource(it.labelRes) },
                         selected = settings.watch { it.grammarDialect },
                         default = SettingsDefaults.grammarDialect,
+                        info = stringResource(R.string.tooldetail_grammar_dialect_info),
                     ) { scope.launch { repository.setGrammarDialect(it) } }
                 }
                 item(level = SettingLevel.ADVANCED) {
@@ -3195,6 +3305,7 @@ internal fun ToolDetailSettings(
                         range = 100f..1500f,
                         display = { msFormat.format(it.toInt()) },
                         default = SettingsDefaults.grammarDebounceMs.toFloat(),
+                        info = stringResource(R.string.tooldetail_grammar_debounce_info),
                     ) { scope.launch { repository.setGrammarDebounceMs(it.toInt()) } }
                 }
             }
@@ -3273,6 +3384,7 @@ internal fun ToolDetailSettings(
                             ),
                             settings.watch { it.spellCheckerNoSuggestions },
                             default = SettingsDefaults.spellCheckerNoSuggestions,
+                            info = stringResource(R.string.tooldetail_grammar_no_suggestions_info),
                         ) {
                             scope.launch {
                                 repository.setSpellCheckerNoSuggestions(it)
@@ -3302,6 +3414,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_wiki_markdown_subtitle),
                         settings.watch { it.webSearch.wikiLinksMarkdown },
                         default = SettingsDefaults.webSearch.wikiLinksMarkdown,
+                        info = stringResource(R.string.tooldetail_wiki_markdown_info),
                     ) { scope.launch { repository.setWikiLinksMarkdown(it) } }
                 }
                 item(level = SettingLevel.ADVANCED) {
@@ -3362,6 +3475,7 @@ internal fun ToolDetailSettings(
                     stringResource(R.string.tooldetail_calc_degrees_subtitle),
                     settings.watch { it.calcDegrees },
                     default = SettingsDefaults.calcDegrees,
+                    info = stringResource(R.string.tooldetail_calc_degrees_info),
                 ) { scope.launch { repository.setCalcDegrees(it) } }
             }
             item(level = SettingLevel.STANDARD) {
@@ -3370,6 +3484,7 @@ internal fun ToolDetailSettings(
                     stringResource(R.string.tooldetail_calc_phone_layout_subtitle),
                     settings.watch { it.calcPhoneLayout },
                     default = SettingsDefaults.calcPhoneLayout,
+                    info = stringResource(R.string.tooldetail_calc_phone_layout_info),
                 ) { scope.launch { repository.setCalcPhoneLayout(it) } }
             }
             item(level = SettingLevel.ADVANCED) {
@@ -3381,6 +3496,7 @@ internal fun ToolDetailSettings(
                     steps = wholeSteps(0f..12f),
                     display = { numberFormat.format(it.roundToInt()) },
                     default = SettingsDefaults.calcPrecision.toFloat(),
+                    info = stringResource(R.string.tooldetail_calc_precision_info),
                 ) { scope.launch { repository.setCalcPrecision(it.roundToInt()) } }
             }
         }
@@ -3464,6 +3580,7 @@ internal fun ToolDetailSettings(
                         steps = wholeSteps(0f..6f),
                         display = { numberFormat.format(it.toInt()) },
                         default = SettingsDefaults.currencyDecimals.toFloat(),
+                        info = stringResource(R.string.tooldetail_currency_decimals_info),
                     ) { scope.launch { repository.setCurrencyDecimals(it.toInt()) } }
                 }
                 item(level = SettingLevel.STANDARD) {
@@ -3528,6 +3645,7 @@ internal fun ToolDetailSettings(
                                 if (it.toInt() == 0) auto else numberFormat.format(it.toInt())
                             },
                             default = SettingsDefaults.rateSources.cryptoDecimals.toFloat(),
+                            info = stringResource(R.string.tooldetail_crypto_decimals_info),
                         ) { scope.launch { repository.setCryptoDecimals(it.toInt()) } }
                     }
                     item(level = SettingLevel.ADVANCED) {
@@ -3538,6 +3656,7 @@ internal fun ToolDetailSettings(
                             range = 1f..60f,
                             display = { minutesFormat.format(it.toInt()) },
                             default = SettingsDefaults.rateSources.cryptoCacheMinutes.toFloat(),
+                            info = stringResource(R.string.tooldetail_crypto_refresh_info),
                         ) { scope.launch { repository.setCryptoCacheMinutes(it.toInt()) } }
                     }
                     item(level = SettingLevel.STANDARD) { CryptoCoinPicker(repository, settings) }
@@ -3570,6 +3689,7 @@ internal fun ToolDetailSettings(
                         range = 256f..2048f,
                         display = { pixelsFormat.format(it.roundToInt()) },
                         default = SettingsDefaults.scanner.qrSizePx.toFloat(),
+                        info = stringResource(R.string.tooldetail_qr_gen_size_info),
                     ) { scope.launch { repository.setQrSizePx(it.roundToInt()) } }
                 }
                 item(level = SettingLevel.ADVANCED) {
@@ -3602,6 +3722,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_qr_gen_gallery_subtitle),
                         settings.watch { it.scanner.qrSaveToGallery },
                         default = SettingsDefaults.scanner.qrSaveToGallery,
+                        info = stringResource(R.string.tooldetail_qr_gen_gallery_info),
                     ) { scope.launch { repository.setQrSaveToGallery(it) } }
                 }
             }
@@ -3615,6 +3736,7 @@ internal fun ToolDetailSettings(
                         selected = settings.watch { it.scanner.qrEcc },
                         default = SettingsDefaults.scanner.qrEcc,
                         detail = { level -> ChoiceDetail(stringResource(qrEccDescRes(level))) },
+                        info = stringResource(R.string.tooldetail_qr_gen_ecc_info),
                     ) { level -> scope.launch { repository.setQrEcc(level) } }
                 }
                 item {
@@ -3649,6 +3771,7 @@ internal fun ToolDetailSettings(
                         range = 4f..64f,
                         display = { numberFormat.format(it.roundToInt()) },
                         default = SettingsDefaults.passwordGenerator.pwLength.toFloat(),
+                        info = stringResource(R.string.tooldetail_password_length_info),
                     ) { scope.launch { repository.setPwLength(it.roundToInt()) } }
                 }
                 item(level = SettingLevel.STANDARD) {
@@ -3657,6 +3780,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_password_uppercase_subtitle),
                         settings.watch { it.passwordGenerator.pwUppercase },
                         default = SettingsDefaults.passwordGenerator.pwUppercase,
+                        info = stringResource(R.string.tooldetail_password_uppercase_info),
                     ) { scope.launch { repository.setPwUppercase(it) } }
                 }
                 item(level = SettingLevel.STANDARD) {
@@ -3665,6 +3789,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_password_digits_subtitle),
                         settings.watch { it.passwordGenerator.pwDigits },
                         default = SettingsDefaults.passwordGenerator.pwDigits,
+                        info = stringResource(R.string.tooldetail_password_digits_info),
                     ) { scope.launch { repository.setPwDigits(it) } }
                 }
                 item(level = SettingLevel.STANDARD) {
@@ -3673,6 +3798,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_password_symbols_subtitle),
                         pwSymbols,
                         default = SettingsDefaults.passwordGenerator.pwSymbols,
+                        info = stringResource(R.string.tooldetail_password_symbols_info),
                     ) { scope.launch { repository.setPwSymbols(it) } }
                 }
                 item(visible = pwSymbols, level = SettingLevel.ADVANCED) {
@@ -3689,6 +3815,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_password_ambiguous_subtitle),
                         settings.watch { it.passwordGenerator.pwExcludeAmbiguous },
                         default = SettingsDefaults.passwordGenerator.pwExcludeAmbiguous,
+                        info = stringResource(R.string.tooldetail_password_ambiguous_info),
                     ) { scope.launch { repository.setPwExcludeAmbiguous(it) } }
                 }
             }
@@ -3705,6 +3832,7 @@ internal fun ToolDetailSettings(
                         steps = wholeSteps(2f..10f),
                         display = { numberFormat.format(it.roundToInt()) },
                         default = SettingsDefaults.passwordGenerator.ppWordCount.toFloat(),
+                        info = stringResource(R.string.tooldetail_passphrase_words_info),
                     ) { scope.launch { repository.setPpWordCount(it.roundToInt()) } }
                 }
                 item {
@@ -3721,6 +3849,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_passphrase_capitalize_subtitle),
                         settings.watch { it.passwordGenerator.ppCapitalize },
                         default = SettingsDefaults.passwordGenerator.ppCapitalize,
+                        info = stringResource(R.string.tooldetail_passphrase_capitalize_info),
                     ) { scope.launch { repository.setPpCapitalize(it) } }
                 }
                 item(level = SettingLevel.ADVANCED) {
@@ -3729,6 +3858,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_passphrase_digit_subtitle),
                         settings.watch { it.passwordGenerator.ppIncludeDigit },
                         default = SettingsDefaults.passwordGenerator.ppIncludeDigit,
+                        info = stringResource(R.string.tooldetail_passphrase_digit_info),
                     ) { scope.launch { repository.setPpIncludeDigit(it) } }
                 }
             }
@@ -3741,6 +3871,7 @@ internal fun ToolDetailSettings(
                         range = PasswordGen.PIN_LENGTHS.first.toFloat()..PasswordGen.PIN_LENGTHS.last.toFloat(),
                         display = { numberFormat.format(it.roundToInt()) },
                         default = SettingsDefaults.passwordGenerator.pinLength.toFloat(),
+                        info = stringResource(R.string.tooldetail_pin_length_info),
                     ) { scope.launch { repository.setPinLength(it.roundToInt()) } }
                 }
                 item {
@@ -3749,6 +3880,7 @@ internal fun ToolDetailSettings(
                         stringResource(R.string.tooldetail_pin_avoid_weak_subtitle),
                         settings.watch { it.passwordGenerator.pinAvoidWeak },
                         default = SettingsDefaults.passwordGenerator.pinAvoidWeak,
+                        info = stringResource(R.string.tooldetail_pin_avoid_weak_info),
                     ) { scope.launch { repository.setPinAvoidWeak(it) } }
                 }
             }
@@ -3810,6 +3942,7 @@ internal fun ToolDetailSettings(
                     stringResource(R.string.files_tool_two_panes_subtitle),
                     settings.watch { it.filesTwoPanes },
                     default = SettingsDefaults.filesTwoPanes,
+                    info = stringResource(R.string.files_tool_two_panes_info),
                 ) { scope.launch { repository.setFilesTwoPanes(it) } }
             }
         }
@@ -3849,6 +3982,7 @@ internal fun ToolDetailSettings(
                 stringResource(R.string.tooldetail_show_in_toolbox_subtitle),
                 settings.watch { tool.key !in it.toolbox.hiddenTools },
                 default = tool.key !in SettingsDefaults.toolbox.hiddenTools,
+                info = stringResource(R.string.tooldetail_show_in_toolbox_info),
             ) { scope.launch { repository.setToolHiddenInToolbox(tool.key, !it) } }
         }
         // Recolour just this tool's icon. Only meaningful while the global
@@ -3866,6 +4000,7 @@ internal fun ToolDetailSettings(
                     color = settings.watch { it.toolColorOverrides[tool] },
                     fallback = toolAccentColorArgb(tool),
                     onChange = { scope.launch { repository.setToolColor(tool, it) } },
+                    info = stringResource(R.string.tooldetail_icon_colour_start_info),
                 )
             }
             item(visible = gradient, level = SettingLevel.ADVANCED) {
@@ -3876,6 +4011,7 @@ internal fun ToolDetailSettings(
                     // is, so the pair moves together until it is pinned.
                     fallback = settings.watch { toolAccentEndColorArgb(tool, it.toolColorOverrides) },
                     onChange = { scope.launch { repository.setToolColorEnd(tool, it) } },
+                    info = stringResource(R.string.tooldetail_icon_colour_end_info),
                 )
             }
         }
@@ -3888,6 +4024,7 @@ internal fun ToolDetailSettings(
                 checked = settings.watch { tool in it.toolbarBehavior.floatOnTap },
                 onChange = { scope.launch { repository.setToolFloatsOnTap(tool, it) } },
                 default = false,
+                info = stringResource(R.string.tooldetail_float_on_tap_info),
             )
         }
         // This tool's box on a tap outside it (#1262), set apart from every other box's.
@@ -3898,6 +4035,7 @@ internal fun ToolDetailSettings(
                 checked = settings.watch { it.boxClosesOutside(tool) },
                 onChange = { scope.launch { repository.setToolBoxClosesOutside(tool, it) } },
                 default = settings.watch { it.summonButton.boxClosesOutside },
+                info = stringResource(R.string.tooldetail_box_close_outside_info),
             )
         }
     }
@@ -4019,6 +4157,7 @@ private fun TextRepeatToolSettings(repository: SettingsRepository, settings: Liv
                 range = TextRepeat.MIN_COUNT.toFloat()..TextRepeat.MAX_COUNT.toFloat(),
                 display = { numberFormat.format(it.roundToInt()) },
                 default = SettingsDefaults.textRepeat.count.toFloat(),
+                info = stringResource(R.string.tooldetail_repeat_count_info),
             ) { scope.launch { repository.setTextRepeatCount(it.roundToInt()) } }
         }
         item(level = SettingLevel.STANDARD) {
@@ -4043,6 +4182,7 @@ private fun TextRepeatToolSettings(repository: SettingsRepository, settings: Liv
                         ),
                     )
                 },
+                info = stringResource(R.string.tooldetail_repeat_mode_info),
             ) { scope.launch { repository.setTextRepeatMode(it) } }
         }
         item(visible = hasCopies, level = SettingLevel.STANDARD) {
@@ -4058,6 +4198,7 @@ private fun TextRepeatToolSettings(repository: SettingsRepository, settings: Liv
                 ),
                 selected = separator,
                 default = SettingsDefaults.textRepeat.separator,
+                info = stringResource(R.string.tooldetail_repeat_separator_info),
             ) { scope.launch { repository.setTextRepeatSeparator(it) } }
         }
         item(visible = hasCopies && separator == TextRepeat.Separator.CUSTOM, level = SettingLevel.STANDARD) {
@@ -4074,6 +4215,7 @@ private fun TextRepeatToolSettings(repository: SettingsRepository, settings: Liv
                 stringResource(R.string.tooldetail_repeat_numbered_subtitle),
                 settings.watch { it.textRepeat.numbered },
                 default = SettingsDefaults.textRepeat.numbered,
+                info = stringResource(R.string.tooldetail_repeat_numbered_info),
             ) { scope.launch { repository.setTextRepeatNumbered(it) } }
         }
         item(visible = hasCopies, level = SettingLevel.STANDARD) {
@@ -4082,6 +4224,7 @@ private fun TextRepeatToolSettings(repository: SettingsRepository, settings: Liv
                 stringResource(R.string.tooldetail_repeat_alternate_subtitle),
                 settings.watch { it.textRepeat.alternateCase },
                 default = SettingsDefaults.textRepeat.alternateCase,
+                info = stringResource(R.string.tooldetail_repeat_alternate_info),
             ) { scope.launch { repository.setTextRepeatAlternateCase(it) } }
         }
     }
@@ -4094,6 +4237,7 @@ private fun TextRepeatToolSettings(repository: SettingsRepository, settings: Liv
                 range = TextRepeat.MIN_MAX_CHARS.toFloat()..TextRepeat.MAX_MAX_CHARS.toFloat(),
                 display = { numberFormat.format(it.roundToInt()) },
                 default = SettingsDefaults.toolLimits.textRepeatMaxChars.toFloat(),
+                info = stringResource(R.string.tooldetail_repeat_max_chars_info),
             ) { scope.launch { repository.setTextRepeatMaxChars(it.roundToInt()) } }
         }
         item {
@@ -4116,6 +4260,7 @@ private fun TextRepeatToolSettings(repository: SettingsRepository, settings: Liv
                         ),
                     )
                 },
+                info = stringResource(R.string.tooldetail_repeat_chip_insert_info),
             ) { scope.launch { repository.setTextRepeatChipInsert(it) } }
         }
         // The same row as Typing → Smart chips; the chip is this tool's door.
@@ -4127,6 +4272,7 @@ private fun TextRepeatToolSettings(repository: SettingsRepository, settings: Liv
                 range = (TextRepeat.MIN_REPEAT_AFTER..TextRepeat.MAX_REPEAT_AFTER).toList(),
                 display = { numberFormat.format(it) },
                 default = SettingsDefaults.smartChips.repeatAfter,
+                info = stringResource(R.string.tooldetail_repeat_chip_after_info),
             ) { scope.launch { repository.setSmartChipRepeatAfter(it) } }
         }
     }
@@ -4200,6 +4346,7 @@ private fun TypingTestToolSettings(repository: SettingsRepository, settings: Liv
                 },
                 selected = testMode,
                 default = SettingsDefaults.typingTest.mode,
+                info = stringResource(R.string.toolai_typing_default_test_info),
             ) { mode -> scope.launch { repository.setTypingTestMode(mode) } }
         }
     }
@@ -4217,6 +4364,7 @@ private fun TypingTestToolSettings(repository: SettingsRepository, settings: Liv
                     range = 15f..120f,
                     display = { secondsFormat.format(it.roundToInt()) },
                     default = SettingsDefaults.typingTest.duration.toFloat(),
+                    info = stringResource(R.string.toolai_typing_seconds_info),
                 ) { scope.launch { repository.setTypingTestDuration(it.roundToInt()) } }
             }
             TypingTestMode.WORDS -> item {
@@ -4226,6 +4374,7 @@ private fun TypingTestToolSettings(repository: SettingsRepository, settings: Liv
                     range = 10f..100f,
                     display = { numberFormat.format(it.roundToInt()) },
                     default = SettingsDefaults.typingTest.wordCount.toFloat(),
+                    info = stringResource(R.string.toolai_typing_words_info),
                 ) { scope.launch { repository.setTypingTestWordCount(it.roundToInt()) } }
             }
             // Quotes come at whatever length they were written.
@@ -4241,6 +4390,7 @@ private fun TypingTestToolSettings(repository: SettingsRepository, settings: Liv
                     stringResource(R.string.toolai_typing_punctuation_subtitle),
                     settings.watch { it.typingTest.punctuation },
                     default = SettingsDefaults.typingTest.punctuation,
+                    info = stringResource(R.string.toolai_typing_punctuation_info),
                 ) { scope.launch { repository.setTypingTestPunctuation(it) } }
             }
             item {
@@ -4249,6 +4399,7 @@ private fun TypingTestToolSettings(repository: SettingsRepository, settings: Liv
                     stringResource(R.string.toolai_typing_numbers_subtitle),
                     settings.watch { it.typingTest.numbers },
                     default = SettingsDefaults.typingTest.numbers,
+                    info = stringResource(R.string.toolai_typing_numbers_info),
                 ) { scope.launch { repository.setTypingTestNumbers(it) } }
             }
         }
@@ -4267,6 +4418,7 @@ private fun TypingTestToolSettings(repository: SettingsRepository, settings: Liv
                 stringResource(R.string.toolai_typing_glide_subtitle),
                 settings.watch { it.typingTest.glide },
                 default = SettingsDefaults.typingTest.glide,
+                info = stringResource(R.string.toolai_typing_glide_info),
             ) { scope.launch { repository.setTypingTestGlide(it) } }
         }
         item {
@@ -4275,6 +4427,7 @@ private fun TypingTestToolSettings(repository: SettingsRepository, settings: Liv
                 stringResource(R.string.toolai_typing_suggestions_subtitle),
                 settings.watch { it.typingTest.suggestions },
                 default = SettingsDefaults.typingTest.suggestions,
+                info = stringResource(R.string.toolai_typing_suggestions_info),
             ) { scope.launch { repository.setTypingTestSuggestions(it) } }
         }
     }
@@ -4528,6 +4681,7 @@ internal fun DeepLWriteSettingsGroup(repository: SettingsRepository, settings: L
                 options = DeepLWriteStyle.entries.map { it to stringResource(it.labelRes) },
                 selected = settings.watch { it.translate.deepl.writeStyle },
                 default = defaults.writeStyle,
+                info = stringResource(R.string.tooldetail_deepl_style_info),
             ) { scope.launch { repository.setDeepLWriteStyle(it) } }
         }
     }
@@ -5393,6 +5547,7 @@ private fun AiReplyToolSettings(
                 range = 1f..AiPrompts.MAX_REPLIES.toFloat(),
                 display = { numberFormat.format(it.roundToInt()) },
                 default = SettingsDefaults.ai.reply.count.toFloat(),
+                info = stringResource(R.string.toolai_reply_count_info),
             ) { scope.launch { repository.setAiReplyCount(it.roundToInt()) } }
         }
         item {
@@ -5406,6 +5561,7 @@ private fun AiReplyToolSettings(
                 ),
                 selected = settings.watch { it.ai.reply.length },
                 default = SettingsDefaults.ai.reply.length,
+                info = stringResource(R.string.toolai_reply_length_info),
             ) { scope.launch { repository.setAiReplyLength(it) } }
         }
         item(level = SettingLevel.STANDARD) {
@@ -5419,6 +5575,7 @@ private fun AiReplyToolSettings(
                 ),
                 selected = settings.watch { it.ai.reply.emoji },
                 default = SettingsDefaults.ai.reply.emoji,
+                info = stringResource(R.string.toolai_reply_emoji_info),
             ) { scope.launch { repository.setAiReplyEmoji(it) } }
         }
     }
@@ -5445,6 +5602,7 @@ private fun AiReplyToolSettings(
                 range = 300f..8_000f,
                 display = { charsFormat.format(it.roundToInt()) },
                 default = SettingsDefaults.ai.reply.contextChars.toFloat(),
+                info = stringResource(R.string.toolai_reply_context_info),
             ) { scope.launch { repository.setAiReplyContextChars(it.roundToInt()) } }
         }
     }
@@ -5461,6 +5619,7 @@ private fun AiReplyToolSettings(
                 ),
                 selected = settings.watch { it.ai.reply.imageMode },
                 default = SettingsDefaults.ai.reply.imageMode,
+                info = stringResource(R.string.toolai_reply_image_mode_info),
             ) { scope.launch { repository.setAiReplyImageMode(it) } }
         }
         item {
@@ -5469,7 +5628,17 @@ private fun AiReplyToolSettings(
                 stringResource(R.string.toolai_reply_catch_shots_subtitle),
                 settings.watch { it.ai.reply.catchScreenshots },
                 default = SettingsDefaults.ai.reply.catchScreenshots,
+                info = stringResource(R.string.toolai_reply_catch_shots_info),
             ) { scope.launch { repository.setAiReplyCatchScreenshots(it) } }
+        }
+        item {
+            ToggleSetting(
+                R.string.toolai_reply_strip_chip_title,
+                stringResource(R.string.toolai_reply_strip_chip_subtitle),
+                settings.watch { it.ai.reply.stripChip },
+                default = SettingsDefaults.ai.reply.stripChip,
+                info = stringResource(R.string.toolai_reply_strip_chip_info),
+            ) { scope.launch { repository.setAiReplyStripChip(it) } }
         }
     }
 
@@ -5489,6 +5658,7 @@ private fun AiReplyToolSettings(
                 stringResource(R.string.toolai_reply_tidy_subtitle),
                 settings.watch { it.ai.reply.tidyUp },
                 default = SettingsDefaults.ai.reply.tidyUp,
+                info = stringResource(R.string.toolai_reply_tidy_info),
             ) { scope.launch { repository.setAiReplyTidyUp(it) } }
         }
         item {
@@ -5497,6 +5667,7 @@ private fun AiReplyToolSettings(
                 stringResource(R.string.toolai_reply_history_subtitle),
                 settings.watch { it.ai.reply.keepHistory },
                 default = SettingsDefaults.ai.reply.keepHistory,
+                info = stringResource(R.string.toolai_reply_history_info),
             ) { scope.launch { repository.setAiReplyKeepHistory(it) } }
         }
     }
@@ -5550,6 +5721,7 @@ private fun CalendarNewEventRows(repository: SettingsRepository, settings: LiveS
                     options = options,
                     selected = if (options.any { it.first == chosen }) chosen else -1L,
                     default = SettingsDefaults.calendarTool.defaultCalendarId,
+                    info = stringResource(R.string.tooldetail_calendar_default_calendar_info),
                 ) { scope.launch { repository.setCalendarDefaultCalendar(it) } }
             } else {
                 NavRow(
@@ -5567,6 +5739,7 @@ private fun CalendarNewEventRows(repository: SettingsRepository, settings: LiveS
                     if (m in CALENDAR_LENGTHS) m else SettingsDefaults.calendarTool.defaultDurationMinutes
                 },
                 default = SettingsDefaults.calendarTool.defaultDurationMinutes,
+                info = stringResource(R.string.tooldetail_calendar_default_length_info),
             ) { scope.launch { repository.setCalendarDefaultDuration(it) } }
         }
         item {
@@ -5578,6 +5751,7 @@ private fun CalendarNewEventRows(repository: SettingsRepository, settings: LiveS
                     if (m in CALENDAR_REMINDERS) m else SettingsDefaults.calendarTool.defaultReminderMinutes
                 },
                 default = SettingsDefaults.calendarTool.defaultReminderMinutes,
+                info = stringResource(R.string.tooldetail_calendar_default_reminder_info),
             ) { scope.launch { repository.setCalendarDefaultReminder(it) } }
         }
     }

@@ -3,6 +3,8 @@ package com.wasimaster.wmkeyboard.ime.ui
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,6 +35,7 @@ import com.wasimaster.wmkeyboard.core.layout.PanelLayoutSpec
 import com.wasimaster.wmkeyboard.core.settings.ClipPanelExtraHeightRange
 import com.wasimaster.wmkeyboard.core.settings.EmojiBarMode
 import com.wasimaster.wmkeyboard.core.settings.MediaPanelExtraHeightRange
+import com.wasimaster.wmkeyboard.core.settings.PanelHeightKind
 import com.wasimaster.wmkeyboard.core.settings.TextEditAction
 import com.wasimaster.wmkeyboard.ime.KeyboardUiState
 import com.wasimaster.wmkeyboard.ime.PanelMode
@@ -267,6 +270,27 @@ private fun EmojiPanelPage(
             }
         }
         if (state.settings.emojiFullBleed) {
+            // The same height bar as the GIF and sticker panels, over the same
+            // shared setting. Without one of its own the panel got the bar
+            // every full-bleed tool shares, which moves a different setting
+            // and adds to this one: dragging it left the emoji taller or
+            // shorter than the GIFs beside it (Telegram 10316).
+            val setting = panelExtraHeight(state, PanelHeightKind.MEDIA, state.settings.emoji.panelExtraHeightDp)
+            val resize = rememberClipPanelResize(setting)
+            val base = keyRowsHeight(state) + fullBleedHiddenRows(state, macroRowAtPanelOpen(state))
+            val maxPanel = toolPanelHeight(state, wanted = base + MediaPanelExtraHeightRange.last.dp, floor = base)
+            val maxExtra = (maxPanel - base).coerceAtLeast(0.dp)
+            val extra = resize.shownDp(setting).dp.coerceIn(0.dp, maxExtra)
+            val maxPanelPx = with(LocalDensity.current) { maxPanel.roundToPx() }
+            SideEffect { resize.maxPanelPx = maxPanelPx }
+            val probe = remember(resize) { Modifier.clipPanelHeightProbe(resize) }
+            val barDescription = stringResource(R.string.ime_media_height_desc)
+            val bar: @Composable () -> Unit = {
+                ClipPanelHeightBar(resize, extra, maxExtra, callbacks.onMediaPanelHeight, barDescription)
+            }
+            // A handle of any kind keeps the shared full-bleed bar away; where
+            // the screen leaves no room to grow it is an empty one.
+            val handle: @Composable () -> Unit = if (maxExtra >= 1.dp) bar else ({})
             // Full-bleed spends the reclaimed toolbar row on the panel's own
             // strip, as it always has: a first row made only of the tabs and the
             // search pill moves up into the header beside the back button, and
@@ -275,30 +299,36 @@ private fun EmojiPanelPage(
             val strip = spec.leadingStrip()
             if (strip != null) {
                 val rest = spec.withoutLeadingRow()
-                FullBleedTool(
-                    state, title = "", onClose = onClose,
-                    extraHeight = mediaPanelExtraHeight(state),
-                    headerActions = {
-                        for (key in strip) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(key.width)
-                                    .fillMaxHeight()
-                                    .padding(horizontal = 2.dp),
-                            ) { fields((key.action as KeyAction.Field).kind) }
-                        }
-                    },
-                ) {
-                    PanelLayoutGrid(state, rest, callbacks, onClose, fields, Modifier.fillMaxSize())
+                Box(modifier = probe) {
+                    FullBleedTool(
+                        state, title = "", onClose = onClose,
+                        extraHeight = extra,
+                        topHandle = handle,
+                        headerActions = {
+                            for (key in strip) {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(key.width)
+                                        .fillMaxHeight()
+                                        .padding(horizontal = 2.dp),
+                                ) { fields((key.action as KeyAction.Field).kind) }
+                            }
+                        },
+                    ) {
+                        PanelLayoutGrid(state, rest, callbacks, onClose, fields, Modifier.fillMaxSize())
+                    }
                 }
             } else {
-                FullBleedTool(
-                    state,
-                    stringResource(R.string.ime_tool_emoji),
-                    onClose = onClose,
-                    extraHeight = mediaPanelExtraHeight(state),
-                ) {
-                    PanelLayoutGrid(state, spec, callbacks, onClose, fields, Modifier.fillMaxSize())
+                Box(modifier = probe) {
+                    FullBleedTool(
+                        state,
+                        stringResource(R.string.ime_tool_emoji),
+                        onClose = onClose,
+                        extraHeight = extra,
+                        topHandle = handle,
+                    ) {
+                        PanelLayoutGrid(state, spec, callbacks, onClose, fields, Modifier.fillMaxSize())
+                    }
                 }
             }
         } else {
@@ -309,7 +339,7 @@ private fun EmojiPanelPage(
             // The height bar the GIF and sticker panels carry, over the same
             // shared setting: without it, a panel grown from the GIFs could
             // not be made shorter again from the emoji (Telegram 5530).
-            val setting = state.settings.emoji.panelExtraHeightDp
+            val setting = panelExtraHeight(state, PanelHeightKind.MEDIA, state.settings.emoji.panelExtraHeightDp)
             val resize = rememberClipPanelResize(setting)
             val base = keyRowsHeight(state) + barCompensation
             val maxPanel = toolPanelHeight(state, wanted = base + MediaPanelExtraHeightRange.last.dp, floor = base)
@@ -433,8 +463,39 @@ private fun ClipboardHistoryPage(
     val spec = state.panelLayout(PanelKind.CLIPBOARD).let { spec ->
         if (stacked && spec == BuiltInPanelLayouts.clipboard(keyRow = true)) BuiltInPanelLayouts.CLIPBOARD else spec
     }
+    val keysToggle: @Composable () -> Unit = {
+        ToolCircle(
+            slot = IconSlots.KEY_INPUT_METHOD_PICKER,
+            description = stringResource(
+                if (stacked) R.string.ime_clipboard_keys_hide_desc else R.string.ime_clipboard_keys_show_desc,
+            ),
+            active = stacked,
+            onClick = callbacks.clipboard.actions.onKeysToggle,
+            modifier = Modifier.padding(start = 2.dp),
+        )
+    }
+    // The search and the view switch put in the layout's last row, for the
+    // thumb (#414): the keyboard button goes down there with them, at the
+    // search's end, rather than staying alone in the header.
+    val lastRow = spec.grid.rows.lastOrNull().orEmpty()
+    val searchCell = lastRow.any { (it.action as? KeyAction.Field)?.kind == PanelFieldKind.CLIPBOARD_SEARCH }
+    val viewCell = lastRow.any { (it.action as? KeyAction.Field)?.kind == PanelFieldKind.CLIPBOARD_VIEW }
+    val keysBelow = state.settings.clipboard.fullBleed && spec.grid.rows.size >= 2 && (searchCell || viewCell)
+    val keysIn = when {
+        !keysBelow -> null
+        searchCell && clipSearchCellParts(session).isNotEmpty() -> PanelFieldKind.CLIPBOARD_SEARCH
+        viewCell && state.clipboardItems.isNotEmpty() -> PanelFieldKind.CLIPBOARD_VIEW
+        else -> null
+    }
     val fields: @Composable (PanelFieldKind) -> Unit = { kind ->
-        ClipboardField(kind, state, session, callbacks.clipboard)
+        if (kind == keysIn) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.weight(1f).fillMaxHeight()) { ClipboardField(kind, state, session, callbacks.clipboard) }
+                keysToggle()
+            }
+        } else {
+            ClipboardField(kind, state, session, callbacks.clipboard)
+        }
     }
     // The strips only exist when they have something to show, as before: a
     // row holding nothing but an empty strip takes no height.
@@ -450,28 +511,19 @@ private fun ClipboardHistoryPage(
     // The height bar (#414): the panel opens this much taller than the
     // keyboard, up to what the screen can give it, and the bar on top drags it.
     val clipboard = state.settings.clipboard
-    val resize = rememberClipPanelResize(clipboard.panelExtraHeightDp)
+    // The clipboard's own height, or the clipboard tool's with heights per tool (#1381).
+    val clipExtra = panelExtraHeight(state, PanelHeightKind.CLIPBOARD, clipboard.panelExtraHeightDp)
+    val resize = rememberClipPanelResize(clipExtra)
     val base = if (clipboard.fullBleed) keyRowsHeight(state) + fullBleedHiddenRows(state, macroRowAtPanelOpen(state)) else keyRowsHeight(state)
     val maxPanel = toolPanelHeight(state, wanted = base + ClipPanelExtraHeightRange.last.dp, floor = base)
     val maxExtra = (maxPanel - base).coerceAtLeast(0.dp)
-    val extra = resize.shownDp(clipboard.panelExtraHeightDp).dp.coerceIn(0.dp, maxExtra)
+    val extra = resize.shownDp(clipExtra).dp.coerceIn(0.dp, maxExtra)
     val maxPanelPx = with(LocalDensity.current) { maxPanel.roundToPx() }
     SideEffect { resize.maxPanelPx = maxPanelPx }
     val probe = remember(resize) { Modifier.clipPanelHeightProbe(resize) }
     // No bar where the screen leaves no room to grow: it would drag nothing.
     val bar: (@Composable () -> Unit)? = if (maxExtra < 1.dp) null else {
         { ClipPanelHeightBar(resize, extra, maxExtra, callbacks.clipboard.actions.onPanelHeight) }
-    }
-    val keysToggle: @Composable () -> Unit = {
-        ToolCircle(
-            slot = IconSlots.KEY_INPUT_METHOD_PICKER,
-            description = stringResource(
-                if (stacked) R.string.ime_clipboard_keys_hide_desc else R.string.ime_clipboard_keys_show_desc,
-            ),
-            active = stacked,
-            onClick = callbacks.clipboard.actions.onKeysToggle,
-            modifier = Modifier.padding(start = 2.dp),
-        )
     }
     if (clipboard.fullBleed) {
         // Full-bleed: the toolbar row becomes the back header and the
@@ -517,7 +569,7 @@ private fun ClipboardHistoryPage(
                                 ) { fields(kind) }
                             }
                         }
-                        keysToggle()
+                        if (keysIn == null) keysToggle()
                     },
                 ) {
                     PanelLayoutGrid(
@@ -535,7 +587,7 @@ private fun ClipboardHistoryPage(
                     compact = stacked,
                     compactHeight = ClipStackedHeight,
                     topHandle = if (stacked) null else bar,
-                    headerActions = { keysToggle() },
+                    headerActions = { if (keysIn == null) keysToggle() },
                 ) {
                     PanelLayoutGrid(state, spec, callbacks, onClose, fields, Modifier.fillMaxSize(), collapsed)
                 }
@@ -663,7 +715,7 @@ internal fun HandwritingPanelHost(
  * itself; [mediaPanelHeight] does that for the others.
  */
 internal fun mediaPanelExtraHeight(state: KeyboardUiState): Dp =
-    state.settings.emoji.panelExtraHeightDp.coerceAtLeast(0).dp
+    panelExtraHeight(state, PanelHeightKind.MEDIA, state.settings.emoji.panelExtraHeightDp).coerceAtLeast(0).dp
 
 /**
  * The height of an emoji, GIF or sticker panel that is not full-bleed: the

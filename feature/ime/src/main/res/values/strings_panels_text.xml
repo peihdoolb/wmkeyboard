@@ -88,6 +88,8 @@
     <string name="ime_textedit_delete_to_start_desc">Delete to the start</string>
     <string name="ime_textedit_delete_to_end_desc">Delete to the end</string>
     <string name="ime_textedit_type_clipboard_desc">Type the clipboard</string>
+    <string name="ime_textedit_case_up_desc">Word case up</string>
+    <string name="ime_textedit_case_down_desc">Word case down</string>
     <string name="ime_tool_clear_field">Delete everything</string>
     <string name="ime_tool_timestamp">Timestamp</string>
     <string name="ime_textedit_doc_end_desc">Move to the end of the text</string>
@@ -294,6 +296,14 @@
     <string name="ime_weather_clouds_label">clouds</string>
     <!-- Caption under the highest ultraviolet index of the day. -->
     <string name="ime_weather_uv_label">UV max</string>
+    <!-- #1369: the Weather panel's outlook under the current conditions. -->
+    <string name="ime_weather_outlook_hours">Next 24 hours</string>
+    <string name="ime_weather_outlook_days">This week</string>
+    <string name="ime_weather_outlook_today">Today</string>
+    <!-- %1$s is the UV index, a small whole number. Keep it short. -->
+    <string name="ime_weather_outlook_uv">UV %1$s</string>
+    <!-- %1$d is the air quality index (European for °C, US for °F). Keep it short; AQI is the usual abbreviation. -->
+    <string name="ime_weather_outlook_aqi">AQI %1$d</string>
     <string name="ime_weather_sunrise_label">sunrise</string>
     <string name="ime_weather_sunset_label">sunset</string>
     <string name="ime_weather_progress">Loading the weather…</string>
@@ -352,6 +362,10 @@
     <string name="ime_calendar_untitled">(No title)</string>
     <!-- Read aloud for the weather on an event card. %1$s is the sky (for example "Partly cloudy"), %2$s the temperature, %3$s the place. -->
     <string name="ime_calendar_weather_desc">%1$s, %2$s in %3$s. Opens the forecast for each hour</string>
+    <!-- #1368: a day with nothing on shows its weather every three hours. %1$s is the place. -->
+    <string name="ime_calendar_day_forecast_desc">The day\'s weather every three hours in %1$s. Opens the forecast for each hour</string>
+    <!-- #1368: in an event's details, the chance of rain at its hour. -->
+    <string name="ime_calendar_weather_rain">%1$d%% rain</string>
     <string name="ime_calendar_title_hint">Title</string>
     <string name="ime_calendar_location_hint">Add a place</string>
     <string name="ime_calendar_notes_hint">Add notes</string>

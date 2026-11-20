@@ -522,6 +522,7 @@ internal fun SnippetSettings(
                 stringResource(R.string.expander_titles_only_subtitle),
                 settings.watch { it.suggestionStrip.snippetTitlesOnly },
                 default = SettingsDefaults.suggestionStrip.snippetTitlesOnly,
+                info = stringResource(R.string.expander_titles_only_info),
             ) { scope.launch { repository.setSnippetTitlesOnly(it) } }
         }
         item(level = SettingLevel.STANDARD) {
@@ -530,6 +531,7 @@ internal fun SnippetSettings(
                 stringResource(R.string.expander_panel_stays_subtitle),
                 settings.watch { it.suggestionStrip.snippetPanelStays },
                 default = SettingsDefaults.suggestionStrip.snippetPanelStays,
+                info = stringResource(R.string.expander_panel_stays_info),
             ) { scope.launch { repository.setSnippetPanelStays(it) } }
         }
         item(level = SettingLevel.ADVANCED) {
@@ -687,6 +689,15 @@ internal fun SnippetSettings(
         onOpen = { snippet -> onNavigate("expander/edit/${snippet.id}") },
         onDelete = ::deleteWithUndo,
         onReorder = { ordered -> mutate { s -> s.reorder(regrouped(snippets, ordered)) } },
+        folders = folders,
+        onDeleteMany = { picked ->
+            val before = store?.items() ?: return@SnippetGroup
+            mutate { s -> picked.forEach { s.remove(it.id) } }
+            snackbar?.undo(
+                message = context.resources.getQuantityString(R.plurals.expander_deleted_many_snackbar, picked.size, picked.size),
+                undoLabel = undoLabel,
+            ) { mutate { it.replaceAll(before) } }
+        },
     )
 
     namingFolder?.let { folder ->
@@ -927,6 +938,7 @@ internal fun SnippetFolderScreen(
                 subtitle = stringResource(R.string.expander_folder_enabled_subtitle),
                 checked = here.enabled,
                 onChange = { on -> mutate { it.setFolderEnabled(folderId, on) } },
+                info = stringResource(R.string.expander_folder_enabled_info),
             )
         }
         // One option for every snippet here at once (#1122): the built-in
@@ -950,6 +962,15 @@ internal fun SnippetFolderScreen(
         // The whole store's order, with only this folder's part of it rewritten
         // — see [regrouped].
         onReorder = { ordered -> mutate { s -> s.reorder(regrouped(snippets, ordered)) } },
+        folders = listOf(here),
+        onDeleteMany = { picked ->
+            val before = store?.items() ?: return@SnippetGroup
+            mutate { s -> picked.forEach { s.remove(it.id) } }
+            snackbar?.undo(
+                message = context.resources.getQuantityString(R.plurals.expander_deleted_many_snackbar, picked.size, picked.size),
+                undoLabel = undoLabel,
+            ) { mutate { it.replaceAll(before) } }
+        },
     )
 
     if (renaming) {
@@ -1285,8 +1306,77 @@ private fun SnippetGroup(
     onOpen: (Snippet) -> Unit,
     onDelete: (Snippet) -> Unit,
     onReorder: (List<Snippet>) -> Unit,
+    /** The folders the picked snippets may sit in, written into an export so they land in them again. */
+    folders: List<SnippetFolder> = emptyList(),
+    /** Deletes the picked snippets at once (the screen offers them back). */
+    onDeleteMany: ((List<Snippet>) -> Unit)? = null,
 ) {
     var editing by rememberSaveable(title) { mutableStateOf(false) }
+    // A long press on a snippet starts picking, as in the other lists of
+    // things the user makes: taps then tick snippets, and the dock exports or
+    // deletes every ticked one at once.
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var pickedIds by remember { mutableStateOf<Set<Long>>(emptySet()) }
+    val livePicked = snippets.filter { it.id in pickedIds }
+    val picking = livePicked.isNotEmpty() && !editing
+    var pendingExport by remember { mutableStateOf<List<Snippet>?>(null) }
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument(SnippetFile.MIME_TYPE),
+    ) { uri ->
+        val picked = pendingExport
+        pendingExport = null
+        if (uri == null || picked == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val ok = withContext(Dispatchers.IO) {
+                runCatching {
+                    context.contentResolver.requireOutputStream(uri).use { out ->
+                        out.write(
+                            SnippetFile.encode(
+                                picked,
+                                appVersion = BuildConfig.VERSION_CODE,
+                                appVersionName = BuildConfig.VERSION_NAME,
+                                folders = folders.filter { f -> picked.any { it.folderId == f.id } },
+                                images = SnippetStore.imageBytes(context.filesDir, picked),
+                            ).toByteArray(),
+                        )
+                    }
+                }.isSuccess
+            }
+            pickedIds = emptySet()
+            android.widget.Toast.makeText(
+                context,
+                if (ok) {
+                    context.resources.getQuantityString(R.plurals.expander_saved_count, picked.size, picked.size)
+                } else {
+                    context.getString(R.string.expander_export_error)
+                },
+                android.widget.Toast.LENGTH_LONG,
+            ).show()
+        }
+    }
+    androidx.activity.compose.BackHandler(enabled = picking) { pickedIds = emptySet() }
+    if (picking) {
+        RegisterDock {
+            PickBar(
+                count = livePicked.size,
+                allPicked = livePicked.size == snippets.size,
+                onClear = { pickedIds = emptySet() },
+                onSelectAll = { pickedIds = snippets.mapTo(HashSet()) { it.id } },
+                onExport = {
+                    pendingExport = livePicked
+                    exportLauncher.launch(SnippetFile.fileName())
+                },
+                onDelete = onDeleteMany?.let { delete ->
+                    {
+                        val doomed = livePicked
+                        pickedIds = emptySet()
+                        delete(doomed)
+                    }
+                },
+            )
+        }
+    }
     // Deleting down to one snippet takes the pencil away, so the flag has to
     // come down with it or adding a second would land straight back in a mode
     // nothing on screen is offering to leave.
@@ -1334,8 +1424,11 @@ private fun SnippetGroup(
             item(key = snippet.id) {
                 SnippetRow(
                     snippet,
-                    onEdit = { onOpen(snippet) },
+                    onEdit = { if (picking) pickedIds = pickedIds.toggled(snippet.id) else onOpen(snippet) },
                     onDelete = { onDelete(snippet) },
+                    picking = picking,
+                    picked = snippet.id in pickedIds,
+                    onPick = { pickedIds = pickedIds.toggled(snippet.id) },
                 )
             }
         }
@@ -1343,7 +1436,14 @@ private fun SnippetGroup(
 }
 /** One snippet in the Text Expander list: what it inserts, and what fires it. */
 @Composable
-private fun SnippetRow(snippet: Snippet, onEdit: () -> Unit, onDelete: () -> Unit) {
+private fun SnippetRow(
+    snippet: Snippet,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    picking: Boolean = false,
+    picked: Boolean = false,
+    onPick: (() -> Unit)? = null,
+) {
     val delete = deleteSwipeAction(stringResource(CommonR.string.common_delete), onDelete)
     // Snippet ids are numbers; an install records the batch it added as one
     // comma-joined list of them.
@@ -1458,16 +1558,24 @@ private fun SnippetRow(snippet: Snippet, onEdit: () -> Unit, onDelete: () -> Uni
             // pencil button beside a row that is already the target for the
             // same thing is one target too many.
             onClick = onEdit,
+            onLongClick = onPick,
+            leading = if (picking) {
+                { androidx.compose.material3.Checkbox(checked = picked, onCheckedChange = null) }
+            } else {
+                null
+            },
             // A long swipe deletes outright: the screen offers the snippet
             // back from the undo bar, so it is never lost to a slip.
-            swipeActions = listOf(delete),
-            fullSwipe = delete,
-            trailing = {
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        Icons.Outlined.Delete,
-                        contentDescription = stringResource(CommonR.string.common_delete),
-                    )
+            swipeActions = if (picking) emptyList() else listOf(delete),
+            fullSwipe = if (picking) null else delete,
+            trailing = if (picking) null else {
+                {
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            Icons.Outlined.Delete,
+                            contentDescription = stringResource(CommonR.string.common_delete),
+                        )
+                    }
                 }
             },
         )
@@ -2032,6 +2140,7 @@ private fun SnippetEditorForm(
                     R.string.rows_snippet_propagate_case_label,
                     stringResource(R.string.rows_snippet_propagate_case_body),
                     checked = propagateCase,
+                    info = stringResource(R.string.rows_snippet_propagate_case_info),
                 ) { propagateCase = it }
             }
             // The style only means anything for a trigger typed with one
@@ -2060,6 +2169,7 @@ private fun SnippetEditorForm(
                     R.string.rows_snippet_confirm_label,
                     stringResource(R.string.rows_snippet_confirm_body),
                     checked = confirm,
+                    info = stringResource(R.string.rows_snippet_confirm_info),
                 ) { confirm = it }
             }
             item(visible = word && !confirm, level = SettingLevel.STANDARD) {
@@ -2067,6 +2177,7 @@ private fun SnippetEditorForm(
                     R.string.rows_snippet_immediate_label,
                     stringResource(R.string.rows_snippet_immediate_body),
                     checked = immediate,
+                    info = stringResource(R.string.rows_snippet_immediate_info),
                 ) { immediate = it }
             }
             item(visible = word && !confirm && immediate, level = SettingLevel.ADVANCED) {
@@ -2074,6 +2185,7 @@ private fun SnippetEditorForm(
                     R.string.rows_snippet_inside_words_label,
                     stringResource(R.string.rows_snippet_inside_words_body),
                     checked = insideWords,
+                    info = stringResource(R.string.rows_snippet_inside_words_info),
                 ) { insideWords = it }
             }
             // Nothing to choose between until there is more than one thing to
@@ -2099,6 +2211,7 @@ private fun SnippetEditorForm(
                         // following the app's.
                         default = MultiExpand.DEFAULT,
                         detail = { choice -> ChoiceDetail(stringResource(snippetMultiExpandDescRes(choice))) },
+                        info = stringResource(R.string.rows_snippet_multi_expand_info),
                     ) { multiExpand = it }
                 }
             }

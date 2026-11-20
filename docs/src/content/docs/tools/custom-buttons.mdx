@@ -13,9 +13,11 @@ The fixed tools cover what the keyboard does by itself. Custom buttons cover the
 
 The same page is linked from <SettingsPath path="Appearance / Toolbar" />. You can have up to 24 buttons.
 
-## Four kinds
+## Five kinds
 
 **App shortcut** opens a shortcut another app offers. These are the actions a launcher shows when you hold an app's icon: a new incognito tab, a new note, a contact to call. The picker lists them by app, with each shortcut's own icon, and the button wears that icon on the toolbar.
+
+**App screen** opens any screen of an installed app, the way an activity launcher does: an app's hidden settings page, a single tab of a system app, a screen its home-screen icon doesn't lead to. See [App screens](#app-screens) below.
 
 **Setting switch** turns one of the keyboard's settings on and off with a tap. The button is lit while the setting is on, the same way the Incognito tool lights up. You can pick from:
 
@@ -30,14 +32,24 @@ The same page is linked from <SettingsPath path="Appearance / Toolbar" />. You c
 - Key popup
 - Toolbar names
 - Reduce motion
+- Second toolbar (the [extra row of tools](/reference/settings/appearance/#second-toolbar))
+- Autocorrect
+- Double space period
+- Space after punctuation
+- Arrow keys row
+- Split keyboard
+- Incognito
+- Dark keyboard: on picks the Dark [theme mode](/themes/overview/), off picks Light. A day and night theme pair still decides over it.
 
-A tap writes the same setting its row in Settings writes, so the two always agree. If a [mode](/typing/modes/) sets one of these itself, the mode's value is what the keyboard uses, and the button shows that.
+A tap writes the same setting its row in Settings writes, so the two always agree. If a [mode](/typing/modes/) sets one of these itself, the mode's value is what the keyboard uses, and the button shows that. Hold a switch to open its own row in Settings, with the settings that go with it.
 
-**Settings page** opens a page of these settings in one tap: **Favourites** (the screens and rows you starred, opened over whatever page is showing), the settings home, search, themes, languages, typing, dictionary, clipboard, tools, toolbar, sound and vibration, or this page itself.
+**Settings page** opens a page of these settings in one tap: **Favourites** (the screens and rows you starred, opened over whatever page is showing), the settings home, search, themes, languages, typing, dictionary, clipboard, tools, toolbar, sound and vibration, appearance, layout, size and position, autocorrect, suggestions, gestures, haptics and sound, emoji, voice typing, AI, privacy, backup and restore, accessibility, statistics, or this page itself.
 
 **Plugin** pins one of your [plugins](/plugins/overview/) to the toolbar. It does not make a button: a plugin is a tool of its own, with its own icon, that drags, files into folders and shows up in the toolbox search like any other. See [Plugins as tools](/tools/overview/#plugins-as-tools). Plugin buttons made before this became tools in the same place, on the toolbar or in the toolbox.
 
 ## Where shortcuts come from
+
+The picker's rows each add a button, so there is nothing to tick: tap a shortcut and it's made.
 
 Android lets only the home screen read every app's shortcuts. Where the keyboard has that access, the picker lists all of them. Most phones don't give it, and then the picker offers what it can reach without it:
 
@@ -46,17 +58,41 @@ Android lets only the home screen read every app's shortcuts. Where the keyboard
 
 Shortcuts an app adds while it runs, such as a browser's incognito tab on some versions, are only visible to the home screen. Those apps can't be reached this way, and an app that answers the "create shortcut" request with something only a home screen can accept gets a message saying so.
 
+When the list is cut down like this, a note at the top of the picker says so, and its **App screens** button takes you to the App screen picker, which needs no special access.
+
 A shortcut's icon is saved on the phone when you pick it. A backup carries the buttons but not their icons, so after a restore a shortcut button shows its app's icon instead.
+
+## App screens
+
+**App screen** lists every app with a home-screen icon, folded by app; tap an app's name to see its screens, or search across all of them by screen name or class name. Each row shows the screen's class name under its title, and the button wears the screen's icon.
+
+Without special access, the list holds the screens any app may open. Many apps keep more behind a permission, or don't share a screen with other apps at all. The F-Droid and GitHub builds can reach those through Shizuku or root, set up under <SettingsPath path="Privacy / Permissions / Shizuku or root" />; the note at the top of the picker has a **Set up** button that goes there.
+
+- With Shizuku, the list adds the screens that ask for a permission, since Shizuku runs commands as the shell, which holds most of them.
+- With root and **Use root** turned on, it adds the screens an app keeps to itself too.
+
+A screen that needs Shizuku or root says **Opens through Shizuku or root** under its name, and on the page of your buttons it's listed as an App screen. A tap runs `am start` for it, so it works only while Shizuku is running (or root is allowed) and the Shizuku or root switch is on; otherwise the button says it couldn't open. Screens are named only by their app and class, so a restored button can never carry anything else onto the command line. The Google Play build lists only the screens any app may open.
+
+Some screens expect to be opened by their own app with extra details and close at once, or show an error, when opened on their own. That's the app's doing; pick another screen.
 
 ## Toolbar or toolbox
 
-A new button goes on the toolbar, after your pinned tools, [folders](/tools/overview/#folders) and [apps](/tools/app-launcher/#apps-on-the-toolbar). Tap a button on the Custom buttons page to rename it or move it to the toolbox, where your buttons sit in a row at the top of the grid, with their names. The arrows on the page change the order they appear in. Swipe a button away, or press its bin, to delete it.
+A custom button is a tool like Calculator. A new one is pinned at the end of your toolbar's tools; from there you arrange it the way you arrange any tool:
 
-Custom buttons don't drag like tools. The page is where you arrange them.
+- Hold it on the toolbar and drag it into the toolbox to unpin it, or drag a button from the toolbox up onto the toolbar to pin it.
+- Drag it along the toolbar or around the toolbox grid to change its place.
+- Drop it on another tool to make a [folder](/tools/overview/#folders), or on a folder to file it there.
+- In the toolbox it turns up in the search, can be hidden from the grid, and moves up under **Most used** or **Recently used** like the other tools.
+
+A hold that stays put opens the Custom buttons page, or a switch's own row for a setting switch. On that page, tap a button to rename it, to pin it to the toolbar or put it in the toolbox without dragging, or to give it another icon: **Icon** › **Choose** picks one out of a launcher icon pack installed on the phone, such as [Arcticons](https://github.com/Arcticons-team/Arcticons), with the icons the pack made for the shortcut's own app first. The button then wears that icon on the toolbar, in the toolbox and on the floating button. **Reset** puts its own icon back. Swipe a button away, or press its bin, to delete it; it leaves the toolbar, the toolbox and any folder with it.
+
+Buttons made in an older version keep the side they were on: one on the toolbar is pinned at the end of your tools, and one in the toolbox's row joins the end of the grid.
+
+A [mode](/typing/modes/) with its own toolbar or toolbox order can list your buttons too. Custom buttons never get a hint number in the toolbar's hint mode or a hardware leader-key letter; those stay with the built-in tools.
 
 ## On the floating button
 
-Every custom button is also an action the [floating button](/reference/settings/floating-button/#gestures) can run, from a tap, a double tap, a hold or a slot in its quick menu. Look for **Your buttons** in the action list. A switch or a page works without bringing the keyboard up, and a shortcut opens its app.
+Every custom button is also an action the [floating button](/reference/settings/floating-button/#gestures) can run, from a tap, a double tap, a hold or a slot in its quick menu. Look for **Your buttons** in the action list. The same **Your buttons** group is in every other place that picks a tool: a tool's **Press and hold on the toolbar**, the buttons [beside the suggestions](/reference/settings/appearance/#beside-the-suggestions), and the layout editor's keys, flicks and long-press alternates, as well as multi-finger swipes. A key or flick set to a custom button wears its icon. A switch or a page works without bringing the keyboard up, and a shortcut opens its app.
 
 ## Details
 

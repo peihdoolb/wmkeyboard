@@ -67,9 +67,72 @@ class KotlinFuzzyBeamSearch {
             )
         }
 
-        return results.values.sortedWith(
+        // wm-engine's drift bonus (`TouchScoring::drift_bonus`), on matches
+        // and slips only, never with slips off or on an ambiguous board.
+        val rescored = if (touch == null || touch.model.slipRadius <= 0.0 || keys?.isAmbiguous == true) {
+            results.values
+        } else {
+            results.values.map { c ->
+                val bonus = if (c.edits == c.slips) SHAPE_WEIGHT * driftBonus(touch, c.word) else 0.0
+                if (bonus > 0.0) {
+                    ScoredCandidate(
+                        c.word, c.score + bonus, c.editCost, c.edits, c.completedChars, c.tier,
+                        c.dictScore + bonus, c.userScore + bonus, c.accents, c.slips,
+                    )
+                } else {
+                    c
+                }
+            }
+        }
+        return rescored.sortedWith(
             compareByDescending<ScoredCandidate> { it.score }.thenBy { it.word }
         ).take(k)
+    }
+
+    private fun driftBonus(touch: TouchScoring, word: String): Double {
+        val pairs = ArrayList<DoubleArray>()
+        for (pos in 0 until minOf(word.length, touch.points.size)) {
+            val p = touch.points[pos] ?: continue
+            val c = touch.model.center(word[pos]) ?: continue
+            pairs.add(doubleArrayOf(c.x.toDouble(), c.y.toDouble(), p.x.toDouble(), p.y.toDouble()))
+        }
+        if (pairs.size < 2) return 0.0
+        val n = pairs.size.toDouble()
+        var kx = 0.0
+        var ky = 0.0
+        var tx = 0.0
+        var ty = 0.0
+        for (q in pairs) {
+            kx += q[0]
+            ky += q[1]
+            tx += q[2]
+            ty += q[3]
+        }
+        kx /= n
+        ky /= n
+        tx /= n
+        ty /= n
+        var num = 0.0
+        var den = 0.0
+        for (q in pairs) {
+            num += (q[0] - kx) * (q[2] - tx) + (q[1] - ky) * (q[3] - ty)
+            den += (q[0] - kx) * (q[0] - kx) + (q[1] - ky) * (q[1] - ky)
+        }
+        val scale = if (den > 1e-9) (num / den).coerceIn(SHAPE_SCALE_MIN, SHAPE_SCALE_MAX) else 1.0
+        var raw = 0.0
+        var fit = 0.0
+        for (q in pairs) {
+            raw += (q[2] - q[0]) * (q[2] - q[0]) + (q[3] - q[1]) * (q[3] - q[1])
+            val fx = tx + (q[0] - kx) * scale
+            val fy = ty + (q[1] - ky) * scale
+            fit += (q[2] - fx) * (q[2] - fx) + (q[3] - fy) * (q[3] - fy)
+        }
+        val gain = raw - fit
+        if (!(gain > 0.0)) return 0.0
+        val tap = touch.model.sigmaValue * touch.model.sigmaValue
+        val drift = SHAPE_DRIFT_SIGMAS * SHAPE_DRIFT_SIGMAS * tap
+        val shrink = n * drift / (tap + n * drift)
+        return shrink * gain / (2.0 * tap)
     }
 
     @Suppress("LongParameterList")
@@ -600,6 +663,12 @@ class KotlinFuzzyBeamSearch {
 
         /** Autocorrect wants a deeper ranked list than the strip shows. */
         const val AUTOCORRECT_K = 8
+
+        /** wm-engine's `SHAPE_DRIFT_SIGMAS`, `SHAPE_WEIGHT` and scale bounds. */
+        const val SHAPE_DRIFT_SIGMAS = 1.0
+        const val SHAPE_WEIGHT = 1.0
+        const val SHAPE_SCALE_MIN = 0.6
+        const val SHAPE_SCALE_MAX = 1.6
 
         /** Cap on the rank cost an off-center tap adds to an exact match. */
         const val MATCH_CAP = 1.0

@@ -39,9 +39,11 @@ import com.wasimaster.wmkeyboard.core.settings.flickDirectionOf
 import com.wasimaster.wmkeyboard.core.settings.SummonButtonSettings
 import com.wasimaster.wmkeyboard.core.settings.categoryOf
 import com.wasimaster.wmkeyboard.core.settings.doubleTapFor
+import com.wasimaster.wmkeyboard.core.settings.floatingVersion
 import com.wasimaster.wmkeyboard.core.settings.floatsOverKeyboard
 import com.wasimaster.wmkeyboard.core.settings.gestureActions
 import com.wasimaster.wmkeyboard.core.settings.pillTouchWidthDp
+import com.wasimaster.wmkeyboard.core.settings.staysTucked
 import com.wasimaster.wmkeyboard.core.settings.tapFor
 import com.wasimaster.wmkeyboard.core.settings.tucks
 import com.wasimaster.wmkeyboard.ime.KeyboardViewLifecycleOwner
@@ -246,6 +248,7 @@ internal class FloatingButton(
         face.label = name(tap)
         face.style = setting.style
         face.shape = setting.shape
+        face.roundness = setting.cornerRoundness
         face.sizeDp = setting.sizeDp
         face.pill = setting.edgePill
         face.pillThicknessDp = setting.pillThicknessDp
@@ -257,19 +260,22 @@ internal class FloatingButton(
         menu.speed = setting.animationSpeed
         menu.labels = setting.menuLabels
         menu.buttonSizeDp = setting.sizeDp
+        menu.itemSizeDp = setting.menuItemSizeDp
+        menu.roundness = setting.cornerRoundness
+        menu.holdFloats = setting.menuHoldFloats
         val view = button ?: return
         view.contentDescription = face.label
         // A change is worth seeing: the button wakes, then fades again as set.
         idle = false
-        view.animate().alpha(setting.opacity).setDuration(FADE_IN_MS).start()
+        if (appeared) view.animate().alpha(setting.opacity).setDuration(FADE_IN_MS).start()
         if (resized) {
             buttonParams?.let {
                 it.width = windowW
                 it.height = windowH
             }
             place()
-        } else if (!view.dragging && menuView == null && buttonParams?.x != restX()) {
-            animateX(restX(), overshoot = false)
+        } else if (!view.dragging && menuView == null && buttonParams?.x != homeX()) {
+            animateX(homeX(), overshoot = false)
         }
         scheduleIdle()
     }
@@ -303,14 +309,48 @@ internal class FloatingButton(
         val added = runCatching { windowManager.addView(view, layout) }.isSuccess
         if (added) {
             button = view
-            if (onPanel) view.post { checkPanelOrigin(view) }
             view.alpha = 0f
             view.scaleX = 0.6f
             view.scaleY = 0.6f
-            view.animate().alpha(setting.opacity).scaleX(1f).scaleY(1f)
-                .setInterpolator(OvershootInterpolator(1.6f)).setDuration(paced(APPEAR_MS)).start()
+            appeared = false
+            // Over the keys, unseen until the corner it counts from is known to
+            // be right (#1238): where Android puts a panel is measured, not
+            // assumed, and a button seen at the guess and then moved is the jump.
+            if (onPanel) view.post { checkPanelOrigin(view) } else appear(view)
             scheduleIdle()
         } else {
+            buttonParams = null
+            lifecycle.onStop()
+        }
+    }
+
+    /** The button has had its appearing animation since it was put up. */
+    private var appeared = false
+
+    private fun appear(view: TouchHost) {
+        if (appeared || button !== view) return
+        appeared = true
+        view.animate().alpha(setting.opacity).scaleX(1f).scaleY(1f)
+            .setInterpolator(OvershootInterpolator(1.6f)).setDuration(paced(APPEAR_MS)).start()
+    }
+
+    /**
+     * Puts the button back on top of an overlay window opened after it.
+     * Android stacks windows of one type in the order they were added, so a
+     * floating box opened while the button was up covered the button once
+     * dragged over it, and the button could not be reached through it
+     * (Telegram 10316). Not over the keys, where the button is a panel of the
+     * keyboard's window, nor mid-drag or with its menu open, which the
+     * re-add would cut short.
+     */
+    fun bringToFront() {
+        if (onPanel || menuView != null) return
+        val view = button ?: return
+        val layout = buttonParams ?: return
+        if (view.dragging || view.touching) return
+        runCatching { windowManager.removeViewImmediate(view) }
+        if (runCatching { windowManager.addView(view, layout) }.isFailure) {
+            button = null
             buttonParams = null
             lifecycle.onStop()
         }
@@ -327,6 +367,7 @@ internal class FloatingButton(
         button = null
         buttonParams = null
         xAnimator?.cancel()
+        yAnimator?.cancel()
         current.cancelPress()
         current.animate().cancel()
         runCatching { windowManager.removeViewImmediate(current) }
@@ -342,7 +383,56 @@ internal class FloatingButton(
         if (topPx == ceilingPx) return
         ceilingPx = topPx
         val current = button ?: return
-        if (!current.dragging) place()
+        if (current.dragging) return
+        // Over the keys the button is a panel of the keyboard's window, which
+        // grows and shrinks from the bottom of the screen as the toolbar, a
+        // tool or the number row come and go. Where Android counts the panel
+        // from can move with it, so it is measured again rather than leaving
+        // the button wherever the window's last size put it (#1238).
+        if (onPanel) {
+            originChecks = 0
+            // A fixed button is out of sight until it is back where it was
+            // put (#926), so a keyboard growing or shrinking under it never
+            // shows it wandering while its corner is measured again.
+            if (setting.docked && appeared) {
+                current.animate().cancel()
+                current.alpha = 0f
+                appeared = false
+            }
+            place()
+            return
+        }
+        // Over the apps the button is lifted clear of the keyboard, or let
+        // back down to where it was put, and glides there with the keyboard
+        // rather than jumping (#1238).
+        glideY(current)
+    }
+
+    private var yAnimator: ValueAnimator? = null
+
+    /** Moves [view] to the height [positionFromFractions] gives it now, over [LIFT_MS]. */
+    private fun glideY(view: TouchHost) {
+        val layout = buttonParams ?: return
+        val from = layout.y
+        positionFromFractions(layout)
+        val to = layout.y
+        layout.y = from
+        yAnimator?.cancel()
+        if (from == to || setting.animationSpeed <= 0f) {
+            layout.y = to
+            runCatching { windowManager.updateViewLayout(view, layout) }
+            return
+        }
+        yAnimator = ValueAnimator.ofInt(from, to).apply {
+            duration = paced(LIFT_MS)
+            interpolator = DecelerateInterpolator()
+            addUpdateListener {
+                if (button !== view || view.dragging) return@addUpdateListener
+                layout.y = it.animatedValue as Int
+                runCatching { windowManager.updateViewLayout(view, layout) }
+            }
+            start()
+        }
     }
 
     /** The screen changed shape (rotation, fold): put the button back on it, and shut a menu laid out for the old one. */
@@ -357,6 +447,7 @@ internal class FloatingButton(
         val layout = buttonParams ?: return
         val current = button ?: return
         xAnimator?.cancel()
+        yAnimator?.cancel()
         positionFromFractions(layout)
         runCatching { windowManager.updateViewLayout(current, layout) }
         if (onPanel) current.post { checkPanelOrigin(current) }
@@ -376,7 +467,11 @@ internal class FloatingButton(
      * most, so a window Android will not put where asked cannot loop.
      */
     private fun checkPanelOrigin(view: TouchHost) {
-        if (!onPanel || button !== view || view.dragging || originChecks >= MAX_ORIGIN_CHECKS) return
+        if (!onPanel || button !== view || view.dragging) return
+        if (originChecks >= MAX_ORIGIN_CHECKS) {
+            appear(view)
+            return
+        }
         val layout = buttonParams ?: return
         if (!view.isAttachedToWindow) return
         val at = IntArray(2).also(view::getLocationOnScreen)
@@ -385,6 +480,7 @@ internal class FloatingButton(
         val measured = intArrayOf(drawnX - layout.x, drawnY - layout.y)
         if (measured.contentEquals(origin())) {
             rememberPanelOrigin(measured)
+            appear(view)
             return
         }
         originChecks++
@@ -409,7 +505,7 @@ internal class FloatingButton(
     private fun positionFromFractions(layout: WindowManager.LayoutParams) {
         val (roomX, roomY) = room()
         face.pillOnLeft = onLeft
-        layout.x = if (idle && setting.tucks) tuckedX() else restX()
+        layout.x = if (idle && setting.tucks) tuckedX() else homeX()
         val rest = (yFraction.coerceIn(0f, 1f) * roomY).roundToInt()
         val ceiling = ceiling()
         layout.y = (if (ceiling != null && rest > ceiling) ceiling.coerceAtLeast(0) else rest) - origin()[1]
@@ -429,6 +525,14 @@ internal class FloatingButton(
     private fun restX(): Int = (xFraction.coerceIn(0f, 1f) * room().first).roundToInt() - origin()[0]
 
     /**
+     * Where the button sits while awake: its resting place, or half off its
+     * edge for a fixed button that tucks (#1370), which stays there through
+     * every touch rather than sliding out and back, so it is always the same
+     * target in the same place.
+     */
+    private fun homeX(): Int = if (setting.staysTucked) tuckedX() else restX()
+
+    /**
      * The lowest the button's window may sit, clear of a docked keyboard; null
      * over the keys (#926) or with none. The gap counts from the disc, not
      * the window: the window's shadow room below the disc can sit behind the
@@ -436,7 +540,8 @@ internal class FloatingButton(
      * the gap together left the button floating well clear of the keys (#1126).
      */
     private fun ceiling(): Int? =
-        if (onPanel) null else ceilingPx?.let { it - windowH + shadowRoomPx - dp(KEYBOARD_GAP_DP) }
+        // Fixed in place, it is never lifted (#926).
+        if (onPanel || setting.docked) null else ceilingPx?.let { it - windowH + shadowRoomPx - dp(KEYBOARD_GAP_DP) }
 
     private val onLeft: Boolean get() = xFraction < 0.5f
 
@@ -452,14 +557,21 @@ internal class FloatingButton(
         return (width - windowW).coerceAtLeast(0) to (height - windowH).coerceAtLeast(0)
     }
 
+    /**
+     * The screen's size, read the same way over the keys and over the apps
+     * (#926): through the overlay's window context either way. Read through
+     * the keyboard's own window manager while the button was a panel, the
+     * room a place's fractions are measured in could differ from the
+     * overlay's, and the same saved place came out somewhere else.
+     */
     private fun screenSize(): Pair<Int, Int> =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val bounds = windowManager.currentWindowMetrics.bounds
+            val bounds = overlayManager.currentWindowMetrics.bounds
             bounds.width() to bounds.height()
         } else {
             val metrics = DisplayMetrics()
             @Suppress("DEPRECATION")
-            windowManager.defaultDisplay.getRealMetrics(metrics)
+            overlayManager.defaultDisplay.getRealMetrics(metrics)
             metrics.widthPixels to metrics.heightPixels
         }
 
@@ -554,7 +666,8 @@ internal class FloatingButton(
         view.animate().alpha(setting.opacity).setDuration(FADE_IN_MS).start()
         if (!idle) return
         idle = false
-        if (!setting.tucks) return
+        // Fixed and tucked (#1370): it brightens where it is, and stays tucked.
+        if (!setting.tucks || setting.staysTucked) return
         if (snap) {
             xAnimator?.cancel()
             buttonParams?.let {
@@ -653,6 +766,7 @@ internal class FloatingButton(
                     onClose = ::closeMenu,
                     onBack = ::backFromCategory,
                     onClosed = { if (!menu.open) removeMenuWindow() },
+                    onFloat = ::pickFloating,
                 )
             }
         }
@@ -721,15 +835,18 @@ internal class FloatingButton(
         val (width, height) = screenSize()
         val anchor = ringAnchor(view)
         val labels = setting.menuLabels
-        val itemHalf = FLOATING_MENU_ITEM_DP * density / 2f
+        val item = setting.menuItemSizeDp
+        val itemHalf = item * density / 2f
         menu.anchor = anchor
+        menu.floatArmed = false
+        armedByHold = false
         menu.centers = floatingRings(
             count = slots.size,
             anchor = anchor,
             width = width.toFloat(),
             height = height.toFloat(),
-            radius = (setting.sizeDp / 2f + setting.menuGapDp + FLOATING_MENU_ITEM_DP / 2f) * density,
-            spacing = (if (labels) LABELLED_SPACING_DP else BARE_SPACING_DP) * density,
+            radius = (setting.sizeDp / 2f + setting.menuGapDp + item / 2f) * density,
+            spacing = floatingSlotSpacingDp(item, labels) * density,
             margin = itemHalf + MENU_MARGIN_DP * density +
                 if (labels) MENU_LABEL_ROOM_DP * density else 0f,
         )
@@ -740,10 +857,16 @@ internal class FloatingButton(
                 action = action,
                 icon = floatingActionIcon(action, keyboardUp, setting.categories),
                 label = name(action),
-                image = appIcon(action, FLOATING_MENU_ITEM_DP),
+                image = appIcon(action, item),
+                active = isOn(action),
+                floatLabel = action.floatingVersion?.let(::name),
             )
         }
     }
+
+    /** A phone switch's slot shows whether the switch is on (#1364); the rest are never "on". */
+    private fun isOn(action: FloatingAction): Boolean =
+        action is FloatingAction.Device && DeviceControls.isOn(context, action.control) == true
 
     /**
      * Swaps the open quick menu's ring for [category]'s (#923), the slots of
@@ -793,11 +916,26 @@ internal class FloatingButton(
         fire(action)
     }
 
+    /**
+     * Slot [index]'s tool in its floating box rather than in the keyboard
+     * (#1401): a swipe off the slot, or a hold on it with the setting on.
+     * A slot with no box version runs as a pick.
+     */
+    private fun pickFloating(index: Int) {
+        val action = menu.items.getOrNull(index)?.action ?: return
+        val floating = action.floatingVersion ?: return pick(index)
+        haptic(confirmHaptic)
+        closeMenu()
+        fire(floating)
+    }
+
     private fun closeMenu() {
         menuFromPress = false
         cancelDwell()
         if (menuView == null) return
         menu.hovered = null
+        menu.floatArmed = false
+        armedByHold = false
         if (menu.open) menu.open = false else removeMenuWindow()
         scheduleIdle()
     }
@@ -829,21 +967,41 @@ internal class FloatingButton(
     /** The category slot a hold's finger is resting on, waiting out [CATEGORY_DWELL_MS]. */
     private var dwellSlot: Int? = null
 
+    /** The hovered slot was set to open in its box by resting on it (#1401), not by sliding past it. */
+    private var armedByHold = false
+
     private val dwell = Runnable {
         val index = dwellSlot ?: return@Runnable
         dwellSlot = null
-        val category = menu.items.getOrNull(index)?.action?.let(setting::categoryOf) ?: return@Runnable
-        openCategory(category)
+        val action = menu.items.getOrNull(index)?.action ?: return@Runnable
+        val category = setting.categoryOf(action)
+        if (category != null) {
+            openCategory(category)
+        } else if (action.floatingVersion != null && menu.hovered == index) {
+            // Held there with the setting on (#1401): letting go opens the box.
+            menu.floatArmed = true
+            armedByHold = true
+            haptic(HapticFeedbackConstants.LONG_PRESS)
+        }
     }
 
-    /** A sliding finger came to rest on slot [index]: a category opens if it stays a moment (#923). */
+    /**
+     * A sliding finger came to rest on slot [index]: a category opens if it
+     * stays a moment (#923), and with [SummonButtonSettings.menuHoldFloats]
+     * a tool that floats is set to open in its box if it stays a long press
+     * (#1401).
+     */
     private fun dwellOn(index: Int?) {
         if (index == dwellSlot) return
         cancelDwell()
         val action = index?.let { menu.items.getOrNull(it)?.action } ?: return
-        if (setting.categoryOf(action) == null) return
+        val wait = when {
+            setting.categoryOf(action) != null -> CATEGORY_DWELL_MS
+            setting.menuHoldFloats && action.floatingVersion != null -> ViewConfiguration.getLongPressTimeout().toLong()
+            else -> return
+        }
         dwellSlot = index
-        button?.postDelayed(dwell, CATEGORY_DWELL_MS)
+        button?.postDelayed(dwell, wait)
     }
 
     private fun cancelDwell() {
@@ -866,8 +1024,9 @@ internal class FloatingButton(
         if (flicks.isEmpty()) return
         val anchor = ringAnchor(view)
         val (width, height) = screenSize()
-        val radius = (setting.sizeDp / 2f + setting.menuGapDp + FLOATING_MENU_ITEM_DP / 2f) * density
-        val margin = (FLOATING_MENU_ITEM_DP / 2f + MENU_MARGIN_DP) * density
+        val item = setting.menuItemSizeDp
+        val radius = (setting.sizeDp / 2f + setting.menuGapDp + item / 2f) * density
+        val margin = (item / 2f + MENU_MARGIN_DP) * density
         flickGuide.slots = flicks.entries.sortedBy { it.key.ordinal }.map { (direction, action) ->
             val angle = Math.toRadians(direction.degrees.toDouble())
             FloatingFlickSlot(
@@ -878,13 +1037,16 @@ internal class FloatingButton(
                 ),
                 icon = floatingActionIcon(action, keyboardUp, setting.categories),
                 label = name(action),
-                image = appIcon(action, FLOATING_MENU_ITEM_DP),
+                image = appIcon(action, item),
+                active = isOn(action),
             )
         }
         flickGuide.anchor = anchor
         flickGuide.radius = radius
         flickGuide.style = setting.style
         flickGuide.shape = setting.shape
+        flickGuide.roundness = setting.cornerRoundness
+        flickGuide.itemSizeDp = item
         flickGuide.hovered = null
         flickGuide.shown = false
         val content = ComposeView(viewContext).apply {
@@ -1175,6 +1337,7 @@ internal class FloatingButton(
                                     shape = face.shape,
                                     sizeDp = face.sizeDp,
                                     pressed = face.pressed,
+                                    roundness = face.roundness,
                                 )
                             }
                         }
@@ -1199,6 +1362,8 @@ internal class FloatingButton(
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     touching = true
+                    // A finger on it stops a lift mid-glide where it is (#1238).
+                    yAnimator?.cancel()
                     wake(snap = true)
                     downRawX = event.rawX
                     downRawY = event.rawY
@@ -1330,15 +1495,51 @@ internal class FloatingButton(
             hideFlickGuide()
         }
 
-        /** The hold's finger is on its way to a slot. */
+        /**
+         * The hold's finger is on its way to a slot. Carried on out past a
+         * slot whose tool floats, away from the button, it keeps that slot
+         * and sets it to open in its box (#1401), a badge on the slot saying
+         * so; back onto a slot, it is a plain pick again.
+         */
         private fun hover(rawX: Float, rawY: Float) {
-            val reach = (FLOATING_MENU_ITEM_DP / 2f + HOVER_SLACK_DP) * density
-            val slot = floatingSlotAt(Offset(rawX, rawY), menu.centers, reach)
+            val point = Offset(rawX, rawY)
+            val reach = (setting.menuItemSizeDp / 2f + HOVER_SLACK_DP) * density
+            var slot = floatingSlotAt(point, menu.centers, reach)
+            // Still on the slot a hold set to float: it stays set.
+            var floating = slot != null && slot == menu.hovered && armedByHold
+            if (slot == null) {
+                val last = menu.hovered
+                if (last != null && pastSlot(point, last, reach)) {
+                    slot = last
+                    floating = true
+                }
+            }
             if (slot != menu.hovered) {
                 menu.hovered = slot
+                armedByHold = false
                 if (slot != null) haptic(HapticFeedbackConstants.CLOCK_TICK)
             }
-            dwellOn(slot)
+            if (floating != menu.floatArmed) {
+                menu.floatArmed = floating
+                if (floating) haptic(HapticFeedbackConstants.CLOCK_TICK)
+            }
+            if (!floating) dwellOn(slot) else cancelDwell()
+        }
+
+        /**
+         * Whether [point] is beyond slot [index] as seen from the button,
+         * within its width either side and no further than [FLOAT_REACH_DP]:
+         * where a finger that slid onto the slot and kept going ends up.
+         * Only for a slot whose tool floats.
+         */
+        private fun pastSlot(point: Offset, index: Int, reach: Float): Boolean {
+            if (menu.items.getOrNull(index)?.floatLabel == null) return false
+            val center = menu.centers.getOrNull(index) ?: return false
+            val out = center - menu.anchor
+            val length = out.getDistance().takeIf { it > 0f } ?: return false
+            val along = (point - menu.anchor).let { (it.x * out.x + it.y * out.y) / length }
+            val across = abs(((point - menu.anchor).x * out.y - (point - menu.anchor).y * out.x) / length)
+            return along > length && along - length <= FLOAT_REACH_DP * density && across <= reach
         }
 
         /**
@@ -1349,8 +1550,10 @@ internal class FloatingButton(
         private fun releaseHold() {
             if (!menuFromPress) return
             val slot = menu.hovered
+            val floating = menu.floatArmed
             menuFromPress = false
             when {
+                slot != null && floating -> pickFloating(slot)
                 slot != null -> pick(slot)
                 travelled -> closeMenu()
                 else -> Unit
@@ -1478,9 +1681,8 @@ internal class FloatingButton(
         /** How long a hold's finger rests on a category before its ring opens (#923). */
         const val CATEGORY_DWELL_MS = 380L
 
-        /** Along the arc, slot centre to slot centre, with names under the slots and without. */
-        const val LABELLED_SPACING_DP = 86f
-        const val BARE_SPACING_DP = 64f
+        /** How far past a slot a hold's finger may go and still open its tool's box (#1401). */
+        const val FLOAT_REACH_DP = 120f
 
         /** Kept clear of the screen's edge round each slot. */
         const val MENU_MARGIN_DP = 8f
@@ -1498,6 +1700,9 @@ internal class FloatingButton(
         const val TARGET_SNAP_DP = 84f
 
         const val APPEAR_MS = 260L
+
+        /** How long the button takes to rise clear of the keyboard, or settle back (#1238). */
+        const val LIFT_MS = 220L
         const val SNAP_MS = 260L
         private val NO_OFFSET = IntArray(2)
         const val MAX_ORIGIN_CHECKS = 3

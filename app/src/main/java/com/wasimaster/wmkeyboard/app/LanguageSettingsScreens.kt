@@ -1245,6 +1245,7 @@ internal fun LanguageDetailScreen(
                         ?: FancyStyles.all.first(),
                     default = FancyStyles.byId(SettingsDefaults.layoutBehavior.fancyStyleId)
                         ?: FancyStyles.all.first(),
+                    info = stringResource(R.string.languages_fancy_style_row_info),
                 ) { scope.launch { repository.setFancyStyle(it.id) } }
             }
         }
@@ -1395,11 +1396,15 @@ internal fun LanguageDetailScreen(
     }
     val phonetic = ComposerType.TRANSLITERATE in composers
     // An imported m17n method (ITRANS, InScript, Tamil99) is a roman grid too,
-    // and the hints are how it says what its keys write. Only the hints: the
-    // key map and strip below are Avro's.
+    // and so is a jquery.ime method, shipped or imported (Mozhi, Nepali
+    // transliteration); the hints are how it says what its keys write. Only
+    // the hints: the key map and strip below are Avro's.
     val rulesMethod = settings.watch { s ->
         s.enabledLayoutIds.any { id ->
-            resolveLayout(s.customLayouts, id).let { it.langId == langId && it.inputMethod?.kind == InputMethodKind.RULES }
+            resolveLayout(s.customLayouts, id).let {
+                it.langId == langId &&
+                    (it.inputMethod?.kind == InputMethodKind.RULES || it.inputMethod?.kind == InputMethodKind.REGEX)
+            }
         }
     }
     val khipro = ComposerType.KHIPRO in composers || ComposerType.KHIPRO_DARK in composers
@@ -2028,6 +2033,7 @@ private fun CjkDictPackManager(
                 stringResource(R.string.languages_cjk_traditional_button_subtitle),
                 settings.watch { it.cjk.traditionalButton },
                 default = SettingsDefaults.cjk.traditionalButton,
+                info = stringResource(R.string.languages_cjk_traditional_button_info),
             ) { on -> scope.launch { repository.setCjkTraditionalButton(on) } }
         }
 
@@ -2052,6 +2058,7 @@ private fun CjkDictPackManager(
                 selected = settings.watch { it.cjk.readingOnSwitch },
                 default = SettingsDefaults.cjk.readingOnSwitch,
                 detail = { choice -> ChoiceDetail(stringResource(readingOnSwitchDescRes(choice))) },
+                info = stringResource(R.string.languages_cjk_reading_on_switch_info),
             ) { choice -> scope.launch { repository.setCjkReadingOnSwitch(choice) } }
         }
 
@@ -2079,6 +2086,7 @@ private fun CjkDictPackManager(
                 stringResource(R.string.languages_cjk_lazy_subtitle),
                 settings.watch { it.cjk.jyutpingLazy },
                 default = SettingsDefaults.cjk.jyutpingLazy,
+                info = stringResource(R.string.languages_cjk_lazy_info),
             ) { on -> scope.launch { repository.setJyutpingLazy(on) } }
         }
 
@@ -2173,6 +2181,7 @@ private fun CjkDictPackManager(
                 options = listOf("" to uncontracted) + BrailleContracted.tables.map { it.id to it.label },
                 selected = settings.watch { it.cjk.brailleTable },
                 default = SettingsDefaults.cjk.brailleTable,
+                info = stringResource(R.string.languages_braille_table_info),
             ) { table -> scope.launch { repository.setBrailleTable(table) } }
         }
 
@@ -2186,6 +2195,39 @@ private fun CjkDictPackManager(
                 info = stringResource(R.string.languages_cjk_loose_marks_info),
                 default = SettingsDefaults.cjk.kanaLooseMarks,
             ) { on -> scope.launch { repository.setKanaLooseMarks(on) } }
+        }
+
+        // Japanese-only: the old character forms (kyujitai), and the strip
+        // button that flips them, the 繁 button's setting under its own name
+        // here (#962).
+        item(visible = langId == "ja", level = SettingLevel.STANDARD) {
+            ToggleSetting(
+                R.string.languages_cjk_kyujitai_title,
+                stringResource(R.string.languages_cjk_kyujitai_subtitle),
+                settings.watch { it.cjk.kyujitaiOutput },
+                info = stringResource(R.string.languages_cjk_kyujitai_info),
+                default = SettingsDefaults.cjk.kyujitaiOutput,
+            ) { on -> scope.launch { repository.setCjkKyujitaiOutput(on) } }
+        }
+        item(visible = langId == "ja", level = SettingLevel.STANDARD) {
+            ToggleSetting(
+                R.string.languages_cjk_kyujitai_button_title,
+                stringResource(R.string.languages_cjk_kyujitai_button_subtitle),
+                settings.watch { it.cjk.traditionalButton },
+                default = SettingsDefaults.cjk.traditionalButton,
+                info = stringResource(R.string.languages_cjk_kyujitai_button_info),
+            ) { on -> scope.launch { repository.setCjkTraditionalButton(on) } }
+        }
+
+        // Japanese-only: Backspace on an unconverted romaji reading (#1338).
+        item(visible = langId == "ja", level = SettingLevel.STANDARD) {
+            ToggleSetting(
+                R.string.languages_cjk_kana_backspace_title,
+                stringResource(R.string.languages_cjk_kana_backspace_subtitle),
+                settings.watch { it.cjk.kanaBackspace },
+                info = stringResource(R.string.languages_cjk_kana_backspace_info),
+                default = SettingsDefaults.cjk.kanaBackspace,
+            ) { on -> scope.launch { repository.setKanaBackspace(on) } }
         }
 
         // Japanese-only: the flick pad takes repeated taps (あ → い → う) as
@@ -2325,6 +2367,7 @@ private fun CjkDictPackManager(
                     options = DoublePinyinScheme.entries.map { it to stringResource(it.displayNameRes) },
                     selected = current,
                     default = SettingsDefaults.cjk.pinyinDoublePinyin,
+                    info = stringResource(R.string.languages_cjk_double_pinyin_info),
                 ) { scheme ->
                     scope.launch {
                         if (scheme == DoublePinyinScheme.CUSTOM && customText.isBlank()) {
@@ -2460,6 +2503,7 @@ private fun PhoneticStripGroup(
                             },
                         )
                     },
+                    info = stringResource(R.string.languages_phonetic_strip_source_info),
                 ) { scope.launch { repository.setPhoneticStripSource(langId, it) } }
             }
         }

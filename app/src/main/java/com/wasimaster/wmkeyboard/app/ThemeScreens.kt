@@ -79,6 +79,7 @@ import androidx.core.net.toUri
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Collections
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Search
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.PhotoLibrary
+import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Animation
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Add
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.PushPin
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Public
@@ -339,6 +340,8 @@ import com.wasimaster.wmkeyboard.core.theme.WallpaperBand
 import com.wasimaster.wmkeyboard.core.theme.dressedForGlass
 import com.wasimaster.wmkeyboard.core.theme.pictureOnKeys
 import com.wasimaster.wmkeyboard.core.theme.withPictureOnKeys
+import com.wasimaster.wmkeyboard.core.theme.withImageBlur
+import com.wasimaster.wmkeyboard.core.theme.IMAGE_BRIGHTNESS_MIN
 import com.wasimaster.wmkeyboard.core.theme.ThemeAnimation
 import com.wasimaster.wmkeyboard.core.theme.ThemeCodec
 import com.wasimaster.wmkeyboard.core.theme.FutoTheme
@@ -381,6 +384,7 @@ import java.io.File
 import kotlin.math.max
 import kotlin.math.roundToInt
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.SwapHoriz
+import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.ContentPaste
 import com.wasimaster.wmkeyboard.core.theme.FlexResult
 import com.wasimaster.wmkeyboard.core.theme.FlexTheme
 import com.wasimaster.wmkeyboard.core.theme.deviceWallpaperPalette
@@ -389,6 +393,7 @@ import com.wasimaster.wmkeyboard.core.theme.GboardResult
 import com.wasimaster.wmkeyboard.core.theme.GboardTheme
 import com.wasimaster.wmkeyboard.core.theme.HeliResult
 import com.wasimaster.wmkeyboard.core.theme.HeliTheme
+import com.wasimaster.wmkeyboard.core.theme.KyngShareCode
 import com.wasimaster.wmkeyboard.core.theme.ClinkTheme
 import com.wasimaster.wmkeyboard.core.theme.ClinkThemeResult
 import com.wasimaster.wmkeyboard.core.theme.KineticaTheme
@@ -1494,6 +1499,27 @@ fun ThemesScreen(
     suspend fun applyHeliTheme(text: String?) {
         message = heliTheme(text, "custom_${System.currentTimeMillis()}").message
     }
+    // A Kyng share code is one line of text (`KBTH1.…`), so its button reads
+    // the clipboard straight away. Only a palette the user built in Kyng
+    // carries colours; see KyngShareCode.
+    suspend fun applyKyngTheme(text: String?) {
+        val id = "custom_${System.currentTimeMillis()}"
+        val result = withContext(Dispatchers.Default) { KyngShareCode.read(text.orEmpty(), id) }
+        message = when (result) {
+            is KyngShareCode.Result.Converted -> {
+                repository.upsertCustomTheme(result.theme)
+                buildString {
+                    append(context.getString(R.string.import_kyng_done, result.theme.name))
+                    if (result.catalogParts.isNotEmpty()) {
+                        append("\n\n").append(context.getString(R.string.import_kyng_catalog_parts))
+                    }
+                }
+            }
+            is KyngShareCode.Result.CatalogPaletteOnly -> context.getString(R.string.import_kyng_catalog_palette)
+            KyngShareCode.Result.Damaged -> context.getString(R.string.import_kyng_damaged)
+            KyngShareCode.Result.NotACode -> context.getString(R.string.import_kyng_no_code)
+        }
+    }
     val heliLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenMultipleDocuments()
     ) { uris ->
@@ -1714,6 +1740,7 @@ fun ThemesScreen(
                 stringResource(R.string.theme_material_you_subtitle),
                 checked = settings.watch { it.dynamicColor },
                 default = SettingsDefaults.dynamicColor,
+                info = stringResource(R.string.theme_material_you_info),
             ) { scope.launch { repository.setDynamicColor(it) } }
         }
     }
@@ -1751,6 +1778,7 @@ fun ThemesScreen(
                 stringResource(R.string.theme_auto_subtitle),
                 checked = autoOn,
                 default = SettingsDefaults.autoTheme.enabled,
+                info = stringResource(R.string.theme_auto_info),
             ) { scope.launch { repository.setAutoThemeEnabled(it) } }
         }
         if (autoOn) {
@@ -1774,6 +1802,7 @@ fun ThemesScreen(
                         .map { it to stringResource(it.labelRes) },
                     selected = settings.watch { it.autoTheme.shuffleInterval },
                     default = SettingsDefaults.autoTheme.shuffleInterval,
+                    info = stringResource(R.string.theme_shuffle_interval_info),
                 ) { value -> scope.launch { repository.setAutoThemeShuffleInterval(value) } }
             }
             item(visible = shuffles) {
@@ -2106,6 +2135,15 @@ fun ThemesScreen(
             Spacer(Modifier.width(6.dp))
             Text(stringResource(R.string.theme_import_clink_action))
         }
+        val kyngClipboard = LocalClipboardManager.current
+        OutlinedButton(onClick = {
+            val pasted = kyngClipboard.getText()?.text
+            scope.launch { applyKyngTheme(pasted) }
+        }) {
+            Icon(Icons.Outlined.ContentPaste, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(stringResource(R.string.theme_import_kyng_action))
+        }
         // The Play build has no Rboard browser (it would fetch a collection of
         // unlicensed third-party artwork from inside the app), so there is
         // nothing to choose between and the button opens the file picker.
@@ -2372,9 +2410,13 @@ fun ThemesScreen(
     }
     // After the built-ins, where someone who has looked through everything the
     // app ships with is standing.
+    // One row for getting more (#43), as Layout & size has (#1318): the
+    // community repository is one of the stores the add-on screen lists, so
+    // a second row for it only split the same catalogue in two.
     SettingsGroup {
-        item { AddonStoreRow(AddonType.Theme, onNavigate) }
-        item { CommunityAddonsRow(AddonType.Theme, onNavigate) }
+        item {
+            AddonStoreRow(AddonType.Theme, onNavigate, subtitle = stringResource(R.string.theme_get_more_subtitle))
+        }
     }
     Spacer(Modifier.height(24.dp))
 
@@ -2604,6 +2646,7 @@ private fun AppColorsGroup(repository: SettingsRepository, settings: LiveSetting
                 stringResource(R.string.theme_app_colors_subtitle),
                 checked = on,
                 default = SettingsDefaults.appColors.enabled,
+                info = stringResource(R.string.theme_app_colors_info),
             ) { scope.launch { repository.setAppColorsEnabled(it) } }
         }
         item(visible = on, level = SettingLevel.STANDARD) {
@@ -2613,6 +2656,7 @@ private fun AppColorsGroup(repository: SettingsRepository, settings: LiveSetting
                 selected = settings.watch { it.appColors.scope },
                 default = SettingsDefaults.appColors.scope,
                 detail = { ChoiceDetail(stringResource(appColorScopeDescRes(it))) },
+                info = stringResource(R.string.theme_app_colors_scope_info),
             ) { value -> scope.launch { repository.setAppColorsScope(value) } }
         }
         item(visible = on, level = SettingLevel.ADVANCED) {
@@ -2622,6 +2666,7 @@ private fun AppColorsGroup(repository: SettingsRepository, settings: LiveSetting
                 selected = settings.watch { it.appColors.source },
                 default = SettingsDefaults.appColors.source,
                 detail = { ChoiceDetail(stringResource(appColorSourceDescRes(it))) },
+                info = stringResource(R.string.theme_app_colors_source_info),
             ) { value -> scope.launch { repository.setAppColorsSource(value) } }
         }
         item(visible = on, level = SettingLevel.STANDARD) {
@@ -2637,6 +2682,7 @@ private fun AppColorsGroup(repository: SettingsRepository, settings: LiveSetting
                         leading = { PaletteStyleSwatch(style) },
                     )
                 },
+                info = stringResource(R.string.theme_app_colors_style_info),
             ) { value -> scope.launch { repository.setAppColorsStyle(value) } }
         }
         item(visible = on && picks > 0) {
@@ -3363,12 +3409,17 @@ private fun ThemeEditorContent(
         scope.launch { repository.upsertCustomTheme(family) }
     }
 
+    // Which kind of picture the device picker was opened for (#1403): a still
+    // one keeps its blur and never plays, an animated one plays straight away
+    // and has no blur, since blurring a moving picture breaks it.
+    var pickingAnimation by rememberSaveable { mutableStateOf(false) }
     val imagePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null) {
             val (family, theme) = look.now() ?: return@rememberLauncherForActivityResult
             val keyOpacity = settings.value.photoBackground.keyOpacity
+            val wantsAnimation = pickingAnimation
             scope.launch(Dispatchers.IO) {
                 runCancellable {
                     val file = File(themeImagesDir(context), "${theme.id}_${System.currentTimeMillis()}.img")
@@ -3376,11 +3427,11 @@ private fun ThemeEditorContent(
                         file.outputStream().use { input.copyTo(it) }
                     }
                     theme.backgroundImage?.let { File(it).delete() }
-                    // A GIF picked from the gallery plays, without the user
-                    // having to find the switch below and wonder why their
-                    // moving picture is a still. Blur is the other half of that
-                    // pair and has to go, since the two exclude each other.
-                    val animated = isAnimatedImageFile(file)
+                    // Picked as an animation, a GIF or animated WebP plays at
+                    // once, without the user having to find a switch, and its
+                    // blur goes, since the two exclude each other. Picked as a
+                    // still picture, it stays still and keeps the blur (#1403).
+                    val animated = wantsAnimation && isAnimatedImageFile(file)
                     // Same treatment an online photo gets: the board goes
                     // see-through so the image shows, and the keys stop
                     // covering all of it. The user raises either back.
@@ -3413,6 +3464,7 @@ private fun ThemeEditorContent(
     ) { uri ->
         if (uri != null) {
             val (family, theme) = look.now() ?: return@rememberLauncherForActivityResult
+            val wantsAnimation = pickingAnimation
             scope.launch(Dispatchers.IO) {
                 runCancellable {
                     val file = File(
@@ -3427,7 +3479,7 @@ private fun ThemeEditorContent(
                     // per theme: a landscape GIF turns it on, and a still one
                     // leaves whatever the portrait image asked for alone rather
                     // than stopping an animation the user can still see.
-                    val animated = isAnimatedImageFile(file)
+                    val animated = wantsAnimation && isAnimatedImageFile(file)
                     repository.upsertCustomTheme(
                         family.replacingMember(theme.id) {
                             theme.copy(
@@ -3473,6 +3525,16 @@ private fun ThemeEditorContent(
     val soundOn = settings.watch { it.sound.enabled }
     val hasVariants = settings.watch { it.customThemes.findThemeFamily(themeId)?.variants?.isNotEmpty() == true }
     val hasImage = look.watch { it.backgroundImage != null }
+    val imagePlays = look.watch { it.backgroundAnimated }
+    // Whether either picture can play, read off the files: a still one has
+    // no use for the Play switch (#1403).
+    val portraitImage = look.watch { it.backgroundImage }
+    val landscapeImagePath = look.watch { it.backgroundImageLandscape }
+    val imageCanMove by produceState(initialValue = imagePlays, portraitImage, landscapeImagePath) {
+        value = withContext(Dispatchers.IO) {
+            listOfNotNull(portraitImage, landscapeImagePath).any { isAnimatedImageFile(File(it)) }
+        }
+    }
     val hasLandscapeImage = look.watch { it.backgroundImageLandscape != null }
     val photoCredit = look.watch { it.backgroundPhoto }
     val landscapePhotoCredit = look.watch { it.backgroundPhotoLandscape }
@@ -3502,8 +3564,9 @@ private fun ThemeEditorContent(
         val landscape = slot == BackgroundSlot.LANDSCAPE
         BackgroundSourceDialog(
             hasImage = if (landscape) hasLandscapeImage else hasImage,
-            onDevice = {
+            onDevice = { animation ->
                 sourceDialogSlot = null
+                pickingAnimation = animation
                 val request = PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                 if (landscape) imagePickerLandscape.launch(request) else imagePicker.launch(request)
             },
@@ -3971,6 +4034,7 @@ private fun ThemeEditorContent(
                                 },
                             )
                         },
+                        info = stringResource(R.string.theme_popup_placement_info),
                     ) { value -> update { t -> t.copy(popupPlacement = value) } }
                 }
                 item(level = SettingLevel.STANDARD) {
@@ -4305,6 +4369,7 @@ private fun ThemeEditorContent(
                 R.string.theme_editor_dark_title,
                 stringResource(R.string.theme_editor_dark_subtitle),
                 checked = look.watch { it.dark },
+                info = stringResource(R.string.theme_editor_dark_info),
             ) { dark -> update { t -> t.reseeded(t.enterKeyBackground, dark) } }
         }
         item {
@@ -4476,32 +4541,39 @@ private fun ThemeEditorContent(
                     display = { "${(it * 100).toInt()}%" },
                 ) { update { t -> t.copy(backgroundImageOpacity = it) } }
             }
+            // Darkens the picture itself (#1222), where lowering the opacity
+            // fades it into the board colour: over a light board that is
+            // lighter, never darker. Reaches the picture on the keys too.
             item(level = SettingLevel.STANDARD) {
+                SliderRow(
+                    R.string.theme_image_brightness_title,
+                    value = look.watch { it.backgroundImageBrightness },
+                    range = IMAGE_BRIGHTNESS_MIN..1f,
+                    display = { "${(it * 100).roundToInt()}%" },
+                    info = stringResource(R.string.theme_image_brightness_info),
+                ) { update { t -> t.copy(backgroundImageBrightness = (it * 100).roundToInt() / 100f) } }
+            }
+            // Only for a picture that stands still (#1403): blurring a
+            // moving one re-renders the effect every frame and broke it, so
+            // the row is not there to be reached while it plays. Turning the
+            // animation off below brings it back.
+            item(visible = !imagePlays, level = SettingLevel.STANDARD) {
                 SliderRow(
                     R.string.theme_image_blur_title,
                     value = look.watch { it.backgroundImageBlur },
                     range = 0f..25f,
                     display = { if (it < 0.5f) offLabel else it.toInt().toString() },
-                    // Blurring an animation re-renders the effect every frame,
-                    // so the two settings exclude each other: raising the blur
-                    // stops the animation, and the switch below zeroes the blur.
-                ) { update { t -> t.copy(backgroundImageBlur = it, backgroundAnimated = false) } }
+                    // On the keys' slices as well while the picture is on
+                    // them (#1395); see withImageBlur.
+                ) { update { t -> t.withImageBlur(it) } }
             }
-            item {
-                // One photo cut up across the keys: the glass samples the
-                // picture sharp on every key and the board is a plain colour
-                // between them. Writes ordinary glass fields; see withPictureOnKeys.
-                ToggleSetting(
-                    R.string.theme_picture_on_keys_title,
-                    stringResource(R.string.theme_picture_on_keys_subtitle),
-                    checked = look.watch { it.pictureOnKeys },
-                ) { on -> update { t -> t.withPictureOnKeys(on) } }
-            }
-            if (!reduceMotion) item(level = SettingLevel.STANDARD) {
+            // The switch only for a picture that can move at all.
+            if (!reduceMotion && imageCanMove) item(level = SettingLevel.STANDARD) {
                 ToggleSetting(
                     R.string.theme_background_animated_title,
                     stringResource(R.string.theme_background_animated_subtitle),
                     checked = look.watch { it.backgroundAnimated },
+                    info = stringResource(R.string.theme_background_animated_info),
                 ) { on ->
                     update { t ->
                         t.copy(
@@ -4735,6 +4807,16 @@ private fun ThemeEditorContent(
             )
         }
         item {
+            // Under the shape, since it is one (#1390): every layout drawn as
+            // a honeycomb, as a layout's own Honeycomb grid switch draws it.
+            ToggleSetting(
+                R.string.theme_honeycomb_title,
+                stringResource(R.string.theme_honeycomb_subtitle),
+                checked = look.watch { it.honeycomb },
+                info = stringResource(R.string.theme_honeycomb_info),
+            ) { on -> update { t -> t.copy(honeycomb = on) } }
+        }
+        item {
             ColorRow(
                 R.string.theme_letter_keys_title,
                 look.watch { it.keyBackground },
@@ -4760,6 +4842,16 @@ private fun ThemeEditorContent(
             ColorRow(R.string.theme_key_text_title, look.watch { it.keyText }) {
                 update { t -> t.copy(keyText = it) }
             }
+        }
+        // A halo round the letters (#1222): keys over a busy photo stay readable.
+        item {
+            NullableColorRow(
+                R.string.theme_key_text_outline_title,
+                look.watch { it.keyTextOutline }, fallback = 0xFF000000,
+                supportsAlpha = true,
+                info = stringResource(R.string.theme_key_text_outline_body),
+                onChange = { update { t -> t.copy(keyTextOutline = it) } },
+            )
         }
         item {
             ColorRow(
@@ -4826,6 +4918,31 @@ private fun ThemeEditorContent(
                 R.string.theme_pressed_key_title,
                 look.watch { it.pressedKeyBackground }, fallback = look.watch { it.effectivePressed() },
                 onChange = { update { t -> t.copy(pressedKeyBackground = it) } },
+            )
+        }
+        // The labels while held (Telegram 7588): a pressed face far from the
+        // key's own needs a label colour of its own, per class.
+        item(level = SettingLevel.ADVANCED) {
+            NullableColorRow(
+                R.string.theme_pressed_key_text_title,
+                look.watch { it.pressedKeyText }, fallback = look.watch { it.keyText },
+                onChange = { update { t -> t.copy(pressedKeyText = it) } },
+            )
+        }
+        item(level = SettingLevel.ADVANCED) {
+            NullableColorRow(
+                R.string.theme_pressed_modifier_key_text_title,
+                look.watch { it.pressedModifierKeyText },
+                fallback = look.watch { it.modifierKeyText ?: it.keyText },
+                onChange = { update { t -> t.copy(pressedModifierKeyText = it) } },
+            )
+        }
+        item(level = SettingLevel.ADVANCED) {
+            NullableColorRow(
+                R.string.theme_pressed_enter_key_text_title,
+                look.watch { it.pressedEnterKeyText },
+                fallback = look.watch { it.modifierKeyText ?: it.keyText },
+                onChange = { update { t -> t.copy(pressedEnterKeyText = it) } },
             )
         }
         item(level = SettingLevel.STANDARD) {
@@ -4926,6 +5043,7 @@ private fun ThemeEditorContent(
                 R.string.theme_glass_title,
                 stringResource(R.string.theme_glass_subtitle),
                 checked = frostOn,
+                info = stringResource(R.string.theme_glass_info),
             ) { on -> updateFrost { it.copy(enabled = on) } }
         }
         if (!frostOn) return@SettingsGroup
@@ -4993,6 +5111,7 @@ private fun ThemeEditorContent(
                 R.string.theme_glass_window_blur_title,
                 stringResource(R.string.theme_glass_window_blur_subtitle),
                 checked = frost.windowBlur,
+                info = stringResource(R.string.theme_glass_window_blur_info),
             ) { on -> updateFrost { it.copy(windowBlur = on) } }
         }
         // A phone with its blur off, or none to offer (some skins dropped the
@@ -5089,6 +5208,7 @@ private fun ThemeEditorContent(
                 R.string.theme_glass_accent_board_title,
                 stringResource(R.string.theme_glass_accent_board_subtitle),
                 checked = frost.accentBoard,
+                info = stringResource(R.string.theme_glass_accent_board_info),
             ) { on -> updateFrost { it.copy(accentBoard = on) } }
         }
         item(visible = hasImage && frost.backdropSource != FrostBackdropSource.WALLPAPER &&
@@ -5098,6 +5218,7 @@ private fun ThemeEditorContent(
                 R.string.theme_glass_blur_board_title,
                 stringResource(R.string.theme_glass_blur_board_subtitle),
                 checked = frost.blurBoard,
+                info = stringResource(R.string.theme_glass_blur_board_info),
             ) { on -> updateFrost { it.copy(blurBoard = on) } }
         }
         item(visible = !hasBackdrop) {
@@ -5693,6 +5814,7 @@ private fun ThemeEditorContent(
                 R.string.theme_custom_radii_title,
                 stringResource(R.string.theme_custom_radii_subtitle),
                 checked = hasCustomRadii,
+                info = stringResource(R.string.theme_custom_radii_info),
             ) { enable ->
                 val current = settings.value
                 update { t ->
@@ -5776,6 +5898,7 @@ private fun ThemeEditorContent(
                 R.string.theme_custom_layout_title,
                 stringResource(R.string.theme_custom_layout_subtitle),
                 checked = hasLayoutOverrides,
+                info = stringResource(R.string.theme_custom_layout_info),
             ) { enable ->
                 val current = settings.value
                 update { t ->
@@ -5790,6 +5913,11 @@ private fun ThemeEditorContent(
                             popupHeightDp = current.popup.onKeyHeightDp,
                             popupFloatingHeightDp = current.popup.floatingHeightDp,
                             keyHeightDp = current.keyHeightDp,
+                            numberRowHeightDp = if (current.layoutBehavior.numberRowFollowsKeys) {
+                                0
+                            } else {
+                                current.numberRowHeightDp
+                            },
                             keyGapScale = current.keyGapScale,
                             sidePadScale = current.layoutBehavior.sidePadLeftScale
                                 .takeIf { it == current.layoutBehavior.sidePadRightScale },
@@ -5808,6 +5936,7 @@ private fun ThemeEditorContent(
                             popupHeightDp = null,
                             popupFloatingHeightDp = null,
                             keyHeightDp = null,
+                            numberRowHeightDp = null,
                             keyGapScale = null,
                             sidePadScale = null,
                             sidePadLeftScale = null,
@@ -5868,9 +5997,31 @@ private fun ThemeEditorContent(
                 SliderRow(
                     R.string.theme_key_height_title,
                     value = look.watch { it.keyHeightDp ?: 48 }.toFloat(),
-                    range = 32f..100f,
+                    range = SettingsRepository.KEY_HEIGHT_MIN_DP.toFloat()..SettingsRepository.KEY_HEIGHT_MAX_DP.toFloat(),
                     display = { "${it.toInt()} dp" },
                 ) { update { t -> t.copy(keyHeightDp = it.toInt()) } }
+            }
+            item {
+                // The number row's own height for this theme (#1376), with
+                // "Same as keys" at the leftmost stop as in Size and position.
+                val sameAsKeys = stringResource(R.string.layout_number_row_follow_keys_label)
+                val followStop = (SettingsRepository.KEY_HEIGHT_MIN_DP - 1).toFloat()
+                SliderRow(
+                    R.string.theme_number_row_height_title,
+                    value = look.watchWith { s, t ->
+                        when (val own = t.numberRowHeightDp) {
+                            0 -> followStop
+                            null -> if (s.layoutBehavior.numberRowFollowsKeys) followStop else s.numberRowHeightDp.toFloat()
+                            else -> own.toFloat()
+                        }
+                    },
+                    range = followStop..SettingsRepository.KEY_HEIGHT_MAX_DP.toFloat(),
+                    display = { if (it < SettingsRepository.KEY_HEIGHT_MIN_DP) sameAsKeys else "${it.toInt()} dp" },
+                ) { value ->
+                    update { t ->
+                        t.copy(numberRowHeightDp = if (value < SettingsRepository.KEY_HEIGHT_MIN_DP) 0 else value.toInt())
+                    }
+                }
             }
             item {
                 SliderRow(
@@ -5909,6 +6060,7 @@ private fun ThemeEditorContent(
                     R.string.theme_bold_labels_title,
                     subtitle = null,
                     checked = look.watch { it.boldKeyLabels ?: false },
+                    info = stringResource(R.string.theme_bold_labels_info),
                 ) { bold -> update { t -> t.copy(boldKeyLabels = bold) } }
             }
             item {
@@ -6234,6 +6386,7 @@ private fun ThemeEditorContent(
                     kind to if (kind == null) stringResource(CommonR.string.common_none) else stringResource(materialKindLabel(kind))
                 },
                 selected = materialSpec?.kind?.let(::keyMaterialKindOrNull),
+                info = stringResource(R.string.theme_material_info),
             ) { kind ->
                 // A new preset starts clean: the fine-tuning belonged to the old one.
                 update { t -> t.copy(keyMaterial = kind?.let { KeyMaterialSpec(kind = it.name) }) }
@@ -6285,6 +6438,7 @@ private fun ThemeEditorContent(
                     title = R.string.theme_material_texture_title,
                     options = MaterialTexture.entries.map { it to stringResource(materialTextureLabel(it)) },
                     selected = material.texture,
+                    info = stringResource(R.string.theme_material_texture_info),
                 ) { picked -> updateMaterial { it.copy(texture = picked.name) } }
             }
             item(level = SettingLevel.STANDARD) {
@@ -6300,6 +6454,7 @@ private fun ThemeEditorContent(
                     title = R.string.theme_material_edge_title,
                     options = MaterialEdge.entries.map { it to stringResource(materialEdgeLabel(it)) },
                     selected = material.edge,
+                    info = stringResource(R.string.theme_material_edge_info),
                 ) { picked -> updateMaterial { it.copy(edge = picked.name) } }
             }
             item(level = SettingLevel.STANDARD) {
@@ -6316,13 +6471,14 @@ private fun ThemeEditorContent(
                     value = material.edgeWidthDp,
                     range = MATERIAL_EDGE_WIDTH_RANGE,
                     display = { "%.1f dp".format(it) },
-                ) { v -> updateMaterial { it.copy(edgeWidthDp = (v * 2).roundToInt() / 2f) } }
+                ) { v -> updateMaterial { it.copy(edgeWidthDp = (v * 10).roundToInt() / 10f) } }
             }
             item {
                 ChoiceSetting(
                     title = R.string.theme_material_label_title,
                     options = MaterialLabel.entries.map { it to stringResource(materialLabelLabel(it)) },
                     selected = material.label,
+                    info = stringResource(R.string.theme_material_label_info),
                 ) { picked -> updateMaterial { it.copy(label = picked.name) } }
             }
             item(level = SettingLevel.STANDARD) {
@@ -6361,6 +6517,33 @@ private fun ThemeEditorContent(
             onPlayAnyway = { scope.launch { repository.setThemeEffectsWithReduceMotion(true) } },
         )
     }
+    // The background picture cut across the keys (#1396): a look of its own,
+    // beside the key material, rather than a row under the background image
+    // where nobody styling their keys went looking.
+    SettingsGroup(
+        stringResource(R.string.theme_key_caps_art_section_title),
+        foldKey = "theme/key_caps_art",
+        info = stringResource(R.string.theme_key_caps_art_section_body),
+    ) {
+        item {
+            // One photo cut up across the keys: the glass samples the
+            // picture on every key and the board is a plain colour between
+            // them. Writes ordinary glass fields; see withPictureOnKeys.
+            val cut = look.watch { it.pictureOnKeys }
+            ToggleSetting(
+                R.string.theme_picture_on_keys_title,
+                stringResource(
+                    if (hasImage) R.string.theme_picture_on_keys_subtitle else R.string.theme_picture_on_keys_no_image,
+                ),
+                checked = cut,
+                info = stringResource(R.string.theme_picture_on_keys_info),
+                // Left on with no picture, it can still be turned off.
+                enabled = hasImage || cut,
+                disabledReason = DisabledReason(stringResource(R.string.theme_picture_on_keys_no_image)),
+            ) { on -> update { t -> t.withPictureOnKeys(on) } }
+        }
+    }
+
     // The picker tiles play each effect in the theme's own colours, and hold
     // still while motion is held, as the keyboard would.
     val swatchColors = look.watch { SwatchColors(it.boardBackground, it.keyBackground, it.keyText, it.accent) }
@@ -6527,6 +6710,7 @@ private fun ThemeEditorContent(
                     p to if (p == null) stringResource(CommonR.string.common_none) else stringResource(lightingPatternLabel(p))
                 },
                 selected = lighting?.pattern?.let(::keyLightingPatternOrNull),
+                info = stringResource(R.string.theme_lighting_info),
             ) { p ->
                 update { t ->
                     t.copy(keyLighting = p?.let { t.keyLighting?.copy(pattern = it.name) ?: KeyLightingSpec(pattern = it.name) })
@@ -6545,6 +6729,7 @@ private fun ThemeEditorContent(
                             leading = { KeyLightPickerTile(lighting.copy(target = target.name), swatchColors, swatchesMove) },
                         )
                     },
+                    info = stringResource(R.string.theme_lighting_target_info),
                 ) { picked -> updateLighting { it.copy(target = picked.name) } }
             }
             item {
@@ -6628,6 +6813,7 @@ private fun ThemeEditorContent(
                 R.string.theme_touch_bloom_title,
                 stringResource(R.string.theme_touch_bloom_subtitle),
                 checked = bloom != null,
+                info = stringResource(R.string.theme_touch_bloom_info),
             ) { on -> update { t -> t.copy(touchBloom = if (on) t.touchBloom ?: TouchBloomSpec() else null) } }
         }
         if (bloom != null) {
@@ -7729,6 +7915,11 @@ private fun KeyOverrideDialog(
                 onChange = { onChange(override.copy(text = it)) },
             )
             NullableColorRow(
+                R.string.theme_key_override_pressed_text_title,
+                override.pressedText, fallback = override.text ?: theme.pressedKeyText ?: theme.keyText,
+                onChange = { onChange(override.copy(pressedText = it)) },
+            )
+            NullableColorRow(
                 R.string.theme_hint_text_title,
                 override.hint, fallback = theme.hintText ?: theme.keyText,
                 onChange = { onChange(override.copy(hint = it)) },
@@ -7746,6 +7937,7 @@ private fun KeyOverrideDialog(
                 title = R.string.theme_key_override_gradient_title,
                 subtitle = null,
                 checked = override.gradient != null,
+                info = stringResource(R.string.theme_key_override_gradient_info),
             ) { on ->
                 onChange(
                     override.copy(
@@ -7895,6 +8087,7 @@ private fun KeyOverrideDialog(
                 title = R.string.theme_key_override_radius_title,
                 subtitle = override.cornerRadiusDp?.let { "$it dp" } ?: stringResource(CommonR.string.common_auto),
                 checked = override.cornerRadiusDp != null,
+                info = stringResource(R.string.theme_key_override_radius_info),
             ) { on -> onChange(override.copy(cornerRadiusDp = if (on) theme.keyCornerRadiusDp ?: 8 else null)) }
             override.cornerRadiusDp?.let { radius ->
                 SliderRow(
@@ -7914,11 +8107,25 @@ private fun KeyOverrideDialog(
                 modifier = Modifier.padding(vertical = 8.dp),
                 label = stringResource(R.string.theme_key_override_bold_label),
             ) { bold -> onChange(override.copy(bold = bold)) }
+            // Only on a glass theme: elsewhere there is no glass to opt into.
+            if (theme.frost != null) {
+                ChoiceControl(
+                    options = listOf(
+                        null to stringResource(CommonR.string.common_auto),
+                        false to stringResource(CommonR.string.common_off),
+                        true to stringResource(CommonR.string.common_on),
+                    ),
+                    selected = override.glass,
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    label = stringResource(R.string.theme_key_override_glass_label),
+                ) { glass -> onChange(override.copy(glass = glass)) }
+            }
             ToggleSetting(
                 title = R.string.theme_key_override_label_size_title,
                 subtitle = override.labelScale?.let { "${(it * 100).toInt()}%" }
                     ?: stringResource(CommonR.string.common_auto),
                 checked = override.labelScale != null,
+                info = stringResource(R.string.theme_key_override_label_size_info),
             ) { on -> onChange(override.copy(labelScale = if (on) 1f else null)) }
             override.labelScale?.let { scale ->
                 SliderRow(
@@ -8672,7 +8879,8 @@ fun SectionHeaderPublic(text: String, info: String? = null) {
 @Composable
 private fun BackgroundSourceDialog(
     hasImage: Boolean,
-    onDevice: () -> Unit,
+    /** True for an animation, false for a still picture (#1403). */
+    onDevice: (Boolean) -> Unit,
     onOnline: () -> Unit,
     onSaved: () -> Unit,
     onRemove: () -> Unit,
@@ -8683,12 +8891,21 @@ private fun BackgroundSourceDialog(
         title = { Text(stringResource(R.string.theme_background_source_title)) },
         text = {
             Column {
+                // Still or moving asked here, rather than found out from the
+                // file afterwards and fixed with a switch (#1403).
                 ListItem(
-                    headlineContent = { Text(stringResource(R.string.photo_add_device_title)) },
-                    supportingContent = { Text(stringResource(R.string.photo_add_device_subtitle)) },
+                    headlineContent = { Text(stringResource(R.string.photo_add_device_still_title)) },
+                    supportingContent = { Text(stringResource(R.string.photo_add_device_still_subtitle)) },
                     leadingContent = { Icon(Icons.Outlined.PhotoLibrary, contentDescription = null) },
                     colors = transparentListColors(),
-                    modifier = Modifier.clickable(onClick = onDevice),
+                    modifier = Modifier.clickable { onDevice(false) },
+                )
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.photo_add_device_animated_title)) },
+                    supportingContent = { Text(stringResource(R.string.photo_add_device_animated_subtitle)) },
+                    leadingContent = { Icon(Icons.Outlined.Animation, contentDescription = null) },
+                    colors = transparentListColors(),
+                    modifier = Modifier.clickable { onDevice(true) },
                 )
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.photo_find_title)) },

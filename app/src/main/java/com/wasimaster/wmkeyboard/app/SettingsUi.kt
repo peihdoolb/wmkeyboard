@@ -39,6 +39,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -478,6 +482,8 @@ internal val SettingsRouteColors: Map<String, Color> = mapOf(
     "debug_log" to Color(0xFF607D8B),
     "storage" to Color(0xFF546E7A),
     "resources" to Color(0xFF546E7A),
+    "provider_credits" to Color(0xFF546E7A),
+    "tool_dashboard" to Color(0xFF546E7A),
     "debug_info" to Color(0xFF607D8B),
     "feature_libraries" to Color(0xFF90A4AE),
     "import_hub" to Color(0xFF546E7A),
@@ -729,6 +735,9 @@ internal fun RegisterAddFab(label: String, onClick: () -> Unit) {
  * thrown away and rebuilt.
  */
 private const val AddFabKey = "wm.fab.add"
+
+/** What sits between the new settings bar's card and the window's foot besides the navigation bar: its own padding. */
+private val NEW_SETTINGS_FAB_MARGIN = 16.dp
 
 /**
  * How a screen opens the AI chat, published at the settings root while
@@ -2945,11 +2954,13 @@ internal fun WmScreen(
                 // Each small button stacked above the bottom one adds a step.
                 val buttons = listOf(hasFab, hasPreview, hasChat).count { it }
                 // The new settings bar floats over the foot of every page;
-                // a row under it has to be able to scroll out from under it.
+                // a row under it has to be able to scroll out from under it,
+                // and from under the buttons, which ride up above the bar
+                // while it shows (#1348): their room is on top of its.
                 val bar = with(LocalDensity.current) { NewSettings.barHeight.toDp() }
                 Spacer(
                     Modifier.height(
-                        maxOf(bar, if (buttons == 0) 24.dp else FAB_TAIL + PREVIEW_FAB_STEP * (buttons - 1)),
+                        bar + if (buttons == 0) 24.dp else FAB_TAIL + PREVIEW_FAB_STEP * (buttons - 1),
                     ),
                 )
             }
@@ -3217,6 +3228,17 @@ private fun WmScreenFrame(
                     }
                 },
                 floatingActionButton = {
+                    // The new settings bar floats over the foot of the window,
+                    // where the buttons sit: they ride up above it while it is
+                    // there (#1348). Its height counts the navigation bar and
+                    // its own margin, which the buttons' place already has.
+                    val barDp = with(LocalDensity.current) { NewSettings.barHeight.toDp() }
+                    val navDp = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                    val lift by animateDpAsState(
+                        if (NewSettings.barHeight > 0) (barDp - navDp - NEW_SETTINGS_FAB_MARGIN).coerceAtLeast(0.dp) else 0.dp,
+                        label = "fabLift",
+                    )
+                    Box(Modifier.padding(bottom = lift)) {
                     val own = fab ?: slots.fab
                     val chat = chatFab?.takeIf { route !in NoChatFabRoutes }
                     // The keyboard test (#412) rides above the screen's own
@@ -3238,6 +3260,7 @@ private fun WmScreenFrame(
                         AiChatFab(chat)
                     } else {
                         own?.invoke()
+                    }
                     }
                 },
                 snackbarHost = { SnackbarHost(snackbarHost) },

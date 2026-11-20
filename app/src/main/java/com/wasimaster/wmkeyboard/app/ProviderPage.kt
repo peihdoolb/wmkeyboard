@@ -130,6 +130,9 @@ internal val ProviderEndpoints: Map<String, List<ServiceEndpoint>> = mapOf(
     ProviderTypes.BRAVE.id to listOf(ServiceEndpoint.BRAVE_SEARCH),
     ProviderTypes.TAVILY.id to listOf(ServiceEndpoint.TAVILY),
     ProviderTypes.MWMBL.id to listOf(ServiceEndpoint.MWMBL),
+    ProviderTypes.WIBY.id to listOf(ServiceEndpoint.WIBY),
+    ProviderTypes.MARGINALIA.id to listOf(ServiceEndpoint.MARGINALIA),
+    ProviderTypes.WIKIPEDIA_SEARCH.id to listOf(ServiceEndpoint.WIKIPEDIA),
     ProviderTypes.UNSPLASH.id to listOf(ServiceEndpoint.UNSPLASH),
     ProviderTypes.PEXELS.id to listOf(ServiceEndpoint.PEXELS),
     ProviderTypes.WIKTIONARY.id to listOf(ServiceEndpoint.KAIKKI),
@@ -228,6 +231,7 @@ internal fun ProviderPage(
                         ),
                         checked = row.entry.enabled,
                         icon = Icons.Outlined.ToggleOn,
+                        info = stringResource(R.string.providers_page_on_info),
                     ) { on ->
                         save(ProviderEdits.setChain(tool, settings.value.providerChain(tool, env).toggled(row.key, on)))
                     }
@@ -246,7 +250,7 @@ internal fun ProviderPage(
         // The kind's own settings: what used to be appended to the tool's page.
         ProviderOwnSettings(repository, settings, tool, type, row, onNavigate)
         // What a paid service has cost so far (#1135).
-        if (row != null) ProviderUsageGroup(row, tool)
+        if (row != null) ProviderUsageGroup(row, tool, onNavigate)
         ServerFieldsGroup(repository, settings, endpoints = ProviderEndpoints[type.id].orEmpty(), level = SettingLevel.ADVANCED)
         val usedBy = settings.watch { s ->
             row?.let { ProviderEdits.usedBy(s, it.entry.credentialKey, tool, env) }.orEmpty()
@@ -349,6 +353,8 @@ internal fun ProviderOwnSettings(
             if (it == EtEngine.SHERPA) SherpaCustomModels(settings)
             // How long Asr4All looks ahead before it writes (#1322).
             if (it == EtEngine.ASR4ALL) Asr4AllTierGroup(repository, settings)
+            // Parakeet Ultra past 50 seconds, cut at its own pauses (#1173).
+            if (it == EtEngine.PARAKEET) ParakeetUltraHeadGroup(settings)
             // Where the engine's phrase ends, next to the engine (#1174).
             if (it.live) VoicePhraseEndGroup(repository, settings)
         }
@@ -377,14 +383,38 @@ internal fun ProviderOwnSettings(
         ProviderTypes.OFFLINE_WORDNET.id -> OfflineDictionariesGroup(settings, listOf(OfflineDictionaryCatalog.OEWN))
         ProviderTypes.OFFLINE_BENGALI.id ->
             OfflineDictionariesGroup(settings, listOf(OfflineDictionaryCatalog.BENGALI_WIKTIONARY))
-        ProviderTypes.OFFLINE_LANGUAGES.id -> OfflineDictionariesGroup(settings, OfflineDictionaryCatalog.LANGUAGES)
+        ProviderTypes.OFFLINE_LANGUAGES.id -> {
+            OfflineDictionariesGroup(settings, OfflineDictionaryCatalog.LANGUAGES)
+            DictCcGroup()
+        }
         ProviderTypes.IMPORTED_DICTIONARIES.id -> ImportedDictionariesGroup()
         // ---- The speed test: a LibreSpeed row picks its server from the public list.
         ProviderTypes.LIBRESPEED.id -> LibreSpeedServerSettings(repository, settings, row)
         // ---- AI: the model on the phone, and the headers a service is sent with (#648).
         ProviderTypes.ON_DEVICE_AI.id -> LocalLlmModelManager(repository, settings)
+        ProviderTypes.BRAVE_ANSWERS.id -> {
+            BraveResearchGroup(repository, settings)
+            AiProviderHeadersGroup(repository, settings, AiProvider.BRAVE)
+        }
         else -> if (tool == ProviderTool.AI) {
             AiProviders.of(type.id)?.takeIf { it != AiProvider.ON_DEVICE }?.let { AiProviderHeadersGroup(repository, settings, it) }
+        }
+    }
+}
+
+/** Brave's research mode (`enable_research`), on the Brave row's own page. */
+@Composable
+private fun BraveResearchGroup(repository: SettingsRepository, settings: LiveSettings) {
+    val scope = rememberCoroutineScope()
+    SettingsGroup(level = SettingLevel.STANDARD) {
+        item {
+            ToggleSetting(
+                R.string.tooldetail_brave_research_title,
+                stringResource(R.string.tooldetail_brave_research_subtitle),
+                settings.watch { it.ai.braveResearch },
+                info = stringResource(R.string.tooldetail_brave_research_info),
+                default = SettingsDefaults.ai.braveResearch,
+            ) { on -> scope.launch { repository.setAiBraveResearch(on) } }
         }
     }
 }
@@ -536,6 +566,7 @@ private fun WhisperOfflineSettings(repository: SettingsRepository, settings: Liv
                 stringResource(R.string.voice_translate_subtitle),
                 settings.watch { it.whisper.translate },
                 default = SettingsDefaults.whisper.translate,
+                info = stringResource(R.string.voice_translate_info),
             ) { scope.launch { repository.setWhisperTranslate(it) } }
         }
     }

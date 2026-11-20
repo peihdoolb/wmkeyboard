@@ -30,6 +30,10 @@ A **Colorful tool icons** toggle sits above the list, on by default. It tints ea
 
 **Close floating boxes on a tap outside**, off by default, is for the tools that can open in a [box over other apps](/tools/overview/#tools-in-a-floating-box). On, a tap anywhere else on the screen closes the box. Taps on the keyboard don't count.
 
+**Swipe up on a tool to float it**, on by default, opens a tool that can float in its box when you swipe up on it on the toolbar. Its button greys while the tool is out there, and a tap on it brings the tool back into the keyboard. **Floating tool animation** sets how long the tool takes to rise into its box and drop back, from Off to 800 ms; the default is 240 ms. See [Tools in a floating box](/tools/overview/#tools-in-a-floating-box).
+
+**Each tool keeps its own height**, off by default, makes the bar on top of a tool or panel set that tool's height alone, so a taller search panel no longer makes the emoji panel taller. **Reset tool heights** appears under it once a tool has a height of its own. See [Making a tool taller](/tools/overview/#making-a-tool-taller).
+
 Turning it on reveals **Gradient tool colors** underneath, off by default. On, each icon is painted with a two-colour gradient instead of one flat colour, running from its own colour at the top left to a second colour at the bottom right. The second colour is worked out from the first, so you get a gradient without picking anything. To choose both ends by hand, open the tool and set them there. The row is nested under the switch above rather than greyed out, because with the colours off there'd be nothing for a gradient to be made of.
 
 Once you've recoloured at least one tool (either end of a gradient counts), a **Reset custom colors** button appears above the list and clears every per-tool override in one tap. It rides on the same switch: turn Colorful tool icons off and the button goes with the colours, overrides and all, until you turn them back on.
@@ -52,7 +56,7 @@ Tools are grouped by what they do, in this order. Each group starts folded shut,
 | Create and convert | Special symbols, Calculator, Unit converter, QR code generator, Password generator, Text repeat, Read back, Typing speed test |
 | Keyboard modes | Keyboard modes, One-handed mode, Split keyboard, Floating keyboard, Keep on screen, Resize |
 | Cursor | The twelve one-tap cursor moves, Selection mode, plus Hide keyboard |
-| Quick actions | Undo, Redo, Copy, Cut, Paste, Autocorrect, Selection actions, English words, Switch language, Fancy text, Secondary layout, Incognito, Privacy shade, Sound & haptics, Themes, Power saving, Settings shortcut, Statistics |
+| Quick actions | Undo, Redo, Copy, Cut, Paste, Autocorrect, Selection actions, English words, Switch language, Fancy text, Secondary layout, Incognito, Privacy shade, Sound & haptics, Themes, Power saving, Settings shortcut, Statistics, Resources |
 | Utilities | Flashlight, Screenshot, Compass, Bubble level, Calendar, Clock, Weather, Location, Moon phase, Plugins |
 
 Panels is the longest group by far. If twenty rows are too many to scan, turn on **Split the Panels group**, the switch just above the groups. It's off by default. On, Panels gives way to two groups in the same place: **Writing** holds Emoji, Clipboard, Snippets, Notes, Text editing, Trackpad, Numpad, Handwriting, Voice typing, Dictionary, Vocabulary, Learn from text, Find & replace and Grammar check, and **Connect and media** holds Camera, Gallery, App launcher, Media controls, Music ID, KDE Connect, Send files and Files. Each of the two remembers whether you left it open, separately from Panels. The switch only changes this screen: the tool pickers elsewhere in settings, such as the floating button's, keep the one Panels group.
@@ -63,7 +67,7 @@ A tool that belongs to a feature bundle switched off on [Extensions](/reference/
 
 A tool that a future group forgets to claim still shows. It would fall into a trailing **Other** catch-all, so nothing ever goes missing from the list. Every tool has a named home today, though, so that catch-all currently has nothing in it and doesn't appear.
 
-A tune icon marks the tools with settings beyond the switch. Six are toggle-only here, because their real options live somewhere else: **Settings** (shortcut), **[Statistics](/reference/settings/statistics/)** (a shortcut too, whose page only links to the Statistics screen), **Themes**, **Sound & haptics**, **One-handed mode**, and **[Resize](/tools/resize/)**, whose values are all sliders under <SettingsPath path="Layout & size" /> anyway.
+A tune icon marks the tools with settings beyond the switch. The app works the mark out from the settings it files under each tool's page, the same list settings search reads, so a tool that gains an option gains the icon with it. A tool whose page holds only its switch, such as a shortcut to another screen or a quick toggle whose options live under <SettingsPath path="Appearance" /> or <SettingsPath path="Layout & size" />, has none.
 
 <Flavor edition="fdroid" /> keeps every row of the **Scanners** group: Text scan reads with PaddleOCR, QR & barcode scanner with zxing-cpp, and the document scanner is the built-in one. **Panels** keeps all its rows: Handwriting is there too, reading Chinese and Japanese through zinnia. See [F-Droid build](#f-droid-build) below for the complete gating rule.
 

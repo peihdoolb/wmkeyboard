@@ -10,6 +10,7 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okio.BufferedSink
 import okio.source
@@ -44,7 +45,15 @@ class ImmichClient(server: String, private val apiKey: String) {
     data class Bucket(val key: String, val count: Int)
 
     /** One asset of a bucket, as the timeline lists it. */
-    data class Asset(val id: String, val image: Boolean, val ratio: Float, val createdMs: Long, val trashed: Boolean)
+    data class Asset(
+        val id: String,
+        val image: Boolean,
+        val ratio: Float,
+        val createdMs: Long,
+        val trashed: Boolean,
+        /** A video's length, from the timeline's `duration` (`0:00:12.345`); 0 for a picture or when not given. */
+        val durationMs: Long = 0,
+    )
 
     data class Album(val id: String, val name: String, val count: Int, val coverId: String?)
 
@@ -88,6 +97,7 @@ class ImmichClient(server: String, private val apiKey: String) {
         val ratios = o.optJSONArray("ratio")
         val trashed = o.optJSONArray("isTrashed")
         val created = o.optJSONArray("fileCreatedAt")
+        val durations = o.optJSONArray("duration")
         val month = parseTime(key)
         return (0 until ids.length()).map { i ->
             Asset(
@@ -96,8 +106,19 @@ class ImmichClient(server: String, private val apiKey: String) {
                 ratio = ratios?.optDouble(i, 1.0)?.toFloat()?.takeIf { it > 0f && !it.isNaN() } ?: 1f,
                 createdMs = created?.optString(i)?.let(::parseTime)?.takeIf { it > 0 } ?: month,
                 trashed = trashed?.optBoolean(i, false) ?: false,
+                durationMs = durations?.takeUnless { it.isNull(i) }?.optString(i)?.let { parseDuration(it) } ?: 0,
             )
         }.filter { it.id.isNotEmpty() }
+    }
+
+    /** `0:00:12.345` (hours, minutes, seconds) in milliseconds; 0 for anything else. */
+    internal fun parseDuration(text: String): Long {
+        val parts = text.trim().split(':')
+        if (parts.size != 3) return 0
+        val h = parts[0].toLongOrNull() ?: return 0
+        val m = parts[1].toLongOrNull() ?: return 0
+        val s = parts[2].toDoubleOrNull() ?: return 0
+        return ((h * 3600 + m * 60) * 1000 + (s * 1000).toLong()).coerceAtLeast(0)
     }
 
     /** The albums the key can read: the user's own and those shared with them. */
@@ -166,6 +187,22 @@ class ImmichClient(server: String, private val apiKey: String) {
         if (sha1 != null) req.header("x-immich-checksum", sha1)
         val o = JSONObject(text(call(req.build())))
         return Uploaded(o.optString("id"), o.optString("status") == "duplicate")
+    }
+
+    /**
+     * Deletes [ids] on the server (#1366): `DELETE /assets` without `force`,
+     * so they go to Immich's trash, from which the server's own apps can
+     * restore them until it empties (30 days unless changed). A server with
+     * its trash switched off deletes them for good. The key needs Immich's
+     * `asset.delete` permission, or the server answers 403.
+     */
+    fun delete(ids: List<String>) {
+        if (ids.isEmpty()) return
+        val body = JSONObject().put("ids", JSONArray(ids)).put("force", false).toString()
+            .toRequestBody("application/json".toMediaTypeOrNull())
+        val req = Request.Builder().url(url("assets")).delete(body)
+            .header("x-api-key", apiKey).header("Accept", "application/json").build()
+        call(req).close()
     }
 
     // ---- Plumbing -----------------------------------------------------------

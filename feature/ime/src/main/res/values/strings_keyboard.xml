@@ -14,6 +14,7 @@
     <string name="ime_key_shift_on">Shift on</string>
     <string name="ime_key_caps_lock_on">Caps lock on</string>
     <string name="ime_key_caps_lock">Caps lock</string>
+    <string name="ime_key_shift_off">Shift off</string>
     <string name="ime_key_tab">Tab</string>
     <string name="ime_key_arrow_left">Left</string>
     <string name="ime_key_arrow_right">Right</string>
@@ -332,6 +333,11 @@
     <string name="ime_snippet_ask_done_desc">Insert the snippet</string>
     <!-- Placeholder in the fill-in row's box; %1$s is the field's name, such as "Name". -->
     <string name="ime_snippet_ask_hint">Type the %1$s</string>
+    <!-- The row the floating button's "Write a clip" puts in the strip's
+         place (#1339): what is typed there becomes a new clip. -->
+    <string name="ime_clip_write_hint">Type the text to keep as a clip</string>
+    <string name="ime_clip_write_keep_desc">Keep the clip</string>
+    <string name="ime_clip_write_cancel_desc">Throw the clip away</string>
     <!-- The fill-in row's label when a snippet asks several things: "Name 1/3". -->
     <string name="ime_snippet_ask_step_label">%1$s %2$d/%3$d</string>
     <!-- Spoken name of a picture snippet's thumbnail on a chip or a tile; %1$s is the snippet's name. -->
@@ -434,6 +440,7 @@
     <string name="ime_tool_quick_note">Quick note</string>
     <string name="ime_tool_debug_info">Debug info</string>
     <string name="ime_tool_homophones">Same sound</string>
+    <string name="ime_tool_type_clipboard">Type the clipboard</string>
     <string name="ime_homophones_none_before">Type a Chinese or Japanese character first</string>
     <!-- %1$s: the character, such as 是 -->
     <string name="ime_homophones_none">Nothing on this phone sounds like %1$s. A language pack or a RIME schema adds the readings.</string>
@@ -490,6 +497,8 @@
     <!-- The strip button on Chinese and Cantonese layouts: 繁 is the first character of 繁體, Traditional. Not translated. -->
     <string name="ime_traditional_button" translatable="false">繁</string>
     <string name="ime_traditional_output">Traditional characters</string>
+    <string name="ime_kyujitai_button" translatable="false">舊</string>
+    <string name="ime_kyujitai_output">Old character forms (kyujitai)</string>
     <!-- Strip chip after a paste the keyboard found to be in Zawgyi, the old Burmese font encoding. Tapping it replaces the paste with Unicode. -->
     <string name="ime_zawgyi_paste_offer">Pasted Zawgyi. Convert to Unicode</string>
     <!-- Strip chip on a Burmese layout when the text box already holds Zawgyi. Tapping it makes the keyboard write Zawgyi in this text box. -->
@@ -728,6 +737,7 @@
     <string name="ime_tool_text_repeat">Repeat</string>
     <string name="ime_tool_typing_test">Typing speed</string>
     <string name="ime_tool_statistics">Statistics</string>
+    <string name="ime_tool_resources">Resources</string>
     <string name="ime_tool_media_control">Media</string>
     <string name="ime_tool_kde_connect" translatable="false">KDE Connect</string>
     <string name="ime_tool_plugins">Plugins</string>
@@ -765,6 +775,8 @@
     <!-- Pill shown while a tool is being dragged, naming where the new
          arrangement is saved. %1$s is the name the user gave the mode. -->
     <string name="ime_toolbox_drag_scope_mode">Changing the tool order for only the %1$s mode</string>
+    <string name="ime_toolbox_drag_scope_mode_second">Changing the tool order for only the %1$s mode; the second toolbar is the same in every mode</string>
+    <string name="ime_toolbox_hint_drag_second">Press and hold a tool, then drag it. Drop it on the toolbar or the second toolbar to pin it there. Drop it in this grid to change the order. Drop it below the grid to remove it.</string>
     <string name="ime_toolbox_drag_scope_global">Changing the global tool order outside modes</string>
     <string name="ime_toolbox_empty">Every tool is on the toolbar.</string>
     <!-- The second toolbar (#1217) with no tools on it yet. -->
@@ -804,10 +816,17 @@
     <!-- Names the search service. Brave is a brand name: keep it as it is. -->
     <string name="ime_search_attribution_brave">via Brave</string>
     <string name="ime_search_attribution_mwmbl">via Mwmbl</string>
+    <string name="ime_search_attribution_wiby">via Wiby</string>
+    <string name="ime_search_attribution_marginalia">via Marginalia</string>
+    <string name="ime_search_attribution_wikipedia">via Wikipedia</string>
+    <!-- The search list's "Search in the browser" row is on, but no app would open the search (#1383). -->
+    <string name="ime_search_browser_failed">No browser would open the search</string>
     <!-- Names the search service. Tavily is a brand name: keep it as it is. -->
     <string name="ime_search_attribution_tavily">via Tavily</string>
     <!-- The search service, then what it says is left of this month's searches or credits (#1135): "via Tavily · 812 left". -->
     <string name="ime_search_attribution_left">%1$s · %2$s left</string>
+    <!-- %1$s is "via Brave"; %2$s about how many free searches this month's credit still pays for, counted on this phone. -->
+    <string name="ime_search_attribution_free_left">%1$s · about %2$s free left</string>
     <string name="ime_unit_convert_title">Unit converter</string>
     <!-- The unit converter's tab when it and the currency converter share one panel (#1268). Keep it short. -->
     <string name="ime_converter_tab_units">Units</string>
@@ -1018,7 +1037,13 @@
     <string name="ime_clip_edit_placeholder">Type the clip’s text</string>
     <!-- A clip's own labels (#612): the hold popup's action, and the editor opened on them. -->
     <string name="ime_clip_tags">Tags</string>
+    <string name="ime_notes_has_reminder">Has a deadline or birthday ahead</string>
     <string name="ime_clip_paste_next">Paste next</string>
+    <string name="ime_clip_collect">Collect copies here</string>
+    <string name="ime_clip_send_to_board">Send to board</string>
+    <string name="ime_clip_sent_to_board_toast">Sent to the shared board</string>
+    <string name="ime_clip_collect_toast">New copies go into this clip. Press Collect copies here on it again to stop.</string>
+    <string name="ime_clip_collect_off_toast">New copies are clips of their own again</string>
     <string name="ime_clip_share_image">Share</string>
     <string name="ime_clip_image_pasted_toast">Pasted from the clipboard. If nothing came in, this app takes no pictures: hold the clip to share it</string>
     <string name="ime_clip_paste_next_toast">This clip pastes next</string>
@@ -1138,6 +1163,7 @@
     <string name="ime_clip_select">Select</string>
     <string name="ime_clip_select_cancel_desc">Stop selecting</string>
     <string name="ime_clip_select_all_desc">Select all, or none</string>
+    <string name="ime_clip_share_desc">Share the picked clips</string>
     <plurals name="ime_clip_selected_count">
         <item quantity="one">%1$d selected</item>
         <item quantity="other">%1$d selected</item>
@@ -1172,6 +1198,25 @@
     <string name="ime_clip_joiner_bar">Bar</string>
     <!-- Dragging clips into an order of the user's own (#612). -->
     <string name="ime_clip_reorder">Reorder</string>
+    <!-- #970: a held clip's button that puts it first in its group without pasting it. -->
+    <string name="ime_clip_move_top">Move to top</string>
+    <!-- #1354: what stands where a clip was deleted until the clipboard closes. -->
+    <string name="ime_clip_deleted_slot">Deleted</string>
+    <!-- #612: the round buttons over the clipboard history. -->
+    <string name="ime_clip_jump_top_desc">Back to the top</string>
+    <string name="ime_clip_trail_back_desc">Back to the clip you went to before</string>
+    <string name="ime_clip_trail_forward_desc">Forward to the next clip you went to</string>
+    <!-- #612: the menu beside the .* button in the clipboard search and Combine. -->
+    <string name="ime_clip_patterns_desc">Kept patterns and whole-clip matching</string>
+    <string name="ime_clip_regex_whole">Match the whole clip</string>
+    <string name="ime_clip_regex_whole_hint">A pattern has to match all of a clip\'s text, not just part of it</string>
+    <string name="ime_clip_pattern_save">Keep this pattern</string>
+    <string name="ime_clip_patterns_none">No kept patterns yet. Type one, then keep it here.</string>
+    <string name="ime_clip_pattern_remove_desc">Remove <xliff:g id="pattern" example="\\w+ \\w+">%1$s</xliff:g></string>
+    <plurals name="ime_clip_count_desc">
+        <item quantity="one">%1$d clip</item>
+        <item quantity="other">%1$d clips</item>
+    </plurals>
     <string name="ime_clip_reorder_hint">Drag a clip by its handle, or press and hold it, to move it. It stays where you put it.</string>
     <string name="ime_clip_reorder_done">Done</string>
     <string name="ime_clip_reorder_handle_desc">Drag to move this clip</string>
@@ -1249,6 +1294,7 @@
     <!-- Spoken by TalkBack for the AI continuation chip in the suggestion strip (#944). %1$s is the continuation. -->
     <string name="ime_ai_suggest_desc">AI suggestion: %1$s. Double-tap to insert, hold to hide in this field.</string>
     <string name="ime_smart_send_link">Receive the file</string>
+    <string name="ime_smart_open_app">Open <xliff:g id="app" example="WhatsApp">%1$s</xliff:g></string>
     <string name="ime_smart_open_tool">Open %1$s</string>
     <!-- Where a currency chip's converted amount would be, while the exchange
          rates wait for a tap before they are fetched. -->

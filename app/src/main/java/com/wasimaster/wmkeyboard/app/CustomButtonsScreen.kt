@@ -10,6 +10,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,7 +27,9 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -45,8 +48,6 @@ import androidx.core.graphics.drawable.toBitmap
 import com.wasimaster.wmkeyboard.R
 import com.wasimaster.wmkeyboard.common.R as CommonR
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.AppShortcut
-import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.ArrowDownward
-import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.ArrowUpward
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Bookmarks
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Delete
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Extension
@@ -54,6 +55,10 @@ import com.wasimaster.wmkeyboard.core.plugins.PluginStore
 import com.wasimaster.wmkeyboard.core.plugins.displayDescription
 import com.wasimaster.wmkeyboard.core.plugins.displayName
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.ToggleOn
+import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Window
+import com.wasimaster.wmkeyboard.core.settings.CUSTOM_SHELL_ACTIVITY_PREFIX
+import com.wasimaster.wmkeyboard.core.shell.ShellAccess
+import com.wasimaster.wmkeyboard.core.shell.ShellFeatures
 import com.wasimaster.wmkeyboard.core.settings.CUSTOM_BUTTON_LABEL_MAX
 import com.wasimaster.wmkeyboard.core.settings.CustomButton
 import com.wasimaster.wmkeyboard.core.settings.CustomButtonKind
@@ -61,7 +66,7 @@ import com.wasimaster.wmkeyboard.core.settings.CustomPage
 import com.wasimaster.wmkeyboard.core.settings.CustomToggle
 import com.wasimaster.wmkeyboard.core.settings.MAX_CUSTOM_BUTTONS
 import com.wasimaster.wmkeyboard.core.settings.SettingsRepository
-import com.wasimaster.wmkeyboard.core.settings.moved
+import com.wasimaster.wmkeyboard.core.settings.customToolKey
 import com.wasimaster.wmkeyboard.core.settings.nextCustomButtonId
 import com.wasimaster.wmkeyboard.ime.ui.CustomButtonFaces
 import com.wasimaster.wmkeyboard.ime.ui.customPageIcon
@@ -77,20 +82,27 @@ object CustomButtons {
     const val ROUTE = "custom_buttons"
 }
 
-private enum class CustomPick { SHORTCUT, SETTING, PAGE, PLUGIN }
+private enum class CustomPick { SHORTCUT, SCREEN, SETTING, PAGE, PLUGIN }
 
 /**
  * The user's own buttons (#1213, #1236): another app's shortcut, a switch
  * over one of the keyboard's settings, a jump to a settings page, or a
- * plugin's panel. Each
- * sits on the toolbar or in the toolbox, and the floating button can run any
- * of them. A press on a button renames it and moves it between the two.
+ * plugin's panel. Each is a tool (#1345): on the toolbar or in the toolbox,
+ * dragged between the two and around them like any other, and the floating
+ * button can run any of them. A press on a button renames it and pins it to
+ * the toolbar or puts it in the toolbox.
  */
 @Composable
-internal fun CustomButtonsScreen(repository: SettingsRepository, settings: LiveSettings) {
+internal fun CustomButtonsScreen(
+    repository: SettingsRepository,
+    settings: LiveSettings,
+    onNavigate: (String) -> Unit = {},
+) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val buttons = settings.watch { it.toolbox.customButtons }
+    // Where each button is lives in the tool lists, not on the button (#1345).
+    val pinned = settings.watch { s -> s.toolbarTools.toSet() }
     SideEffect { CustomButtonFaces.buttons = buttons }
     var picking by rememberSaveable { mutableStateOf<CustomPick?>(null) }
     var editing by rememberSaveable { mutableStateOf<String?>(null) }
@@ -132,14 +144,12 @@ internal fun CustomButtonsScreen(repository: SettingsRepository, settings: LiveS
     CaptionText(stringResource(R.string.custombuttons_caption))
     if (buttons.isNotEmpty()) {
         SettingsGroup(stringResource(R.string.custombuttons_yours_title)) {
-            buttons.forEachIndexed { index, button ->
+            for (button in buttons) {
                 item(key = button.id) {
                     CustomButtonRow(
                         button = button,
-                        canMoveUp = index > 0,
-                        canMoveDown = index < buttons.lastIndex,
+                        onToolbar = customToolKey(button.id) in pinned,
                         onEdit = { editing = button.id },
-                        onMove = { by -> scope.launch { repository.updateCustomButtons { it.moved(button.id, by) } } },
                         onDelete = {
                             scope.launch {
                                 repository.updateCustomButtons { list -> list.filterNot { it.id == button.id } }
@@ -161,6 +171,17 @@ internal fun CustomButtonsScreen(repository: SettingsRepository, settings: LiveS
                 ),
                 icon = Icons.Outlined.AppShortcut,
             ) { if (!full) picking = CustomPick.SHORTCUT }
+        }
+        // Any screen of an app, as an activity launcher opens it (#1405).
+        item {
+            NavRow(
+                title = R.string.custombuttons_add_screen_title,
+                subtitle = stringResource(
+                    if (full) R.string.custombuttons_full else R.string.custombuttons_add_screen_subtitle,
+                    MAX_CUSTOM_BUTTONS,
+                ),
+                icon = Icons.Outlined.Window,
+            ) { if (!full) picking = CustomPick.SCREEN }
         }
         item {
             NavRow(
@@ -203,6 +224,7 @@ internal fun CustomButtonsScreen(repository: SettingsRepository, settings: LiveS
                     add(CustomButtonKind.SHORTCUT, offer.target, offer.label, offer.packageName, icon)
                 }
             },
+            onMore = { picking = CustomPick.SCREEN },
             onMaker = { maker ->
                 picking = null
                 pendingMaker = maker
@@ -211,6 +233,21 @@ internal fun CustomButtonsScreen(repository: SettingsRepository, settings: LiveS
                         pendingMaker = null
                         Toast.makeText(context, R.string.custombuttons_maker_unsupported, Toast.LENGTH_LONG).show()
                     }
+            },
+        )
+        CustomPick.SCREEN -> AppScreenPicker(
+            useRoot = settings.watch { it.launcher.useRoot },
+            onDismiss = { picking = null },
+            onSetUp = {
+                picking = null
+                onNavigate("permissions")
+            },
+            onPick = { offer ->
+                picking = null
+                scope.launch {
+                    val icon = withContext(Dispatchers.IO) { runCatching { offer.icon() }.getOrNull() }
+                    add(CustomButtonKind.SHORTCUT, offer.target, offer.label, offer.packageName, icon)
+                }
             },
         )
         CustomPick.SETTING -> TogglePicker(
@@ -239,15 +276,18 @@ internal fun CustomButtonsScreen(repository: SettingsRepository, settings: LiveS
 
     val edited = buttons.firstOrNull { it.id == editing }
     if (edited != null) {
+        val wasOnToolbar = customToolKey(edited.id) in pinned
         EditCustomButtonDialog(
             button = edited,
+            onToolbar = wasOnToolbar,
             onDismiss = { editing = null },
-            onSave = { label, onToolbar ->
+            onSave = { label, onToolbar, icon ->
                 editing = null
                 scope.launch {
                     repository.updateCustomButtons { list ->
-                        list.map { if (it.id == edited.id) it.copy(label = label, onToolbar = onToolbar) else it }
+                        list.map { if (it.id == edited.id) it.copy(label = label, icon = icon) else it }
                     }
+                    if (onToolbar != wasOnToolbar) repository.setCustomButtonOnToolbar(edited.id, onToolbar)
                 }
             },
         )
@@ -257,24 +297,26 @@ internal fun CustomButtonsScreen(repository: SettingsRepository, settings: LiveS
 @Composable
 private fun CustomButtonRow(
     button: CustomButton,
-    canMoveUp: Boolean,
-    canMoveDown: Boolean,
+    onToolbar: Boolean,
     onEdit: () -> Unit,
-    onMove: (Int) -> Unit,
     onDelete: () -> Unit,
 ) {
     val context = LocalContext.current
     val name = remember(button) { CustomButtonFaces.name(context, button) }
     val kind = stringResource(
         when (button.kind) {
-            CustomButtonKind.SHORTCUT -> R.string.custombuttons_kind_shortcut
+            CustomButtonKind.SHORTCUT -> if (button.target.startsWith(CUSTOM_SHELL_ACTIVITY_PREFIX)) {
+                R.string.custombuttons_kind_screen
+            } else {
+                R.string.custombuttons_kind_shortcut
+            }
             CustomButtonKind.SETTING -> R.string.custombuttons_kind_setting
             CustomButtonKind.PAGE -> R.string.custombuttons_kind_page
             CustomButtonKind.PLUGIN -> R.string.custombuttons_kind_plugin
         },
     )
     val place = stringResource(
-        if (button.onToolbar) R.string.custombuttons_on_toolbar else R.string.custombuttons_in_toolbox,
+        if (onToolbar) R.string.custombuttons_on_toolbar else R.string.custombuttons_in_toolbox,
     )
     WmRow(
         title = name,
@@ -283,16 +325,8 @@ private fun CustomButtonRow(
         swipeActions = listOf(deleteSwipeAction(stringResource(CommonR.string.common_delete), onDelete)),
         leading = { CustomButtonGlyph(button) },
         trailing = {
-            Row {
-                IconButton(onClick = { onMove(-1) }, enabled = canMoveUp) {
-                    Icon(Icons.Outlined.ArrowUpward, contentDescription = stringResource(R.string.custombuttons_move_up))
-                }
-                IconButton(onClick = { onMove(1) }, enabled = canMoveDown) {
-                    Icon(Icons.Outlined.ArrowDownward, contentDescription = stringResource(R.string.custombuttons_move_down))
-                }
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Outlined.Delete, contentDescription = stringResource(CommonR.string.common_delete))
-                }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Outlined.Delete, contentDescription = stringResource(CommonR.string.common_delete))
             }
         },
         onClick = onEdit,
@@ -329,12 +363,14 @@ private fun CustomButtonGlyph(button: CustomButton) {
  * Every app's shortcuts the keyboard can offer, grouped by app, then the apps
  * that make a shortcut on request. Where Android does not let the keyboard
  * read shortcuts, the first list holds only what apps declare in their
- * manifests, and a row at the top says so.
+ * manifests, and a banner at the top says so, with a way on to any app's
+ * screens ([onMore], #1405). The rows add a button: no radio buttons (#1407).
  */
 @Composable
 private fun ShortcutPicker(
     onDismiss: () -> Unit,
     onPick: (ShortcutOffer) -> Unit,
+    onMore: () -> Unit,
     onMaker: (ShortcutMaker) -> Unit,
 ) {
     val context = LocalContext.current
@@ -349,26 +385,6 @@ private fun ShortcutPicker(
     }
     val (canRead, offers, makers) = loaded ?: Triple(true, emptyList(), emptyList())
     val groups = buildList {
-        if (loaded == null) {
-            add(PickerGroup("loading", null, listOf(PickerRow("loading", stringResource(R.string.custombuttons_loading), onPick = {}))))
-            return@buildList
-        }
-        if (!canRead) {
-            add(
-                PickerGroup(
-                    "note",
-                    null,
-                    listOf(
-                        PickerRow(
-                            "note",
-                            stringResource(R.string.custombuttons_shortcut_limited_title),
-                            subtitle = stringResource(R.string.custombuttons_shortcut_limited_body),
-                            onPick = {},
-                        ),
-                    ),
-                ),
-            )
-        }
         for ((app, list) in offers.groupBy { it.appLabel }) {
             add(
                 PickerGroup(
@@ -395,21 +411,127 @@ private fun ShortcutPicker(
                             key = "maker-${maker.packageName}/${maker.activity}",
                             title = maker.label,
                             subtitle = maker.appLabel.takeIf { it != maker.label },
+                            leading = { AppIconOf(maker.packageName) },
                             onPick = { onMaker(maker) },
                         )
                     },
                 ),
             )
         }
-        if (offers.isEmpty() && makers.isEmpty()) {
-            add(PickerGroup("empty", null, listOf(PickerRow("empty", stringResource(R.string.custombuttons_shortcut_empty), onPick = onDismiss))))
-        }
     }
+    val limitedTitle = stringResource(R.string.custombuttons_shortcut_limited_title)
+    val limitedBody = stringResource(R.string.custombuttons_shortcut_limited_body)
+    val more = stringResource(R.string.custombuttons_shortcut_more_action)
     ActionPickerPage(
         memoryKey = "custom-shortcut",
         title = stringResource(R.string.custombuttons_add_shortcut_title),
         groups = groups,
         onDismiss = onDismiss,
+        searchHint = stringResource(R.string.custombuttons_shortcut_search_hint),
+        radios = false,
+        emptyText = stringResource(
+            if (loaded == null) R.string.custombuttons_loading else R.string.custombuttons_shortcut_empty,
+        ),
+        banner = if (loaded != null && !canRead) {
+            { StateBanner("$limitedTitle\n$limitedBody", action = more, onAction = onMore) }
+        } else {
+            null
+        },
+    )
+}
+
+/** An installed app's own icon, the shortcut glyph while it loads or when it has none. */
+@Composable
+private fun AppIconOf(packageName: String) {
+    val context = LocalContext.current
+    val px = (32 * context.resources.displayMetrics.density).toInt().coerceAtLeast(1)
+    val icon by produceState<ImageBitmap?>(null, packageName) {
+        value = withContext(Dispatchers.IO) {
+            com.wasimaster.wmkeyboard.ime.floating.FloatingAppIcons.icon(context, packageName, px)
+        }
+    }
+    val shown = icon
+    if (shown != null) {
+        Image(shown, contentDescription = null, modifier = Modifier.size(32.dp))
+    } else {
+        Icon(Icons.Outlined.AppShortcut, contentDescription = null)
+    }
+}
+
+/**
+ * Every screen of every app the keyboard can see, grouped by app and folded
+ * until opened, the way an activity launcher lists them (#1405). Listed are
+ * the screens any app may open; with Settings › Permissions › Shizuku or root
+ * on and a door open, also those that ask for a permission (Shizuku's shell
+ * holds most), and with root, those an app keeps to itself. Those open through
+ * the shell's `am start`, so the button stores an `am:` target.
+ */
+@Composable
+private fun AppScreenPicker(
+    useRoot: Boolean,
+    onDismiss: () -> Unit,
+    onSetUp: () -> Unit,
+    onPick: (ShortcutOffer) -> Unit,
+) {
+    val context = LocalContext.current
+    val shellOn = remember { ShellFeatures.isEnabled(context) }
+    LaunchedEffect(Unit) { ShellAccess.init(context) }
+    SideEffect { ShellAccess.rootAllowed = useRoot }
+    val shizuku by ShellAccess.shizukuGranted.collectAsState()
+    val root = shellOn && useRoot && ShellAccess.suPresent
+    val shell = shellOn && (shizuku || root)
+    val loaded by produceState<List<AppScreens>?>(null, shell, root) {
+        value = withContext(Dispatchers.IO) { CustomShortcutSources.appScreens(context, shell = shell, root = root) }
+    }
+    val needsShell = stringResource(R.string.custombuttons_screen_needs_shell)
+    val groups = loaded.orEmpty().map { app ->
+        PickerGroup(
+            "screens-${app.packageName}",
+            app.appLabel,
+            app.screens.map { screen ->
+                PickerRow(
+                    key = screen.className,
+                    title = screen.label,
+                    subtitle = screen.className + if (screen.viaShell) "\n" + needsShell else "",
+                    leading = { AppIconOf(app.packageName) },
+                    onPick = { onPick(CustomShortcutSources.screenOffer(context, app, screen)) },
+                )
+            },
+        )
+    }
+    ActionPickerPage(
+        memoryKey = "custom-screen",
+        title = stringResource(R.string.custombuttons_add_screen_title),
+        groups = groups,
+        onDismiss = onDismiss,
+        searchHint = stringResource(R.string.custombuttons_screen_search_hint),
+        radios = false,
+        foldedAtFirst = true,
+        emptyText = stringResource(
+            if (loaded == null) R.string.custombuttons_screen_loading else R.string.custombuttons_screen_empty,
+        ),
+        banner = when {
+            !ShellFeatures.offered || root -> null
+            !shell -> {
+                {
+                    StateBanner(
+                        stringResource(R.string.custombuttons_screen_shell_banner),
+                        action = stringResource(R.string.custombuttons_screen_shell_action),
+                        onAction = onSetUp,
+                    )
+                }
+            }
+            ShellAccess.suPresent -> {
+                {
+                    StateBanner(
+                        stringResource(R.string.custombuttons_screen_root_banner),
+                        action = stringResource(R.string.custombuttons_screen_shell_action),
+                        onAction = onSetUp,
+                    )
+                }
+            }
+            else -> null
+        },
     )
 }
 
@@ -449,10 +571,12 @@ private fun TogglePicker(taken: Set<CustomToggle>, onDismiss: () -> Unit, onPick
             PickerGroup(
                 "settings",
                 null,
-                rows.ifEmpty { listOf(PickerRow("none", stringResource(R.string.custombuttons_all_added), onPick = onDismiss)) },
+                rows,
             ),
         ),
         onDismiss = onDismiss,
+        radios = false,
+        emptyText = stringResource(R.string.custombuttons_all_added),
     )
 }
 
@@ -474,10 +598,12 @@ private fun PagePicker(taken: Set<CustomPage>, onDismiss: () -> Unit, onPick: (C
             PickerGroup(
                 "pages",
                 null,
-                rows.ifEmpty { listOf(PickerRow("none", stringResource(R.string.custombuttons_all_added), onPick = onDismiss)) },
+                rows,
             ),
         ),
         onDismiss = onDismiss,
+        radios = false,
+        emptyText = stringResource(R.string.custombuttons_all_added),
     )
 }
 
@@ -510,22 +636,55 @@ private fun PluginTilePicker(taken: Set<String>, onDismiss: () -> Unit, onPick: 
             PickerGroup(
                 "plugins",
                 null,
-                rows.ifEmpty { listOf(PickerRow("none", stringResource(R.string.custombuttons_no_plugins), onPick = onDismiss)) },
+                rows,
             ),
         ),
         onDismiss = onDismiss,
+        radios = false,
+        emptyText = stringResource(R.string.custombuttons_no_plugins),
     )
 }
 
 @Composable
 private fun EditCustomButtonDialog(
     button: CustomButton,
+    /** Whether the button is pinned to the toolbar now, by the tool lists. */
+    onToolbar: Boolean,
     onDismiss: () -> Unit,
-    onSave: (label: String, onToolbar: Boolean) -> Unit,
+    onSave: (label: String, onToolbar: Boolean, icon: String) -> Unit,
 ) {
     val context = LocalContext.current
     var label by rememberSaveable(button.id) { mutableStateOf(button.label) }
-    var onToolbar by rememberSaveable(button.id) { mutableStateOf(button.onToolbar) }
+    var pinned by rememberSaveable(button.id) { mutableStateOf(onToolbar) }
+    // An icon out of an installed icon pack (#1375), or blank for its own.
+    var icon by rememberSaveable(button.id) { mutableStateOf(button.icon) }
+    var choosingIcon by remember { mutableStateOf(false) }
+    val packs = rememberSystemIconPacks()
+    if (choosingIcon) {
+        AlertDialog(
+            onDismissRequest = { choosingIcon = false },
+            title = { Text(stringResource(R.string.custombuttons_icon_picker_title)) },
+            text = {
+                if (packs.isEmpty()) {
+                    Text(stringResource(R.string.custombuttons_icon_no_packs))
+                } else {
+                    SystemPackIconGrid(
+                        packs = packs,
+                        selected = icon.ifEmpty { null },
+                        onPick = { source ->
+                            icon = source
+                            choosingIcon = false
+                        },
+                        // A shortcut's own app first, where the pack themes it.
+                        leadFor = button.packageName.ifEmpty { null },
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { choosingIcon = false }) { Text(stringResource(CommonR.string.common_cancel)) }
+            },
+        )
+    }
     val fallback = remember(button) { CustomButtonFaces.name(context, button.copy(label = "")) }
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -545,18 +704,44 @@ private fun EditCustomButtonDialog(
                         Text(stringResource(R.string.custombuttons_edit_toolbar))
                         Text(
                             stringResource(
-                                if (onToolbar) R.string.custombuttons_edit_toolbar_on else R.string.custombuttons_edit_toolbar_off,
+                                if (pinned) R.string.custombuttons_edit_toolbar_on else R.string.custombuttons_edit_toolbar_off,
                             ),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    Switch(checked = onToolbar, onCheckedChange = { onToolbar = it })
+                    Switch(checked = pinned, onCheckedChange = { pinned = it })
+                }
+                // Its icon, on the toolbar, in the toolbox and on the floating button (#1375).
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.custombuttons_edit_icon))
+                        Text(
+                            if (icon.isEmpty()) {
+                                stringResource(R.string.custombuttons_edit_icon_own)
+                            } else {
+                                systemPackLabel(packs, icon)
+                                    ?.let { stringResource(R.string.custombuttons_edit_icon_from_pack, it) }
+                                    ?: stringResource(R.string.custombuttons_edit_icon_own)
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    if (icon.isNotEmpty()) {
+                        Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) {
+                            ResolvedGlyph(rememberSystemPackIcon(icon))
+                        }
+                        TextButton(onClick = { icon = "" }) { Text(stringResource(R.string.custombuttons_edit_icon_reset)) }
+                    }
+                    TextButton(onClick = { choosingIcon = true }) {
+                        Text(stringResource(R.string.custombuttons_edit_icon_choose))
+                    }
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(label.trim(), onToolbar) }) { Text(stringResource(CommonR.string.common_save)) }
+            TextButton(onClick = { onSave(label.trim(), pinned, icon) }) { Text(stringResource(CommonR.string.common_save)) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(CommonR.string.common_cancel)) }

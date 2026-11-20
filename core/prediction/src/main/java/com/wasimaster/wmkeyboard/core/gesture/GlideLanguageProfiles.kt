@@ -83,6 +83,8 @@ object GlideLanguageProfiles {
         val joinCost: Double,
         val joinMinPart: Int,
         val joinPartPenalty: Double,
+        /** [GlideBeam.Tuning.joinLinkCost]; infinite, reading no linking letters, unless a row says otherwise. */
+        val joinLinkCost: Double = Double.POSITIVE_INFINITY,
         /** Decoder nats per nat the context model prefers a stroke's candidate over the first it can read. */
         val lmBlend: Double = DEFAULT_LM_BLEND,
         /** The most [lmBlend] moves a candidate either way. */
@@ -115,13 +117,13 @@ object GlideLanguageProfiles {
             val weight = if (hasContext) freqWeightWithContext else freqWeight
             return if (tuning.freqWeight == weight && tuning.gapWeight == gapWeight &&
                 tuning.joinCost == joinCost && tuning.joinMinPart == joinMinPart &&
-                tuning.joinPartPenalty == joinPartPenalty
+                tuning.joinPartPenalty == joinPartPenalty && tuning.joinLinkCost == joinLinkCost
             ) {
                 tuning
             } else {
                 tuning.copy(
                     freqWeight = weight, gapWeight = gapWeight, joinCost = joinCost,
-                    joinMinPart = joinMinPart, joinPartPenalty = joinPartPenalty,
+                    joinMinPart = joinMinPart, joinPartPenalty = joinPartPenalty, joinLinkCost = joinLinkCost,
                 )
             }
         }
@@ -159,6 +161,12 @@ object GlideLanguageProfiles {
         joinCost = 8.0,
         joinMinPart = 4,
         joinPartPenalty = 0.1,
+        // Arbeit-s-zeit, Sonne-n-schein (#966). On synthetic strokes of 12
+        // compounds held out of the 150k list (glide_cases, this profile),
+        // with the compound lexicon's guard applied: 2 read right without
+        // linking letters, 4 at 1.0, 6 at 0.5 and at 0; 24 listed words read
+        // exactly as before at every cost. Real German strokes not re-run.
+        joinLinkCost = 0.5,
         lmBlend = 0.5,
         lmBlendCap = 5.0,
         glideLmBlend = 0.5,
@@ -220,6 +228,36 @@ object GlideLanguageProfiles {
     )
 
     /**
+     * Japanese: Kana JIS strokes spell readings ([KanaGlide][com.wasimaster.wmkeyboard.core.input.composer.KanaGlide]),
+     * fifty keys on a grid built for ten, where many readings share a shape
+     * and the reading weights spread far wider than a word list's. No real
+     * Japanese swipes exist to fit against, so this row is measured on
+     * synthetic strokes (glide_cases, the JIS rows a key apart and 1.7 keys
+     * high): 600 readings drawn by their frequency in `ja_full`, four seeds
+     * each, read with the bundled reading counts. Read first:
+     *
+     *     freqWeight         clean strokes   sloppy strokes
+     *     1.0 (default)        82.3 %           79.0 %
+     *     0.5                  89.4 %           86.1 %
+     *     0.25                 92.9 %           89.6 %
+     *     0.15                 93.8 %           89.3 %
+     *
+     * (clean: corners cut 0.3 key, tremor 0.06; sloppy: 0.45 and 0.12.) The
+     * table's own scores without the counts go 73.0 % to 90.3 % clean and
+     * 66.3 % to 84.0 % sloppy for the same move. 0.25 rather than 0.15: the
+     * strokes are drawn through the key centres, which flatters shape, and
+     * 0.15 already reads fewer of the sloppy strokes. The gap weight at 2.0
+     * costs at 0.25 (92.6 % / 88.4 %), and joins stay off.
+     */
+    val JAPANESE = Profile(
+        freqWeight = 0.25,
+        gapWeight = GlideBeam.Tuning.DEFAULT.gapWeight,
+        joinCost = GlideBeam.Tuning.DEFAULT.joinCost,
+        joinMinPart = GlideBeam.Tuning.DEFAULT.joinMinPart,
+        joinPartPenalty = GlideBeam.Tuning.DEFAULT.joinPartPenalty,
+    )
+
+    /**
      * English: the decoder defaults are its fit. The small bundled list uses
      * 0.7/3.0 with pieces: +4.9 top-1 on the original 2,129/1,824 hard slice,
      * +3.25 on the full 26,523 public set. The large list uses 0.5/5.0 on
@@ -249,6 +287,7 @@ object GlideLanguageProfiles {
         "et" to ESTONIAN,
         "fi" to FINNISH,
         "hu" to HUNGARIAN,
+        "ja" to JAPANESE,
     )
 
     /**

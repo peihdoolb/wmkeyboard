@@ -200,6 +200,13 @@ data class ThemeSpec(
     val backgroundImageLandscape: String? = null,
     /** Alpha applied to the background image itself (shared by both orientations). */
     val backgroundImageOpacity: Float = 1f,
+    /**
+     * How bright the background image is drawn, 1 as the file has it and
+     * [IMAGE_BRIGHTNESS_MIN] at the darkest (#1222). Unlike the opacity it
+     * darkens the picture itself, so nothing behind it shows through, and it
+     * reaches the picture on the keys too. An older build ignores it.
+     */
+    val backgroundImageBrightness: Float = 1f,
     /** Blur radius applied to the background image (0 = sharp, 25 = heavy). */
     val backgroundImageBlur: Float = 0f,
     /**
@@ -261,6 +268,14 @@ data class ThemeSpec(
     // Keys
     val keyShape: KeyShapeKind = KeyShapeKind.ROUNDED,
     /**
+     * Draw every layout's keys as a honeycomb (#1390): hexagons, every other
+     * row half a key over, the rows fitted into each other, as a layout's own
+     * `grid: "hex"` draws its keys. A part of how the keys look, so it sits
+     * with the key shape; a layout that asks for a honeycomb gets one either
+     * way. Corners round by the key radius unless the shape is Sharp (#1392).
+     */
+    val honeycomb: Boolean = false,
+    /**
      * Absolute path of an image drawn on every letter key, clipped to the key
      * shape, over the key colour. Never set in exports — the bytes travel in
      * [assets] under `"keyTexture"`. The class-specific slots below fall back
@@ -288,6 +303,12 @@ data class ThemeSpec(
     val keyGradient: GradientSpec? = null,
     val keyBackground: Long = 0xFF303338,
     val keyText: Long = 0xFFE9E9EE,
+    /**
+     * A soft outline drawn round every key's letters (#1222), so they read
+     * over a busy photo whatever its colours. Null draws none. Alpha is
+     * honoured: a half-strength black is a shadow, a full one an outline.
+     */
+    val keyTextOutline: Long? = null,
     val modifierKeyBackground: Long = 0xFF222428,
     val modifierKeyText: Long? = null,
     /**
@@ -301,6 +322,17 @@ data class ThemeSpec(
     val enterKeyBackground: Long = 0xFF4C8DF6,
     val enterKeyText: Long = 0xFF0B1220,
     val pressedKeyBackground: Long? = null,
+    /**
+     * The label colour while a letter key is held; null keeps [keyText].
+     * A pressed face that is much lighter or darker than the key needs its
+     * own label colour, or the letter vanishes under the finger (Telegram
+     * 7588).
+     */
+    val pressedKeyText: Long? = null,
+    /** The same for the function keys (Shift, delete, ?123…); null keeps their label colour. */
+    val pressedModifierKeyText: Long? = null,
+    /** The same for Enter; null keeps the function keys' label colour, as Enter always did. */
+    val pressedEnterKeyText: Long? = null,
     val keyBorderColor: Long? = null,
     val keyBorderWidthDp: Float = 0f,
     /**
@@ -529,6 +561,11 @@ data class ThemeSpec(
     /** The floating style's bubble height, in dp; see [popupHeightDp]. */
     val popupFloatingHeightDp: Int? = null,
     val keyHeightDp: Int? = null,
+    /**
+     * The number row's height, in dp; 0 draws it at the key height, null
+     * follows the global setting (#1376).
+     */
+    val numberRowHeightDp: Int? = null,
     val keyGapScale: Float? = null,
     /**
      * Legacy symmetric side padding. Still honoured, and still written when a
@@ -807,6 +844,8 @@ data class KeyOverride(
      */
     val pressedBackground: Long? = null,
     val text: Long? = null,
+    /** This key's label while held; null follows its class's pressed label colour. */
+    val pressedText: Long? = null,
     val border: Long? = null,
     val popupBackground: Long? = null,
     val popupText: Long? = null,
@@ -886,6 +925,13 @@ data class KeyOverride(
      * null follows the board's. See [KEY_OVERRIDE_RADIUS_RANGE].
      */
     val cornerRadiusDp: Int? = null,
+    /**
+     * Whether this key is a pane of the theme's frosted glass; null follows
+     * its class ([FrostSpec]'s surfaces: letters, function keys, Enter,
+     * space). True makes one key glass on a theme whose glass leaves its
+     * class out; false keeps one key solid. Nothing on a theme without glass.
+     */
+    val glass: Boolean? = null,
 ) {
     val isEmpty: Boolean
         get() = background == null && text == null && border == null &&
@@ -893,7 +939,8 @@ data class KeyOverride(
             texture == null && pressedTexture == null && effect == null && effectParam == null &&
             pressedBackground == null &&
             labelScale == null && bold == null && shape == null &&
-            gradient == null && glow == null && glowDp == null && cornerRadiusDp == null
+            gradient == null && glow == null && glowDp == null && cornerRadiusDp == null &&
+            glass == null && pressedText == null
 
     /**
      * The kind of burst this key throws on its own, or null when it follows

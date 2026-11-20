@@ -85,6 +85,18 @@ internal class ReadingMethodComposer(private val id: String) : Composer {
     override fun buffersChar(c: Char): Boolean = data?.keys?.contains(c) == true
 
     /**
+     * The space bar too, mid-word, on a schema that spells with it (a
+     * Bopomofo tone, see [InputMethodMeta.spaceKey]): once after each run of
+     * other keys, so a second space still commits.
+     */
+    override fun buffersChar(c: Char, composing: CharSequence): Boolean =
+        if (c == ' ') {
+            data?.meta?.spaceKey == true && composing.isNotEmpty() && composing.last() != ' '
+        } else {
+            buffersChar(c)
+        }
+
+    /**
      * The schema's own display rules (Zhuyin symbols for keys, full pinyin for
      * double-pinyin pairs), applied syllable by syllable with a space between,
      * the way Rime shows its composition: the rules are written for one
@@ -196,9 +208,13 @@ internal class ReadingMethodComposer(private val id: String) : Composer {
 
 /**
  * An m17n method: the rules write the text in place, as a phonetic layout
- * does, so there is no strip to choose from. The composing region shows what
- * the rules have written so far, and a space commits what they leave when the
- * word closes ([finishBuffer]).
+ * does. The composing region shows what the rules have written so far, and a
+ * space commits what they leave when the word closes ([finishBuffer]).
+ *
+ * A method that offers lists to choose from (m17n's `candidates`, moved
+ * through with `select`) is a conversion here: the strip shows the list the
+ * keys ended on, the rules' own choice first, and a pick writes the text with
+ * that choice in place. A method without lists has no strip to choose from.
  */
 internal class RulesMethodComposer(private val id: String) : Composer {
 
@@ -206,6 +222,23 @@ internal class RulesMethodComposer(private val id: String) : Composer {
         get() = ImportedInputMethods.loaded(id) as? ImportedInputMethods.Loaded.Rules
 
     override val isTransliterating: Boolean get() = true
+
+    override val isConversion: Boolean get() = data?.program?.listsCandidates == true
+
+    override fun candidates(buffer: String): List<String> = candidates(buffer, LIMIT)
+
+    /**
+     * The whole text with each choice of the open list in place, the rules'
+     * own first; just the text when the keys ended on no list.
+     */
+    override fun candidates(buffer: String, limit: Int): List<String> {
+        val rules = data ?: return emptyList()
+        if (buffer.isEmpty() || limit <= 0) return emptyList()
+        val result = rules.engine.run(buffer)
+        val choices = result.choices ?: return listOf(result.text)
+        val order = listOf(choices.index) + choices.list.indices.filter { it != choices.index }
+        return order.asSequence().map(choices::textWith).distinct().take(limit).toList()
+    }
 
     /** ITRANS spells native digits and marks with digits and punctuation keys. */
     override val bufferDigits: Boolean get() = data?.takesDigits == true
@@ -248,6 +281,78 @@ internal class RulesMethodComposer(private val id: String) : Composer {
         last?.let { if (it.rules === rules && it.buffer == buffer) return it.text }
         val text = rules.engine.run(buffer).text
         last = Composed(rules, buffer, text)
+        return text
+    }
+
+    private companion object {
+        const val LIMIT = 12
+    }
+}
+
+/**
+ * A jquery.ime method: like [RulesMethodComposer], the rules write the text in
+ * place and there is nothing to choose, so the composing region shows what
+ * they have written so far. The keys of the word are replayed from the start
+ * on every key, which is what lets a backspace take back one key rather than
+ * one letter of the output.
+ */
+internal class RegexMethodComposer(private val id: String) : Composer {
+
+    private val rules: RegexRules?
+        get() = ImportedInputMethods.regexRules(id)
+
+    override val isTransliterating: Boolean get() = true
+
+    /**
+     * The signs the rules read: `\` to escape, `` ` `` or `~` for a virama,
+     * `.` for a danda. On a method typed in the script itself, also the marks
+     * its rules name, the virama a KaChaTaThaPa word is built from first.
+     */
+    override fun buffersChar(c: Char): Boolean {
+        val r = rules ?: return false
+        return c in r.keys || (c >= '\u0080' && r.typesScript && c in r.scriptChars)
+    }
+
+    override fun buffersText(text: String, composing: CharSequence): Boolean =
+        rules?.typesScript == true && text.all { it.isLetter() || buffersChar(it) }
+
+    override fun composeBuffer(buffer: String): String = compose(buffer)
+
+    /**
+     * The word as it closes. On a web page the space that ends a word is a
+     * key like any other, and some methods have a rule for it (Hindi
+     * transliteration drops the virama a word was left with: `agar` is अगर्
+     * until the space makes it अगर). Here the space commits the word instead
+     * of reaching the rules, so it is run through them on the way out, and
+     * kept only if they did something with the word before it.
+     */
+    override fun finishBuffer(buffer: String): String {
+        val r = rules ?: return buffer
+        val closed = r.run("$buffer ")
+        return if (closed.endsWith(' ')) closed.dropLast(1) else compose(buffer)
+    }
+
+    /** What one more key writes, compared from the front: a key may rewrite the letter before it. */
+    override fun keyPreview(buffer: String, key: String, wholeCluster: Boolean): String? {
+        if (key.isEmpty() || rules == null) return null
+        val before = compose(buffer)
+        val after = compose(buffer + key)
+        var shared = 0
+        while (shared < before.length && shared < after.length && before[shared] == after[shared]) shared++
+        return after.substring(shared)
+    }
+
+    private class Composed(val rules: RegexRules, val buffer: String, val text: String)
+
+    /** One entry, for the same reason as the m17n composer's: the key hints ask after one buffer forty times. */
+    @Volatile
+    private var last: Composed? = null
+
+    private fun compose(buffer: String): String {
+        val r = rules ?: return buffer
+        last?.let { if (it.rules === r && it.buffer == buffer) return it.text }
+        val text = r.run(buffer)
+        last = Composed(r, buffer, text)
         return text
     }
 }

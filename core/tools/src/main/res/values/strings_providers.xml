@@ -65,6 +65,12 @@
     <string name="core_tools_provider_rens" translatable="false">Rens</string>
     <string name="core_tools_provider_rens_desc">A Rens server: a free front end to Google Lens. It reads the text in a photo for you, in most scripts.</string>
     <string name="core_tools_provider_rens_translate_desc">A Rens server: a free front end to Google Lens. It gives the photo back with its text translated.</string>
+    <string name="core_tools_provider_ocr_on_device">On this phone</string>
+    <string name="core_tools_provider_ocr_on_device_desc">Reads on the phone with the best engine this build has for the script: ML Kit, Tesseract or PaddleOCR. Nothing leaves the phone.</string>
+    <string name="core_tools_provider_ocr_mlkit">ML Kit</string>
+    <string name="core_tools_provider_ocr_mlkit_desc">Google\'s text recognizer, on the phone: Latin, Chinese, Japanese, Korean and Devanagari.</string>
+    <string name="core_tools_provider_ocr_tesseract">Tesseract</string>
+    <string name="core_tools_provider_ocr_tesseract_desc">Free software, on the phone, for any script it has a language pack for. The packs download from the OCR tool\'s page.</string>
     <string name="core_tools_provider_vision_ocr">Your vision model</string>
     <string name="core_tools_provider_vision_ocr_desc">A model that reads images, through a server that answers OpenAI chat requests. Needs the address and the model name.</string>
     <string name="core_tools_provider_google_translate">Google Translate</string>
@@ -76,6 +82,14 @@
     <string name="core_tools_provider_brave">Brave Search</string>
     <string name="core_tools_provider_mwmbl" translatable="false">Mwmbl</string>
     <string name="core_tools_provider_mwmbl_desc">A free, non-profit search engine with its own index. No key. Web results only, no images.</string>
+    <string name="core_tools_provider_wiby" translatable="false">Wiby</string>
+    <string name="core_tools_provider_wiby_desc">A search engine for the small web: personal and hobby pages, the way the web used to be. No key. Web results only, no images.</string>
+    <string name="core_tools_provider_marginalia" translatable="false">Marginalia Search</string>
+    <string name="core_tools_provider_marginalia_desc">An independent search engine that favours non-commercial, text-first sites. Works without a key on a shared one that is often busy; a free key of your own comes by e-mail. Web results only.</string>
+    <string name="core_tools_provider_wikipedia_search">Wikipedia</string>
+    <string name="core_tools_provider_wikipedia_search_desc">Searches Wikipedia\'s articles, in the Wikipedia tool\'s language. No key. Articles only, no images.</string>
+    <string name="core_tools_provider_browser">Search in the browser</string>
+    <string name="core_tools_provider_browser_desc">Hands what you typed to your default browser\'s own search and does nothing more. No results in the keyboard, and the AI tools skip it.</string>
     <string name="core_tools_provider_brave_desc">Web and image search. Needs a Brave Search API key, unless this build has one.</string>
     <string name="core_tools_provider_unsplash_desc">Photos from Unsplash. Needs an API key, unless this build has one.</string>
     <string name="core_tools_provider_pexels_desc">Photos from Pexels. Needs an API key, unless this build has one.</string>

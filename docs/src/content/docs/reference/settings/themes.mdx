@@ -147,12 +147,12 @@ Tapping a swatch, or flipping **Dark theme**, reseeds every seed-derived color a
 |---|---|---|
 | Background | Color, alpha | `#17181C` |
 | Gradient background | [Gradient](#gradients), off by default | Off |
-| Background image | Opens **Select a background** | None |
+| Background image | Opens **Select a background**: a still picture or an animation from this device, a photo service, or your collection | None |
 | Crop image *(image set)* | Opens the [crop dialog](#cropping-an-image) | n/a |
 | Image opacity *(image set)* | Slider, 0–100% | 100% |
-| Image blur *(image set)* | Slider, 0–25 | 0 (off) |
-| Picture on the keys *(image set)* | Toggle; shows the image only on the keys, [details](/themes/backgrounds/#picture-on-the-keys) | Off |
-| Play animated image *(image set)* | Toggle | On for a GIF or animated WebP, off otherwise |
+| Image brightness *(image set)* | Slider, 20–100%; darkens the picture on the board and on the keys, 0.6.8 | 100% |
+| Image blur *(image set, not playing)* | Slider, 0–25; also blurs the pieces with Picture on the keys | 0 (off) |
+| Play animated image *(GIF or animated WebP set)* | Toggle | On when picked as an animation |
 | Landscape background image | Opens **Select a background**, always shown | None |
 | Crop landscape image *(landscape image set)* | Opens the crop dialog | n/a |
 | Photo credit *(service photo set)* | Opens the photographer's page | n/a |
@@ -203,6 +203,7 @@ See [Frosted glass](/themes/glass/).
 | Setting | Control | Default |
 |---|---|---|
 | Key shape | Row → picker dialog: None / Rounded / Square / Pill / Cut / Squircle / Arch / Leaf / Slanted / Hexagon / Scalloped / Ticket / Circle | Rounded |
+| Honeycomb grid | Toggle; draws every layout as a [honeycomb](/languages/custom-layouts/#honeycomb-layouts) while this theme is on | Off |
 | Letter keys | Color, alpha | `#303338` |
 | Key gradient | [Gradient](#gradients), off by default | Off |
 | Key text | Color | `#E9E9EE` |
@@ -212,6 +213,9 @@ See [Frosted glass](/themes/glass/).
 | Enter key | Color, alpha | `#4C8DF6` |
 | Enter key icon | Color | `#0B1220` |
 | Pressed key | Color, Auto → blended from Letter keys and Accent | Auto |
+| Pressed key text | Color, Auto → Key text. Advanced | Auto |
+| Pressed function key text | Color, Auto → Modifier key text. Advanced | Auto |
+| Pressed Enter icon | Color, Auto → Modifier key text. Advanced | Auto |
 | Key border | Color, Auto → no border | Auto |
 | Border width *(border color set)* | Slider, 0–3dp | 0dp |
 
@@ -249,7 +253,9 @@ A key's style:
 | Popup background, Popup text | Its preview bubble's colours. Hidden while key popups are off |
 | Key image | A picture for this one key, drawn at the theme's texture fit and opacity. Bin icon clears it |
 | Press effect | Automatic, Stars, Hearts, Sparkle, Confetti, Emoji (with its own emoji field). Hidden under reduce motion |
+| Key text while pressed | This key's label colour while held; Auto follows its class's pressed text |
 | Bold label | Automatic / Off / On |
+| Frosted glass | Automatic / Off / On; only on a theme with frosted glass |
 | Label size | Switch to set one, then a slider from 30% to 200% of a letter's size |
 
 A letter's style follows that letter onto every layout that has it. A key that does one particular thing (an arrow or Home on the text-editing pad, a tool key, a page key) is styled for that thing alone, and a style an older or imported theme gave the whole family still reaches every key with none of its own. The sheet opens half-way, so the pinned preview shows each change as you make it. Anything you leave unset keeps following the theme, and an armed or locked modifier still shows the accent or pressed face whatever colour you gave it. A label size the layout gave the key in the layout editor beats the theme's.
@@ -386,7 +392,8 @@ Off by default, so a theme follows the three global sliders: two under Appearanc
 | Tool background width *(on)* | Slider | 38–64dp | your current global value |
 | Toolbar height *(on)* | Slider | 24–80dp | your current global value |
 | Popup height *(on)* | Slider | 32–160dp | your current global value, one per bubble style |
-| Key height *(on)* | Slider | 32–100dp | your current global value |
+| Key height *(on)* | Slider | 24–100dp | your current global value |
+| Number row height *(on)* | Slider | Same as keys, 24–100dp | your current global value |
 | Key spacing *(on)* | Slider | 0–2× | your current global value |
 | Left padding *(on)* | Slider | 0–30% | your current global value |
 | Right padding *(on)* | Slider | 0–30% | your current global value |
@@ -438,12 +445,20 @@ A small particle burst under every key press. With **Emoji**, each character you
 | Texture strength | Slider | 0–100% | The material's |
 | Edge | Choice | None / Stitching / Glow / Ink outline / Glazed rim / Pressed in / Double ring / Dotted / Pixel bevel | The material's |
 | Edge colour | Colour, or Auto | Any | Auto |
-| Edge width *(advanced)* | Slider | 0.5–6 dp | The material's |
+| Edge width *(advanced)* | Slider | 0.1–6 dp | The material's |
 | Label effect | Choice | None / Glow / Pressed in / Raised / Shadow / Dot matrix | The material's |
 | Rainbow sheen | Slider | 0–100% | The material's |
 | Soft shadow | Slider | 0–100% | The material's |
 
 Every control after the first shows the material's own value until you change it. Picking another material clears the changes.
+
+### Key caps art
+
+| Setting | Control | Default |
+|---|---|---|
+| Picture on the keys | Toggle; cuts the background image across the keys, needs an image set under Board, [details](/themes/backgrounds/#picture-on-the-keys) | Off |
+
+Until 0.6.8 this switch sat under **Image blur** in the Board section.
 
 ### Moving background
 

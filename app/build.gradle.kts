@@ -1013,14 +1013,16 @@ val bundleReleaseNotes =
         )
     }
 
-// Copies the docs site's settings-since.json (which release first had each
-// settings screen and row, written from git tags) to assets/, so a link copied
-// from a settings row says when that row arrived instead of the version it was
-// copied on (SettingsSince). A checkout without the docs ships without it, and
-// copied links fall back to the build's own version.
+// Copies settings-since.json (which release first had each settings screen
+// and row, written from git tags) to assets/, so a link copied from a settings
+// row says when that row arrived instead of the version it was copied on
+// (SettingsSince). Read from app/src/main, not from the docs site's copy:
+// F-Droid deletes docs/ before building, and an APK with the file never
+// matched one built without it (#1346). The Settings links workflow writes
+// both copies.
 val bundleSettingsSince =
     tasks.register<BundleReleaseNotesTask>("bundleSettingsSince") {
-        notes.from(rootProject.layout.projectDirectory.file("docs/src/data/settings-since.json"))
+        notes.from(layout.projectDirectory.file("src/main/settings-since.json"))
         fileName.set("settings-since.json")
     }
 
@@ -1673,6 +1675,11 @@ if (docShots) {
         systemProperty("wmkb.docShots.only", providers.gradleProperty("wmkb.docShots.only").getOrElse(""))
         // `-Pwmkb.docShots.modes=light` (or dark) renders one of the two, for a quick look.
         systemProperty("wmkb.docShots.modes", providers.gradleProperty("wmkb.docShots.modes").getOrElse(""))
+        // HelpShots, the pictures in a setting's "?" dialog: rendered only when
+        // `-Pwmkb.helpShots.only=<regex over title resource names>` is given
+        // (`.*` for all), into build/helpshots/ for tools/helpvisuals/build.py.
+        systemProperty("wmkb.helpShots.only", providers.gradleProperty("wmkb.helpShots.only").getOrElse(""))
+        systemProperty("wmkb.helpShots.out", layout.buildDirectory.dir("helpshots").get().asFile.absolutePath)
         // AddonShots, the community repository's render: `-Pwmkb.addonShots.in=<dir>`
         // holds request.json and the submitted file, `-Pwmkb.addonShots.out=<dir>`
         // gets the PNGs and the report.

@@ -2,6 +2,7 @@ package com.wasimaster.wmkeyboard.app
 
 import com.wasimaster.wmkeyboard.core.voice.whisper.WhisperCatalog
 import com.wasimaster.wmkeyboard.core.ui.DisabledReason
+import com.wasimaster.wmkeyboard.core.download.DataMirror
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
@@ -99,8 +100,6 @@ internal fun PrivacySettings(
     onNavigate: (String) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    // Decides which rows the group holds; the rows read everything else.
-    val learnOn = settings.watch { it.learnFromTyping }
     // An unnamed group has no SectionHeader to hold it off the top bar, so the
     // breathing room a named group gets for free is spelled out here.
     Spacer(Modifier.height(12.dp))
@@ -140,10 +139,89 @@ internal fun PrivacySettings(
             ) { onNavigate(AppLockTargets.ROUTE) }
         }
     }
+    // Learning moved to Typing › Suggestions and Android backup to Backup &
+    // restore (#134): Privacy keeps what is about privacy itself.
     SettingsGroup(
-        stringResource(R.string.privacy_learning_group_title),
+        stringResource(R.string.privacy_incognito_group_title),
         info = stringResource(R.string.privacy_on_device_info),
     ) {
+        item {
+            ToggleSetting(
+                R.string.privacy_incognito_title,
+                stringResource(R.string.privacy_incognito_subtitle),
+                settings.watch { it.incognito },
+                info = stringResource(R.string.privacy_incognito_info),
+                default = SettingsDefaults.incognito,
+            ) { scope.launch { repository.setIncognito(it) } }
+        }
+        item(level = SettingLevel.STANDARD) {
+            ToggleSetting(
+                R.string.privacy_auto_incognito_title,
+                stringResource(R.string.privacy_auto_incognito_subtitle),
+                settings.watch { it.autoIncognito },
+                info = stringResource(AUTO_INCOGNITO_INFO),
+                default = SettingsDefaults.autoIncognito,
+            ) { scope.launch { repository.setAutoIncognito(it) } }
+        }
+        // #1215: the keyboard out of screenshots where what is typed is private.
+        item(level = SettingLevel.STANDARD) {
+            ToggleSetting(
+                R.string.privacy_secure_window_title,
+                stringResource(R.string.privacy_secure_window_subtitle),
+                settings.watch { it.layoutBehavior.secureWindow },
+                info = stringResource(R.string.privacy_secure_window_info),
+                default = SettingsDefaults.layoutBehavior.secureWindow,
+            ) { scope.launch { repository.setSecureWindow(it) } }
+        }
+    }
+    IncognitoAppsGroup(repository, settings)
+    OtherAppsGroup(repository, onNavigate)
+    // F-Droid's opt-in and the offline build's import are what a feature's
+    // message points to, so they show at every depth; the checksum switch,
+    // which is for one rare situation, stays with Everything.
+    val libraryChoice = NativeDelivery.active && (NativeConsent.downloadsNeedOptIn || !InternetPermission.granted)
+    SettingsGroup(
+        stringResource(R.string.privacy_downloads_group_title),
+        level = if (libraryChoice) SettingLevel.BASIC else SettingLevel.STANDARD,
+    ) {
+        item(level = SettingLevel.STANDARD, weight = 2) { DownloadMirrorRow(repository, settings) }
+        item(level = SettingLevel.ADVANCED) { VerifyChecksumsRow(repository, settings) }
+        item(visible = FeatureLibraryList.offered) { FeatureLibrariesNavRow() }
+        item { FeatureLibrariesRows() }
+    }
+    SettingsGroup(stringResource(R.string.privacy_data_group_title)) {
+        item {
+            ActionRow(
+                title = R.string.privacy_delete_learned_words_title,
+                subtitle = stringResource(R.string.privacy_delete_learned_words_subtitle),
+                action = stringResource(R.string.privacy_delete_learned_words_action),
+                confirm = stringResource(R.string.privacy_delete_learned_words_confirm),
+                lock = AppLockTargets["action_delete_learned_words"],
+            ) {
+                scope.launch {
+                    repository.clearLearnedData()
+                    // The Chinese, Japanese and Cantonese picks are one of the
+                    // files the repository deletes, but its live store is a
+                    // `:core:input` object that `:core:settings` cannot reach,
+                    // so the in-memory copy in this process is dropped here.
+                    CjkLearning.store?.clear()
+                }
+            }
+        }
+    }
+}
+
+/**
+ * What the keyboard learns from typing, and how it shares words with Android's
+ * own dictionary (#134: on Typing › Suggestions, beside the personal
+ * dictionary, rather than on Privacy).
+ */
+@Composable
+internal fun LearningGroup(repository: SettingsRepository, settings: LiveSettings) {
+    val scope = rememberCoroutineScope()
+    // Decides which rows the group holds; the rows read everything else.
+    val learnOn = settings.watch { it.learnFromTyping }
+    SettingsGroup(stringResource(R.string.privacy_learning_group_title)) {
         item {
             ToggleSetting(
                 R.string.privacy_learn_typing_title,
@@ -182,26 +260,13 @@ internal fun PrivacySettings(
                 default = SettingsDefaults.suggestionStrip.expandUserDictShortcuts,
             ) { scope.launch { repository.setExpandUserDictShortcuts(it) } }
         }
-        item {
-            ToggleSetting(
-                R.string.privacy_incognito_title,
-                stringResource(R.string.privacy_incognito_subtitle),
-                settings.watch { it.incognito },
-                info = stringResource(R.string.privacy_incognito_info),
-                default = SettingsDefaults.incognito,
-            ) { scope.launch { repository.setIncognito(it) } }
-        }
-        item(level = SettingLevel.STANDARD) {
-            ToggleSetting(
-                R.string.privacy_auto_incognito_title,
-                stringResource(R.string.privacy_auto_incognito_subtitle),
-                settings.watch { it.autoIncognito },
-                info = stringResource(AUTO_INCOGNITO_INFO),
-                default = SettingsDefaults.autoIncognito,
-            ) { scope.launch { repository.setAutoIncognito(it) } }
-        }
     }
-    IncognitoAppsGroup(repository, settings)
+}
+
+/** Android's own backup switch, on the Backup & restore screen (#134). */
+@Composable
+internal fun AndroidBackupGroup(repository: SettingsRepository, settings: LiveSettings) {
+    val scope = rememberCoroutineScope()
     SettingsGroup(stringResource(R.string.privacy_backup_group_title)) {
         item(level = SettingLevel.STANDARD) {
             ToggleSetting(
@@ -213,39 +278,24 @@ internal fun PrivacySettings(
             ) { scope.launch { repository.setCloudBackup(it) } }
         }
     }
-    OtherAppsGroup(repository, onNavigate)
-    // F-Droid's opt-in and the offline build's import are what a feature's
-    // message points to, so they show at every depth; the checksum switch,
-    // which is for one rare situation, stays with Everything.
-    val libraryChoice = NativeDelivery.active && (NativeConsent.downloadsNeedOptIn || !InternetPermission.granted)
-    SettingsGroup(
-        stringResource(R.string.privacy_downloads_group_title),
-        level = if (libraryChoice) SettingLevel.BASIC else SettingLevel.ADVANCED,
-    ) {
-        item(level = SettingLevel.ADVANCED) { VerifyChecksumsRow(repository, settings) }
-        item(visible = FeatureLibraryList.offered) { FeatureLibrariesNavRow() }
-        item { FeatureLibrariesRows() }
-    }
-    SettingsGroup(stringResource(R.string.privacy_data_group_title)) {
-        item {
-            ActionRow(
-                title = R.string.privacy_delete_learned_words_title,
-                subtitle = stringResource(R.string.privacy_delete_learned_words_subtitle),
-                action = stringResource(R.string.privacy_delete_learned_words_action),
-                confirm = stringResource(R.string.privacy_delete_learned_words_confirm),
-                lock = AppLockTargets["action_delete_learned_words"],
-            ) {
-                scope.launch {
-                    repository.clearLearnedData()
-                    // The Chinese, Japanese and Cantonese picks are one of the
-                    // files the repository deletes, but its live store is a
-                    // `:core:input` object that `:core:settings` cannot reach,
-                    // so the in-memory copy in this process is dropped here.
-                    CjkLearning.store?.clear()
-                }
-            }
-        }
-    }
+}
+
+/**
+ * A GitHub proxy every GitHub download tries first (#1045): for anyone GitHub
+ * is blocked or crawling for. The hint says when what is typed can't be used.
+ */
+@Composable
+private fun DownloadMirrorRow(repository: SettingsRepository, settings: LiveSettings) {
+    val stored = settings.watch { it.selfHosted.downloadMirror }
+    val usable = stored.isBlank() || DataMirror.isUsableProxy(stored)
+    TextFieldSetting(
+        label = stringResource(R.string.privacy_download_mirror_title),
+        value = stored,
+        hint = stringResource(
+            if (usable) R.string.privacy_download_mirror_hint else R.string.privacy_download_mirror_invalid,
+        ),
+        default = "",
+    ) { repository.setDownloadMirror(it) }
 }
 
 /**
@@ -461,6 +511,7 @@ internal fun VoiceSettings(repository: SettingsRepository, settings: LiveSetting
                     R.string.voice_typing_title,
                 ),
                 default = SettingsDefaults.voiceContinuous,
+                info = stringResource(R.string.voice_continuous_info),
             ) { scope.launch { repository.setVoiceContinuous(it) } }
         }
         item {
@@ -469,6 +520,7 @@ internal fun VoiceSettings(repository: SettingsRepository, settings: LiveSetting
                 stringResource(R.string.voice_keep_screen_on_subtitle),
                 settings.watch { it.voiceBar.keepScreenOn },
                 default = SettingsDefaults.voiceBar.keepScreenOn,
+                info = stringResource(R.string.voice_keep_screen_on_info),
             ) { scope.launch { repository.setVoiceKeepScreenOn(it) } }
         }
         item(level = SettingLevel.ADVANCED) {
@@ -501,6 +553,7 @@ internal fun VoiceSettings(repository: SettingsRepository, settings: LiveSetting
                 stringResource(R.string.voice_punctuation_subtitle),
                 settings.watch { it.voiceSpokenPunctuation },
                 default = SettingsDefaults.voiceSpokenPunctuation,
+                info = stringResource(R.string.voice_punctuation_info),
             ) { scope.launch { repository.setVoiceSpokenPunctuation(it) } }
         }
         // Only Sherpa, Omnilingual and Vosk write bare words; plain voice
@@ -743,6 +796,7 @@ internal fun VoiceServerSettings(repository: SettingsRepository, settings: LiveS
                 stringResource(R.string.voice_server_language_subtitle),
                 settings.watch { it.whisper.serverSendLanguage },
                 default = SettingsDefaults.whisper.serverSendLanguage,
+                info = stringResource(R.string.voice_server_language_info),
             ) { scope.launch { repository.setVoiceServerSendLanguage(it) } }
         }
         item {
@@ -796,6 +850,7 @@ internal fun ClipboardSettings(
                 default = SettingsDefaults.clipboard.history,
                 onChange = { scope.launch { repository.setClipboardHistory(it) } },
                 onOpen = { onNavigate("clipboard/history") },
+                info = stringResource(R.string.clipboard_history_info),
             )
         }
         item {
@@ -896,6 +951,15 @@ internal fun ClipboardSettings(
                 default = SettingsDefaults.clipboard.gridColumns.toFloat(),
             ) { scope.launch { repository.setClipboardGridColumns(it.roundToInt()) } }
         }
+        item(visible = clipView == ClipboardView.GRID) {
+            ToggleSetting(
+                R.string.clipboard_grid_rows_title,
+                stringResource(R.string.clipboard_grid_rows_subtitle),
+                settings.watch { it.clipboard.gridRows },
+                info = stringResource(R.string.clipboard_grid_rows_info),
+                default = SettingsDefaults.clipboard.gridRows,
+            ) { scope.launch { repository.setClipboardGridRows(it) } }
+        }
         item {
             val auto = stringResource(R.string.clipboard_lines_auto)
             SliderSetting(
@@ -954,6 +1018,7 @@ internal fun ClipboardSettings(
                 stringResource(R.string.clipboard_outline_pinned_subtitle),
                 settings.watch { it.clipboard.outlinePinned },
                 default = SettingsDefaults.clipboard.outlinePinned,
+                info = stringResource(R.string.clipboard_outline_pinned_info),
             ) { scope.launch { repository.setClipboardOutlinePinned(it) } }
         }
         item {
@@ -1010,6 +1075,7 @@ internal fun ClipboardSettings(
                 stringResource(R.string.clipboard_bump_on_paste_subtitle),
                 settings.watch { it.clipboard.bumpOnPaste },
                 default = SettingsDefaults.clipboard.bumpOnPaste,
+                info = stringResource(R.string.clipboard_bump_on_paste_info),
             ) { scope.launch { repository.setClipboardBumpOnPaste(it) } }
         }
         item {
@@ -1082,6 +1148,7 @@ internal fun ClipboardSettings(
                 stringResource(R.string.clipboard_search_subtitle),
                 settings.watch { it.clipboard.search },
                 default = SettingsDefaults.clipboard.search,
+                info = stringResource(R.string.clipboard_search_info),
             ) { scope.launch { repository.setClipboardSearch(it) } }
         }
         item(visible = clipSearch) {
@@ -1092,6 +1159,15 @@ internal fun ClipboardSettings(
                 info = stringResource(R.string.clipboard_search_regex_info),
                 default = SettingsDefaults.clipboard.searchRegex,
             ) { scope.launch { repository.setClipboardSearchRegex(it) } }
+        }
+        item(visible = clipSearch) {
+            ToggleSetting(
+                R.string.clipboard_regex_whole_title,
+                stringResource(R.string.clipboard_regex_whole_subtitle),
+                settings.watch { it.clipboard.regexWhole },
+                info = stringResource(R.string.clipboard_regex_whole_info),
+                default = SettingsDefaults.clipboard.regexWhole,
+            ) { scope.launch { repository.setClipboardRegexWhole(it) } }
         }
         item(visible = clipSearch) {
             ToggleSetting(
@@ -1117,7 +1193,17 @@ internal fun ClipboardSettings(
                 stringResource(R.string.clipboard_link_previews_subtitle),
                 settings.watch { it.clipboard.linkPreviews },
                 default = SettingsDefaults.clipboard.linkPreviews,
+                info = stringResource(R.string.clipboard_link_previews_info),
             ) { scope.launch { repository.setClipboardLinkPreviews(it) } }
+        }
+        item {
+            ToggleSetting(
+                R.string.clipboard_open_links_in_app_title,
+                stringResource(R.string.clipboard_open_links_in_app_subtitle),
+                settings.watch { it.clipboard.openLinksInApp },
+                info = stringResource(R.string.clipboard_open_links_in_app_info),
+                default = SettingsDefaults.clipboard.openLinksInApp,
+            ) { scope.launch { repository.setClipboardOpenLinksInApp(it) } }
         }
         item {
             ToggleSetting(
@@ -1203,6 +1289,7 @@ internal fun ClipboardHistorySettings(
                 range = 0f..168f,
                 display = { if (it.toInt() == 0) never else hoursFormat.format(it.toInt()) },
                 default = SettingsDefaults.clipboard.expiryHours.toFloat(),
+                info = stringResource(R.string.clipboard_expiry_info),
             ) { scope.launch { repository.setClipboardExpiryHours(it.toInt()) } }
         }
         item(level = SettingLevel.ADVANCED) {
@@ -1238,6 +1325,7 @@ internal fun ClipboardHistorySettings(
                 stringResource(R.string.clipboard_pinned_last_subtitle),
                 settings.watch { it.clipboard.pinnedLast },
                 default = SettingsDefaults.clipboard.pinnedLast,
+                info = stringResource(R.string.clipboard_pinned_last_info),
             ) { scope.launch { repository.setClipboardPinnedLast(it) } }
         }
         item(level = SettingLevel.ADVANCED) {
@@ -1270,6 +1358,7 @@ internal fun ClipboardHistorySettings(
                 stringResource(R.string.clipboard_text_only_subtitle),
                 textOnly,
                 default = SettingsDefaults.clipboard.textOnly,
+                info = stringResource(R.string.clipboard_text_only_info),
             ) { on -> scope.launch { repository.setClipboardTextOnly(on) } }
         }
         // Screenshots, the source app and the paste chip are all read as a
@@ -1284,6 +1373,7 @@ internal fun ClipboardHistorySettings(
                 enabled = !textOnly,
                 disabledReason = if (textOnly) DisabledReason(stringResource(R.string.clipboard_screenshots_text_only)) else null,
                 default = SettingsDefaults.clipboard.userScreenshots,
+                info = stringResource(R.string.clipboard_screenshots_info),
             ) { on ->
                 scope.launch { repository.setClipboardUserScreenshots(on) }
                 if (on && !hasImagesPermission(context)) {
@@ -1377,6 +1467,7 @@ internal fun ClipboardChipsSettings(
                 stringResource(R.string.clipboard_suggest_recent_subtitle),
                 suggestRecent,
                 default = SettingsDefaults.clipboard.suggestRecent,
+                info = stringResource(R.string.clipboard_suggest_recent_info),
             ) { scope.launch { repository.setClipboardSuggestRecent(it) } }
         }
         item(visible = suggestRecent, level = SettingLevel.ADVANCED) {
@@ -1475,6 +1566,7 @@ internal fun ClipboardChipsSettings(
                 stringResource(R.string.clipboard_entity_to_clipboard_subtitle),
                 settings.watch { it.clipboard.entityToClipboard },
                 default = SettingsDefaults.clipboard.entityToClipboard,
+                info = stringResource(R.string.clipboard_entity_to_clipboard_info),
             ) { scope.launch { repository.setClipboardEntityToClipboard(it) } }
         }
         item(visible = detectEntities, level = SettingLevel.ADVANCED) {
@@ -1607,6 +1699,7 @@ internal fun ClipboardRulesSettings(
                 range = 1f..120f,
                 display = { minutesFormat.format(it.toInt()) },
                 default = SettingsDefaults.clipboard.sensitiveExpiryMinutes.toFloat(),
+                info = stringResource(R.string.clipboard_sensitive_expiry_info),
             ) {
                 scope.launch { repository.setClipboardSensitiveExpiryMinutes(it.toInt()) }
             }
@@ -1642,8 +1735,11 @@ private fun clipHoldActionLabels(): Map<ClipHoldAction, String> = ClipHoldAction
         when (it) {
             ClipHoldAction.DETAILS -> ImeR.string.ime_clip_details_desc
             ClipHoldAction.PASTE_NEXT -> ImeR.string.ime_clip_paste_next
+            ClipHoldAction.COLLECT -> ImeR.string.ime_clip_collect
+            ClipHoldAction.SEND_TO_BOARD -> ImeR.string.ime_clip_send_to_board
             ClipHoldAction.SELECT -> ImeR.string.ime_clip_select
             ClipHoldAction.REORDER -> ImeR.string.ime_clip_reorder
+            ClipHoldAction.MOVE_TOP -> ImeR.string.ime_clip_move_top
             ClipHoldAction.SHOW_IN_HISTORY -> ImeR.string.ime_clip_show_in_history
             ClipHoldAction.KEEP_ONLY -> ImeR.string.ime_clip_keep_only
             ClipHoldAction.EDIT -> ImeR.string.ime_clip_edit

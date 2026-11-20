@@ -53,6 +53,7 @@
     <string name="ime_notes_empty_trash_action">Empty trash</string>
     <string name="ime_notes_confirm_action">Tap again to confirm</string>
     <string name="ime_notes_show_more_action">Show more</string>
+    <string name="ime_notes_show_from_start_action">Show from the start</string>
     <!-- The shelf (#560): the header's round search button, the pinned row's label, and the floating pill that starts a note. -->
     <string name="ime_notes_search_desc">Search notes</string>
     <string name="ime_notes_pinned_section">Pinned</string>
@@ -60,6 +61,9 @@
     <string name="ime_notes_passages_section">Passages</string>
     <string name="ime_notes_passage_desc">From <xliff:g id="note" example="Quotes">%1$s</xliff:g>. Tap to insert, hold to open the note.</string>
     <string name="ime_notes_jot_hint">Jot something…</string>
+    <!-- The paperclip on the jot pill: makes a new note from the text of the field being typed in. -->
+    <string name="ime_notes_attach_field_desc">New note from the text in this field</string>
+    <string name="ime_notes_field_empty_toast">This field has no text to keep</string>
     <!-- The read view's header button that unfolds the second row of actions. -->
     <string name="ime_notes_more_desc">More actions</string>
     <!-- %1$s is a relative time like "2 hours ago". -->

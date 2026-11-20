@@ -163,6 +163,7 @@
     <string name="search_kw_languages_cjk_flick_only">japanese flick toggle input keitai multitap repeated taps kana</string>
     <string name="search_kw_languages_cjk_loose_marks">japanese flick dakuten handakuten sokuon modifier insensitive</string>
     <string name="search_kw_languages_cjk_traditional">taiwan hong kong hanzi</string>
+    <string name="search_kw_languages_cjk_kyujitai">japanese kanji kyujitai shinjitai old new forms traditional</string>
     <string name="search_kw_languages_rime_engine">librime trime weasel squirrel 中州韻 deploy</string>
     <string name="search_kw_languages_mozc_engine">google input 日本語入力 変換 文節 bunsetsu segment kanji</string>
     <string name="search_kw_languages_conjunct_backspace">hindi devanagari indic akshara cluster</string>
@@ -197,6 +198,7 @@
     <string name="search_kw_layout_split">thumb ergonomic tablet</string>
     <string name="search_kw_privacy_backup">phone migrate</string>
     <string name="search_kw_privacy_verify_checksums">hash sha256 integrity signature mismatch corrupt</string>
+    <string name="search_kw_privacy_download_mirror">proxy github blocked china vpn ghproxy slow download raw.githubusercontent</string>
     <string name="search_kw_privacy_learn_typing">personalization adapt remember habits</string>
     <string name="search_kw_privacy_lock">biometric face unlock applock passcode</string>
     <string name="search_kw_selection_macros">highlight context menu share</string>

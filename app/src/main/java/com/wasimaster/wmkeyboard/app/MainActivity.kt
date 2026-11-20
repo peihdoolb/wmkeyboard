@@ -30,6 +30,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -204,6 +206,8 @@ import com.wasimaster.wmkeyboard.core.emoji.EmojiDictDownloadManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.RowScope
@@ -362,8 +366,17 @@ class MainActivity : FragmentActivity() {
         // Modes added since this install was first seeded — the settings
         // screen should list them even if the keyboard has not run yet.
         lifecycleScope.launch { repository.seedNewDefaultModes() }
+        lifecycleScope.launch { repository.settleSensitiveClipDefault() }
         // Plugin tiles made as custom buttons become tools of their own.
         lifecycleScope.launch { repository.migratePluginTiles() }
+        // Custom buttons made before they were tools get their place (#1345),
+        // and the screens that name a button as a tool read it from here.
+        lifecycleScope.launch { repository.placeCustomButtonTools() }
+        lifecycleScope.launch {
+            repository.settings.map { it.toolbox.customButtons }.distinctUntilChanged().collect {
+                com.wasimaster.wmkeyboard.ime.ui.CustomButtonFaces.buttons = it
+            }
+        }
         val nav = navFor(intent)
         pendingNav.value = nav
         // A rotation rebuilds the activity from the same intent. The dialog
@@ -818,6 +831,14 @@ private fun SettingsNavHost(
             foldScope.launch { repository.setSettingsDepth(depth) }
         }
     }
+    // How the pictures in a setting's "?" dialog arrive (About › App), and
+    // the index of which settings have one, read off the main thread.
+    val helpPicturesMode = settings.watch { it.appUi.helpPictures }
+    val helpPictures = remember(helpPicturesMode) {
+        HelpPicturesControl(helpPicturesMode) { mode -> foldScope.launch { repository.setHelpPictures(mode) } }
+    }
+    val helpContext = LocalContext.current
+    LaunchedEffect(Unit) { HelpVisuals.warm(helpContext) }
     // Which feature bundles are on (Extensions), read by Home, Advanced, the
     // Tools list and every picker; a route a switched-off bundle owns is
     // turned towards the Extensions screen before navigate() sees it.
@@ -924,6 +945,7 @@ private fun SettingsNavHost(
             LocalSettingsCrumbTrail provides crumbs,
             LocalAdvancedFolds provides folds,
             LocalSettingsDepth provides depthControl,
+            LocalHelpPictures provides helpPictures,
             LocalExtensions provides extensionsOn,
             LocalTwoPane provides twoPane,
             // Published here rather than threaded through, so that the small
@@ -1001,6 +1023,12 @@ private fun SettingsNavHost(
                 }
                 if (settings.watch { it.onboardingDone }) {
                     NewSettingsBar(openNewSetting, Modifier.align(Alignment.BottomCenter))
+                    // The release notes, once, after an update (#730).
+                    if (NewSettings.notesDue) {
+                        com.wasimaster.wmkeyboard.app.updates.InstalledReleaseNotesDialog {
+                            NewSettings.notesShown(context)
+                        }
+                    }
                 }
                 // The favourites list a custom button on the keyboard opened (#1236).
                 if (openFavourites) FavouritesSheet(here = null, onDismiss = onFavouritesClosed)
@@ -1605,7 +1633,7 @@ private fun SettingsNavGraph(
                 { navController.popBackStack() },
                 route = CustomButtons.ROUTE,
             ) {
-                CustomButtonsScreen(repository, settings)
+                CustomButtonsScreen(repository, settings, onNavigate = { navController.navigate(it) })
             }
         }
         composable(LauncherAppIcons.ROUTE) {
@@ -1749,7 +1777,24 @@ private fun SettingsNavGraph(
             ) {
                 LayoutSizeSettings(
                     repository, settings,
+                    onNavigate = { navController.navigate(it) },
                 )
+            }
+        }
+        composable("layout/size/{variant}") { backStackEntry ->
+            // A link may name portrait or nothing at all: those have no page
+            // of their own, so they land on the size page itself.
+            val variant = sizeVariantOf(backStackEntry.arguments?.getString("variant"))
+            SettingsScreen(
+                variant?.let { stringResource(it.labelRes) } ?: stringResource(R.string.layout_size_position_title),
+                { navController.popBackStack() },
+                route = "layout/size",
+            ) {
+                if (variant == null) {
+                    LayoutSizeSettings(repository, settings, onNavigate = { navController.navigate(it) })
+                } else {
+                    LayoutVariantSizeSettings(repository, settings, variant)
+                }
             }
         }
         composable("layout/panels") {
@@ -2845,7 +2890,7 @@ private fun SettingsNavGraph(
                 { navController.popBackStack() },
                 route = ExtensionsRoute,
             ) {
-                ExtensionsSettings(repository, settings) { extension ->
+                ExtensionsSettings(repository, settings, onOpenRoute = { navController.navigate(it) }) { extension ->
                     navController.navigate(extensionRoute(extension))
                 }
             }
@@ -3104,6 +3149,7 @@ private fun SettingsNavGraph(
                     onOpenDebugLog = { navController.navigate("debug_log") },
                     onOpenStorage = { navController.navigate("storage") },
                     onOpenResources = { navController.navigate("resources") },
+                    onOpenRoute = { navController.navigate(it) },
                     onOpenDebugInfo = { navController.navigate("debug_info") },
                     onOpenImportHub = { navController.navigate("import_hub") },
                     onOpenStatistics = { navController.navigate("statistics") },
@@ -3143,6 +3189,36 @@ private fun SettingsNavGraph(
                 route = "resources",
             ) {
                 ResourcesScreen(useRoot = settings.watch { it.launcher.useRoot }) { navController.navigate(it) }
+            }
+        }
+        composable(TOOL_DASHBOARD_ROUTE) {
+            SettingsScreen(
+                stringResource(R.string.tool_dashboard_title),
+                { navController.popBackStack() },
+                route = TOOL_DASHBOARD_ROUTE,
+            ) {
+                ToolDashboardScreen { navController.navigate(it) }
+            }
+        }
+        composable(TOOL_DASHBOARD_TOOL_ROUTE) { backStackEntry ->
+            val tool = backStackEntry.arguments?.getString("tool")?.let { name -> ToolbarTool.entries.firstOrNull { it.name == name } }
+            if (tool != null) {
+                SettingsScreen(
+                    stringResource(toolTitle(tool)),
+                    { navController.popBackStack() },
+                    route = toolDashboardRoute(tool),
+                ) {
+                    ToolDashboardToolScreen(repository, tool) { navController.navigate(it) }
+                }
+            }
+        }
+        composable(PROVIDER_CREDITS_ROUTE) {
+            SettingsScreen(
+                stringResource(R.string.providers_credits_title),
+                { navController.popBackStack() },
+                route = PROVIDER_CREDITS_ROUTE,
+            ) {
+                ProviderCreditsScreen(settings) { navController.navigate(it) }
             }
         }
         composable("debug_info") {
@@ -4436,24 +4512,45 @@ internal fun transparentListColors(): ListItemColors =
 internal fun InfoButton(title: String, detail: String) {
     if (LocalRowExtrasBare.current) return
     var open by remember { mutableStateOf(false) }
+    // A "?" that opens on a picture is drawn in the accent, so the rows worth
+    // opening for a look can be told from the ones that only have words.
+    val pictured = rowHasHelpPicture()
     IconButton(onClick = { open = true }, modifier = Modifier.size(RowExtraSize)) {
         Icon(
             Icons.AutoMirrored.Outlined.HelpOutline,
             contentDescription = stringResource(R.string.home_info_desc, title),
             modifier = Modifier.size(18.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            tint = if (pictured) MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
         )
     }
     if (open) InfoDialog(title, detail) { open = false }
 }
 
-/** The explanation [InfoButton] opens: the setting's name over its [detail], and OK. */
+/**
+ * The explanation [InfoButton] opens: the setting's name over its [detail],
+ * and OK. A setting that has a picture, a clip or an off/on comparison shows
+ * it above the words ([HelpVisualSlot]); [pictureKey] is the title resource
+ * the picture is filed under, the row's own unless the caller says otherwise.
+ */
 @Composable
-internal fun InfoDialog(title: String, detail: String, onDismiss: () -> Unit) {
+internal fun InfoDialog(
+    title: String,
+    detail: String,
+    @StringRes pictureKey: Int = LocalRowLinkKey.current?.key ?: 0,
+    onDismiss: () -> Unit,
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
-        text = { Text(detail) },
+        text = {
+            // Scrolls: a picture over a long explanation is taller than a
+            // small phone's dialog.
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                HelpVisualSlot(pictureKey, title)
+                Text(detail)
+            }
+        },
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(stringResource(CommonR.string.common_ok))

@@ -104,6 +104,7 @@ import com.wasimaster.wmkeyboard.core.settings.GlideLoopExtentRange
 import com.wasimaster.wmkeyboard.core.settings.GlideLoopRadiusRange
 import com.wasimaster.wmkeyboard.core.settings.GlideLoopStrengthRange
 import com.wasimaster.wmkeyboard.core.settings.GlidePauseStrengthRange
+import com.wasimaster.wmkeyboard.core.settings.GlideSentenceWeightRange
 import com.wasimaster.wmkeyboard.core.settings.GlideWiggleExtentRange
 import com.wasimaster.wmkeyboard.core.settings.GlideKeptStrokesRange
 import com.wasimaster.wmkeyboard.core.settings.GlideShapesPerWordRange
@@ -134,6 +135,7 @@ import com.wasimaster.wmkeyboard.core.settings.NumberGrouping
 import com.wasimaster.wmkeyboard.core.settings.RankControl
 import com.wasimaster.wmkeyboard.core.settings.RecentWordPlacement
 import com.wasimaster.wmkeyboard.core.settings.RetypeButtonPlace
+import com.wasimaster.wmkeyboard.core.settings.RetypeTarget
 import com.wasimaster.wmkeyboard.core.settings.stripHidden
 import com.wasimaster.wmkeyboard.core.settings.SuggestionOverflow
 import com.wasimaster.wmkeyboard.core.settings.SpaceSwipeAction
@@ -505,6 +507,17 @@ internal fun TypingCorrectionsSettings(
         // Not autocorrect's own: learning from fixes made by hand, the strip's
         // spelling, filtering and ranking, and language detection all work
         // with autocorrect off, so they stay on the page with it off (#1112).
+        // The strip's two-word splits have their own switch apart from
+        // "Add missing spaces" (#413).
+        item(level = SettingLevel.ADVANCED) {
+            ToggleSetting(
+                R.string.typing_strip_splits_title,
+                stringResource(R.string.typing_strip_splits_subtitle),
+                settings.watch { it.suggestionStrip.stripSplits },
+                info = stringResource(R.string.typing_strip_splits_info),
+                default = SettingsDefaults.suggestionStrip.stripSplits,
+            ) { scope.launch { repository.setStripSplits(it) } }
+        }
         item(level = SettingLevel.STANDARD) {
             ToggleSetting(
                 R.string.typing_undo_delete_chip_title,
@@ -523,7 +536,10 @@ internal fun TypingCorrectionsSettings(
                 default = SettingsDefaults.suggestionStrip.learnFromCorrections,
             ) { scope.launch { repository.setLearnFromCorrections(it) } }
         }
-        item(level = SettingLevel.STANDARD) {
+        // At every level (#620): the list of what was learned is where a
+        // correction the keyboard keeps making is undone, and search sends
+        // people here for it whatever level they are on.
+        item {
             NavRow(
                 R.string.typing_learned_corrections_title,
                 stringResource(R.string.typing_learned_corrections_subtitle),
@@ -596,6 +612,7 @@ internal fun TypingCorrectionsSettings(
                 stringResource(R.string.typing_shortcuts_converting_subtitle),
                 settings.watch { it.suggestionStrip.shortcutsWhileConverting },
                 default = SettingsDefaults.suggestionStrip.shortcutsWhileConverting,
+                info = stringResource(R.string.typing_shortcuts_converting_info),
             ) { scope.launch { repository.setShortcutsWhileConverting(it) } }
         }
         item {
@@ -604,6 +621,7 @@ internal fun TypingCorrectionsSettings(
                 stringResource(R.string.typing_chips_at_end_subtitle),
                 settings.watch { it.suggestionStrip.chipsAtEnd },
                 default = SettingsDefaults.suggestionStrip.chipsAtEnd,
+                info = stringResource(R.string.typing_chips_at_end_info),
             ) { scope.launch { repository.setStripChipsAtEnd(it) } }
         }
         item(level = SettingLevel.ADVANCED) {
@@ -753,6 +771,7 @@ internal fun TypingWritingSettings(
     val doubleSpaceOn = settings.watch { it.autoText.doubleSpacePeriod || it.autoText.doubleSpaceTab }
     val autoSpaceOn = settings.watch { it.autoText.spaceAfterPunctuation }
     val hugOn = settings.watch { it.autoText.hugPunctuation }
+    val closeBracketsOn = settings.watch { it.textEditing.autoCloseBrackets }
     val smartPunctuationOn = settings.watch { it.autoText.smartPunctuation }
     val recaseOn = settings.watch { it.textEditing.recapitalizeSelectionWithShift }
     val capitalizeOn = settings.watch { it.autoText.capitalize }
@@ -774,6 +793,16 @@ internal fun TypingWritingSettings(
                 info = stringResource(R.string.typing_auto_capitalize_words_info),
                 default = SettingsDefaults.autoText.capitalizeWords,
             ) { scope.launch { repository.setAutoCapitalizeWords(it) } }
+        }
+        // Capitals where the app never asked for any (#1341).
+        item(visible = capitalizeOn, level = SettingLevel.STANDARD) {
+            ToggleSetting(
+                R.string.typing_auto_capitalize_any_field_title,
+                stringResource(R.string.typing_auto_capitalize_any_field_subtitle),
+                settings.watch { it.autoText.capitalizeAnyField },
+                info = stringResource(R.string.typing_auto_capitalize_any_field_info),
+                default = SettingsDefaults.autoText.capitalizeAnyField,
+            ) { scope.launch { repository.setAutoCapitalizeAnyField(it) } }
         }
         item(level = SettingLevel.STANDARD) {
             ToggleSetting(
@@ -982,12 +1011,22 @@ internal fun TypingWritingSettings(
                 default = SettingsDefaults.textEditing.autoCloseBrackets,
             ) { scope.launch { repository.setAutoCloseBrackets(it) } }
         }
+        // Pairs of the user's own, closed the same way (#1361).
+        item(visible = closeBracketsOn, level = SettingLevel.ADVANCED) {
+            TextFieldSetting(
+                label = stringResource(R.string.typing_auto_close_custom_pairs_title),
+                value = settings.watch { it.textEditing.autoCloseCustomPairs },
+                hint = stringResource(R.string.typing_auto_close_custom_pairs_hint),
+                default = SettingsDefaults.textEditing.autoCloseCustomPairs,
+            ) { repository.setAutoCloseCustomPairs(it) }
+        }
         item(level = SettingLevel.ADVANCED) {
             ToggleSetting(
                 R.string.typing_auto_close_quotes_title,
                 stringResource(R.string.typing_auto_close_quotes_subtitle),
                 settings.watch { it.textEditing.autoCloseQuotes },
                 default = SettingsDefaults.textEditing.autoCloseQuotes,
+                info = stringResource(R.string.typing_auto_close_quotes_info),
             ) { scope.launch { repository.setAutoCloseQuotes(it) } }
         }
         item(level = SettingLevel.STANDARD) {
@@ -1160,6 +1199,7 @@ internal fun TypingSuggestionsSettings(
                 stringResource(R.string.typing_rtl_words_from_right_subtitle),
                 settings.watch { it.suggestionStrip.rtlWordsFromRight },
                 default = SettingsDefaults.suggestionStrip.rtlWordsFromRight,
+                info = stringResource(R.string.typing_rtl_words_from_right_info),
             ) { scope.launch { repository.setRtlWordsFromRight(it) } }
         }
         item(level = SettingLevel.ADVANCED) {
@@ -1187,6 +1227,7 @@ internal fun TypingSuggestionsSettings(
                 stringResource(R.string.typing_suggestion_pages_emoji_subtitle),
                 settings.watch { it.suggestionStrip.pagesEmoji },
                 default = SettingsDefaults.suggestionStrip.pagesEmoji,
+                info = stringResource(R.string.typing_suggestion_pages_emoji_info),
             ) { scope.launch { repository.setSuggestionPagesEmoji(it) } }
         }
         item(visible = pagesGridOn, level = SettingLevel.ADVANCED) {
@@ -1195,6 +1236,7 @@ internal fun TypingSuggestionsSettings(
                 stringResource(R.string.typing_suggestion_pages_fancy_subtitle),
                 settings.watch { it.suggestionStrip.pagesFancy },
                 default = SettingsDefaults.suggestionStrip.pagesFancy,
+                info = stringResource(R.string.typing_suggestion_pages_fancy_info),
             ) { scope.launch { repository.setSuggestionPagesFancy(it) } }
         }
         item(level = SettingLevel.ADVANCED) {
@@ -1213,6 +1255,7 @@ internal fun TypingSuggestionsSettings(
                 stringResource(R.string.typing_suggestion_expanded_grid_subtitle),
                 settings.watch { it.suggestionStrip.expandedGrid },
                 default = SettingsDefaults.suggestionStrip.expandedGrid,
+                info = stringResource(R.string.typing_suggestion_expanded_grid_info),
             ) { scope.launch { repository.setSuggestionsExpandedGrid(it) } }
         }
         item(level = SettingLevel.STANDARD) {
@@ -1506,6 +1549,7 @@ internal fun TypingSuggestionsSettings(
                 stringResource(R.string.typing_typed_word_first_subtitle),
                 settings.watch { it.suggestionStrip.typedWordFirst },
                 default = SettingsDefaults.suggestionStrip.typedWordFirst,
+                info = stringResource(R.string.typing_typed_word_first_info),
             ) { scope.launch { repository.setTypedWordFirst(it) } }
         }
         item(level = SettingLevel.ADVANCED) {
@@ -1514,6 +1558,7 @@ internal fun TypingSuggestionsSettings(
                 stringResource(R.string.typing_rank_marks_subtitle),
                 settings.watch { it.suggestionStrip.rankMarks },
                 default = SettingsDefaults.suggestionStrip.rankMarks,
+                info = stringResource(R.string.typing_rank_marks_info),
             ) { scope.launch { repository.setSuggestionRankMarks(it) } }
         }
         item(level = SettingLevel.STANDARD) {
@@ -1682,6 +1727,8 @@ internal fun TypingSuggestionsSettings(
             ) { scope.launch { repository.setDeleteEditsImportedLists(it) } }
         }
     }
+    // What is learned from typing (#134), here beside the personal dictionary.
+    LearningGroup(repository, settings)
     // Where Synonyms looks (#321), in the order it asks: a provider is only
     // asked when those above it had nothing or were unreachable.
     ProvidersGroup(
@@ -1971,6 +2018,7 @@ internal fun TypingSmartChipsSettings(
                     stringResource(R.string.typing_smart_calc_subtitle),
                     calcOn,
                     default = SettingsDefaults.smartCalc,
+                    info = stringResource(R.string.typing_smart_calc_info),
                 ) { scope.launch { repository.setSmartCalc(it) } }
             }
             chipToolsOffItem(SmartSuggest.Family.CALC, calcOn, usable, repository)
@@ -1980,6 +2028,7 @@ internal fun TypingSmartChipsSettings(
                     stringResource(R.string.typing_smart_currency_subtitle, settings.watch { it.currencyTo }),
                     currencyOn,
                     default = SettingsDefaults.smartCurrency,
+                    info = stringResource(R.string.typing_smart_currency_info),
                 ) { scope.launch { repository.setSmartCurrency(it) } }
             }
             chipToolsOffItem(SmartSuggest.Family.CURRENCY, currencyOn, usable, repository)
@@ -1989,6 +2038,7 @@ internal fun TypingSmartChipsSettings(
                     stringResource(R.string.typing_smart_units_subtitle),
                     unitsOn,
                     default = SettingsDefaults.smartUnits,
+                    info = stringResource(R.string.typing_smart_units_info),
                 ) { scope.launch { repository.setSmartUnits(it) } }
             }
             chipToolsOffItem(SmartSuggest.Family.UNITS, unitsOn, usable, repository)
@@ -2007,6 +2057,7 @@ internal fun TypingSmartChipsSettings(
                     stringResource(R.string.typing_smart_dates_subtitle),
                     datesOn,
                     default = SettingsDefaults.smartChips.dates,
+                    info = stringResource(R.string.typing_smart_dates_info),
                 ) { scope.launch { repository.setSmartChipDates(it) } }
             }
             // Issue #1089: the date written the user's own way, or ways.
@@ -2025,6 +2076,7 @@ internal fun TypingSmartChipsSettings(
                     stringResource(R.string.typing_smart_weather_subtitle),
                     weatherOn,
                     default = SettingsDefaults.smartChips.weather,
+                    info = stringResource(R.string.typing_smart_weather_info),
                 ) { scope.launch { repository.setSmartChipWeather(it) } }
             }
             chipToolsOffItem(SmartSuggest.Family.WEATHER, weatherOn, usable, repository)
@@ -2034,6 +2086,7 @@ internal fun TypingSmartChipsSettings(
                     stringResource(R.string.typing_smart_lookups_subtitle),
                     lookupsOn,
                     default = SettingsDefaults.smartChips.lookups,
+                    info = stringResource(R.string.typing_smart_lookups_info),
                 ) { scope.launch { repository.setSmartChipLookups(it) } }
             }
             chipToolsOffItem(SmartSuggest.Family.LOOKUPS, lookupsOn, usable, repository)
@@ -2043,6 +2096,7 @@ internal fun TypingSmartChipsSettings(
                     stringResource(R.string.typing_smart_intents_subtitle),
                     intentsOn,
                     default = SettingsDefaults.smartChips.intents,
+                    info = stringResource(R.string.typing_smart_intents_info),
                 ) { scope.launch { repository.setSmartChipIntents(it) } }
             }
             chipToolsOffItem(SmartSuggest.Family.TRANSLATE, intentsOn, usable, repository)
@@ -2052,6 +2106,7 @@ internal fun TypingSmartChipsSettings(
                     stringResource(R.string.typing_smart_gifs_subtitle),
                     gifsOn,
                     default = SettingsDefaults.smartChips.gifs,
+                    info = stringResource(R.string.typing_smart_gifs_info),
                 ) { scope.launch { repository.setSmartChipGifs(it) } }
             }
             // Celebrations are read inside the translate hints (see chips.mdx),
@@ -2093,6 +2148,7 @@ internal fun TypingSmartChipsSettings(
                     detail = { style ->
                         ChoiceDetail(stringResource(numberGroupingDescRes(style)))
                     },
+                    info = stringResource(R.string.typing_smart_number_grouping_info),
                 ) { scope.launch { repository.setSmartChipNumberGrouping(it) } }
             }
             // #656: a contact's name typed → call or text them. Reads the
@@ -2136,7 +2192,18 @@ internal fun TypingSmartChipsSettings(
                     selected = settings.watch { it.smartChips.contactMessageApp },
                     onChange = { scope.launch { repository.setSmartChipContactMessageApp(it) } },
                     default = SettingsDefaults.smartChips.contactMessageApp,
+                    info = stringResource(R.string.typing_smart_contact_message_info),
                 )
+            }
+            // #656: an installed app's name typed → open it.
+            item(level = SettingLevel.STANDARD) {
+                ToggleSetting(
+                    R.string.typing_smart_apps_title,
+                    stringResource(R.string.typing_smart_apps_subtitle),
+                    settings.watch { it.smartChips.apps },
+                    info = stringResource(R.string.typing_smart_apps_info),
+                    default = SettingsDefaults.smartChips.apps,
+                ) { scope.launch { repository.setSmartChipApps(it) } }
             }
             // The same text typed a few times in a row → the Text repeat tool,
             // opened on it with the count already set.
@@ -2158,6 +2225,7 @@ internal fun TypingSmartChipsSettings(
                     range = (TextRepeat.MIN_REPEAT_AFTER..TextRepeat.MAX_REPEAT_AFTER).toList(),
                     display = { it.toString() },
                     default = SettingsDefaults.smartChips.repeatAfter,
+                    info = stringResource(R.string.typing_smart_repeat_after_info),
                 ) { scope.launch { repository.setSmartChipRepeatAfter(it) } }
             }
             // #665: the gear on a chip takes the text it answered out of the
@@ -2329,6 +2397,7 @@ internal fun TypingCodesSettings(
                     steps = wholeSteps(1f..10f),
                     display = { minutesFormat.format(it.toInt()) },
                     default = SettingsDefaults.otp.expiryMinutes.toFloat(),
+                    info = stringResource(R.string.typing_otp_expiry_info),
                 ) { scope.launch { repository.setOtpExpiryMinutes(it.toInt()) } }
             }
             item(level = SettingLevel.STANDARD) {
@@ -2492,6 +2561,8 @@ internal fun TypingGlideSettings(
     val shiftCapitals = settings.watch { it.gesture.shiftGlideCapitals }
     val twoThumb = settings.watch { it.gesture.twoThumbGlide }
     val twoThumbWordEnd = settings.watch { it.gesture.twoThumbWordEnd }
+    val retypes = settings.watch { it.gesture.twoThumbBackspace } == TwoThumbBackspace.RETYPE_WORD ||
+        settings.watch { it.suggestionStrip.retypeButton } != RetypeButtonPlace.OFF
     // Two-thumb typing turns off the features that read one swipe as a
     // whole word (#745). Their rows stay editable, since the values come
     // back when it is turned off, but say so instead of their usual line.
@@ -2673,9 +2744,6 @@ internal fun TypingGlideSettings(
                         default = SettingsDefaults.gesture.twoThumbPauseBand,
                     ) { scope.launch { repository.setGestureTwoThumbPauseBand(it) } }
                 }
-                // What Backspace does to a two-thumb word (#1188), apart from
-                // the ordinary glide switch further down.
-                twoThumbBackspaceRows(settings, repository, scope, twoThumb, twoThumbWordEnd)
                 item(visible = !twoThumb, level = SettingLevel.ADVANCED) {
                     ToggleSetting(
                         R.string.typing_swipe_continues_typed_title,
@@ -2693,6 +2761,16 @@ internal fun TypingGlideSettings(
                         info = stringResource(R.string.typing_shift_glide_capitals_info),
                         default = SettingsDefaults.gesture.shiftGlideCapitals,
                     ) { scope.launch { repository.setGestureShiftCapitals(it) } }
+                }
+                // #1386: the delete key and the strip as places a stroke can go.
+                item(level = SettingLevel.STANDARD) {
+                    ToggleSetting(
+                        R.string.typing_glide_edit_targets_title,
+                        stringResource(R.string.typing_glide_edit_targets_subtitle),
+                        settings.watch { it.gesture.glideEditTargets },
+                        info = stringResource(R.string.typing_glide_edit_targets_info),
+                        default = SettingsDefaults.gesture.glideEditTargets,
+                    ) { scope.launch { repository.setGestureEditTargets(it) } }
                 }
                 // How a crossing reads, only while crossings mean anything.
                 item(visible = shiftCapitals, level = SettingLevel.ADVANCED) {
@@ -2921,6 +2999,21 @@ internal fun TypingGlideSettings(
             }
         }
     }
+    // What Backspace does to a two-thumb word (#1188), apart from the
+    // ordinary glide switch: a fold of its own, so the five rows about one key
+    // stop splitting the two-thumb timing rows from the rest of glide typing.
+    // Only rows that apply are drawn, and a fold with none draws nothing.
+    if (glideOn && swipeAction == LetterSwipeAction.TYPE_WORDS) {
+        SettingsGroup(
+            stringResource(R.string.typing_group_two_thumb_backspace_title),
+            level = SettingLevel.STANDARD,
+            foldKey = "typing/two_thumb_backspace",
+            info = stringResource(R.string.typing_two_thumb_backspace_info),
+            foldSummary = { stringResource(R.string.typing_group_two_thumb_backspace_summary) },
+        ) {
+            twoThumbBackspaceRows(settings, repository, scope, twoThumb, twoThumbWordEnd, retypes)
+        }
+    }
     // How the decoder reads a stroke: the three tolerances (#222) and the
     // three marks for a doubled letter (#270). A fold, because they are for
     // the people who want to tune and measure, and a screen that opens on
@@ -3012,6 +3105,7 @@ internal fun TypingGlideSettings(
                     enabled = pin == null,
                     disabledReason = pin,
                     default = SettingsDefaults.gesture.trailWidthDp,
+                    info = stringResource(R.string.typing_trail_width_info),
                 ) { scope.launch { repository.setGestureTrailWidthDp(it) } }
             }
             item(level = SettingLevel.ADVANCED) {
@@ -3023,6 +3117,7 @@ internal fun TypingGlideSettings(
                     range = 100f..1200f,
                     display = { msFormat.format(it.roundToInt()) },
                     default = SettingsDefaults.gesture.trailDurationMs.toFloat(),
+                    info = stringResource(R.string.typing_trail_length_info),
                 ) { scope.launch { repository.setGestureTrailDurationMs(it.roundToInt()) } }
             }
             item(level = SettingLevel.ADVANCED) {
@@ -3041,6 +3136,7 @@ internal fun TypingGlideSettings(
                     enabled = pin == null,
                     disabledReason = pin,
                     default = SettingsDefaults.gesture.trailOpacity,
+                    info = stringResource(R.string.typing_trail_opacity_info),
                 ) { scope.launch { repository.setGestureTrailOpacity(it) } }
             }
             // The pill that rides above the finger with the word the stroke has
@@ -3336,6 +3432,7 @@ internal fun TypingSpacebarSettings(
                     stringResource(R.string.typing_magnifier_follows_subtitle),
                     settings.watch { it.textEditing.magnifierFollowsText },
                     default = SettingsDefaults.textEditing.magnifierFollowsText,
+                    info = stringResource(R.string.typing_magnifier_follows_info),
                 ) { scope.launch { repository.setMagnifierFollowsText(it) } }
             }
         }
@@ -3818,6 +3915,7 @@ internal fun TypingHardwareSettings(
                 stringResource(R.string.typing_hw_lang_alt_space_subtitle),
                 settings.watch { it.hardwareKeyboard.languageSwitchAltSpace },
                 default = SettingsDefaults.hardwareKeyboard.languageSwitchAltSpace,
+                info = stringResource(R.string.typing_hw_lang_alt_space_info),
             ) { scope.launch { repository.setHwLanguageSwitchAltSpace(it) } }
         }
         item(level = SettingLevel.ADVANCED) {
@@ -3826,6 +3924,7 @@ internal fun TypingHardwareSettings(
                 stringResource(R.string.typing_hw_lang_shift_space_subtitle),
                 settings.watch { it.hardwareKeyboard.languageSwitchShiftSpace },
                 default = SettingsDefaults.hardwareKeyboard.languageSwitchShiftSpace,
+                info = stringResource(R.string.typing_hw_lang_shift_space_info),
             ) { scope.launch { repository.setHwLanguageSwitchShiftSpace(it) } }
         }
         item(level = SettingLevel.STANDARD) {
@@ -4425,6 +4524,8 @@ private fun SettingsGroupScope.twoThumbBackspaceRows(
     scope: CoroutineScope,
     twoThumb: Boolean,
     wordEnd: TwoThumbWordEnd,
+    /** Backspace's action is Retype word, or the Retype button is on. */
+    retypes: Boolean,
 ) {
     item(visible = twoThumb, level = SettingLevel.STANDARD) {
         val action = settings.watch { it.gesture.twoThumbBackspace }
@@ -4531,6 +4632,32 @@ private fun SettingsGroupScope.twoThumbBackspaceRows(
             ),
             default = SettingsDefaults.gesture.twoThumbBackspaceJoinFirst,
         ) { scope.launch { repository.setGestureTwoThumbBackspaceJoinFirst(it) } }
+    }
+    // Which word Retype takes while a later one is open: asked wherever a
+    // Retype can happen, by Backspace's action or by the button.
+    item(visible = twoThumb && retypes, level = SettingLevel.STANDARD) {
+        ChoiceSetting(
+            title = R.string.typing_retype_target_title,
+            subtitle = stringResource(R.string.typing_retype_target_subtitle),
+            info = stringResource(R.string.typing_retype_target_info),
+            options = listOf(
+                RetypeTarget.WORD_AT_CARET to stringResource(R.string.typing_retype_target_caret_label),
+                RetypeTarget.LAST_FINISHED to stringResource(R.string.typing_retype_target_finished_label),
+            ),
+            selected = settings.watch { it.gesture.retypeTarget },
+            onChange = { scope.launch { repository.setGestureRetypeTarget(it) } },
+            default = SettingsDefaults.gesture.retypeTarget,
+            detail = { option ->
+                ChoiceDetail(
+                    stringResource(
+                        when (option) {
+                            RetypeTarget.WORD_AT_CARET -> R.string.typing_retype_target_caret_desc
+                            RetypeTarget.LAST_FINISHED -> R.string.typing_retype_target_finished_desc
+                        },
+                    ),
+                )
+            },
+        )
     }
 }
 
@@ -4809,6 +4936,20 @@ private fun SettingsGroupScope.glideIntentRows(
             info = stringResource(R.string.typing_glide_pause_strength_info),
             default = SettingsDefaults.gesture.pauseStrength,
         ) { scope.launch { repository.setGesturePauseStrength(it) } }
+    }
+    // How much the sentence counts against the stroke (#1250): at 0 the
+    // stroke alone decides, the "gesture is king" a careful hand asked for.
+    item {
+        val valueFormat = stringResource(R.string.typing_value_multiplier_suffix)
+        SliderSetting(
+            R.string.typing_glide_sentence_weight_title,
+            subtitle = stringResource(R.string.typing_glide_sentence_weight_subtitle),
+            value = settings.watch { it.gesture.sentenceWeight },
+            range = GlideSentenceWeightRange,
+            display = { valueFormat.format("%.1f".format(it)) },
+            info = stringResource(R.string.typing_glide_sentence_weight_info),
+            default = SettingsDefaults.gesture.sentenceWeight,
+        ) { scope.launch { repository.setGestureSentenceWeight(it) } }
     }
     // The circle, and the three things that decide whether a curl is one.
     item {

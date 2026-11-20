@@ -17,7 +17,7 @@ use jni::objects::{JByteArray, JClass, JDoubleArray, JFloatArray, JIntArray, JLo
 use jni::sys::{jboolean, jfloat, jint, jlong, jobjectArray};
 use jni::JNIEnv;
 
-use wm_engine::fuzzy::Tier;
+use wm_engine::fuzzy::{RankScale, Tier};
 use wm_engine::glide::ctc::{CtcDecoder, CtcRanked, Scoring, Stroke as CtcStroke, CLASSES};
 use wm_engine::glide::duet::{Duet, DuetDecoder, Token};
 use wm_engine::glide::keymap::KeyMap;
@@ -68,8 +68,15 @@ fn longs(env: &mut JNIEnv, a: &JLongArray) -> Option<Vec<i64>> {
     Some(out)
 }
 
-/// The tuning layout `glideTuningVersion` reports and `tuning` reads.
-const GLIDE_TUNING_VERSION: jint = 2;
+/// The tuning layout `glideTuningVersion` reports and `tuning` reads. 3
+/// says the same tuning layout as 2, plus each source's ranking scale
+/// appended to the decode's weights ([`SourceSpec::scale`]). 4 takes a 33rd
+/// field, `join_link_cost`, in the envelope as in the bare array.
+const GLIDE_TUNING_VERSION: jint = 4;
+
+/// The first tuning version with the envelope; `tuning` reads it from any
+/// version from here to [`GLIDE_TUNING_VERSION`].
+const FIRST_ENVELOPE_VERSION: jint = 2;
 
 /// `Tuning` from the Kotlin order: every field, booleans as 0/1, the
 /// floats exactly representable as doubles.
@@ -88,7 +95,10 @@ const GLIDE_TUNING_VERSION: jint = 2;
 /// `max_states`) and default when absent. `max_states` is capped at the
 /// workspace's documented ceiling.
 fn tuning(v: &[f64]) -> Option<Tuning> {
-    let fields: &[f64] = if v.len() >= 2 && v[0] as i32 == GLIDE_TUNING_VERSION && v[1] as i32 == 32 {
+    let fields: &[f64] = if v.len() >= 2
+        && (FIRST_ENVELOPE_VERSION..=GLIDE_TUNING_VERSION).contains(&(v[0] as i32))
+        && (v[1] as i32 == 32 || v[1] as i32 == 33)
+    {
         &v[2..]
     } else {
         v
@@ -127,6 +137,7 @@ fn tuning(v: &[f64]) -> Option<Tuning> {
         join_cost: fields[27],
         join_min_part: fields[28] as i32,
         join_part_penalty: fields[29],
+        join_link_cost: fields.get(32).copied().unwrap_or(f64::INFINITY),
         max_pops: fields.get(30).map_or(MAX_POPS, |&x| (x as usize).max(1)),
         max_states: fields.get(31).map_or(MAX_STATES, |&x| (x as usize).max(1).min(MAX_STATES)),
     })
@@ -166,6 +177,21 @@ impl SourceSpec {
     }
 }
 
+impl SourceSpec {
+    /// Source `i`'s ranking scale. Kotlin appends each source's floor and
+    /// stretch to `weights` (three values a source) once the library says it
+    /// reads them (`glideTuningVersion` 3); a weights array of one value a
+    /// source reads every list as stored.
+    fn scale(&self, i: usize) -> RankScale {
+        let n = self.handles.len();
+        if self.weights.len() >= 3 * n {
+            RankScale { floor: self.weights[n + i], per_nat: self.weights[2 * n + i] }
+        } else {
+            RankScale::RAW
+        }
+    }
+}
+
 /// `f` over the sources `spec` names, each trie held for the length of the call.
 fn with_sources<R>(env: &mut JNIEnv, spec: &SourceSpec, f: impl FnOnce(&[Source]) -> R) -> Option<R> {
     with_walkers(env, &spec.handles, &spec.kinds, |walkers| {
@@ -177,6 +203,7 @@ fn with_sources<R>(env: &mut JNIEnv, spec: &SourceSpec, f: impl FnOnce(&[Source]
                 log_weight: spec.weights[i],
                 tier: if spec.tiers[i] == 1 { Tier::User } else { Tier::Dictionary },
                 min_frequency: spec.floors[i],
+                scale: spec.scale(i),
             })
             .collect();
         f(&sources)
@@ -672,6 +699,20 @@ mod tests {
         let t = tuning(&v).expect("a valid tuning");
         assert_eq!(2000, t.max_pops);
         assert_eq!(8192, t.max_states);
+    }
+
+    #[test]
+    fn the_link_cost_is_the_33rd_field_and_off_without_it() {
+        let mut v = vec![GLIDE_TUNING_VERSION as f64, 33.0];
+        v.extend_from_slice(&shipped_tuning());
+        v.extend_from_slice(&[2000.0, 8192.0, 0.5]);
+        assert_eq!(0.5, tuning(&v).expect("a valid tuning").join_link_cost);
+        // An envelope of the version-2 shape, and the bare 32 values, read none.
+        let mut old = vec![2.0, 32.0];
+        old.extend_from_slice(&shipped_tuning());
+        old.extend_from_slice(&[2000.0, 8192.0]);
+        assert!(tuning(&old).expect("a valid tuning").join_link_cost.is_infinite());
+        assert!(tuning(&old[2..]).expect("a valid tuning").join_link_cost.is_infinite());
     }
 
     #[test]

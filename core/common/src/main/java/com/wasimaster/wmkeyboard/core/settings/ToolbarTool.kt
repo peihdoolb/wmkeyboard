@@ -95,6 +95,9 @@ enum class ToolbarTool {
     // A shortcut to the settings app's Statistics screen: the level, the
     // achievements and the tap heatmap, one tap from the keys (issue #390).
     STATISTICS,
+    // A shortcut to the settings app's Resources screen (#1380): the memory,
+    // processor time and models the keyboard holds, and a way to unload them.
+    RESOURCES,
     // Find and replace over the field (#627): the panel the selection bar's
     // Replace chip opens, reachable with nothing selected first.
     FIND_REPLACE,
@@ -171,6 +174,11 @@ enum class ToolbarTool {
     // search key). Action-only, like [CLIPBOARD_SEARCH]: meant for a key on
     // a CJK layout, a flick or a hold.
     HOMOPHONES,
+    // The clipboard typed out as key presses rather than pasted (#1314), for
+    // a field that refuses a paste. The text-editing panel's action of the
+    // same name, as a tool so a toolbar hold can run it. Action-only, like
+    // [CLIPBOARD_SEARCH].
+    TYPE_CLIPBOARD,
     // A to-do list with steps under each task (#920), kept in the app's files
     // and shared with the settings app's list. Can sync with a CalDAV task
     // list through DAVx5's task app when the user sets that up. Reads
@@ -333,7 +341,7 @@ fun toolOpensScreen(tool: ToolbarTool): Boolean = when (tool) {
     ToolbarTool.FANCY, ToolbarTool.CUSTOM_LAYOUT, ToolbarTool.HIDE_KEYBOARD, ToolbarTool.LEAVE_FIELD,
     ToolbarTool.SELECTION_ACTIONS, ToolbarTool.PHONETIC_ENGLISH, ToolbarTool.LANGUAGE,
     ToolbarTool.RECENT_COPIES, ToolbarTool.READ_BACK, ToolbarTool.SCREENSHOT, ToolbarTool.PRIVACY_SHADE,
-    ToolbarTool.CLEAR_FIELD, ToolbarTool.TIMESTAMP, ToolbarTool.HOMOPHONES,
+    ToolbarTool.CLEAR_FIELD, ToolbarTool.TIMESTAMP, ToolbarTool.HOMOPHONES, ToolbarTool.TYPE_CLIPBOARD,
     -> false
     // The cursor moves nudge the caret and nothing else, and the clipboard trio
     // acts on the selection in place.
@@ -377,7 +385,7 @@ val OptInOnlyTools: Set<ToolbarTool> = setOf(ToolbarTool.LEARN_FROM_TEXT)
 val ActionOnlyTools: Set<ToolbarTool> =
     setOf(
         ToolbarTool.CLIPBOARD_SEARCH, ToolbarTool.RECENT_COPIES, ToolbarTool.LEAVE_FIELD, ToolbarTool.QUICK_NOTE,
-        ToolbarTool.DEBUG_INFO, ToolbarTool.HOMOPHONES,
+        ToolbarTool.DEBUG_INFO, ToolbarTool.HOMOPHONES, ToolbarTool.TYPE_CLIPBOARD,
     )
 
 /**
@@ -451,7 +459,7 @@ val ToolTopUps: Set<ToolbarTool> = setOf(ToolbarTool.WIKIPEDIA, ToolbarTool.POWE
  */
 private val RestOfToolOrder: List<ToolbarTool> = listOf(
     ToolbarTool.WEB_SEARCH, ToolbarTool.IMAGE_SEARCH, ToolbarTool.AI_REPLY,
-    ToolbarTool.LEARN_FROM_TEXT, ToolbarTool.FIND_REPLACE, ToolbarTool.TYPING_TEST, ToolbarTool.SPEED_TEST, ToolbarTool.STATISTICS, ToolbarTool.PLUGINS,
+    ToolbarTool.LEARN_FROM_TEXT, ToolbarTool.FIND_REPLACE, ToolbarTool.TYPING_TEST, ToolbarTool.SPEED_TEST, ToolbarTool.STATISTICS, ToolbarTool.RESOURCES, ToolbarTool.PLUGINS,
     ToolbarTool.CUSTOM_LAYOUT, ToolbarTool.LANGUAGE,
     ToolbarTool.FLOATING, ToolbarTool.PERSISTENT, ToolbarTool.RESIZE, ToolbarTool.INCOGNITO, ToolbarTool.PRIVACY_SHADE,
     ToolbarTool.SELECTION_ACTIONS, ToolbarTool.PHONETIC_ENGLISH, ToolbarTool.SOUND_HAPTICS,
@@ -468,7 +476,7 @@ private val RestOfToolOrder: List<ToolbarTool> = listOf(
     ToolbarTool.SELECT_MODE,
     ToolbarTool.COPY, ToolbarTool.CUT, ToolbarTool.PASTE, ToolbarTool.CLEAR_FIELD,
     ToolbarTool.CLIPBOARD_SEARCH, ToolbarTool.RECENT_COPIES, ToolbarTool.LEAVE_FIELD,
-    ToolbarTool.QUICK_NOTE, ToolbarTool.DEBUG_INFO, ToolbarTool.HOMOPHONES,
+    ToolbarTool.QUICK_NOTE, ToolbarTool.DEBUG_INFO, ToolbarTool.HOMOPHONES, ToolbarTool.TYPE_CLIPBOARD,
 )
 
 /**

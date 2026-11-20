@@ -26,6 +26,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 import java.util.UUID
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * One-shot chat completion against the AI tool's configured provider —
@@ -61,6 +62,25 @@ object AiClient {
          * for it; everywhere else it is ignored.
          */
         val reasoning: Boolean? = null,
+        /** Brave only: its research mode, several searches before one answer. */
+        val braveResearch: Boolean = false,
+        /**
+         * An OpenAI-compatible server's own chat route (#388), for one that
+         * does not answer on `/chat/completions`; blank for that default.
+         */
+        val path: String = "",
+        /**
+         * The services to ask, in order, when this one fails before writing
+         * anything ([AiSettings.fallbackNext]); empty for none.
+         */
+        val backups: List<Config> = emptyList(),
+        /**
+         * Sampling temperature, or null for the service's own default. Set by
+         * the suggestion strip's Creativity (#1048); the panel and the chat
+         * leave it to the service. Left out where the model refuses one: a
+         * reasoning model, or Anthropic's with thinking on.
+         */
+        val temperature: Double? = null,
     )
 
     /** The placeholder a header value can use for [Config.sessionId]. */
@@ -256,10 +276,24 @@ object AiClient {
         AiProvider.LM_STUDIO -> "${config.baseUrl.trimEnd('/')}/v1/chat/completions"
         // The user gives the address up to and including any version segment,
         // because those differ between services (/v1, /openai/v1, /api/v1).
-        AiProvider.OPENAI_COMPATIBLE -> "${config.baseUrl.trimEnd('/')}/chat/completions"
+        AiProvider.OPENAI_COMPATIBLE -> routed(config.baseUrl, config.path, "/chat/completions")
         // The user's own privatemode-proxy: its address with or without /v1.
         AiProvider.PRIVATEMODE -> privatemodeProxyBase(config.baseUrl) + "/chat/completions"
         else -> error("${config.provider} does not use the OpenAI request shape")
+    }
+
+    /**
+     * [base] with [path] after it, as the transcription server's route works
+     * (#388): a path with `://` in it is a whole address of its own, anything
+     * else is added to [base] as typed, and a blank one takes [default].
+     */
+    internal fun routed(base: String, path: String, default: String): String {
+        val route = path.trim()
+        return when {
+            route.isEmpty() -> base.trimEnd('/') + default
+            "://" in route -> route
+            else -> base.trimEnd('/') + "/" + route.trimStart('/')
+        }
     }
 
     /**
@@ -306,6 +340,9 @@ object AiClient {
     }
 
     fun config(settings: AiSettings): Config =
+        withHeaders(settings).copy(backups = settings.fallbacks.mapNotNull { runCatching { withHeaders(it) }.getOrNull() })
+
+    private fun withHeaders(settings: AiSettings): Config =
         baseConfig(settings).copy(headers = settings.providerHeaders[settings.provider.name].orEmpty())
 
     private fun baseConfig(settings: AiSettings): Config = when (settings.provider) {
@@ -345,11 +382,13 @@ object AiClient {
         AiProvider.BRAVE -> Config(
             AiProvider.BRAVE, settings.braveKey.ifBlank { settings.braveSearchKey },
             DefaultModels.BRAVE, "",
+            braveResearch = settings.braveResearch,
         )
         AiProvider.OPENAI_COMPATIBLE -> Config(
             AiProvider.OPENAI_COMPATIBLE, settings.compatibleKey,
             settings.compatibleModel,
             settings.compatibleUrl,
+            path = settings.compatiblePath,
         )
         AiProvider.ON_DEVICE -> Config(
             AiProvider.ON_DEVICE, "",
@@ -623,6 +662,36 @@ object AiClient {
         onPhase: (AiPhase) -> Unit,
         onPartial: (String) -> Unit,
         isActive: () -> Boolean = { true },
+    ): Completion {
+        if (config.backups.isEmpty()) return completeOnce(config, system, turns, maxTokens, tools, onPhase, onPartial, isActive)
+        // Ask the next service when this one fails before writing anything:
+        // past the first word the user has seen an answer begin, and a
+        // second one starting over would read as the first one breaking.
+        var wrote = false
+        val partial: (String) -> Unit = { text ->
+            if (text.isNotEmpty()) wrote = true
+            onPartial(text)
+        }
+        return try {
+            completeOnce(config, system, turns, maxTokens, tools, onPhase, partial, isActive)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            if (wrote || !isActive()) throw e
+            val next = config.backups.first().copy(backups = config.backups.drop(1))
+            completeStreaming(next, system, turns, maxTokens, tools, onPhase, onPartial, isActive)
+        }
+    }
+
+    private fun completeOnce(
+        config: Config,
+        system: String,
+        turns: List<ChatTurn>,
+        maxTokens: Int?,
+        tools: List<AiToolSpec>,
+        onPhase: (AiPhase) -> Unit,
+        onPartial: (String) -> Unit,
+        isActive: () -> Boolean,
     ): Completion {
         val chat = normalizedTurns(turns)
         require(chat.isNotEmpty()) { "No user message to answer" }
@@ -1292,6 +1361,7 @@ object AiClient {
         put("max_tokens", maxTokens)
         put("system", system)
         put("stream", true)
+        if (config.reasoning != true) config.temperature?.let { put("temperature", it.coerceIn(0.0, 1.0)) }
         // The chat's Reasoning switch (#882), in the shape the model accepts.
         config.reasoning?.takeIf { controlsReasoning(config.provider, config.model) }
             ?.let { on -> putClaudeThinking(config.model, on, maxTokens) }
@@ -1488,6 +1558,7 @@ object AiClient {
         // service then applies its own default, which is what the user asked
         // for. Sending a huge number instead would be rejected by some.
         if (maxTokens != null) put(outputCeilingField(config), maxTokens)
+        if (takesTemperature(config)) config.temperature?.let { put("temperature", it) }
         put("stream", true)
         // Asks for the token totals on the last chunk, where the service is
         // known to take the field; another server might refuse it (#1135).
@@ -1525,6 +1596,18 @@ object AiClient {
         }
         return if (newName) "max_completion_tokens" else "max_tokens"
     }
+
+    /**
+     * Whether an OpenAI-shaped request may name a temperature. OpenAI's
+     * reasoning models (o-series, GPT-5) refuse any but their own.
+     */
+    internal fun takesTemperature(config: Config): Boolean {
+        if (outputCeilingField(config) != "max_completion_tokens") return true
+        val model = config.model.lowercase().substringAfterLast('/')
+        return !(model.startsWith("gpt-5") || REASONING_O_SERIES.containsMatchIn(model))
+    }
+
+    private val REASONING_O_SERIES = Regex("^o\\d")
 
     /** The `tools` array OpenAI, Ollama and everything OpenAI-shaped reads. */
     private fun openAiTools(tools: List<AiToolSpec>): JsonArray = buildJsonArray {
@@ -1713,6 +1796,7 @@ object AiClient {
         /** The chat's Reasoning switch and the model it applies to; see [geminiThinking]. */
         reasoning: Boolean? = null,
         model: String = "",
+        temperature: Double? = null,
     ): String = buildJsonObject {
         putJsonObject("system_instruction") {
             put("parts", buildJsonArray { add(buildJsonObject { put("text", system) }) })
@@ -1745,9 +1829,10 @@ object AiClient {
         // Left out entirely for "provider maximum", so Gemini writes up to
         // the model's own output limit. This is the setting that used to cut
         // a long answer off in the middle with nothing to say so.
-        if (maxTokens != null || reasoning != null) {
+        if (maxTokens != null || reasoning != null || temperature != null) {
             putJsonObject("generationConfig") {
                 if (maxTokens != null) put("maxOutputTokens", maxTokens)
+                if (temperature != null) put("temperature", temperature)
                 if (reasoning != null) put("thinkingConfig", geminiThinking(model, reasoning))
             }
         }
@@ -1831,6 +1916,7 @@ object AiClient {
         val body = geminiBody(
             system, turns, maxTokens, tools,
             config.reasoning?.takeIf { controlsReasoning(config.provider, config.model) }, config.model,
+            config.temperature,
         )
         return runStream(
             source = config.netSource,
@@ -1917,8 +2003,11 @@ object AiClient {
         // rather than at the top level. Left out for "provider maximum",
         // which is what this request always did before the setting reached
         // it at all.
-        if (maxTokens != null) {
-            putJsonObject("options") { put("num_predict", maxTokens) }
+        if (maxTokens != null || config.temperature != null) {
+            putJsonObject("options") {
+                if (maxTokens != null) put("num_predict", maxTokens)
+                config.temperature?.let { put("temperature", it) }
+            }
         }
         put("messages", buildJsonArray {
             add(buildJsonObject { put("role", "system"); put("content", system) })
@@ -2043,16 +2132,19 @@ object AiClient {
         return runStream(
             source = config.netSource,
             url = ServiceEndpoints.base(ServiceEndpoint.BRAVE_SEARCH) + "/res/v1/chat/completions",
-            body = braveBody(system, turns, maxTokens),
+            body = braveBody(system, turns, maxTokens, research = config.braveResearch),
             headers = requestHeaders(config, mapOf("X-Subscription-Token" to config.apiKey)),
-            timeoutMs = 120_000,
+            // Research runs up to Brave's own five-minute budget.
+            timeoutMs = if (config.braveResearch) 330_000 else 120_000,
             onPhase = onPhase,
             onPartial = onPartial,
             isActive = isActive,
             apply = { line, buffer ->
                 // A tag prefix held back at the very end is released here.
                 if (line.startsWith("data:") && line.removePrefix("data:").trim() == "[DONE]") {
-                    buffer.answer(filter.flush())
+                    val answer = filter.flush()
+                    buffer.reasoning(filter.takeReasoning())
+                    buffer.answer(answer)
                 }
                 sseData(line)?.let { applyBraveEvent(it, filter, buffer) }
             },
@@ -2064,9 +2156,13 @@ object AiClient {
         system: String,
         turns: List<ChatTurn>,
         maxTokens: Int?,
+        research: Boolean = false,
     ): String = buildJsonObject {
         put("model", DefaultModels.BRAVE)
         put("stream", true)
+        // Several searches and reads before one cited answer; streaming only,
+        // and never with enable_citations, which this body does not send.
+        if (research) put("enable_research", true)
         // Brave's spelling; it does not read max_tokens.
         if (maxTokens != null) put("max_completion_tokens", maxTokens)
         put("messages", buildJsonArray {
@@ -2113,14 +2209,32 @@ object AiClient {
             throw streamFailure(error.text("message").ifEmpty { error.text("detail") })
         }
         val choice = event["choices"]?.jsonArray?.firstOrNull()?.jsonObject ?: return
-        choice["delta"]?.jsonObject?.let { buffer.answer(filter.feed(it.text("content"))) }
+        choice["delta"]?.jsonObject?.let {
+            val answer = filter.feed(it.text("content"))
+            buffer.reasoning(filter.takeReasoning())
+            buffer.answer(answer)
+        }
         val finish = choice.text("finish_reason")
-        if (finish.isNotEmpty()) buffer.answer(filter.flush())
+        if (finish.isNotEmpty()) {
+            val answer = filter.flush()
+            buffer.reasoning(filter.takeReasoning())
+            buffer.answer(answer)
+        }
         if (finish == "length") buffer.markTruncated()
     }
 
-    /** The tags Brave writes into the answer text that are not answer. */
-    private val BRAVE_TAGS = listOf("usage", "citation")
+    /** The tags Brave writes into the answer text whose content is dropped: metadata and debug. */
+    private val BRAVE_DROPPED = listOf("usage", "citation", "queries", "analyzing")
+
+    /**
+     * Research mode's tags whose content is the model at work rather than the
+     * answer (#438's follow-up): how it is choosing sources, its progress
+     * counts, and the gaps it found. Shown as reasoning, the think block.
+     */
+    private val BRAVE_REASONING = listOf("thinking", "progress", "blindspots")
+
+    /** Research mode's final answer, unwrapped. */
+    private const val BRAVE_ANSWER = "answer"
 
     internal fun stripBraveTags(text: String): String {
         val filter = BraveTagFilter()
@@ -2128,14 +2242,19 @@ object AiClient {
     }
 
     /**
-     * Removes Brave's inline metadata tags from a stream whose chunks can cut
-     * a tag anywhere, `<us` in one event and `age>{…}</usage>` in the next.
-     * Text that might still turn into a tag is held back until it either does
-     * or cannot; everything else passes through at once, so the answer still
-     * appears as it streams.
+     * Sorts Brave's stream, whose chunks can cut a tag anywhere (`<us` in one
+     * event and `age>{…}</usage>` in the next): metadata tags are dropped,
+     * research mode's working tags go to [takeReasoning], and its `<answer>`
+     * is unwrapped. Text that might still turn into a tag is held back until
+     * it either does or cannot; everything else passes through at once, so
+     * the answer still appears as it streams.
      */
     internal class BraveTagFilter {
         private val pending = StringBuilder()
+        private val reasoning = StringBuilder()
+
+        /** The content tag the text is inside: a [BRAVE_REASONING] one or [BRAVE_ANSWER]; null outside. */
+        private var inside: String? = null
 
         /** Takes the next chunk, returns the text now known to be answer. */
         fun feed(chunk: String): String {
@@ -2145,35 +2264,66 @@ object AiClient {
 
         /**
          * The end of the stream: a partial tag name is released as text, and a
-         * tag that never closed is dropped, because what it held is metadata.
+         * dropped tag that never closed is dropped whole, because what it held
+         * is metadata.
          */
         fun flush(): String = drain(final = true)
 
+        /** The working text collected since the last call, for the think block. */
+        fun takeReasoning(): String {
+            val out = reasoning.toString()
+            reasoning.setLength(0)
+            return out
+        }
+
+        private fun emit(out: StringBuilder, from: Int, to: Int) {
+            if (from >= to) return
+            if (inside in BRAVE_REASONING) reasoning.append(pending, from, to) else out.append(pending, from, to)
+        }
+
+        @Suppress("CyclomaticComplexMethod", "LoopWithTooManyJumpStatements")
         private fun drain(final: Boolean): String {
             val out = StringBuilder()
             var i = 0
             while (i < pending.length) {
                 val open = pending.indexOf("<", i)
                 if (open < 0) {
-                    out.append(pending, i, pending.length)
+                    emit(out, i, pending.length)
                     i = pending.length
                     break
                 }
-                out.append(pending, i, open)
+                emit(out, i, open)
                 i = open
-                val tag = BRAVE_TAGS.firstOrNull { pending.startsWith("<$it>", i) }
-                if (tag != null) {
-                    val close = pending.indexOf("</$tag>", i)
+                val current = inside
+                if (current != null && pending.startsWith("</$current>", i)) {
+                    // A working tag ends its own line in the think block.
+                    if (current in BRAVE_REASONING && reasoning.isNotEmpty() && !reasoning.endsWith("\n")) {
+                        reasoning.append('\n')
+                    }
+                    inside = null
+                    i += current.length + CLOSING_TAG_EXTRA
+                    continue
+                }
+                val dropped = BRAVE_DROPPED.firstOrNull { pending.startsWith("<$it>", i) }
+                if (dropped != null) {
+                    val close = pending.indexOf("</$dropped>", i)
                     if (close < 0) {
                         if (final) i = pending.length
                         break
                     }
-                    i = close + tag.length + CLOSING_TAG_EXTRA
+                    i = close + dropped.length + CLOSING_TAG_EXTRA
+                    continue
+                }
+                val content = (BRAVE_REASONING + BRAVE_ANSWER).firstOrNull { pending.startsWith("<$it>", i) }
+                if (content != null && current == null) {
+                    inside = content
+                    i += content.length + 2
                     continue
                 }
                 val rest = pending.substring(i)
-                if (!final && BRAVE_TAGS.any { "<$it>".startsWith(rest) }) break
-                out.append('<')
+                val names = BRAVE_DROPPED + BRAVE_REASONING + BRAVE_ANSWER
+                if (!final && (names.any { "<$it>".startsWith(rest) || "</$it>".startsWith(rest) })) break
+                emit(out, i, i + 1)
                 i++
             }
             pending.delete(0, i)

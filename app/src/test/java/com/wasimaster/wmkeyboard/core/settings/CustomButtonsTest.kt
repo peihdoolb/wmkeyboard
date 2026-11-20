@@ -40,25 +40,16 @@ class CustomButtonsTest {
     }
 
     @Test
-    fun `toolbar and toolbox split by placement and skip unknown switches`() {
+    fun `only buttons this build can run are live tools`() {
         val gone = CustomButton("c4", CustomButtonKind.SETTING, "NO_SUCH_SETTING")
-        val list = listOf(shortcut, numberRow, favourites, gone)
-        assertEquals(listOf(shortcut, favourites), list.onToolbar())
-        assertEquals(listOf(numberRow), list.inToolbox())
+        val list = listOf(shortcut, numberRow, favourites, gone, weather)
+        assertEquals(setOf("c1", "c2", "c3"), list.liveCustomToolIds())
     }
 
     @Test
     fun `next id fills the first gap`() {
         assertEquals("c4", listOf(shortcut, numberRow, favourites).nextCustomButtonId())
         assertEquals("c1", listOf(numberRow).nextCustomButtonId())
-    }
-
-    @Test
-    fun `moving clamps at the ends`() {
-        val list = listOf(shortcut, numberRow, favourites)
-        assertEquals(listOf(numberRow, shortcut, favourites), list.moved("c2", -1))
-        assertEquals(list, list.moved("c1", -1))
-        assertEquals(listOf(numberRow, favourites, shortcut), list.moved("c1", 5))
     }
 
     @Test
@@ -76,5 +67,18 @@ class CustomButtonsTest {
         val on = KeyboardSettings(numberRow = true)
         assertTrue(CustomToggle.NUMBER_ROW.isOn(on))
         assertEquals(false, CustomToggle.NUMBER_ROW.isOn(on.copy(numberRow = false)))
+    }
+
+    @Test
+    fun `a shell screen target names only a plain component`() {
+        assertEquals("com.example.app" to "com.example.app.Hidden\$Inner", shellActivityOf("am:com.example.app/com.example.app.Hidden\$Inner"))
+        assertEquals("com.example.app" to "com.example.app.Main", shellActivityOf("am:com.example.app/.Main"))
+        assertEquals("am:a.b/a.b.C", shellActivityTarget("a.b", "a.b.C"))
+        assertNull(shellActivityOf("intent:#Intent;end"))
+        assertNull(shellActivityOf("am:com.example.app"))
+        assertNull(shellActivityOf("am:com.example.app/a.B; reboot"))
+        assertNull(shellActivityOf("am:com.example.app/a.B' -e"))
+        assertNull(shellActivityOf("am:com.example.app/\$x"))
+        assertNull(shellActivityOf("am:nodots/a.B"))
     }
 }

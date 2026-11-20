@@ -85,6 +85,36 @@ class DictionaryCapitalsTest {
         assertEquals("Haus", engine.shouldAutocorrect("haus"))
     }
 
+    /** AOSP's Polish list spells `pan` only as the acronym `PAN`; the word is lower case. */
+    @Test fun aCommonWordTheListOnlySpellsInCapitalsStaysLowerCase() {
+        val (folded, polish) = fold("PAN", "FBI", "dom")
+        val list = PackedTrie.of(folded.filterNotNull().map { it.lowercase() to 100 })
+        val engine = SuggestionEngine(list, BengaliPhoneticIndex(emptyList()), UserLexicon(null)).apply {
+            primaryLanguageId = "pl"
+            customDictionary = list
+            dictionaryCapitals = mapOf("pl" to polish!!)
+        }
+        assertNull(engine.shouldAutocorrect("pan"))
+        assertEquals("FBI", engine.shouldAutocorrect("fbi"))
+        assertEquals(true, DictionaryCapitals.writtenLowerCase("pl", "pan"))
+        assertEquals(false, DictionaryCapitals.writtenLowerCase("en", "pan"))
+    }
+
+    /** Polish `si` is się far oftener than the acronym SI the list also holds. */
+    @Test fun anAcronymTypedInSmallLettersGivesWayToTheWordItBegins() {
+        val (folded, polish) = fold("SI", "się", "sierpnia")
+        val list = PackedTrie.of(listOf("si" to 106, "się" to 202, "sierpnia" to 150))
+        val engine = SuggestionEngine(list, BengaliPhoneticIndex(emptyList()), UserLexicon(null)).apply {
+            primaryLanguageId = "pl"
+            customDictionary = list
+            dictionaryCapitals = mapOf("pl" to polish!!)
+        }
+        val strip = engine.suggest("si", previousWord = null)
+        assertEquals("się", strip.first())
+        assertEquals(true, "SI" in strip)
+        assertEquals(3, folded.size)
+    }
+
     /** #517: English's bundled list is lower case, so its capitals ship beside it. */
     @Test fun theBundledCapitalsNameTheDaysForTheBundledList() {
         val english = PackedTrie.of(listOf("monday" to 100, "london" to 100, "will" to 100))

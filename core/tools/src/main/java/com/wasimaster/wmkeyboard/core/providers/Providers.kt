@@ -36,7 +36,11 @@ enum class ProviderTool(val id: String, val modes: List<ChainMode>, @StringRes v
 
     /** The smart home panel: every home on the list is connected at once, in list order. */
     SMART_HOME("smart_home", listOf(ChainMode.MIX), R.string.core_tools_provider_tool_smart_home),
-    /** The OCR tool's online readers, asked when its engine is Online. The on-device engines stay a setting. */
+    /**
+     * The OCR tool's readers: the engines on the phone and the online ones,
+     * in one list. The first that is on reads; the online ones also stand in
+     * for each other in order, or are picked in the panel.
+     */
     OCR("ocr", listOf(ChainMode.FALLBACK, ChainMode.PICK), R.string.core_tools_provider_tool_ocr),
 
     /** The camera tool's Translate button (#727): the photo comes back with its text translated. */
@@ -424,6 +428,30 @@ object ProviderTypes {
         toolDescRes = mapOf(ProviderTool.PHOTO_TRANSLATE to R.string.core_tools_provider_rens_translate_desc),
     )
 
+    /**
+     * The OCR tool's engines on the phone as rows of its list: the automatic
+     * one (ML Kit where it has the script, else Tesseract or PaddleOCR, as
+     * the build carries them), and ML Kit and Tesseract by name.
+     */
+    val OCR_ON_DEVICE = ProviderType(
+        "ocr_on_device", setOf(ProviderTool.OCR),
+        R.string.core_tools_provider_ocr_on_device, R.string.core_tools_provider_ocr_on_device_desc,
+        onDevice = true,
+    )
+    val OCR_ML_KIT = ProviderType(
+        "ocr_mlkit", setOf(ProviderTool.OCR),
+        R.string.core_tools_provider_ocr_mlkit, R.string.core_tools_provider_ocr_mlkit_desc,
+        onDevice = true,
+    )
+    val OCR_TESSERACT = ProviderType(
+        "ocr_tesseract", setOf(ProviderTool.OCR),
+        R.string.core_tools_provider_ocr_tesseract, R.string.core_tools_provider_ocr_tesseract_desc,
+        onDevice = true, freeSoftware = true,
+    )
+
+    /** The OCR rows that read on the phone. */
+    val OCR_ENGINES: Set<String> by lazy { setOf(OCR_ON_DEVICE.id, OCR_ML_KIT.id, OCR_TESSERACT.id) }
+
     /** A model that reads images through an OpenAI-compatible API (#469), the OCR tool's first online reader. */
     val VISION_OCR = ProviderType(
         "vision_ocr", setOf(ProviderTool.OCR),
@@ -528,6 +556,42 @@ object ProviderTypes {
         R.string.core_tools_provider_mwmbl, R.string.core_tools_provider_mwmbl_desc,
         freeSoftware = true,
     )
+    /** Wiby: the small, old-style web, keyless; its About page invites apps to use its JSON output. */
+    val WIBY = ProviderType(
+        "wiby", setOf(ProviderTool.SEARCH),
+        R.string.core_tools_provider_wiby, R.string.core_tools_provider_wiby_desc,
+        freeSoftware = true,
+    )
+
+    /**
+     * Marginalia Search: independent, non-commercial sites first. A key is
+     * optional: without one the shared `public` key is used, which is often
+     * rate-limited, and a free non-commercial key comes by e-mail.
+     */
+    val MARGINALIA = ProviderType(
+        "marginalia", setOf(ProviderTool.SEARCH),
+        R.string.core_tools_provider_marginalia, R.string.core_tools_provider_marginalia_desc,
+        CredentialSpec(key = Need.OPTIONAL), freeSoftware = true,
+    )
+
+    /** Wikipedia's own article search, keyless, in the Wikipedia tool's language. */
+    val WIKIPEDIA_SEARCH = ProviderType(
+        "wikipedia_search", setOf(ProviderTool.SEARCH),
+        R.string.core_tools_provider_wikipedia_search, R.string.core_tools_provider_wikipedia_search_desc,
+        freeSoftware = true,
+    )
+
+    /**
+     * The phone's browser (#1383): the query is handed to the default
+     * browser's own search and the keyboard does nothing more. Never asked
+     * by the AI's search tools, which need results back.
+     */
+    val BROWSER = ProviderType(
+        "browser", setOf(ProviderTool.SEARCH),
+        R.string.core_tools_provider_browser, R.string.core_tools_provider_browser_desc,
+        onDevice = true,
+    )
+
     val BRAVE = ProviderType(
         "brave", setOf(ProviderTool.SEARCH),
         R.string.core_tools_provider_brave, R.string.core_tools_provider_brave_desc,
@@ -672,7 +736,8 @@ object ProviderTypes {
     /** Any other service with OpenAI's chat shape: OpenRouter, Groq, Mistral, a gateway at home. */
     val OPENAI_COMPATIBLE = ProviderType(
         "openai_compatible", AI, R.string.core_tools_provider_openai_compatible, R.string.core_tools_provider_openai_compatible_desc,
-        CredentialSpec(key = Need.OPTIONAL, url = Need.REQUIRED, model = true, modelRequired = true), multiInstance = true,
+        CredentialSpec(key = Need.OPTIONAL, url = Need.REQUIRED, model = true, modelRequired = true, path = true),
+        multiInstance = true,
     )
 
     /**
@@ -955,11 +1020,11 @@ object ProviderTypes {
         VOCAB_PACKS, WIKTIONARY, WIKTIONARY_REST, DICTIONARY_API, OFFLINE_WIKTIONARY, OFFLINE_WORDNET, OFFLINE_BENGALI, OFFLINE_LANGUAGES,
         IMPORTED_DICTIONARIES, URBAN_DICTIONARY,
         DATAMUSE, SIMILAR_WORDS,
-        SEARXNG, TAVILY, BRAVE, MWMBL,
+        SEARXNG, TAVILY, BRAVE, MWMBL, WIBY, MARGINALIA, WIKIPEDIA_SEARCH, BROWSER,
         UNSPLASH, PEXELS,
         ER_API, FRANKFURTER, ALLRATESTODAY, COINBASE, CURRENCY_API, COINGECKO,
         HOME_ASSISTANT, GOOGLE_HOME, SMARTTHINGS, HUE, OPENHAB, TUYA, SWITCHBOT,
-        VISION_OCR, RENS,
+        OCR_ON_DEVICE, OCR_ML_KIT, OCR_TESSERACT, VISION_OCR, RENS,
         ANTHROPIC, OPENAI, GEMINI, XAI, DEEPSEEK, BRAVE_ANSWERS, PRIVATEMODE, OLLAMA, LM_STUDIO, OPENAI_COMPATIBLE, ON_DEVICE_AI,
         SYSTEM_RECOGNIZER, WHISTLE, WHISPER, ASR4ALL, PARAKEET, MOONSHINE, SHERPA, OMNILINGUAL, VOSK, TRANSCRIPTION_SERVER,
         HARPER, LANGUAGETOOL,

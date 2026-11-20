@@ -231,7 +231,77 @@ impl<'a> TouchScoring<'a> {
     fn point(&self, pos: usize) -> Option<(f32, f32)> {
         self.points.get(pos).copied().flatten()
     }
+
+    /// How much better `word`'s letters explain the taps once the hand's
+    /// drift is allowed for. The taps of one word move together: a thumb
+    /// lands a little to one side of every key (a shared offset), and a hand
+    /// spreads or squeezes the word (a scale about its centre). Fleksy's US
+    /// 9,024,882 reads a word from its taps' shape about their centroid the
+    /// same way. The keys are fitted to the taps by the best offset and a
+    /// scale held to [`SHAPE_SCALE_MIN`, `SHAPE_SCALE_MAX`], and the gain is
+    /// what the fit takes off the taps' squared distance from their keys,
+    /// shrunk by how much a prior of [SHAPE_DRIFT_SIGMAS] trusts it,
+    /// `n s / (1 + n s)` with `s` the drift variance over the tap variance,
+    /// over `2 sigma^2`. With the scale at 1 that is the exact gain of a
+    /// shared-offset model, `n |mean residual|^2`. Read over the typed
+    /// positions only, so a completion is judged on the letters typed;
+    /// positions without a tap, or with a letter the layout has no key for,
+    /// are left out, and fewer than two left gives nothing.
+    fn drift_bonus(&self, word: &[u16]) -> f64 {
+        let mut pairs: Vec<(f64, f64, f64, f64)> = Vec::with_capacity(self.points.len());
+        for (pos, unit) in word.iter().enumerate().take(self.points.len()) {
+            let Some(p) = self.point(pos) else { continue };
+            let Some(&i) = self.model.index.get(unit) else { continue };
+            let (_, cx, cy) = self.model.keys[i];
+            pairs.push((cx as f64, cy as f64, p.0 as f64, p.1 as f64));
+        }
+        if pairs.len() < 2 {
+            return 0.0;
+        }
+        let n = pairs.len() as f64;
+        let (mut kx, mut ky, mut tx, mut ty) = (0.0f64, 0.0f64, 0.0f64, 0.0f64);
+        for &(a, b, c, d) in &pairs {
+            kx += a;
+            ky += b;
+            tx += c;
+            ty += d;
+        }
+        let (kx, ky, tx, ty) = (kx / n, ky / n, tx / n, ty / n);
+        let (mut num, mut den) = (0.0f64, 0.0f64);
+        for &(a, b, c, d) in &pairs {
+            num += (a - kx) * (c - tx) + (b - ky) * (d - ty);
+            den += (a - kx) * (a - kx) + (b - ky) * (b - ky);
+        }
+        let scale = if den > 1e-9 { (num / den).clamp(SHAPE_SCALE_MIN, SHAPE_SCALE_MAX) } else { 1.0 };
+        let (mut raw, mut fit) = (0.0f64, 0.0f64);
+        for &(a, b, c, d) in &pairs {
+            raw += (c - a) * (c - a) + (d - b) * (d - b);
+            let (fx, fy) = (tx + (a - kx) * scale, ty + (b - ky) * scale);
+            fit += (c - fx) * (c - fx) + (d - fy) * (d - fy);
+        }
+        let gain = raw - fit;
+        if !(gain > 0.0) {
+            return 0.0;
+        }
+        let tap = self.model.sigma * self.model.sigma;
+        let drift = SHAPE_DRIFT_SIGMAS * SHAPE_DRIFT_SIGMAS * tap;
+        let shrink = n * drift / (tap + n * drift);
+        shrink * gain / (2.0 * tap)
+    }
 }
+
+/// How far [`TouchScoring::drift_bonus`] lets a hand squeeze or spread a word.
+pub const SHAPE_SCALE_MIN: f64 = 0.6;
+pub const SHAPE_SCALE_MAX: f64 = 1.6;
+
+/// The hand's drift over one word, in sigmas of the tap scatter
+/// ([`TouchScoring::drift_bonus`]).
+pub const SHAPE_DRIFT_SIGMAS: f64 = 1.0;
+
+/// How much of [`TouchScoring::drift_bonus`] a candidate gains. The walk's
+/// touch costs are capped and tempered, so the bonus is too; the noisy-tap
+/// eval (`shape_eval`) is where it was fitted.
+pub const SHAPE_WEIGHT: f64 = 1.0;
 
 /// The letters each keystroke could have meant, on a keyboard with several
 /// on a key: the Kotlin `KeySets`. `spellings[pos]` lists the members a word
@@ -364,6 +434,45 @@ impl RankScale {
             floor: top as f64 * strict_math::pow(std::f64::consts::E, -(reference - 1.0) / per_nat),
             per_nat,
         }
+    }
+
+    /// A list whose counts sit at or under the reference counts as corpus
+    /// counts, and is read on [`RankScale::anchored`], when its count at
+    /// [`RankScale::ANCHOR_RANK`] is under this share of its top. Counts that
+    /// are already logs keep far more of their top that deep: the bundled
+    /// English list 0.31, the bundled Bangla one 0.12. Corpus counts keep
+    /// a hundredth or less (the small Wikipedia lists 0.0003 to 0.01).
+    pub const CORPUS_ANCHOR_SHARE: f64 = 0.05;
+
+    /// How a list whose commonest count is `top` and whose count at
+    /// [`RankScale::ANCHOR_RANK`] is `at_anchor` is read for ranking.
+    ///
+    /// A list whose top lands above the reference carries corpus counts, and
+    /// is read [`RankScale::anchored`]. So is one whose top is at or under it
+    /// but whose counts fall away like a corpus's: a small corpus (a
+    /// Wikipedia of a few thousand articles) tops out at a few thousand, and
+    /// read as stored its mid words were a few nats under where the engine's
+    /// fixed prices expect them, the same fault the large lists had. A list
+    /// already on the reference's log scale, a flat one, or one too short to
+    /// have a word at the anchor is read as stored.
+    pub fn for_list(top: i32, at_anchor: i32, reference: f64, tolerance: f64) -> RankScale {
+        if top as f64 > reference * tolerance {
+            RankScale::anchored(top, at_anchor, reference)
+        } else if at_anchor > 0 && (at_anchor as f64) < top as f64 * RankScale::CORPUS_ANCHOR_SHARE {
+            RankScale::anchored(top, at_anchor, reference)
+        } else {
+            RankScale::RAW
+        }
+    }
+
+    /// [`RankScale::for_list`] for a list given as its counts, in any order:
+    /// what the harnesses read a word list at.
+    pub fn for_counts(counts: &[i32], reference: f64, tolerance: f64) -> RankScale {
+        let mut sorted = counts.to_vec();
+        sorted.sort_unstable_by(|a, b| b.cmp(a));
+        let top = sorted.first().copied().unwrap_or(0);
+        let at_anchor = sorted.get(RankScale::ANCHOR_RANK - 1).copied().unwrap_or(0);
+        RankScale::for_list(top, at_anchor, reference, tolerance)
     }
 
     /// The line that puts a list whose commonest word is `top` where the
@@ -770,6 +879,21 @@ pub fn search_units(
         floor = walk.one(src, &mut results, floor, ws);
     }
     let mut out: Vec<Candidate> = results.into_values().collect();
+    // Phase 2 of slips: a reading whose keys sit the same way from every tap
+    // gains the drift bonus. Only on a path of matches and slips, where the
+    // typed positions line up with the word's letters one to one; never
+    // with slips off, which keeps that walk the old one bit for bit, nor on
+    // an ambiguous board.
+    if let Some(touch) = touch.filter(|t| t.model.slip_radius > 0.0 && !ambiguous) {
+        for c in out.iter_mut().filter(|c| c.edits == c.slips) {
+            let bonus = SHAPE_WEIGHT * touch.drift_bonus(&c.word);
+            if bonus > 0.0 {
+                c.score += bonus;
+                c.dict_score += bonus;
+                c.user_score += bonus;
+            }
+        }
+    }
     sort::by(&mut out, |a, b| b.score.total_cmp(&a.score).then_with(|| a.word.cmp(&b.word)));
     out.truncate(k);
     out
@@ -1357,6 +1481,22 @@ mod tests {
     }
 
     #[test]
+    fn a_small_corpus_under_the_reference_is_anchored_and_log_lists_stay_raw() {
+        // A small Wikipedia's counts: 4,941 at the top, 28 at rank 2,000.
+        let small = RankScale::for_list(4_941, 28, 10_000.0, 1.01);
+        assert!((small.read(4_941) - 10_000.0).abs() < 1e-6);
+        assert!((small.read(28) - RankScale::REFERENCE_AT_ANCHOR).abs() < 1e-6);
+        // The bundled lists are logs already: English, then Bangla.
+        assert!(RankScale::for_list(10_000, 3_077, 10_000.0, 1.01).is_raw());
+        assert!(RankScale::for_list(9_000, 1_078, 10_000.0, 1.01).is_raw());
+        // Too short to have a word at the anchor, or flat.
+        assert!(RankScale::for_list(4_941, 0, 10_000.0, 1.01).is_raw());
+        assert!(RankScale::for_list(1, 1, 10_000.0, 1.01).is_raw());
+        // Above the reference nothing changed.
+        assert_eq!(RankScale::anchored(31_465, 127, 10_000.0), RankScale::for_list(31_465, 127, 10_000.0, 1.01));
+    }
+
+    #[test]
     fn a_corpus_list_on_the_log_line_lets_a_one_edit_fix_beat_a_learned_far_word() {
         // `tdreat`: on raw counts shrunk to a 10,000 top, `threat` fell
         // under a word learned once and a commoner word two edits off.
@@ -1496,6 +1636,48 @@ mod tests {
         let got = touch_search(&d, "rhw", taps, &model);
         assert_eq!(1, got.len());
         assert_eq!((2, 1), (got[0].edits, got[0].slips));
+    }
+
+    #[test]
+    fn taps_that_share_an_offset_earn_the_drift_bonus() {
+        let model = TouchModel::new(qwerty_keys(), TouchModel::SIGMA);
+        let shifted = |dx: [f32; 3]| {
+            "the".chars().zip(dx).map(|(c, d)| Some((centre(c).0 + d, centre(c).1))).collect::<Vec<_>>()
+        };
+        let the: Vec<u16> = "the".encode_utf16().collect();
+        // Every tap half a key right: n s / (1 + n s) * n * 0.25 / (2 * 0.25), n 3, s 1.
+        let drifted = TouchScoring::new(&model, shifted([0.5, 0.5, 0.5]));
+        assert!((drifted.drift_bonus(&the) - 1.125).abs() < 1e-6);
+        // The same distances with no shared direction earn far less: only
+        // what a scale about the centre happens to explain.
+        let scattered = TouchScoring::new(&model, shifted([0.5, -0.5, 0.0]));
+        assert!(scattered.drift_bonus(&the) < 0.15);
+        // A hand that spreads the word by a third, no offset: the scale reads it.
+        let (kx, ky) = ((4.0 + 5.25 + 2.0) / 3.0, 1.0 / 3.0);
+        let spread: Vec<Option<(f32, f32)>> = "the"
+            .chars()
+            .map(|c| Some((kx + (centre(c).0 - kx) * 1.3, ky + (centre(c).1 - ky) * 1.3)))
+            .collect();
+        assert!(TouchScoring::new(&model, spread).drift_bonus(&the) > 0.5);
+        // A completion is read over the typed letters only.
+        let drifted_two = TouchScoring::new(&model, shifted([0.5, 0.5, 0.5]).into_iter().take(2).collect());
+        // n 2: 2/3 * 2 * 0.25 / 0.5.
+        assert!((drifted_two.drift_bonus(&the) - 2.0 / 3.0).abs() < 1e-6);
+        // One tap is no shape.
+        let one = TouchScoring::new(&model, vec![Some((centre('t').0 + 0.5, centre('t').1)), None, None]);
+        assert_eq!(0.0, one.drift_bonus(&the));
+    }
+
+    #[test]
+    fn slips_off_reads_no_drift() {
+        let d = dict(&[("the", 1000)]);
+        let taps = vec![toward('t', 'y', 0.4), toward('h', 'j', 0.4), toward('e', 'r', 0.4)];
+        let model = TouchModel::new(qwerty_keys(), TouchModel::SIGMA);
+        let on = touch_search(&d, "the", taps.clone(), &model);
+        let off = touch_search(&d, "the", taps, &model.clone().with_slip_radius(0.0));
+        assert!(on[0].score > off[0].score, "a shared offset is worth something with slips on");
+        let plain = touch_search(&d, "the", vec![Some(centre('t')), Some(centre('h')), Some(centre('e'))], &model);
+        assert_eq!(plain[0].score, touch_search(&d, "the", vec![Some(centre('t')), Some(centre('h')), Some(centre('e'))], &model.with_slip_radius(0.0))[0].score);
     }
 
     #[test]

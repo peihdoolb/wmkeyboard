@@ -159,6 +159,12 @@ object LayoutJsonDocs {
         "Key.flickActions" to
             "Flicks that run an action instead of typing, by direction, such as moving the cursor. They win over flick " +
             "text in the same direction, and work on action keys too.",
+        "Key.flickReturn" to
+            "What swiping out to an arm and back again more than halfway runs, by direction, such as one case up " +
+            "for the word on an arm that turns Shift on. It wins over the capital the return would otherwise type.",
+        "Key.spaceCycle" to
+            "On a space key, what each further tap turns the space into, in order, such as \", \" then \". \" then " +
+            "\"? \". A tap after the last entry types a plain space again. Only in plain text fields.",
         "Key.multitap" to "What tapping the key again types in place of the last tap, in order. After the last entry the cycle goes back to the key itself.",
         "Key.labelScale" to "This key's label size, as a multiple of a letter's. Leave it out and the keyboard decides.",
         "Key.hintScale" to "This key's corner hint size, as a multiple of every hint's size, from 0.5 to 3. Leave it out to follow the setting.",
@@ -202,6 +208,7 @@ object LayoutJsonDocs {
         "action:edit_sequence.ops" to "The edits to run, first to last.",
         "action:shift" to "Shift. One tap gives one capital letter, a double tap gives caps lock.",
         "action:caps_lock" to "Turns caps lock on or off in one tap, with no one-letter step.",
+        "action:shift_off" to "Puts Shift and caps lock down. Does nothing when they are already off.",
         "action:delete" to "Deletes the character before the caret. It repeats while held, and a swipe deletes words.",
         "action:forward_delete" to "Deletes the character after the caret. It repeats while held.",
         "action:space" to "Types a space. Holding it opens the language picker, unless the key has alternates.",
@@ -225,6 +232,11 @@ object LayoutJsonDocs {
         "action:numpad" to "Opens the number pad. The keyboard makes this key by itself, and a layout does not use it.",
         "action:tool" to "Opens one of the keyboard's tools, the same as its toolbar button.",
         "action:tool.tool" to "Which tool the key opens.",
+        "action:tool.custom" to
+            "The id of one of your custom buttons to run instead of the tool, such as an app shortcut or a settings " +
+            "switch. The tool then only names the key for a build without custom buttons.",
+        "action:plugin" to "Opens one of your plugins in the Plugins panel, the way its toolbar tile does.",
+        "action:plugin.id" to "The plugin's id, from its manifest. A key naming a removed plugin opens the plugin list.",
         "action:layout" to "Shows one of your secondary layouts in place of the letters. A second press goes back.",
         "action:layout.id" to "The id of the secondary layout.",
         "action:layer" to

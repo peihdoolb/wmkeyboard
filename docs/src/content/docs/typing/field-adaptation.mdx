@@ -67,6 +67,8 @@ The Number pad also does sums. An operator typed after a number starts one, whic
 | Snippets on space or Enter | Yes | Yes | Only text the field takes | Only if [turned on](/tools/snippets/) |
 | Snippet chips | Yes | Web address only | Every snippet whose text the field takes, offered outright since the keypad can't type a trigger | No |
 
+Since 0.6.8 a field counts as a password field for snippets when the app names it one, even if it doesn't tell the keyboard it is a password box. Many banking apps and web PIN boxes draw dots over what looks to the keyboard like a plain number or text field, and the snippet chips used to show there with their whole text, personal details and all. Now a field whose hint, label or name says password, PIN, passcode, CVV or one-time code (in English or a dozen other languages) gets no snippet chips and no expansions, so the bar is left to your password manager's suggestions and the [one-time code chip](/smart/one-time-codes/).
+
 These five keypads are shared across every built-in layout. Only the default QWERTY layout defines them and every other language layout inherits the same set, but a custom `.wmlayout.json` can override any of the five with its own key rows.
 
 The keypad shows up whenever the field kind calls for it, with one exception. If focus has been rerouted to something that needs letters, such as an in-panel search box (emoji, dictionary, clipboard, media), a plugin's own text field, or the typing-test tool, the letter layout stays up instead. A digits-only pad would leave those impossible to type in.
@@ -90,7 +92,7 @@ Don't confuse this with the standalone **Numpad** tool in the toolbox, which is 
 - **Suggestions never show.** Password variations force the suggestion strip off unconditionally. <SettingsPath path="Typing / Suggestions / Suggestions in every field" /> can't override it, since that setting exists specifically to make hidden strips show anyway on ordinary fields. Only one other thing is beyond that setting's reach: a field whose class isn't text at all, whose keypad has no words to offer.
 - **Autocorrect and gesture typing turn off too, and not only in password fields.** These, along with on-device learning, are gated on a broader check than `secureField` alone. It also excludes every structured field kind (`EMAIL`, `URI`, `NUMBER`, `PHONE`, `DATE`, `TIME`, `DATETIME`). A keypad has no words to autocorrect, and an email address shouldn't be second-guessed either. Only a plain `TEXT` field that also isn't secure gets the full typing-intelligence treatment.
 - **Phonetic (Avro) composing is the one exception: it keeps running everywhere, password fields included.** Avro turns roman key presses into Bangla as you type, and that step isn't gated on the same check at all. Turning it off in a secure or structured field would mean the roman keys commit untransliterated rather than no Bangla being produced. Only the suggestion-feeding side of composing, plain English composing, which exists purely to feed autocorrect and suggestions, is gated alongside autocorrect and gesture typing.
-- **Nothing is learned.** The same gate feeds <SettingsPath path="Privacy / Learning on this device / Learn from typing" />. Typing in a password field, or any structured field, never reaches the on-device learning dictionary.
+- **Nothing is learned.** The same gate feeds <SettingsPath path="Typing / Suggestions / Learning on this device / Learn from typing" />. Typing in a password field, or any structured field, never reaches the on-device learning dictionary.
 - **Voice typing refuses to start.** Both the voice panel and the toolbar strip's dictation toggle decline while a secure field is focused. The toolbar toggle shows a toast reading "You cannot use voice typing in a password field", the panel shows its own inline notice ("Voice typing does not work in password fields."), and the voice bar reads "Not available in password fields".
 - **Clipboard history stops recording** while a secure field has focus, so new copies (and screenshot-to-clipboard captures) are skipped for as long as it's focused.
 - **Pasting into a password field can wipe the clip afterward.** See [Clipboard: passwords are handled deliberately](/tools/clipboard/#passwords-are-handled-deliberately) for the full paste-time purge behavior and its setting.
@@ -137,8 +139,8 @@ Two related things exist, but neither is a correction for a misreporting app:
 | Password manager suggestions | On (Android 11+) | <SettingsPath path="Typing / Suggestions / Password manager suggestions" /> |
 | Popup on number pads | Off | <SettingsPath path="Key press / Key popup / Popup on number pads" /> |
 | Forget after you paste a password | Off | <SettingsPath path="Clipboard / Passwords and codes / Forget after you paste a password" /> |
-| Learn from typing | On | <SettingsPath path="Privacy / Learning on this device / Learn from typing" /> |
-| Add words to the system dictionary | Off | <SettingsPath path="Privacy / Learning on this device / Add words to the system dictionary" /> |
+| Learn from typing | On | <SettingsPath path="Typing / Suggestions / Learning on this device / Learn from typing" /> |
+| Add words to the system dictionary | Off | <SettingsPath path="Typing / Suggestions / Learning on this device / Add words to the system dictionary" /> |
 
 **Contact emails in email fields too** only shows up once **Suggest contact emails** itself is on. When it is, a contact-email completion still appears in an email field even if the app asked for a hidden strip there, while other suggestions in that field stay hidden.
 

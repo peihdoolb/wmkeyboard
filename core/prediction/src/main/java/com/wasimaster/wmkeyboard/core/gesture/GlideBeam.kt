@@ -418,6 +418,15 @@ class GlideBeam(private val tuning: Tuning = Tuning()) {
         val learnedShapeGain: Double = 0.15,
         val shapeSeeding: Boolean = false,
         /**
+         * How much the words before the cursor count against a single
+         * stroke's own reading, as a multiple of the evidence the n-grams give
+         * (#1250): 1 is what was measured (`glide_context_eval`, .8940 with
+         * the pack alone against .8797 for the stroke alone), 0 lets the
+         * stroke alone decide, 2 leans on the sentence. Read on the Kotlin
+         * side only (the context lift), never sent to the native decoder.
+         */
+        val contextWeight: Float = 1f,
+        /**
          * How much the whole stroke's *shape* counts, once its size and position
          * are taken out of it.
          *
@@ -621,6 +630,15 @@ class GlideBeam(private val tuning: Tuning = Tuning()) {
          * at `8 / 4 / 0.1` the joining gains half a point over none.
          */
         val joinPartPenalty: Double = 0.0,
+        /**
+         * What a linking letter between two joined parts costs, in nats, on
+         * top of [joinCost] (`wm-engine`'s `join_link_cost`): an `s` after a
+         * part that doesn't end in one (Arbeit-s-zeit), an `n` after one
+         * ending in `e` (Sonne-n-schein), drawn on the stroke. Infinite, the
+         * default, reads none. Sent only to a library that reads it
+         * (`glideTuningVersion` 4).
+         */
+        val joinLinkCost: Double = Double.POSITIVE_INFINITY,
         /**
          * Runaway pop backstop for one decode, not a language weight: see
          * [GlideBeam.MAX_POPS]. A mid-swipe preview frame decodes under a

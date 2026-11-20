@@ -86,6 +86,17 @@ open class WMApplication : Application() {
         // Where a Khipro spec set newer than the bundled one is kept (#909);
         // loaded the first time Khipro types, not here.
         com.wasimaster.wmkeyboard.core.transliteration.KhiproSpecs.attach(this)
+        // Where the jquery.ime methods that ship are read from; each is read
+        // the first time a layout types through it, not here.
+        val appAssets = assets
+        com.wasimaster.wmkeyboard.core.input.imported.BundledInputMethods.assets = { path ->
+            runCatching { appAssets.open(path) }.getOrNull()
+        }
+        // The Varnam symbol tables Malayalam, Tamil, Telugu and Kannada read
+        // their dictionary words through; each is read the first time it is used.
+        com.wasimaster.wmkeyboard.core.transliteration.VarnamSchemes.assets = { path ->
+            runCatching { appAssets.open(path) }.getOrNull()
+        }
         // Lets the keyboard tell whether a screen of this app is up before it
         // recycles the process the two share. One callback registration.
         com.wasimaster.wmkeyboard.core.util.StartedActivities.install(this)
@@ -137,6 +148,9 @@ open class WMApplication : Application() {
             googleHome = com.wasimaster.wmkeyboard.config.BuildConfig.ENABLE_GOOGLE_HOME,
             bergamot = BergamotTranslator.available,
             nllb = NllbTranslator.available,
+            // And the OCR list its engines on the phone.
+            mlKitOcr = com.wasimaster.wmkeyboard.config.BuildConfig.ENABLE_ML_KIT_SCANNERS,
+            tesseract = com.wasimaster.wmkeyboard.core.ocr.TesseractOcr.available,
         )
         // Where the Dictionary tool's offline dictionaries live, for a
         // look-up from the keyboard or the AI tool alike. Only a path: before

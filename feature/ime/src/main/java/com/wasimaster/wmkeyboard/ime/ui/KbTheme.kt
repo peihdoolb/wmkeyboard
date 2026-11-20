@@ -45,6 +45,11 @@ import androidx.compose.ui.graphics.toArgb
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.foundation.layout.fillMaxSize
 import android.content.res.Configuration
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
@@ -115,6 +120,8 @@ import com.wasimaster.wmkeyboard.core.theme.KeyTextureScale
 import com.wasimaster.wmkeyboard.core.theme.TextureSlice
 import com.wasimaster.wmkeyboard.core.theme.ThemeAnimation
 import com.wasimaster.wmkeyboard.core.theme.ThemeBackgroundImage
+import com.wasimaster.wmkeyboard.core.theme.IMAGE_BRIGHTNESS_MIN
+import com.wasimaster.wmkeyboard.core.theme.imageBrightnessFilter
 import com.wasimaster.wmkeyboard.core.theme.ThemeSpec
 import com.wasimaster.wmkeyboard.core.theme.BOARD_EFFECT_DENSITY_RANGE
 import com.wasimaster.wmkeyboard.core.theme.BOARD_EFFECT_HALF_LIFE_RANGE
@@ -199,6 +206,8 @@ data class KbTheme(
     /** Landscape override for [backgroundImage]; null falls back to it. */
     val backgroundImageLandscape: String?,
     val backgroundImageOpacity: Float,
+    /** The picture's brightness; see [ThemeSpec.backgroundImageBrightness]. */
+    val backgroundImageBrightness: Float = 1f,
     val backgroundImageBlur: Float,
     /** Play the background as an animated image; see [ThemeSpec.backgroundAnimated]. */
     val backgroundAnimated: Boolean,
@@ -257,12 +266,18 @@ data class KbTheme(
     val enterKey: Color,
     val enterKeyText: Color,
     val pressedKey: Color,
+    /** Label colours while a letter, a function key and Enter are held; null keeps the label's own. */
+    val pressedKeyText: Color? = null,
+    val pressedModifierKeyText: Color? = null,
+    val pressedEnterKeyText: Color? = null,
     val keyBorder: Color?,
     val keyBorderWidthDp: Float,
     /** Lift under each key; already 0 for a shape that must not cast one. */
     val keyElevation: Dp,
     /** Colour of that lift's shadow; null draws the platform's black. */
     val keyShadow: Color?,
+    /** The halo round key letters over a photo (#1222); null draws none. */
+    val labelOutline: Color? = null,
     val accent: Color,
     /** Colour of the glide-typing trail; defaults to [accent] when a theme leaves it unset. */
     val gestureTrail: Color,
@@ -347,6 +362,8 @@ data class KbTheme(
     val toolHeightDp: Int = 38,
     /** Glyph size inside a tool button; a user setting a theme doesn't override. */
     val toolIconSizeDp: Int,
+    /** Side of a keyboard-owned field's small buttons (#1153); a user setting, which no theme sets. */
+    val fieldButtonDp: Int = 32,
     val animation: ThemeAnimation,
     val animationSpeed: Float,
     /**
@@ -384,6 +401,8 @@ data class KbTheme(
      * drop (#1160) through [accessibilityAdjusted].
      */
     val boardEffectStill: Boolean = false,
+    /** Every layout drawn as a honeycomb; see [ThemeSpec.honeycomb]. */
+    val honeycomb: Boolean = false,
 )
 
 /** A [BoardEffectSpec] with its kind known, its colours chosen and its ranges enforced. */
@@ -1088,6 +1107,7 @@ internal fun defaultKbTheme(
         toolWidthDp = settings.toolbarBehavior.toolWidthDp,
         toolHeightDp = settings.toolbarBehavior.toolHeightDp,
         toolIconSizeDp = settings.toolbarBehavior.iconSizeDp,
+        fieldButtonDp = settings.toolbarBehavior.fieldButtonDp,
         animation = ThemeAnimation.NONE,
         animationSpeed = 1f,
         reduceMotion = settings.reduceMotion,
@@ -1143,6 +1163,7 @@ private fun specKbTheme(spec: ThemeSpec, settings: KeyboardSettings): KbTheme {
         backgroundImage = spec.backgroundImage,
         backgroundImageLandscape = spec.backgroundImageLandscape,
         backgroundImageOpacity = spec.backgroundImageOpacity,
+        backgroundImageBrightness = spec.backgroundImageBrightness.coerceIn(IMAGE_BRIGHTNESS_MIN, 1f),
         backgroundImageBlur = spec.backgroundImageBlur,
         // Blur wins when a theme file claims both: playing a blurred animation
         // re-renders the effect every frame, which the editor already forbids.
@@ -1186,6 +1207,9 @@ private fun specKbTheme(spec: ThemeSpec, settings: KeyboardSettings): KbTheme {
         enterKey = colorOf(spec.enterKeyBackground),
         enterKeyText = colorOf(spec.enterKeyText),
         pressedKey = pressed,
+        pressedKeyText = spec.pressedKeyText?.let(::colorOf),
+        pressedModifierKeyText = spec.pressedModifierKeyText?.let(::colorOf),
+        pressedEnterKeyText = spec.pressedEnterKeyText?.let(::colorOf),
         keyBorder = spec.keyBorderColor?.let(::colorOf),
         keyBorderWidthDp = spec.keyBorderWidthDp,
         // Guarded twice: a shape that cannot tessellate a shadow gets none,
@@ -1195,6 +1219,7 @@ private fun specKbTheme(spec: ThemeSpec, settings: KeyboardSettings): KbTheme {
             spec.keyElevationDp.coerceIn(0f, MAX_ELEVATION_DP).dp,
         ).takeIf { keyCastsShadow(spec) } ?: 0.dp,
         keyShadow = spec.keyShadowColor?.let(::colorOf),
+        labelOutline = spec.keyTextOutline?.let(::colorOf),
         accent = accent,
         gestureTrail = spec.gestureTrailColor?.let(::colorOf) ?: accent,
         // A light theme's keyText is dark, so a heavy blend produced a dark
@@ -1256,6 +1281,7 @@ private fun specKbTheme(spec: ThemeSpec, settings: KeyboardSettings): KbTheme {
         clipChip = spec.clipboardChipBackground?.let(::colorOf),
         clipChipText = spec.clipboardChipText?.let(::colorOf),
         keyRadiusDp = spec.keyCornerRadiusDp ?: settings.keyCornerRadiusDp,
+        honeycomb = spec.honeycomb,
         modifierKeyRadiusDp = spec.modifierKeyCornerRadiusDp?.coerceIn(KEY_OVERRIDE_RADIUS_RANGE),
         actionKeyRadiusDp = spec.actionKeyCornerRadiusDp?.coerceIn(KEY_OVERRIDE_RADIUS_RANGE),
         popupRadiusDp = spec.popupCornerRadiusDp ?: settings.popup.cornerRadiusDp,
@@ -1273,6 +1299,7 @@ private fun specKbTheme(spec: ThemeSpec, settings: KeyboardSettings): KbTheme {
             ?: settings.toolbarBehavior.toolWidthDp,
         toolHeightDp = settings.toolbarBehavior.toolHeightDp,
         toolIconSizeDp = settings.toolbarBehavior.iconSizeDp,
+        fieldButtonDp = settings.toolbarBehavior.fieldButtonDp,
         animation = spec.animation,
         animationSpeed = spec.animationSpeed,
         reduceMotion = settings.reduceMotion,
@@ -1409,6 +1436,9 @@ private fun KbTheme.mapColors(f: (Color) -> Color): KbTheme = copy(
     enterKey = f(enterKey),
     enterKeyText = f(enterKeyText),
     pressedKey = f(pressedKey),
+    pressedKeyText = pressedKeyText?.let(f),
+    pressedModifierKeyText = pressedModifierKeyText?.let(f),
+    pressedEnterKeyText = pressedEnterKeyText?.let(f),
     keyBorder = keyBorder?.let(f),
     accent = f(accent),
     gestureTrail = f(gestureTrail),
@@ -1521,6 +1551,10 @@ internal fun KbTheme.accessibilityAdjusted(settings: KeyboardSettings): KbTheme 
             // thing on the key a low-vision reader cannot make out (#493).
             hintText = maxContrastOn(key),
             enterKeyText = maxContrastOn(kb.enterKey),
+            // Picked against the theme's pressed faces, which this mode repaints.
+            pressedKeyText = null,
+            pressedModifierKeyText = null,
+            pressedEnterKeyText = null,
             popupText = maxContrastOn(kb.popup),
             chipText = maxContrastOn(kb.chip),
             chipActiveText = maxContrastOn(kb.chipActive),
@@ -2095,6 +2129,8 @@ private fun lerpKbTheme(a: KbTheme, b: KbTheme, t: Float): KbTheme {
         backgroundImage = if (past) b.backgroundImage else a.backgroundImage,
         backgroundImageLandscape = if (past) b.backgroundImageLandscape else a.backgroundImageLandscape,
         backgroundImageOpacity = lerpF(a.backgroundImageOpacity, b.backgroundImageOpacity, t),
+        // Discrete, like the blur below: it is part of the glass bake's key.
+        backgroundImageBrightness = if (past) b.backgroundImageBrightness else a.backgroundImageBrightness,
         // Discrete, like the image path it belongs to. Interpolating it meant
         // every frame of the crossfade asked for a blur radius no cached decode
         // had, so switching between two themes whose blurs differed re-decoded
@@ -2140,10 +2176,14 @@ private fun lerpKbTheme(a: KbTheme, b: KbTheme, t: Float): KbTheme {
         enterKey = lerp(a.enterKey, b.enterKey, t),
         enterKeyText = lerp(a.enterKeyText, b.enterKeyText, t),
         pressedKey = lerp(a.pressedKey, b.pressedKey, t),
+        pressedKeyText = lerpColorOrNull(a.pressedKeyText, b.pressedKeyText, t),
+        pressedModifierKeyText = lerpColorOrNull(a.pressedModifierKeyText, b.pressedModifierKeyText, t),
+        pressedEnterKeyText = lerpColorOrNull(a.pressedEnterKeyText, b.pressedEnterKeyText, t),
         keyBorder = lerpColorOrNull(a.keyBorder, b.keyBorder, t),
         keyBorderWidthDp = lerpF(a.keyBorderWidthDp, b.keyBorderWidthDp, t),
         keyElevation = lerpDp(a.keyElevation, b.keyElevation, t),
         keyShadow = lerpColorOrNull(a.keyShadow, b.keyShadow, t),
+        labelOutline = lerpColorOrNull(a.labelOutline, b.labelOutline, t),
         accent = lerp(a.accent, b.accent, t),
         gestureTrail = lerp(a.gestureTrail, b.gestureTrail, t),
         popup = lerp(a.popup, b.popup, t),
@@ -2185,6 +2225,7 @@ private fun lerpKbTheme(a: KbTheme, b: KbTheme, t: Float): KbTheme {
         oneHandedPanel = lerp(a.oneHandedPanel, b.oneHandedPanel, t),
         oneHandedPanelIcon = lerp(a.oneHandedPanelIcon, b.oneHandedPanelIcon, t),
         keyRadiusDp = lerpI(a.keyRadiusDp, b.keyRadiusDp, t),
+        honeycomb = if (past) b.honeycomb else a.honeycomb,
         modifierKeyRadiusDp = lerpI(a.modifierKeyRadiusDp ?: a.keyRadiusDp, b.modifierKeyRadiusDp ?: b.keyRadiusDp, t)
             .takeIf { a.modifierKeyRadiusDp != null || b.modifierKeyRadiusDp != null },
         actionKeyRadiusDp = lerpI(a.actionKeyRadiusDp ?: a.keyRadiusDp, b.actionKeyRadiusDp ?: b.keyRadiusDp, t)
@@ -2204,6 +2245,7 @@ private fun lerpKbTheme(a: KbTheme, b: KbTheme, t: Float): KbTheme {
         toolWidthDp = if (past) b.toolWidthDp else a.toolWidthDp,
         toolHeightDp = if (past) b.toolHeightDp else a.toolHeightDp,
         toolIconSizeDp = if (past) b.toolIconSizeDp else a.toolIconSizeDp,
+        fieldButtonDp = if (past) b.fieldButtonDp else a.fieldButtonDp,
         animation = if (past) b.animation else a.animation,
         animationSpeed = lerpF(a.animationSpeed, b.animationSpeed, t),
         reduceMotion = b.reduceMotion,
@@ -2341,35 +2383,52 @@ fun BoxScope.BoardBackground(
         val solid = kb.board.copy(alpha = 1f)
         Box(modifier = Modifier.matchParentSize().drawBehind { drawRect(solid) })
     }
+    // A preview in the settings app crops the picture to the shape the real
+    // board last had, not to its own shorter box (#1379); see
+    // FrostBackdrop.imageAspect. The keyboard itself keeps its own box.
+    val backdrop = LocalFrostBackdrop.current
+    val previewHost = LocalKeyboardPreviewHost.current
+    val boardContext = LocalContext.current
+    val previewAspect = if (previewHost) {
+        remember(boardContext, landscape) { KeyboardBoardShape.aspect(boardContext, landscape) }
+    } else {
+        null
+    }
+    SideEffect { backdrop.imageAspect = previewAspect }
     // Animated backgrounds play through Coil (its loader already carries the
     // GIF/animated-WebP decoders for the media tools) and stop by themselves
     // when the keyboard leaves the screen. Reduce motion — which power saving
     // also sets — falls back to the still path below, whose BitmapFactory
     // decode of the same file is its first frame. Blur is structurally
     // excluded (editor + specKbTheme), so the two paths never fight.
-    if (kb.backgroundAnimated && !kb.reduceMotion && imagePath != null) {
-        AsyncImage(
-            model = remember(imagePath) { File(imagePath) },
-            contentDescription = null,
-            imageLoader = rememberMediaImageLoader(),
-            contentScale = ContentScale.Crop,
-            alpha = kb.backgroundImageOpacity,
-            modifier = Modifier.matchParentSize(),
-        )
+    if (kb.backgroundAnimated && !kb.reduceMotion && imagePath != null && !boardHidesImage(kb, imagePath)) {
+        PictureFrame(previewAspect) {
+            AsyncImage(
+                model = remember(imagePath) { File(imagePath) },
+                contentDescription = null,
+                imageLoader = rememberMediaImageLoader(),
+                contentScale = ContentScale.Crop,
+                alpha = kb.backgroundImageOpacity,
+                colorFilter = imageBrightnessFilter(kb.backgroundImageBrightness),
+                modifier = Modifier.matchParentSize(),
+            )
+        }
     } else if (!boardShowsFrostedImage(kb, imagePath) && !boardHidesImage(kb, imagePath)) {
-        ThemeBackgroundImage(
-            path = imagePath,
-            blur = kb.backgroundImageBlur,
-            opacity = kb.backgroundImageOpacity,
-            targetW = targetW,
-            targetH = targetH,
-        )
+        PictureFrame(previewAspect) {
+            ThemeBackgroundImage(
+                path = imagePath,
+                blur = kb.backgroundImageBlur,
+                opacity = kb.backgroundImageOpacity,
+                targetW = targetW,
+                targetH = targetH,
+                brightness = kb.backgroundImageBrightness,
+            )
+        }
     }
     // The glass: what the surfaces sample — the image above, baked blurred,
     // or the wallpaper's band — and the board's own place for them to sample
     // it against. Nothing is composed for a theme without glass.
     val frost = kb.frost
-    val backdrop = LocalFrostBackdrop.current
     val blurLive = windowFrostLive(kb)
     val kind = frost?.backdropKind(hasImage = imagePath != null, blurLive = blurLive)
     if (frost != null) FrostBackdropLoader(kb, imagePath, kind, targetW, targetH)
@@ -2385,21 +2444,26 @@ fun BoxScope.BoardBackground(
     if (frostedBoard) {
         val picture = backdrop.bitmap
         if (picture != null) {
-            Image(
-                bitmap = picture,
-                contentDescription = null,
-                modifier = Modifier.matchParentSize(),
-                contentScale = ContentScale.Crop,
-                alpha = if (kind == BackdropKind.IMAGE) kb.backgroundImageOpacity else 1f,
-            )
+            PictureFrame(previewAspect) {
+                Image(
+                    bitmap = picture,
+                    contentDescription = null,
+                    modifier = Modifier.matchParentSize(),
+                    contentScale = ContentScale.Crop,
+                    alpha = if (kind == BackdropKind.IMAGE) kb.backgroundImageOpacity else 1f,
+                )
+            }
         } else if (kind == BackdropKind.IMAGE) {
-            ThemeBackgroundImage(
-                path = imagePath,
-                blur = kb.backgroundImageBlur,
-                opacity = kb.backgroundImageOpacity,
-                targetW = targetW,
-                targetH = targetH,
-            )
+            PictureFrame(previewAspect) {
+                ThemeBackgroundImage(
+                    path = imagePath,
+                    blur = kb.backgroundImageBlur,
+                    opacity = kb.backgroundImageOpacity,
+                    targetW = targetW,
+                    targetH = targetH,
+                    brightness = kb.backgroundImageBrightness,
+                )
+            }
         }
     }
     val boardModifier = if (frost != null) {
@@ -2466,19 +2530,45 @@ private fun boardShowsFrostedImage(kb: KbTheme, imagePath: String?): Boolean {
 }
 
 /**
- * Whether the board leaves its image to the keys: a still image under a theme
- * that shows its picture on the keys only (`FrostSpec.cutout`). The board is
- * then its own colour between the keys, and each key draws its slice of the
- * picture through the glass. A playing animation has no frame for the keys
- * to sample, so it stays on the board, and the look falls back to an
- * ordinary see-through-key theme until reduce motion stills it.
+ * Whether the board leaves its image to the keys: a theme that shows its
+ * picture on the keys only (`FrostSpec.cutout`). The board is then its own
+ * colour between the keys, and each key draws its slice of the picture
+ * through the glass: a still one baked, a playing one sliced from the moving
+ * drawable (see FrostBackdrop.animated). Before #1394 a playing picture stayed
+ * on the board, under a board colour the cut had made opaque, so neither the
+ * keys nor the board showed it.
  */
 private fun boardHidesImage(kb: KbTheme, imagePath: String?): Boolean {
     val frost = kb.frost ?: return false
     if (imagePath == null || !frost.cutout) return false
-    if (kb.backgroundAnimated && !kb.reduceMotion) return false
     return frost.backdrop == com.wasimaster.wmkeyboard.core.theme.FrostBackdropSource.AUTO ||
         frost.backdrop == com.wasimaster.wmkeyboard.core.theme.FrostBackdropSource.IMAGE
+}
+
+/**
+ * [content], a picture filling its box, laid into a frame of [aspect] (width
+ * over height) as wide as the board and running from its top, clipped to the
+ * board: the crop the real board gives the picture, on a preview whose own box
+ * is shorter (#1379). Null draws [content] in the board's own box.
+ */
+@Composable
+private fun BoxScope.PictureFrame(aspect: Float?, content: @Composable BoxScope.() -> Unit) {
+    if (aspect == null || aspect <= 0f) {
+        content()
+        return
+    }
+    Box(modifier = Modifier.matchParentSize().clipToBounds()) {
+        Box(
+            modifier = Modifier.fillMaxSize().layout { measurable, constraints ->
+                val width = constraints.maxWidth
+                val height = constraints.maxHeight
+                val frameHeight = maxOf(height, (width / aspect).roundToInt())
+                val placeable = measurable.measure(Constraints.fixed(width, frameHeight))
+                layout(width, height) { placeable.place(0, 0) }
+            },
+            content = content,
+        )
+    }
 }
 
 /** Every stop at least [floor] opaque; see the fallback note in [BoardBackground]. */

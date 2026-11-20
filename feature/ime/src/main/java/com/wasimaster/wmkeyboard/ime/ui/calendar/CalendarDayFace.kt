@@ -161,6 +161,7 @@ private fun AllDayChip(event: DeviceCalendarEvent, onClick: () -> Unit) {
         Modifier
             .height(26.dp)
             .clip(shape)
+            .frostGlass(kb, shape, FrostSurface.CARDS)
             .background(colour.copy(alpha = 0.28f))
             .chipBorder(kb, shape)
             .clickable {
@@ -302,11 +303,30 @@ private fun Timeline(ui: CalendarUi, day: EventDate, timed: List<DeviceCalendarE
                         .width(LABEL_WIDTH - 4.dp),
                 )
             }
+            // The day's weather every few hours under the hour labels (#1368),
+            // empty hours included, so a free stretch can be planned by it.
+            ui.dayForecast?.takeIf { it.day == day }?.let { forecast ->
+                forecast.hours.forEach { hour ->
+                    val h = EventTimes.minuteOfDay(hour.timeMillis, zone) / 60
+                    Text(
+                        forecast.label(hour),
+                        color = labelColor,
+                        fontSize = 9.sp,
+                        maxLines = 1,
+                        modifier = Modifier
+                            .offset(y = HOUR_HEIGHT * h + 7.dp)
+                            .width(LABEL_WIDTH - 2.dp)
+                            .clickable { act(CalendarAction.OpenDayWeather) },
+                    )
+                }
+            }
             val laneWidth = maxWidth - LABEL_WIDTH
             placed.forEach { p ->
                 val shift = settled?.takeIf { it.first == p.event.id }?.second ?: 0
                 EventBlock(
                     placed = p,
+                    weather = ui.weather[com.wasimaster.wmkeyboard.ime.calendar.weatherKey(p.event)],
+                    onWeather = { act(CalendarAction.OpenWeather(p.event)) },
                     hour24 = ui.hour24,
                     laneWidth = laneWidth,
                     hourPx = hourPx,
@@ -331,6 +351,9 @@ private fun Timeline(ui: CalendarUi, day: EventDate, timed: List<DeviceCalendarE
 @Composable
 private fun EventBlock(
     placed: Placed,
+    /** The forecast for the event's hour and place (#1368), drawn after its title. */
+    weather: com.wasimaster.wmkeyboard.ime.calendar.EventWeatherChip?,
+    onWeather: () -> Unit,
     hour24: Boolean,
     laneWidth: Dp,
     hourPx: Float,
@@ -427,6 +450,7 @@ private fun EventBlock(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false),
             )
+            if (weather != null) EventWeatherBadge(weather, onWeather)
             if (event.recurring) {
                 Icon(
                     Icons.Outlined.EventRepeat,

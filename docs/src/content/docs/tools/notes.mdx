@@ -28,6 +28,8 @@ The panel opens on the list by default. <SettingsPath path="Tools / Notes / The 
 
 The panel takes the whole keyboard, the toolbar's row included, so the notes get as much room as there is. To keep your tools in reach while a note is open, turn on <SettingsPath path="Tools / Notes / Keep the toolbar" />: the panel then opens under the toolbar, one row shorter. The back arrow in the panel's own header still goes back a step at a time, out of the note and then to the list, while the toolbar's back arrow closes Notes in one tap.
 
+A note in the list opens when you tap it. If you mostly use notes to type saved text into other apps, turn on <SettingsPath path="Tools / Notes / Tap a note to insert it" />: a tap then types the note into the field, the same as its **Insert** button. To open a note with that on, hold it to show its buttons and tap it again.
+
 ### Quick note
 
 The **Quick note** action opens the panel straight on a new note, with the keys already typing into its body, so a thought goes down in one press. Bind it to a flick, a key's long press, a toolbar button's hold or the floating button. It's an action rather than a tool, so it never shows on the toolbar or in the toolbox: you'll find it under **Other** in those pickers. Fire it again while the note is up to close the panel.
@@ -40,11 +42,11 @@ The list is a shelf. Pinned notes sit on their own row at the top, as wide cards
 
 Along the top, next to Back, the filter chips scroll: **All**, **Pinned**, one chip per tag, **Archived** and **Trash**, then **Manage tags**. The tag chips are your tags, in your colours; there are none until you make one. The round search button at the end turns the header into a search pill, which searches titles, tags and text as you type into it, the way the clipboard's search works; the keys type into the search rather than into the app behind the keyboard, and the chips move down under the pill so a filter stays a tap away. With [Search by meaning](/smart/search-by-meaning/) on, notes that are about what you typed follow the matches, from the same chip; locked notes are left out of it.
 
-Once the search holds two letters or more, the paragraphs that contain them come first, under **Passages**, above the notes. Each shows its paragraph with the match picked out and, under it, the note it comes from. Tap one to type that paragraph into the field as the note has it, without opening the note; hold it to open the note in the editor with the cursor on the match. A locked note, or one too long for the editor, opens to read instead. A long paragraph is cut down to the line around the match, and a long line to the sentences around it. One note gives three passages at most, a search lists 24, and locked notes give none.
+Once the search holds two letters or more, the paragraphs that contain them come first, under **Passages**, above the notes. Each shows its paragraph with the match picked out and, under it, the note it comes from. Tap one to type that paragraph into the field as the note has it, without opening the note; hold it to open the note in the editor with the cursor on the match. A locked note opens to read instead. A note too long for the editor (over 20,000 characters) opens to read at the passage, a couple of lines above the match, with **Show from the start** above it to go back to the top. A long paragraph is cut down to the line around the match, and a long line to the sentences around it. One note gives three passages at most, a search lists 24, and locked notes give none. With a hardware keyboard, the arrow keys reach the passages before the notes, and Enter types the one that is ringed.
 
 Tap a card to open it. Hold a card for its actions right there on the card: **Insert**, **Copy**, **Edit**, **Share**, **Pin**, **Archive**, **Lock** and **Delete**. Swipe a card to the left instead for **Pin**, **Archive** and **Delete** behind it; a long swipe past about half the card moves it to the trash at once, with the Undo bar to bring it back. In the trash, the swipe shows **Restore**. Holding a tag chip opens the tag manager in the settings app.
 
-A **Jot something…** pill floats along the bottom of the shelf. Tap it, or its **+**, to start a new note; it steps aside while the Undo bar is up. On an empty tag, the empty list offers **New note tagged** with that tag already on it.
+A **Jot something…** pill floats along the bottom of the shelf. Tap it, or its **+**, to start a new note; it steps aside while the Undo bar is up. The paperclip beside the **+** makes a new note out of the text in the field you are typing in: the selected text if you selected some, otherwise the whole field, with the cursor at its end. It is not there in a password field. On an empty tag, the empty list offers **New note tagged** with that tag already on it.
 
 ### The timeline
 
@@ -108,11 +110,41 @@ The switch above takes **Save to notes** out of the share sheet. It is on by def
 
 ## Export, share and import
 
-In the settings app, a note's menu shares it as a Markdown or a plain text file, named after its title. **Export all as a zip** under the list writes one Markdown file per note, archived notes included and locked notes left out, with the note's tags on a `Tags:` line at the end. **Import text files** reads `.txt` and `.md` files back as notes, one per file, each titled by its file name unless it opens on a heading (a file this app exported comes back as it went out), skipping any that already exist word for word, and reads a `Tags:` last line back as tags. A note holds up to 100,000 characters, and a longer file is cut there.
+In the settings app, a note's menu shares it as a Markdown or a plain text file, named after its title. **Export all as a zip** under the list writes one Markdown file per note, archived notes included and locked notes left out, with the note's tags on a `Tags:` line at the end. **Import text files** reads `.txt` and `.md` files back as notes, one per file, each titled by its file name unless it opens on a heading (a file this app exported comes back as it went out), skipping any that already exist word for word, and reads a `Tags:` last line back as tags. A note holds up to 100,000 characters, so a longer file comes in as several notes, numbered in their titles (`Moby Dick (1/3)`, `(2/3)`, `(3/3)`), each cut at a blank line near the limit and carrying the file's tags. Up to 40 parts are read from one file.
 
 Importing is also the way to keep texts you quote often within reach: a speech, a book's chapter, a set of answers you give again and again. Give them a tag such as **Quotes**, and the search's [passages](#the-shelf-and-the-tags) type a quote from them straight into a chat. Pick the tag's chip while you search to look in those notes only. The [clipboard's search](/tools/clipboard/#searching-your-notes-too) lists the same passages above your clips, so you can reach a quote without leaving the clipboard.
 
 **Export to an Obsidian vault** asks for the vault's folder and writes each note to a `WM Keyboard` folder inside it, with its tags and dates in front matter so Obsidian sees them, and any space in a tag turned into a dash. It leaves out locked notes the same way. Export again to update the files: a note whose file is there overwrites it, so edits made to that file in Obsidian are lost, and a note you renamed gets a new file beside the old one. It runs when you tap it, not in the background. Import reads those files back, tags and dates included, and leaves front matter with any other key in the note's text.
+
+## Your Obsidian vault
+
+If your notes already live in an Obsidian or Zettel Notes vault, the keyboard can open that vault next to its own notes, read its notes, edit them where they are, and add new ones. The vault stays a folder of Markdown files that those apps keep using; the keyboard reads and writes the files through Android's folder picker and copies nothing into its own notes.
+
+### Choosing the vault
+
+1. Open Notes and tap the folder button at the right of the panel's header, next to the search.
+2. Tap **Choose a folder**. Android's folder picker opens.
+3. Go to the vault's folder (the one with the `.obsidian` folder inside it, for Obsidian) and tap **Use this folder**, then **Allow**.
+
+The keyboard comes back with the vault's top folder listed. **Change folder** at the bottom of the list picks another one, and **Forget the vault** lets it go. If the picker shares the folder read-only, as some cloud apps do, notes can be read and typed but not changed, and the list says so. If Android takes the folder's permission back, for instance after the app that shares it is uninstalled, the vault view says so and asks for the folder again.
+
+### Reading and editing
+
+The vault opens one folder at a time: folders first, then the notes, which are the `.md`, `.markdown` and `.txt` files. Hidden folders such as `.obsidian` and `.trash` stay out of the list. Tap a folder to go into it; the crumbs along the header go back up, and so does the back arrow.
+
+Tap a note to read it. Its front matter, the block between the `---` lines at the top, is kept out of sight, apart from its `tags`, which show as a line of `#tags` above the text, and its `title`, which names the note in the header (otherwise the file name does). The rest is drawn as Markdown, the way the keyboard's own notes are. A wiki-link such as `[[Shopping]]` or `[[Shopping|the list]]` shows as its words and opens the note it names when you tap it: first in the folder on show, then anywhere in the vault by file name. An embed such as `![[photo.png]]` shows its name in place of the picture.
+
+**Edit** opens the note's text in a box with the keys below; <KeyCap>Enter</KeyCap> starts a new line, **Save** writes the file, and **Cancel** leaves it as it was. The front matter is written back exactly as it was, so Obsidian's own fields keep their values. If the file changed somewhere else while you had it open (a sync, or Obsidian on a computer), saving stops and asks: **Save mine over it**, or **Drop mine and reload**. A note longer than 20,000 characters can be read and typed but not edited in the keyboard. **Type it** types the note's text into the field behind the keyboard.
+
+**New note** asks for a name and makes `name.md` in the folder on show, then opens it to write. Characters no file name can hold, such as `/` and `:`, become spaces.
+
+### Quick captures
+
+A capture is a few words sent to the vault without opening a note. First pick where captures go: hold a note and tap **Add captures to this note**, or hold a folder and tap **New captures in this folder** (or **Captures to this folder** at the bottom of the list, for the folder on show). The note or folder picked shows **Captures** beside its name.
+
+Then tap **Capture** in the header, write, and tap **Send**. Sent to a note, the capture goes on the end of it, on a line of its own, which suits a daily note or an inbox. Sent to a folder, each capture becomes a new note named after its first few words.
+
+The vault and the capture spot belong to this phone. They aren't in backups, since the folder's permission can't move to another phone.
 
 ## Backups
 

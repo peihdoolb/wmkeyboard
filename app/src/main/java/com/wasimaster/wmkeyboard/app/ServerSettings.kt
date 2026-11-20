@@ -162,6 +162,7 @@ private fun RepoLocationRows(repo: ServiceRepo, repository: SettingsRepository, 
             options = GitForge.entries.map { it to stringResource(it.labelRes) },
             selected = shown.forge,
             default = repo.default.forge,
+            info = stringResource(R.string.servers_repo_forge_info),
         ) { forge ->
             if (forge != shown.forge) replace(RepoLocation(forge, forge.defaultHost, shown.owner, shown.repo))
         }
@@ -271,6 +272,8 @@ internal val ServiceEndpoint.labelRes: Int
         ServiceEndpoint.BRAVE_SEARCH -> R.string.servers_brave_search
         ServiceEndpoint.TAVILY -> R.string.servers_tavily
         ServiceEndpoint.MWMBL -> R.string.servers_mwmbl
+        ServiceEndpoint.WIBY -> R.string.servers_wiby
+        ServiceEndpoint.MARGINALIA -> R.string.servers_marginalia
         ServiceEndpoint.KLIPY -> R.string.servers_klipy
         ServiceEndpoint.GIPHY -> R.string.servers_giphy
         ServiceEndpoint.GIFCITIES -> R.string.servers_gifcities
@@ -287,6 +290,7 @@ internal val ServiceEndpoint.labelRes: Int
         ServiceEndpoint.WIKTIONARY -> R.string.servers_wiktionary
         ServiceEndpoint.OPEN_METEO -> R.string.servers_open_meteo
         ServiceEndpoint.OPEN_METEO_GEOCODING -> R.string.servers_open_meteo_geocoding
+        ServiceEndpoint.OPEN_METEO_AIR_QUALITY -> R.string.servers_open_meteo_air_quality
         ServiceEndpoint.NOMINATIM -> R.string.servers_nominatim
         ServiceEndpoint.AUDD -> R.string.servers_audd
         ServiceEndpoint.AUDIOTAG -> R.string.servers_audiotag

@@ -64,6 +64,7 @@ import com.wasimaster.wmkeyboard.app.lock.AppLockStatus
 import com.wasimaster.wmkeyboard.app.lock.AppLockTargets
 import com.wasimaster.wmkeyboard.app.lock.LocalAppLock
 import com.wasimaster.wmkeyboard.common.R as CommonR
+import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Alarm
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Add
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Check
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Close
@@ -247,6 +248,8 @@ internal fun NotesListScreen(
     var message by remember { mutableStateOf<String?>(null) }
     var sortMenu by remember { mutableStateOf(false) }
     val sort = settings.watch { it.notes.sort }
+    // The alarm on a note with a deadline or birthday ahead (#1293).
+    val reminderMarks = settings.watch { it.notes.assist.enabled && it.notes.assist.reminders }
     val tagColours = remember(state.tags) { state.tags.associate { it.name.lowercase(Locale.ROOT) to it.colour } }
 
     val shown = remember(state.active, state.archived, view, tagFilter, query, sort) {
@@ -413,6 +416,7 @@ internal fun NotesListScreen(
                     NoteListRow(
                         note = note,
                         tagColours = tagColours,
+                        reminderMark = reminderMarks,
                         selecting = selecting,
                         checked = note.id in selected,
                         onClick = {
@@ -557,20 +561,22 @@ private suspend fun importNotes(context: android.content.Context, state: NotesSc
     var imported = 0
     var duplicates = 0
     var skipped = 0
+    var split = 0
     val existing = (state.active + state.archived).map { it.title.trim() to it.body.trim() }.toHashSet()
     val notes = withContext(Dispatchers.IO) {
-        uris.mapNotNull { uri ->
+        uris.flatMap { uri ->
             val name = WMFileTypes.displayName(context, uri)
             if (!NoteFiles.isNoteFile(name)) {
                 skipped++
-                return@mapNotNull null
+                return@flatMap emptyList()
             }
             val bytes = runCatching { context.contentResolver.readBytesCapped(uri) }.getOrNull()
             if (bytes == null) {
                 skipped++
-                return@mapNotNull null
+                return@flatMap emptyList()
             }
-            NoteFiles.fromText(name, String(bytes))
+            // A file longer than one note holds comes in as numbered parts.
+            NoteFiles.fromTextParts(name, String(bytes)).also { if (it.size > 1) split++ }
         }
     }
     state.mutate { store ->
@@ -587,6 +593,7 @@ private suspend fun importNotes(context: android.content.Context, state: NotesSc
         add(context.resources.getQuantityString(R.plurals.notes_imported_count, imported, imported))
         if (duplicates > 0) add(context.resources.getQuantityString(R.plurals.notes_import_duplicates, duplicates, duplicates))
         if (skipped > 0) add(context.resources.getQuantityString(R.plurals.notes_import_skipped, skipped, skipped))
+        if (split > 0) add(context.resources.getQuantityString(R.plurals.notes_import_split, split, split))
     }
     return lines.joinToString("\n")
 }
@@ -597,6 +604,8 @@ private suspend fun importNotes(context: android.content.Context, state: NotesSc
 private fun NoteListRow(
     note: Note,
     tagColours: Map<String, Int>,
+    /** Whether a note with a deadline or birthday ahead wears an alarm (#1293). */
+    reminderMark: Boolean,
     selecting: Boolean,
     checked: Boolean,
     onClick: () -> Unit,
@@ -636,6 +645,14 @@ private fun NoteListRow(
                 leading = if (selecting) ({ Checkbox(checked = checked, onCheckedChange = { onClick() }) }) else null,
                 trailing = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        val due = reminderMark && !note.locked && remember(note.id, note.updatedAt) {
+                            com.wasimaster.wmkeyboard.core.notes.assist.NoteReminders.upcoming(
+                                com.wasimaster.wmkeyboard.core.notes.assist.NoteHighlights.find(note.body, note.updatedAt),
+                                System.currentTimeMillis(),
+                                limit = 1,
+                            ).isNotEmpty()
+                        }
+                        if (due) Icon(Icons.Outlined.Alarm, contentDescription = stringResource(R.string.notes_has_reminder_desc), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                         if (note.pinned) Icon(Icons.Outlined.PushPin, contentDescription = stringResource(R.string.notes_pinned_desc), modifier = Modifier.size(16.dp))
                         if (note.locked) Icon(Icons.Outlined.Lock, contentDescription = stringResource(R.string.notes_locked_desc), modifier = Modifier.size(16.dp))
                     }
@@ -1120,6 +1137,7 @@ internal fun NotesToolSettings(
                 options = NoteSort.entries.map { it to stringResource(it.labelRes()) },
                 selected = settings.watch { it.notes.sort },
                 default = d.sort,
+                info = stringResource(R.string.tooldetail_notes_sort_info),
             ) { scope.launch { repository.setNotesSort(it) } }
         }
         item {
@@ -1128,6 +1146,7 @@ internal fun NotesToolSettings(
                 stringResource(R.string.tooldetail_notes_markdown_subtitle),
                 settings.watch { it.notes.renderMarkdown },
                 default = d.renderMarkdown,
+                info = stringResource(R.string.tooldetail_notes_markdown_info),
             ) { scope.launch { repository.setNotesRenderMarkdown(it) } }
         }
         // The toolbar over the open panel (#1282), instead of the panel over it.
@@ -1140,6 +1159,16 @@ internal fun NotesToolSettings(
                 default = d.keepToolbar,
             ) { scope.launch { repository.setNotesKeepToolbar(it) } }
         }
+        // A tap types the note in rather than opening it (#1333).
+        item {
+            ToggleSetting(
+                R.string.tooldetail_notes_tap_inserts_title,
+                stringResource(R.string.tooldetail_notes_tap_inserts_subtitle),
+                settings.watch { it.notes.tapInserts },
+                info = stringResource(R.string.tooldetail_notes_tap_inserts_info),
+                default = d.tapInserts,
+            ) { scope.launch { repository.setNotesTapInserts(it) } }
+        }
         item {
             ChoiceSetting(
                 R.string.tooldetail_notes_panel_start_title,
@@ -1150,6 +1179,7 @@ internal fun NotesToolSettings(
                 ),
                 selected = settings.watch { it.notes.panelOpensOn },
                 default = d.panelOpensOn,
+                info = stringResource(R.string.tooldetail_notes_panel_start_info),
             ) { scope.launch { repository.setNotesPanelOpensOn(it) } }
         }
         item {
@@ -1162,6 +1192,7 @@ internal fun NotesToolSettings(
                 ),
                 selected = settings.watch { it.notes.panelLayout },
                 default = d.panelLayout,
+                info = stringResource(R.string.tooldetail_notes_panel_layout_info),
             ) { scope.launch { repository.setNotesPanelLayout(it) } }
         }
         item(level = SettingLevel.ADVANCED) {
@@ -1177,6 +1208,7 @@ internal fun NotesToolSettings(
                 },
                 selected = settings.watch { it.notes.trashDays }.let { days -> if (days in NotesSettings.TRASH_DAY_CHOICES) days else 30 },
                 default = d.trashDays,
+                info = stringResource(R.string.tooldetail_notes_trash_days_info),
             ) { scope.launch { repository.setNotesTrashDays(it) } }
         }
         item {
@@ -1189,6 +1221,7 @@ internal fun NotesToolSettings(
                 ),
                 selected = settings.watch { it.notes.saveSelectionAppends },
                 default = d.saveSelectionAppends,
+                info = stringResource(R.string.tooldetail_notes_save_selection_info),
             ) { scope.launch { repository.setNotesSaveSelectionAppends(it) } }
         }
     }

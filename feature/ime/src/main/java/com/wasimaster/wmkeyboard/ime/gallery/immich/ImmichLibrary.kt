@@ -27,8 +27,9 @@ import java.util.UUID
  * are listed once and filled in as the grid pages down; [forget] drops that
  * when the panel opens again, so new pictures on the server show up.
  *
- * Only pictures are listed: Immich videos would have to be fetched whole
- * before they could be watched or sent.
+ * Videos are listed too, with their length: a video is fetched whole before
+ * it plays in the viewer or is sent, the same fetch a picture's original
+ * takes, so it goes through the network log like every other call.
  */
 internal object ImmichLibrary {
 
@@ -44,6 +45,25 @@ internal object ImmichLibrary {
     private var config: Config? = null
     private var client: ImmichClient? = null
     private val cache = HashMap<String, AlbumCache>()
+
+    /**
+     * Saving data off Wi-Fi (#1374), set by the panel as it opens and before
+     * each fetch: the grid shows only thumbnails already on the phone, a
+     * tapped picture comes down as the server's preview (about 1440 px), and
+     * an original, a video or an upload waits unless the user asks for it.
+     */
+    @Volatile
+    var lean: Boolean = false
+
+    /** Where the server's thumbnails and previews are kept on the phone, so they show again without the network. */
+    @Volatile
+    private var pictureDir: File? = null
+    private var writesSincePrune = 0
+
+    /** Names the picture cache's folder; the panel calls it once. */
+    fun attach(context: Context) {
+        if (pictureDir == null) pictureDir = File(File(context.cacheDir, "media"), PICTURE_DIR)
+    }
 
     fun configured(s: GallerySettings): Boolean = s.immichUrl.isNotBlank() && s.immichKey.isNotBlank()
 
@@ -92,21 +112,24 @@ internal object ImmichLibrary {
 
     /**
      * Rows [offset] up to [offset] + [limit] of [album], newest first, asking
-     * the server for as many months as that takes. Videos are left out, so a
-     * filter for videos or GIFs finds nothing here.
+     * the server for as many months as that takes. Pictures and videos; the
+     * server tells no GIF apart, so a filter for GIFs finds nothing here.
      */
     fun page(s: GallerySettings, album: GalleryAlbum, filter: GalleryFilter, offset: Int, limit: Int): List<GalleryItem> {
-        if (filter == GalleryFilter.VIDEOS || filter == GalleryFilter.GIFS) return emptyList()
+        if (filter == GalleryFilter.GIFS) return emptyList()
         val c = client(s) ?: return emptyList()
         val albumId = album.id.takeIf { album.kind == AlbumKind.IMMICH_ALBUM }
-        val key = albumId ?: TIMELINE
+        // Each filter keeps its own rows, so an offset counts the rows it shows.
+        val key = (albumId ?: TIMELINE) + "|" + filter.name
         val entry = synchronized(this) { cache[key] } ?: AlbumCache(c.buckets(albumId)).also {
             synchronized(this) { cache[key] = it }
         }
         while (entry.loaded.size < offset + limit && !entry.done) {
             val bucket = entry.buckets[entry.next]
             val assets = c.bucket(bucket.key, albumId)
-            entry.loaded += assets.filter { it.image && !it.trashed }.map { item(it, album.name.orEmpty()) }
+            entry.loaded += assets.filter { !it.trashed }
+                .map { item(it, album.name.orEmpty()) }
+                .filter { filter.accepts(it.kind) }
             entry.next++
         }
         if (offset >= entry.loaded.size) return emptyList()
@@ -116,15 +139,15 @@ internal object ImmichLibrary {
     private fun item(a: ImmichClient.Asset, albumName: String): GalleryItem {
         return GalleryItem(
             id = rowId(a.id),
-            mime = "image/jpeg",
-            kind = GalleryKind.IMAGE,
+            mime = if (a.image) "image/jpeg" else "video/mp4",
+            kind = if (a.image) GalleryKind.IMAGE else GalleryKind.VIDEO,
             name = "",
             // The timeline gives the shape only; the size comes with the original.
             width = (a.ratio * RATIO_SCALE).toInt(),
             height = RATIO_SCALE,
             orientation = 0,
             size = 0,
-            durationMs = 0,
+            durationMs = a.durationMs,
             dateMs = a.createdMs,
             bucketId = REMOTE_BUCKET,
             bucketName = albumName,
@@ -152,11 +175,47 @@ internal object ImmichLibrary {
      * The server's thumbnail (or, [preview], its larger picture) for [uri],
      * from the server the albums were last listed from: the grid only shows
      * an Immich picture once the controller has done that.
+     *
+     * Kept on the phone once fetched (#1374). While [lean], only what is kept
+     * is shown, with the small thumbnail standing in for a missing preview,
+     * unless [asked]: the viewer, opened by a tap, fetches the preview.
      */
-    fun picture(uri: Uri, preview: Boolean): ByteArray? {
+    fun picture(uri: Uri, preview: Boolean, asked: Boolean = false): ByteArray? {
         val id = assetOf(uri) ?: return null
+        kept(id, preview)?.let { return it }
+        if (lean && !asked) return if (preview) kept(id, preview = false) else null
         val c = synchronized(this) { client } ?: return null
-        return c.thumbnail(id, preview)
+        return c.thumbnail(id, preview).also { keep(id, preview, it) }
+    }
+
+    private fun keptFile(id: String, preview: Boolean): File? = pictureDir?.let { File(it, id + if (preview) ".p" else ".t") }
+
+    private fun kept(id: String, preview: Boolean): ByteArray? {
+        val f = keptFile(id, preview)?.takeIf { it.isFile && it.length() > 0 } ?: return null
+        return runCatching { f.readBytes() }.getOrNull()?.also { f.setLastModified(System.currentTimeMillis()) }
+    }
+
+    private fun keep(id: String, preview: Boolean, bytes: ByteArray) {
+        val f = keptFile(id, preview) ?: return
+        runCatching {
+            f.parentFile?.mkdirs()
+            val tmp = File(f.parentFile, f.name + ".tmp")
+            tmp.writeBytes(bytes)
+            tmp.renameTo(f)
+        }
+        val prune = synchronized(this) { ++writesSincePrune >= PRUNE_EVERY }
+        if (prune) prunePictures()
+    }
+
+    /** Keeps the picture cache under [PICTURE_CACHE_BYTES], the least recently shown going first. */
+    private fun prunePictures() {
+        synchronized(this) { writesSincePrune = 0 }
+        val files = pictureDir?.listFiles()?.filter { it.isFile }?.sortedByDescending { it.lastModified() } ?: return
+        var total = 0L
+        for (f in files) {
+            total += f.length()
+            if (total > PICTURE_CACHE_BYTES) f.delete()
+        }
     }
 
     /**
@@ -165,10 +224,57 @@ internal object ImmichLibrary {
      * so editing and sending treat it as they treat a picked file. Null when
      * the server would not give it.
      */
-    fun fetch(context: Context, s: GallerySettings, item: GalleryItem): GalleryItem? {
+    fun fetch(context: Context, s: GallerySettings, item: GalleryItem, full: Boolean = true): GalleryItem? {
         if (!item.isRemote) return item
-        val id = item.sourceUri?.let(::assetOf) ?: return null
         val c = client(s) ?: return null
+        // Saving data (#1374): the server's preview stands in for the original.
+        return if (full) fetchWith(context, c, item) else previewWith(context, c, item)
+    }
+
+    /**
+     * [item] as the server's preview, a JPEG about 1440 px on its long side
+     * and a fraction of the original's size: what is sent or edited while
+     * saving data, unless Original was picked. Null for a video, which has
+     * no smaller form to send.
+     */
+    private fun previewWith(context: Context, c: ImmichClient, item: GalleryItem): GalleryItem? {
+        if (item.isVideo) return null
+        val id = item.sourceUri?.let(::assetOf) ?: return null
+        val dir = File(MediaPrep.outputDir(context), "immich").apply { mkdirs() }
+        val file = File(dir, "$id.preview.jpg")
+        if (!file.isFile || file.length() == 0L) {
+            val bytes = kept(id, preview = true) ?: runCatching { c.thumbnail(id, preview = true) }.getOrNull()
+                ?.also { keep(id, true, it) } ?: return null
+            if (runCatching { file.writeBytes(bytes) }.isFailure) return null
+        }
+        val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        runCatching { android.graphics.BitmapFactory.decodeFile(file.path, bounds) }
+        return item.copy(
+            sourceUri = Uri.fromFile(file),
+            mime = "image/jpeg",
+            name = "IMG_${item.dateMs}.jpg",
+            size = file.length(),
+            width = bounds.outWidth.coerceAtLeast(0),
+            height = bounds.outHeight.coerceAtLeast(0),
+            orientation = 0,
+        )
+    }
+
+    /**
+     * [fetch] from the server the albums were last listed from, for the
+     * viewer, which has no settings to hand: a video plays from its fetched
+     * original (#1205).
+     */
+    fun fetchFromServer(context: Context, item: GalleryItem): GalleryItem? {
+        if (!item.isRemote) return item
+        // A video is its original: it waits for Wi-Fi while saving data (#1374).
+        if (lean) return null
+        val c = synchronized(this) { client } ?: return null
+        return fetchWith(context, c, item)
+    }
+
+    private fun fetchWith(context: Context, c: ImmichClient, item: GalleryItem): GalleryItem? {
+        val id = item.sourceUri?.let(::assetOf) ?: return null
         val dir = File(MediaPrep.outputDir(context), "immich").apply { mkdirs() }
         val done = dir.listFiles()?.firstOrNull { it.name.startsWith("$id.") && it.length() > 0 }
         val (file, mime, name) = if (done != null) {
@@ -183,17 +289,22 @@ internal object ImmichLibrary {
                 ?: MediaPrep.extensionFor(original.mime)
             val file = File(dir, "$id.$ext")
             if (!part.renameTo(file)) return null
-            Triple(file, original.mime.takeIf { it.startsWith("image/") } ?: mimeOfExt(ext), original.name ?: file.name)
+            Triple(
+                file,
+                original.mime.takeIf { it.startsWith("image/") || it.startsWith("video/") } ?: mimeOfExt(ext),
+                original.name ?: file.name,
+            )
         }
         val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        runCatching { android.graphics.BitmapFactory.decodeFile(file.path, bounds) }
+        if (!item.isVideo) runCatching { android.graphics.BitmapFactory.decodeFile(file.path, bounds) }
         return item.copy(
             sourceUri = Uri.fromFile(file),
             mime = mime,
             name = name,
             size = file.length(),
-            width = bounds.outWidth.coerceAtLeast(0),
-            height = bounds.outHeight.coerceAtLeast(0),
+            // A video keeps the shape the timeline gave it.
+            width = bounds.outWidth.takeIf { it > 0 } ?: if (item.isVideo) item.width else 0,
+            height = bounds.outHeight.takeIf { it > 0 } ?: if (item.isVideo) item.height else 0,
             // The original's own EXIF turn is read where the picture is decoded.
             orientation = 0,
         )
@@ -206,7 +317,29 @@ internal object ImmichLibrary {
         "heic", "heif" -> "image/heic"
         "avif" -> "image/avif"
         "dng" -> "image/x-adobe-dng"
+        "mp4", "m4v" -> "video/mp4"
+        "mov" -> "video/quicktime"
+        "webm" -> "video/webm"
+        "mkv" -> "video/x-matroska"
+        "3gp" -> "video/3gpp"
         else -> "image/jpeg"
+    }
+
+    // ---- Delete ------------------------------------------------------------------
+
+    /**
+     * Deletes [items] from the server (#1366): into Immich's trash, see
+     * [ImmichClient.delete]. Phone pictures among them are left alone. Throws
+     * when the server refuses or cannot be reached; the listing is dropped on
+     * success, so the album is read afresh.
+     */
+    fun delete(s: GallerySettings, items: List<GalleryItem>): Int {
+        val c = client(s) ?: throw IOException("no server")
+        val ids = items.mapNotNull { it.sourceUri?.let(::assetOf) }
+        c.delete(ids)
+        synchronized(this) { cache.clear() }
+        ids.forEach { id -> keptFile(id, true)?.delete(); keptFile(id, false)?.delete() }
+        return ids.size
     }
 
     // ---- Upload ------------------------------------------------------------------
@@ -282,4 +415,9 @@ internal object ImmichLibrary {
 
     private const val RATIO_SCALE = 1000
     private const val BUFFER = 64 * 1024
+
+    /** Under the cache's `media` folder, which About › Storage already counts. */
+    const val PICTURE_DIR = "immich-pictures"
+    private const val PICTURE_CACHE_BYTES = 64L * 1024 * 1024
+    private const val PRUNE_EVERY = 40
 }

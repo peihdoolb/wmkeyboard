@@ -123,6 +123,37 @@ data class CaretText(
     }
 
     /**
+     * Where Up ([up]) or Down puts the caret (#1241): the same column on the
+     * line above or below, cut to that line's length, and the buffer's start
+     * or end from its first or last line. A one-line buffer's Up and Down are
+     * its ends, as they always were. Lines are the text's own, split at
+     * newlines, not the ones a narrow box wraps it into.
+     */
+    fun lineStep(up: Boolean): Int {
+        val i = at
+        val start = lineStartOf(i)
+        val column = i - start
+        if (up) {
+            if (start == 0) return 0
+            val above = lineStartOf(start - 1)
+            return clamp(minOf(above + column, start - 1))
+        }
+        val end = text.indexOf('\n', i).let { if (it < 0) return text.length else it }
+        val next = end + 1
+        val nextEnd = text.indexOf('\n', next).let { if (it < 0) text.length else it }
+        return clamp(minOf(next + column, nextEnd))
+    }
+
+    /** The start ([end] false) or end of the line the caret is on: Home and End in a buffer of several lines (#1241). */
+    fun lineEdge(end: Boolean): Int {
+        val i = at
+        return if (end) text.indexOf('\n', i).let { if (it < 0) text.length else it } else lineStartOf(i)
+    }
+
+    private fun lineStartOf(index: Int): Int =
+        if (index <= 0) 0 else text.lastIndexOf('\n', index - 1) + 1
+
+    /**
      * The caret moved [delta] characters, clamped to the buffer's ends. With
      * [extend] the anchor stays put and the selection grows or shrinks; without
      * it a selection collapses to the end the arrow points at, as in any field.
@@ -375,6 +406,13 @@ enum class CaptureTarget(
     /** The clipboard panel's clip editor: free text, newlines and all. */
     CLIP_EDIT(takesWords = true, prose = true),
 
+    /**
+     * A new clip typed in the strip's place (#1339), from the floating
+     * button: text copied down by hand off the screen. One line, and Enter
+     * keeps it.
+     */
+    CLIP_WRITE(takesWords = true, prose = true),
+
     /** The clipboard's Combine (#612): what goes between the clips. Punctuation, not words. */
     CLIP_JOINER(takesWords = false),
 
@@ -431,6 +469,12 @@ enum class CaptureTarget(
 
     /** The file manager's box: a search over file names, a new name, or a new folder's. One line, and no words to offer. */
     FILES_TEXT(takesWords = false),
+
+    /**
+     * The notes vault's box (#1211): a new note's name (Enter makes it), or a
+     * note's text or a quick capture, free text with newlines like [NOTE_BODY].
+     */
+    VAULT_TEXT(takesWords = true, prose = true),
 
     /** A calendar event's title in the Calendar composer: one line, Enter moves on to the place. */
     CALENDAR_TITLE(takesWords = true),
@@ -504,7 +548,10 @@ enum class CaptureTarget(
             this != TOOLBOX_FOLDER_NAME && this != LAUNCHER_FOLDER_NAME &&
             // The snippet waits to go in at the app's caret: typing there
             // first would put the answer somewhere else entirely.
-            this != SNIPPET_ASK
+            this != SNIPPET_ASK &&
+            // A clip written off the screen is the point of the keys being
+            // up; the app behind may have no field, and must not be touched.
+            this != CLIP_WRITE
 
     /**
      * Whether the field's key rows can be put down to see the panel under them
@@ -535,6 +582,20 @@ enum class CaptureTarget(
             this == HA_SEARCH || this == KAOMOJI_SEARCH || this == KAOMOJI_TAG || this == UNICODE_SEARCH ||
             this == WMPASS_SEARCH
 }
+
+/**
+ * Whether Close brackets for me, Close quotes for me and the selection wrap
+ * apply in this box (#612): the ones that hold text, Combine's three boxes
+ * included. Not the searches, where "(" closed would look for "()" (Find and
+ * replace's query is the exception: a pattern is written there), and not the
+ * numeric, address, password or one-mark boxes.
+ */
+val CaptureTarget.closesPairs: Boolean
+    get() = when (this) {
+        CaptureTarget.CLIP_JOINER, CaptureTarget.CLIP_BASE, CaptureTarget.CLIP_APPEND, CaptureTarget.FIND_QUERY -> true
+        CaptureTarget.WORD_SPELL, CaptureTarget.KDE_REMOTE -> false
+        else -> takesWords && movableCaret && !isSearch
+    }
 
 /**
  * Where a caret sits, in which buffer, and what that buffer held at the time.

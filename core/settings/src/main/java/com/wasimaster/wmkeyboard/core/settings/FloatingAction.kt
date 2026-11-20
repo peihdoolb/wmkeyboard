@@ -34,6 +34,16 @@ sealed interface FloatingAction {
         override val token = "look_up"
     }
 
+    /**
+     * Brings the keyboard up typing into a new clip rather than into any
+     * field (#1339): for text on screen that cannot be selected, a video's
+     * caption or a tooltip that vanishes at a touch. The clip shows on the
+     * strip as it is typed, and nothing else covers the app.
+     */
+    data object WriteClip : FloatingAction {
+        override val token = "write_clip"
+    }
+
     /** Fans the quick menu out around the button. Never a menu slot itself. */
     data object Menu : FloatingAction {
         override val token = "menu"
@@ -146,6 +156,7 @@ sealed interface FloatingAction {
             Keyboard.token -> Keyboard
             AskAi.token -> AskAi
             LookUp.token -> LookUp
+            WriteClip.token -> WriteClip
             Menu.token -> Menu
             Hide.token -> Hide
             else -> when {
@@ -238,6 +249,14 @@ val AppletTools: List<ToolbarTool> = listOf(
 val ToolbarTool.floats: Boolean get() = this in AppletTools
 
 /**
+ * The floating box version of [this] (#1401): a tool that floats, opened in
+ * its box rather than in the keyboard. Null for anything else, a box already
+ * among them, since there is nothing more floating to open.
+ */
+val FloatingAction.floatingVersion: FloatingAction?
+    get() = (this as? FloatingAction.Tool)?.tool?.takeIf { it.floats }?.let(FloatingAction::Applet)
+
+/**
  * Whether a tap outside [tool]'s floating box closes it: the setting for every
  * box, unless that tool is set apart from it (#1262). Null is a box whose tool
  * is not known, which follows the setting.
@@ -286,6 +305,9 @@ enum class FloatingButtonShape {
     CIRCLE,
     SQUIRCLE,
     ROUNDED_SQUARE,
+
+    /** Sharp corners, for the corner roundness slider to soften as far as wanted (#1372). */
+    SQUARE,
     OVAL,
     DIAMOND,
     PENTAGON,
@@ -318,6 +340,12 @@ val FloatingButtonSizeRange = 40..72
 
 /** How far a ring's slots stand off the button's edge, in dp (#923). */
 val FloatingMenuGapRange = 8..96
+
+/** How far a shape's corners may be rounded off, as a percentage of the most they can be (#1372). */
+val FloatingCornerRoundnessRange = 0..100
+
+/** The quick menu's slots across, in dp (#1372). */
+val FloatingMenuItemSizeRange = 36..80
 
 /** How long the button waits before fading, in seconds; 0 never fades. */
 val FloatingButtonIdleRange = 0..10

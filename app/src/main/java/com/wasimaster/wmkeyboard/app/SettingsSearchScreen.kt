@@ -501,12 +501,13 @@ internal fun HighlightableRow(
         val bare = depthControl.depth == SettingsDepth.SIMPLE
         val whatIsThis = if (info != null && bare) remember(title, info) { RowInfo(title.orEmpty(), info) } else null
         val hold = if (coarse) null else rememberRowHold(disabledReason, whatIsThis)
-        // A row an update brought wears a gold border until the user puts the
-        // new settings bar away (#970).
-        val isNew = !coarse && when {
-            highlightKey != 0 -> highlightKey in NewSettings.titles
-            title == null || NewSettings.titles.isEmpty() -> false
-            else -> NewSettings.entries.any { it.title == title }
+        // A row an update brought wears a gold border (#970) until it is
+        // tapped, or for a day from when it was first on screen (#1242),
+        // whether or not the new settings bar is still up.
+        val isNew = !coarse && NewSettings.isNew(highlightKey, title)
+        if (isNew) {
+            val context = LocalContext.current
+            LaunchedEffect(highlightKey, title) { NewSettings.sighted(context, highlightKey, title) }
         }
         // Inside a group card the border takes the card's own corners: the
         // card clips to them, and a rounder end corner cut a 12 dp outline (#1184).
@@ -516,11 +517,36 @@ internal fun HighlightableRow(
             rank = if (coarse) HighlightRank.SECTION else HighlightRank.ROW,
             modifier = Modifier
                 .then(if (coarse || touch == null) Modifier else Modifier.armRowTouch(touch))
+                .then(if (isNew) Modifier.clearsNewOnTap(highlightKey, title) else Modifier)
                 .settingLinkHold(hold, disabledReason, whatIsThis)
                 .then(if (isNew) Modifier.border(1.5.dp, NewSettingGold, newBorderShape) else Modifier),
         ) {
             if (LocalRowPeeked.current) PeekedContent(content) else content()
             RowHoldMenu(hold)
+        }
+    }
+}
+
+/**
+ * A tap on a new row (#1242), not a drag that scrolls past it: seen to, so
+ * its gold border goes. Watched on the way down and never consumed, as
+ * [armRowTouch] is, so the row's own controls still get the tap.
+ */
+@Composable
+private fun Modifier.clearsNewOnTap(titleRes: Int, title: String?): Modifier {
+    val context = LocalContext.current
+    return pointerInput(titleRes, title) {
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+            var moved = false
+            while (true) {
+                val change = awaitPointerEvent(PointerEventPass.Initial).changes.firstOrNull { it.id == down.id } ?: break
+                if ((change.position - down.position).getDistance() > viewConfiguration.touchSlop) moved = true
+                if (!change.pressed) {
+                    if (!moved) NewSettings.touched(context, titleRes, title)
+                    break
+                }
+            }
         }
     }
 }
@@ -678,14 +704,20 @@ private fun HighlightFrame(
     // flash, while the hold below still has a second or so to run.
     val centred = remember { BooleanArray(1) }
     val bring: suspend () -> Unit = {
-        val viewport = scroll?.viewportSize ?: 0
+        // The new settings card floats over the foot of the page (#1348): the
+        // part of the viewport it covers is not view, so the row is centred
+        // in what is left above it, and never brought in under it.
+        val bar = NewSettings.barHeight.toFloat()
+        val viewport = (scroll?.viewportSize ?: 0) - bar.toInt()
         val h = height[0]
         if (centred[0] && viewport > h && h > 0) {
             // A viewport-tall box with the row at its middle: the scroll that
             // fits all of it in view is the one that centres the row. Near
             // either end of the page the scroll stops short, as it should.
             val above = (viewport - h) / 2f
-            requester.bringIntoView(Rect(0f, -above, 1f, h + above))
+            requester.bringIntoView(Rect(0f, -above, 1f, h + above + bar))
+        } else if (bar > 0f && h > 0) {
+            requester.bringIntoView(Rect(0f, 0f, 1f, h + bar))
         } else {
             requester.bringIntoView()
         }
@@ -905,6 +937,8 @@ internal object SettingsRouteIcons {
         "import_hub" to { Icons.Outlined.FileOpen },
         "storage" to { Icons.Outlined.PieChart },
         "resources" to { Icons.Outlined.Memory },
+        "tool_dashboard" to { Icons.Outlined.Handyman },
+        "provider_credits" to { com.wasimaster.wmkeyboard.core.icons.symbols.PluginSymbols.Savings },
         "debug_info" to { Icons.Outlined.BugReport },
         "feature_libraries" to { Icons.Outlined.Extension },
         "statistics" to { Icons.Outlined.QueryStats },

@@ -81,6 +81,7 @@ internal fun ShellFeaturesGroup(repository: SettingsRepository) {
                 stringResource(R.string.shell_access_enabled_subtitle),
                 enabled,
                 default = false,
+                info = stringResource(R.string.shell_access_enabled_info),
             ) {
                 enabled = it
                 ShellFeatures.setEnabled(context, it)
@@ -112,7 +113,25 @@ internal fun ShellFeaturesGroup(repository: SettingsRepository) {
                 value = if (missing == 0) stringResource(R.string.privacy_permissions_status_granted) else missing.toString(),
             ) {
                 if (missing == 0) return@NavRow
-                run { ShellGrants.grantRuntimePermissions(context)?.let { it > 0 } }
+                if (!ready) {
+                    report(null)
+                    return@NavRow
+                }
+                scope.launch {
+                    val outcome = ShellGrants.grantRuntimePermissions(context)
+                    if (outcome != null && outcome.granted in 1 until outcome.asked) {
+                        // Some went through: say how many, not a flat "Done"
+                        // that leaves the row's count unexplained.
+                        version++
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.shell_access_result_partial, outcome.granted, outcome.asked),
+                            Toast.LENGTH_LONG,
+                        ).show()
+                    } else {
+                        report(outcome?.let { it.granted > 0 })
+                    }
+                }
             }
         }
         item(visible = enabled) {
@@ -176,6 +195,7 @@ internal fun ShellFeaturesGroup(repository: SettingsRepository) {
                 stringResource(R.string.shell_access_reply_screen_subtitle),
                 readsScreen,
                 default = false,
+                info = stringResource(R.string.shell_access_reply_screen_info),
             ) {
                 readsScreen = it
                 ShellFeatures.setReplyReadsScreen(context, it)
@@ -187,6 +207,7 @@ internal fun ShellFeaturesGroup(repository: SettingsRepository) {
                 stringResource(R.string.shell_access_capture_subtitle),
                 captures,
                 default = false,
+                info = stringResource(R.string.shell_access_capture_info),
             ) {
                 captures = it
                 ShellFeatures.setCapturesScreen(context, it)

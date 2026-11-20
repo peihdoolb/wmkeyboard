@@ -26,6 +26,12 @@ data class OfflineDictionaryPack(
     /** Compressed size: the progress denominator. */
     val approxGzBytes: Long,
     val license: String,
+    /**
+     * The `source` line the current build of the pack carries in its header,
+     * or null to not check. An installed copy with another one is an older
+     * build, which settings offers to replace.
+     */
+    val source: String? = null,
 ) {
     /** The name it is published under, which is also how an import recognises it. */
     val fileName: String get() = "$id.wmdict.gz"
@@ -36,8 +42,14 @@ data class OfflineDictionaryPack(
 /** The packs `scripts/build_dictionary_packs.py` builds. */
 object OfflineDictionaryCatalog {
 
+    /**
+     * Every English entry but proper nouns, phrases and compounds included
+     * (#1085). Its first build held only the common single words: 64,778 of
+     * them, 5 MB.
+     */
     val WIKTIONARY = OfflineDictionaryPack(
-        "wiktionary", "Wiktionary (offline)", "en", 64_778, 5_140_272L, "CC BY-SA 4.0, GFDL",
+        "wiktionary", "Wiktionary (offline)", "en", 608_612, 24_120_479L, "CC BY-SA 4.0, GFDL",
+        source = "kaikki-English.jsonl.gz sha256:7b7b0c560f971883",
     )
 
     val OEWN = OfflineDictionaryPack(
@@ -57,7 +69,7 @@ object OfflineDictionaryCatalog {
      * each: English Wiktionary's entries for the language. The source that
      * reads them asks whichever are on the device.
      */
-    val LANGUAGES: List<OfflineDictionaryPack> = listOf(
+    val ENGLISH_MEANINGS: List<OfflineDictionaryPack> = listOf(
         language("sq", "Albanian", 9_562, 411_287L),
         language("ar", "Arabic", 16_933, 890_656L),
         language("eu", "Basque", 3_925, 123_283L),
@@ -95,6 +107,41 @@ object OfflineDictionaryCatalog {
         "${langId}_wiktionary", "$name–English Wiktionary (offline)", langId, headwords, gzBytes, "CC BY-SA 4.0, GFDL",
     )
 
+    /**
+     * Definitions in the language itself (#1085): the language's own edition
+     * of Wiktionary, so German words are explained in German. Named in the
+     * language, the way its edition names itself.
+     */
+    val NATIVE: List<OfflineDictionaryPack> = listOf(
+        native("zh", "中文", 53_213, 2_548_757L, "kaikki-zhwiktionary.jsonl.gz sha256:600f8dd8050369d6"),
+        native("cs", "čeština", 40_612, 2_073_435L, "kaikki-cswiktionary.jsonl.gz sha256:e0087651ae40f982"),
+        native("nl", "Nederlands", 163_709, 10_669_043L, "kaikki-nlwiktionary.jsonl.gz sha256:1657c961242ca63c"),
+        native("fr", "français", 235_491, 18_214_171L, "kaikki-frwiktionary.jsonl.gz sha256:33c7b73bc11d2533"),
+        native("de", "Deutsch", 151_568, 13_520_969L, "kaikki-dewiktionary.jsonl.gz sha256:3405adc801ae6840"),
+        native("el", "Ελληνικά", 397_804, 9_265_599L, "kaikki-elwiktionary.jsonl.gz sha256:80c83cbfb0701a4c"),
+        native("id", "Bahasa Indonesia", 38_963, 946_750L, "kaikki-idwiktionary.jsonl.gz sha256:c8133eeb262b48cb"),
+        native("it", "italiano", 55_830, 3_627_056L, "kaikki-itwiktionary.jsonl.gz sha256:075c981ca609a66d"),
+        native("ja", "日本語", 107_998, 4_874_826L, "kaikki-jawiktionary.jsonl.gz sha256:728782429f82dcb5"),
+        native("ko", "한국어", 75_321, 2_479_966L, "kaikki-kowiktionary.jsonl.gz sha256:09d515e5f601058d"),
+        native("ku", "Kurdî", 212_791, 4_200_045L, "kaikki-kuwiktionary.jsonl.gz sha256:698523dde054d0ba"),
+        native("ms", "Bahasa Melayu", 8_172, 272_945L, "kaikki-mswiktionary.jsonl.gz sha256:1f983559a1cd7cd6"),
+        native("pl", "polski", 90_373, 4_419_285L, "kaikki-plwiktionary.jsonl.gz sha256:30fda85e7309d8c3"),
+        native("pt", "português", 71_231, 4_145_910L, "kaikki-ptwiktionary.jsonl.gz sha256:0990ec2517efca42"),
+        native("ru", "русский", 398_551, 16_582_090L, "kaikki-ruwiktionary.jsonl.gz sha256:98bebfb8013064d2"),
+        native("es", "español", 96_362, 6_280_370L, "kaikki-eswiktionary.jsonl.gz sha256:206001cbdfc783cf"),
+        native("th", "ไทย", 18_799, 1_217_310L, "kaikki-thwiktionary.jsonl.gz sha256:2b1b114094f05558"),
+        native("tr", "Türkçe", 133_766, 3_338_412L, "kaikki-trwiktionary.jsonl.gz sha256:8404795fcb0e7a67"),
+        native("vi", "Tiếng Việt", 30_987, 1_715_351L, "kaikki-viwiktionary.jsonl.gz sha256:1f0abd21982660b5"),
+    )
+
+    private fun native(langId: String, ownName: String, headwords: Int, gzBytes: Long, source: String) = OfflineDictionaryPack(
+        "${langId}_native", "$ownName Wiktionary (offline)", langId, headwords, gzBytes, "CC BY-SA 4.0, GFDL",
+        source = source,
+    )
+
+    /** Every pack the language source asks: English meanings, then the languages' own definitions. */
+    val LANGUAGES: List<OfflineDictionaryPack> = ENGLISH_MEANINGS + NATIVE
+
     val entries: List<OfflineDictionaryPack> = listOf(WIKTIONARY, OEWN, BENGALI_WIKTIONARY) + LANGUAGES
 
     fun byId(id: String): OfflineDictionaryPack? = entries.firstOrNull { it.id == id }
@@ -117,8 +164,8 @@ object OfflineDictionaries {
     private const val EXTENSION = ".wmdict"
     private const val PART_SUFFIX = ".part"
 
-    /** Far above the largest pack (about 15 MB inflated); a file past it is not one of ours. */
-    private const val MAX_INFLATED_BYTES = 96L * 1024 * 1024
+    /** Far above the largest pack (Wiktionary, about 73 MB inflated); a file past it is not one of ours. */
+    private const val MAX_INFLATED_BYTES = 160L * 1024 * 1024
 
     @Volatile
     private var dir: File? = null
@@ -139,6 +186,18 @@ object OfflineDictionaries {
     }
 
     /**
+     * Whether the copy of [pack] on the device is an older build than the
+     * one published: its header's `source` is not [OfflineDictionaryPack.source].
+     * Reads only the header.
+     */
+    fun isOutdated(filesDir: File, pack: OfflineDictionaryPack): Boolean {
+        val expected = pack.source ?: return false
+        val installed = runCatching { WmDictFile.open(file(filesDir, pack.id))?.use { it.header["source"] } }.getOrNull()
+            ?: return false
+        return installed != expected
+    }
+
+    /**
      * [packId]'s entries for [word], empty when the pack is not installed or
      * does not know the word. An inflection the pack lists ("mice") and one
      * the English rules undo ("houses", "running") both find their lemma.
@@ -148,7 +207,8 @@ object OfflineDictionaries {
         val file = File(folder, packId + EXTENSION)
         if (!file.isFile) return emptyList()
         val dict = runCatching { WmDictFile.open(file) }.getOrNull() ?: return emptyList()
-        val langId = OfflineDictionaryCatalog.byId(packId)?.langId.orEmpty()
+        // A dict.cc pack made on the phone is in no catalogue; its header says whose words it holds.
+        val langId = OfflineDictionaryCatalog.byId(packId)?.langId ?: dict.header["lang"].orEmpty()
         val english = langId == "en"
         // Whose word it is goes on the entry (#1085): the card names it, and
         // the speaker reads it in that language rather than in English.
@@ -161,21 +221,103 @@ object OfflineDictionaries {
      * so when more than one answers each part of speech names its language.
      */
     fun lookupLanguages(word: String): List<DictEntry> {
-        val answers = OfflineDictionaryCatalog.LANGUAGES.mapNotNull { pack ->
-            lookup(pack.id, word).takeIf { it.isNotEmpty() }?.let { pack to it }
+        val packs = OfflineDictionaryCatalog.LANGUAGES.map { it.id to it.langId } + userPacks()
+        val answers = packs.mapNotNull { (id, langId) ->
+            lookup(id, word).takeIf { it.isNotEmpty() }?.let { Triple(id, langId, it) }
         }
-        if (answers.size <= 1) return answers.firstOrNull()?.second.orEmpty()
-        return answers.flatMap { (pack, entries) ->
-            val language = Locale.forLanguageTag(pack.langId).displayLanguage
+        if (answers.size <= 1) return answers.firstOrNull()?.third.orEmpty()
+        return answers.flatMap { (id, langId, entries) ->
+            val locale = Locale.forLanguageTag(langId)
+            // The same language can answer twice: in English, and in its own
+            // words, or from a dict.cc list; each says which it is.
+            val language = when {
+                id.endsWith(NATIVE_SUFFIX) -> locale.getDisplayLanguage(locale).replaceFirstChar { it.titlecase(locale) }
+                id.startsWith(DictCc.ID_PREFIX) -> "dict.cc"
+                else -> locale.displayLanguage
+            }
             entries.map { entry ->
                 entry.copy(meanings = entry.meanings.map { it.copy(partOfSpeech = "$language: ${it.partOfSpeech}") })
             }
         }
     }
 
+    /** The dict.cc lists made on this phone (#1085): id and the language of their headwords' first side. */
+    fun userPacks(): List<Pair<String, String>> {
+        val folder = dir ?: return emptyList()
+        return userPackFiles(folder).mapNotNull { file ->
+            val lang = runCatching { WmDictFile.open(file)?.use { it.header["lang"] } }.getOrNull() ?: return@mapNotNull null
+            file.name.removeSuffix(EXTENSION) to lang
+        }
+    }
+
+    /** The dict.cc packs in [folder], by file. */
+    fun userPackFiles(folder: File): List<File> =
+        folder.listFiles { f -> f.isFile && f.name.startsWith(DictCc.ID_PREFIX) && f.name.endsWith(EXTENSION) }
+            ?.sortedBy { it.name }.orEmpty()
+
+    private const val NATIVE_SUFFIX = "_native"
+
+    /**
+     * Headwords that start with [prefix] in the packs on the device, for the
+     * search box's suggestions (#1085): the English ones first, then the
+     * language packs. Phrases and idioms are headwords of their own in the
+     * Wiktionary pack, so "take o" offers "take off", "take on", "take out".
+     * Shortest first within a pack, at most [limit] in all.
+     */
+    fun complete(prefix: String, limit: Int = 8): List<String> {
+        val key = normalize(prefix)
+        if (key.length < MIN_COMPLETION_PREFIX) return emptyList()
+        val folder = dir ?: return emptyList()
+        val packs = (
+            listOf(OfflineDictionaryCatalog.WIKTIONARY, OfflineDictionaryCatalog.OEWN) +
+                OfflineDictionaryCatalog.LANGUAGES + OfflineDictionaryCatalog.BENGALI_WIKTIONARY
+            ).map { it.id } + userPackFiles(folder).map { it.name.removeSuffix(EXTENSION) }
+        val out = LinkedHashMap<String, String>()
+        for (id in packs) {
+            if (out.size >= limit) break
+            val file = File(folder, id + EXTENSION)
+            if (!file.isFile) continue
+            val words = runCatching { WmDictFile.open(file)?.use { it.complete(key, COMPLETION_SCAN) } }.getOrNull().orEmpty()
+            for (word in completionOrder(words, key)) {
+                if (out.size >= limit) break
+                out.putIfAbsent(word.lowercase(Locale.ROOT), word)
+            }
+        }
+        return out.values.toList()
+    }
+
+    /**
+     * [words] in the order the suggestions show them: the word typed itself,
+     * then fewer words before more, shorter before longer, the file's order
+     * breaking ties.
+     */
+    internal fun completionOrder(words: List<String>, key: String): List<String> =
+        words.withIndex()
+            .sortedWith(
+                compareBy<IndexedValue<String>>(
+                    { if (it.value.lowercase(Locale.ROOT) == key) 0 else 1 },
+                    { it.value.count { c -> c == ' ' } },
+                    { it.value.length },
+                    { it.index },
+                ),
+            )
+            .map { it.value }
+
+    /** How a typed word becomes a key: trimmed, curly apostrophes straightened, runs of spaces one, lower case. */
+    internal fun normalize(word: String): String =
+        word.trim().replace('’', '\'').replace(WHITESPACE, " ").lowercase(Locale.ROOT)
+
+    private val WHITESPACE = Regex("\\s+")
+
+    /** Letters typed before the search box suggests anything: one letter would list half a pack. */
+    private const val MIN_COMPLETION_PREFIX = 2
+
+    /** Lines read past the prefix's first per pack, for [complete] to choose from. */
+    private const val COMPLETION_SCAN = 120
+
     /** The look-up itself, on an open file: for [lookup] and the tests. */
     internal fun lookup(dict: WmDictFile, word: String, englishRules: Boolean = true): List<DictEntry> {
-        val key = word.trim().replace('’', '\'').lowercase(Locale.ROOT)
+        val key = normalize(word)
         if (key.isEmpty()) return emptyList()
         val lines = dict.find(key)
         lines.entries().takeIf { it.isNotEmpty() }?.let { return it.map(::toDictEntry) }
@@ -188,6 +330,20 @@ object OfflineDictionaries {
         for (candidate in EnglishLemmas.candidates(key)) {
             val found = dict.find(candidate).entries()
             if (found.isNotEmpty()) return found.map(::toDictEntry)
+        }
+        // A phrase whose first word is inflected (#1085): "taking off" and
+        // "took off" are under "take off". The first word's own redirects
+        // (took → take), then the rules (taking → take).
+        val space = key.indexOf(' ')
+        if (space > 0) {
+            val head = key.substring(0, space)
+            val rest = key.substring(space)
+            val heads = dict.find(head).filterIsInstance<WmDictFile.Redirect>().flatMap { it.targets }
+                .map { it.lowercase(Locale.ROOT) } + EnglishLemmas.candidates(head)
+            for (lemma in heads.distinct()) {
+                val found = dict.find(lemma + rest).entries()
+                if (found.isNotEmpty()) return found.map(::toDictEntry)
+            }
         }
         return emptyList()
     }

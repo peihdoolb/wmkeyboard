@@ -316,6 +316,7 @@ internal fun VoicePanel(
                     onToggleTranslate = onToggleTranslate,
                     onOpenVoiceSettings = onOpenVoiceSettings,
                     onUseSystemEngine = onUseSystemEngine,
+                    onLastResort = { onRailKey(VoiceBarAction.LastResort) },
                     micFocused = focusedAction == 0,
                 )
             }
@@ -581,6 +582,7 @@ private fun MicContent(
     onToggleTranslate: () -> Unit,
     onOpenVoiceSettings: () -> Unit,
     onUseSystemEngine: () -> Unit,
+    onLastResort: () -> Unit,
     micFocused: Boolean = false,
 ) {
     val kb = LocalKbTheme.current
@@ -710,6 +712,18 @@ private fun MicContent(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 24.dp),
         )
+        // The recognizer would not start: another keyboard's voice typing or
+        // the phone's voice window may still work.
+        val lastResort = voice.lastResort
+        if (voice.status == VoiceStatus.ERROR && lastResort != null) {
+            Row(modifier = Modifier.padding(top = 8.dp)) {
+                VoiceChipAction(
+                    text = lastResort.label,
+                    icon = Icons.Outlined.Mic,
+                    onClick = onLastResort,
+                )
+            }
+        }
 
         // Offline Whisper chips: a prompt to download a model, or the
         // translate-to-English toggle. Whisper auto-detects language, so there
@@ -1299,7 +1313,12 @@ internal fun VoiceMicChip(
  * came up is never drawn as this field listening.
  */
 @Composable
-internal fun FieldVoiceMic(voice: VoiceUi, mine: Boolean, onToggle: () -> Unit) {
+internal fun FieldVoiceMic(
+    voice: VoiceUi,
+    mine: Boolean,
+    side: androidx.compose.ui.unit.Dp = LocalKbTheme.current.fieldButtonDp.dp,
+    onToggle: () -> Unit,
+) {
     val kb = LocalKbTheme.current
     val listening = mine && voice.status == VoiceStatus.LISTENING
     val busy = mine && (voice.status == VoiceStatus.FINISHING || voice.status == VoiceStatus.TRANSCRIBING)
@@ -1320,14 +1339,14 @@ internal fun FieldVoiceMic(voice: VoiceUi, mine: Boolean, onToggle: () -> Unit) 
         if (listening) {
             Box(
                 modifier = Modifier
-                    .size(30.dp)
+                    .size(side + 2.dp)
                     .scale(ringScale)
                     .background(kb.accent.copy(alpha = 0.25f), CircleShape),
             )
         }
         Box(
             modifier = Modifier
-                .size(28.dp)
+                .size(side)
                 .clip(CircleShape)
                 .frostGlass(kb, CircleShape, FrostSurface.CHIPS)
                 .background(if (listening) kb.toolCircleActive else kb.chip)
@@ -1338,7 +1357,7 @@ internal fun FieldVoiceMic(voice: VoiceUi, mine: Boolean, onToggle: () -> Unit) 
             if (busy) {
                 CircularProgressIndicator(
                     color = kb.accent,
-                    modifier = Modifier.size(15.dp),
+                    modifier = Modifier.size(side * 15 / 28),
                     strokeWidth = 2.dp,
                 )
             } else {
@@ -1349,7 +1368,7 @@ internal fun FieldVoiceMic(voice: VoiceUi, mine: Boolean, onToggle: () -> Unit) 
                     } else {
                         stringResource(R.string.ime_voice_start_desc)
                     },
-                    modifier = Modifier.size(17.dp),
+                    modifier = Modifier.size(side * 17 / 28),
                     tint = if (listening) kb.toolCircleActiveIcon else kb.secondaryText,
                 )
             }

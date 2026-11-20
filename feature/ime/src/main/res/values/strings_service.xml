@@ -58,6 +58,8 @@
     <string name="ime_symbols_unicode_search_hint">A name or a code: arrow, U+2192</string>
     <string name="ime_symbols_unicode_search_close">Close search</string>
     <string name="ime_ai_model_label">Model:</string>
+    <!-- AI panel: the row that picks the language the Translate action writes in. -->
+    <string name="ime_ai_translate_to_label">Translate into:</string>
     <string name="ime_ai_setup_body">Set up an AI provider in the settings of the tool to use AI.</string>
     <string name="ime_ai_setup_local_body">Set up an AI provider, or download a model to your device. Both are in the settings of the tool.</string>
     <string name="ime_ai_need_model_body">To use AI on your device, download a model in the settings of the tool first.</string>
@@ -194,6 +196,8 @@
     <string name="ime_service_zawgyi_off_toast">Burmese is written as Unicode</string>
     <string name="ime_service_traditional_on_toast">Chinese is written in Traditional characters (繁體)</string>
     <string name="ime_service_traditional_off_toast">Chinese is written in Simplified characters (简体)</string>
+    <string name="ime_service_kyujitai_on_toast">Japanese is written in the old character forms (舊字體)</string>
+    <string name="ime_service_kyujitai_off_toast">Japanese is written in the new character forms (新字体)</string>
     <string name="ime_zawgyi_field_toast">Writing Zawgyi in this text box</string>
     <string name="ime_zawgyi_paste_moved_toast">The pasted text is no longer before the cursor, so it was left as it is</string>
     <string name="ime_service_selection_actions_on_toast">Selection actions are on</string>
@@ -282,6 +286,7 @@
     <string name="ime_ai_button_label">Ask AI about this screen</string>
     <string name="ime_floating_menu_label">Quick menu</string>
     <string name="ime_floating_lookup_label">Look up a word</string>
+    <string name="ime_floating_write_clip_label">Write a clip</string>
     <string name="ime_floating_pick_hint">Tap a word to look it up</string>
     <string name="ime_floating_pick_nothing">There is no text there to look up</string>
     <string name="ime_screenshot_failed">Android did not take the screenshot</string>
@@ -320,7 +325,7 @@
     <string name="ime_floating_device_bluetooth_page_desc">Opens Android\'s Bluetooth page</string>
     <string name="ime_floating_device_hotspot_desc">Opens Android\'s hotspot page</string>
     <!-- After a page or panel description above, in builds with Shizuku or root support. -->
-    <string name="ime_floating_device_shell_hint">%1$s. With Shizuku or root allowed, it switches it itself</string>
+    <string name="ime_floating_device_shell_hint">%1$s. Allow the keyboard in Shizuku, or turn on Use root, and it switches it itself</string>
     <!-- Toasts: "Wi-Fi on", "Bluetooth off". %1$s is the control's name above. -->
     <string name="ime_floating_device_on">%1$s on</string>
     <string name="ime_floating_device_off">%1$s off</string>
@@ -333,10 +338,15 @@
     <string name="ime_applet_open_in_keyboard">Open in the keyboard</string>
     <string name="ime_applet_pop_out">Open in a floating box</string>
     <string name="ime_applet_resize">Drag to resize</string>
+    <string name="ime_applet_roll_up">Roll up to the title bar</string>
+    <string name="ime_applet_roll_down">Roll back down</string>
+    <string name="ime_applet_see_through">See through: taps reach the app under the box</string>
+    <string name="ime_applet_solid">Make <xliff:g id="tool" example="Notes">%1$s</xliff:g> solid again</string>
     <string name="ime_applet_tuck">Tuck into the edge</string>
     <!-- The tab a floating box leaves on the screen's edge. %1$s is the tool's name, for example Calculator. -->
     <string name="ime_applet_untuck">Bring back <xliff:g id="tool" example="Calculator">%1$s</xliff:g></string>
     <string name="ime_applet_copied">Copied</string>
+    <string name="ime_private_copy_unreadable">This app doesn\'t let the keyboard read what\'s selected, so nothing was copied. Turn off Keep the keyboard\'s copies private to copy here.</string>
     <string name="ime_floating_pair_name">%1$s + %2$s</string>
     <string name="ime_floating_pair_missing">One of the two apps is no longer installed</string>
     <!-- A slot that opens a ring of its own (#923), named here only when it has no name. -->
@@ -356,12 +366,21 @@
     <string name="ime_disabled_translate_empty_box">The box is empty, or its translation is still on its way.</string>
     <string name="ime_disabled_translate_same_language">The text is already in the language you translate to.</string>
     <string name="ime_disabled_media_app_blocks">The app that is playing does not allow this.</string>
+    <string name="ime_disabled_media_seek">The app that is playing does not let other apps move to a point in this track.</string>
+    <!-- KDE Connect panel: why a way to reach the computer is greyed out. "KDE Connect" and the plugin names are as KDE Connect's own settings show them. -->
+    <string name="ime_disabled_kde_keys">The computer does not take typing from the phone right now. Turn on Remote keyboard in KDE Connect on the computer.</string>
+    <string name="ime_disabled_kde_clipboard">The computer does not take the clipboard. Turn on Clipboard sync in KDE Connect on the computer.</string>
+    <string name="ime_disabled_kde_share">The computer does not take text or files. Turn on Share and receive in KDE Connect on the computer.</string>
     <string name="ime_disabled_voice_undo">Nothing to undo yet. Undo takes back the last phrase you spoke.</string>
     <string name="ime_disabled_correction_invalid">Type a different word to correct to. The word being corrected needs at least 3 letters, and the fix can be one word, or two for a missed space.</string>
     <string name="ime_word_correct_saved">\"<xliff:g id="typed" example="kagay">%1$s</xliff:g>\" will be corrected to \"<xliff:g id="fixed" example="lagay">%2$s</xliff:g>\"</string>
     <string name="ime_disabled_spell_unchanged">Change the spelling first. An empty or unchanged spelling has nothing to apply.</string>
     <string name="ime_disabled_clip_tidy">Select a text clip first. Tidy works on text, not on images.</string>
     <string name="ime_disabled_clip_combine">Select two or more text clips to combine them.</string>
+    <string name="ime_disabled_clip_share">Select a text clip to share it. Pictures and clips marked sensitive are not shared.</string>
     <string name="ime_service_privacy_shade_floating_toast">The privacy shade works with the docked keyboard. Dock the keyboard first.</string>
     <string name="ime_privacy_shade_hint">Drag the handle up to see the last lines</string>
+    <string name="ime_two_thumb_retype_refused">Couldn\'t retype: the word before the caret couldn\'t be read back, so Backspace deleted a character</string>
+    <string name="ime_retype_last_finished_unavailable">Can\'t find the last finished word right before this one. Move the cursor to the end of the word to retype it.</string>
+    <string name="ime_two_thumb_undo_changed">The word changed after it was typed, so Backspace deleted a character instead of undoing a gesture</string>
 </resources>

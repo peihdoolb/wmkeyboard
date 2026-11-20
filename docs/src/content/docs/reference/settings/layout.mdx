@@ -45,7 +45,7 @@ Four rows under Your layouts bring layouts in from a file or send the ones in us
 - **Import a layout** opens a `.wmlayout.json` file, or a `.wmlayouts.json` file of several.
 - **Export layouts in use** writes every layout that is on, and every one of your own, to one file.
 - **Import from another keyboard** reads a layout from FlorisBoard, HeliBoard, FUTO, Samsung Keyboard (Keys Cafe), Multiling O, Unexpected Keyboard or a computer's keyboard layout file. See [Importing from other keyboards](/reference/importing-other-keyboards/).
-- **Import an input method** reads a `.cin` table, a Rime schema with its dictionaries, or an m17n `.mim` file.
+- **Import an input method** reads a `.cin` table, a Rime schema with its dictionaries, an m17n `.mim` file, or a jquery.ime rule file.
 
 What each import asks before it adds anything is described on [Key layouts](/reference/settings/keymaps/#managing-your-layouts).
 
@@ -56,7 +56,7 @@ What each import asks before it adds anything is described on [Key layouts](/ref
 | Setting | Control | Range | Default |
 |---|---|---|---|
 | Number row | Toggle | On / Off | On |
-| Number row height | Slider | 32–100 dp | 42 dp (**40** small tablet / **38** large) |
+| Number row height | Slider | Same as keys, 24–100 dp | 42 dp (**40** small tablet / **38** large) |
 | Hints on the number row | Toggle | On / Off | On |
 | Symbols on shift | Toggle | On / Off | Off |
 | Number row in symbols | Toggle | On / Off | On |
@@ -94,6 +94,7 @@ See [Number row and numerals](/typing/basics/#number-row-and-numerals) for the f
 | Go back to the letters | Toggle | On / Off | Off |
 | Characters that go back | Text field *(shown when the toggle is on)* | Any characters | `!?.,;:` |
 | Go back after a space | Toggle | On / Off | Off |
+| Back goes to the letters | Toggle | On / Off | Off |
 
 **Symbols page** picks the page <KeyCap>?123</KeyCap> opens. **Standard** is a row of digits over two rows of symbols. **Number pad** is the arrangement SwiftKey uses: the digits on the right in a phone keypad's 1-2-3 order, and the common symbols in narrow columns to their left. On it, <KeyCap>{&=</KeyCap> opens the second symbols page, which is the same under both choices. The currency key shows your language's or region's currency, as on the standard page, so a phone in Britain gets £. A layout with its own symbols page, written in the [layout editor](/reference/settings/keymaps/) or brought in with an imported file, keeps it; the choice only changes the page every other layout borrows. Editing the symbols layer of such a layout starts from the page you picked here.
 
@@ -106,6 +107,8 @@ The rest of this group appears at the Advanced settings level.
 **Characters that go back** is the list itself. Type the characters you want, with or without spaces between them. Duplicates and spaces are dropped on save, and an empty box falls back to `!` `?` `.` `,` `;` `:`. Digits are deliberately out of that default, since typing "12" is exactly when you want to stay put.
 
 Only single-character keys count, so a `.com` key or an emoticon key never triggers the return. Long-press alternates do, since they insert a single character too. Both symbol pages are covered, so a character typed on the second page returns to the letters the same way.
+
+**Back goes to the letters** makes the Back button (or the back gesture) take you from either symbol page, or from Fn, to the letters instead of closing the keyboard. Back on the letters still closes it. With a tool open, Back closes the tool first, as always.
 
 **Go back after a space** returns to the letters when you press the spacebar on either symbol page, so "at 5 pm" doesn't need an <KeyCap>ABC</KeyCap> press between the number and the word. A space can't go in the character list above (spaces are dropped from it), so it has its own toggle, and it works whether **Go back to the letters** is on or off. It's off by default, so a phone number or a time typed with spaces stays on ?123.
 
@@ -128,12 +131,15 @@ At the Simple settings depth this page shows **Resize by dragging**, **Key heigh
 | Setting | Control | Range | Default |
 |---|---|---|---|
 | Resize by dragging *(hidden while the keyboard test button is off)* | Button | Opens the keyboard in [resize mode](/tools/resize/) | |
-| Key height | Slider | 32–100 dp | 48 dp (**46** small tablet / **44** large) |
+| Key height | Slider | 24–100 dp | 48 dp (**46** small tablet / **44** large) |
+| Number row height *(advanced, Number row on)* | Slider | Same as keys, 24–100 dp | The same setting as under Number row |
 | Bottom row height | Slider | 0–96 dp | 0 dp ("Follow keys") |
 | Toolbar height | Slider | 24–80 dp | 44 dp |
 | Left padding | Slider | 0–30% | 0% |
 | Right padding | Slider | 0–30% | 0% |
 | Key spacing | Slider | 0–200% | 100% |
+| Space between columns *(advanced)* | Slider | 0–200% of Key spacing's gap | 100% |
+| Space between rows *(advanced)* | Slider | 0–200% of Key spacing's gap | 100% |
 | Extend edge keys into the gaps | Toggle | On / Off | Off |
 | Bottom padding | Slider | 0–160 dp | 32 dp (Android 15+ with gesture navigation) / 8 dp (three-button navigation, or older) |
 | Hide the system keyboard bar *(Android 16 and up)* | Toggle | On / Off | Off |
@@ -156,13 +162,13 @@ Once you've moved anything in this group, a **Reset size and position** row appe
 
 <SettingsPath path="Layout & size / Size and position / Per screen" />
 
-The Size & position values above are your portrait sizes, and the in-app caption calls them your "portrait (folded)" sizes. Three more screen shapes can each override any of them, plus the **Number row** toggle from the top of the screen, or scale the whole keyboard at once: **Landscape**, **Portrait, unfolded**, and **Landscape, unfolded**. A shape counts as "unfolded" by a live check on the screen's smallest dimension (≥ 600 dp) rather than a fold-sensor read, so a tablet that never folds still counts. Each row reads "Follows portrait" until you set an override, and its own key height and width once you have. Tap a row and its editor unfolds in place:
+The Size & position values above are your portrait sizes, and the in-app caption calls them your "portrait (folded)" sizes. Three more screen shapes can each override any of them, plus the **Number row** toggle from the top of the screen, or scale the whole keyboard at once: **Landscape**, **Portrait, unfolded**, and **Landscape, unfolded**. A shape counts as "unfolded" by a live check on the screen's smallest dimension (≥ 600 dp) rather than a fold-sensor read, so a tablet that never folds still counts. Each row reads "Follows portrait" until you set an override, and its own key height and width once you have. Tap a row to open that shape's own page:
 
 | Field | Range | Falls back to |
 |---|---|---|
 | Keyboard scale | 50–150% | 100% |
-| Key height | 32–100 dp | this screen's base Key height (48 dp); **33 dp** on landscape |
-| Number row height *(only if Number row is on)* | 32–100 dp | base Number row height (42 dp); **29 dp** on landscape |
+| Key height | 24–100 dp | this screen's base Key height (48 dp); **33 dp** on landscape |
+| Number row height *(only if Number row is on)* | 24–100 dp | base Number row height (42 dp); **29 dp** on landscape |
 | Bottom padding | 0–160 dp | base Bottom padding |
 | Keyboard width | 50–100% | base Keyboard width (100%) |
 | Full-width toolbar *(only if this shape's keys are narrowed)* | On / Off | base Full-width toolbar (Off) |
@@ -278,7 +284,7 @@ See [Switching languages](/languages/switching/#using-the-globe-key) and [Openin
 - **Bottom row height's 0 value reads as "Follow keys," not "0 dp."** It's the default, and it means the space/enter row matches the letter-key height exactly.
 - **Bottom padding's default depends on your Android version and navigation mode.** It's 32 dp on Android 15 and up with gesture navigation, where the IME window draws behind the gesture bar and the system's hide-keyboard and switch-keyboard buttons, and 8 dp with three-button navigation or on older versions.
 - **Hide the system keyboard bar needs Android 16.** With gesture navigation, Android draws a bar under the keyboard with a hide-keyboard chevron and a switch-keyboard button. Android 16 is the first version that lets a keyboard ask for that bar to go, so the switch is greyed out on older versions. It is greyed out as well with three-button navigation, and on a build that draws the bar into the system navigation bar, because no keyboard can remove it there. With it gone, Back hides the keyboard, the 🌐 key changes keyboards, and the keys move down into the bar's space while still clearing the gesture handle. Automatic Bottom padding drops to 8 dp then; set it lower still if you want the space bar nearer the edge.
-- **Full-height keyboard window.** Since 0.6.6 the keyboard's window covers the whole screen, with the keys at its bottom and the rest see-through, so a change of keyboard height (selection mode's row, a panel's height bar, a tool opening) redraws in place. Before, each change resized the window, and some phones showed a stale frame or the app's own toolbar for a moment. A few phones animate that whole window when the keyboard hides: the keys jump up, stop halfway down and then vanish. HarmonyOS 4.2 on a Huawei nova 9 does this, so the switch starts out off on Huawei phones. Turn it off on any other phone that does the same, and the window is as tall as the keyboard again.
+- **Full-height keyboard window.** Since 0.6.6 the keyboard's window covers the whole screen, with the keys at its bottom and the rest see-through, so a change of keyboard height (selection mode's row, a panel's height bar, a tool opening) redraws in place. Before, each change resized the window, and some phones showed a stale frame or the app's own toolbar for a moment. A few phones animate that whole window when the keyboard hides: the keys jump up, stop halfway down and then vanish. HarmonyOS 4.2 on a Huawei nova 9 does this, so the switch starts out off on Huawei phones. Turn it off on any other phone that does the same, and the window is as tall as the keyboard again. Turn it off as well if an app in a floating (small) window gets squashed to a sliver at the top of the screen whenever the keyboard opens: HarmonyOS moves such a window clear of the keyboard's whole window, the see-through part included. **Key press › Key popup › Space above the keyboard** does the same on a smaller scale, so turn that off too.
 - **Per-screen overrides don't reset one field at a time.** **Follow portrait again** clears a whole shape instead. **Characters that go back** has no restore button either, since it's a plain text field: empty it and the built-in `!?.,;:` comes back. Everything else on this screen has the usual [per-setting restore button](/reference/settings/#putting-one-setting-back).
 - **No build differences.** Every control on this screen behaves the same in every build.
 

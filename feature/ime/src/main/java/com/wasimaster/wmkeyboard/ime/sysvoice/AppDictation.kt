@@ -350,8 +350,9 @@ class AppDictation(
 
     private fun startCapture(voice: Local?) {
         val live = (voice as? Local.Et)?.model?.takeIf { liveEngine(it.engine) }
+        val parakeet = (voice as? Local.Et)?.model?.takeIf { it.engine == EtEngine.PARAKEET }
         val maxSeconds = when {
-            (voice as? Local.Et)?.model?.engine == EtEngine.PARAKEET -> ParakeetEngine.MAX_CLIP_SECONDS
+            parakeet != null -> ParakeetEngine.maxClipSeconds(filesDir, parakeet)
             (voice as? Local.Whisper)?.model?.ggml == true || live != null -> WhisperCppPlan.MAX_CLIP_SECONDS
             else -> WhisperMel.CHUNK_SECONDS
         }
@@ -571,6 +572,7 @@ class AppDictation(
                 WhisperCppPlan.prompt(model, biasWords(VoiceBias.RECOGNIZER_LIMIT)),
                 WhisperCppPlan.beamSize(model),
                 WhisperCppPlan.wantsGpu(model, settings.whisper.compute),
+                suppressSymbols = settings.voiceBar.suppressSymbols,
             ) ?: return ""
             val detected = model.multilingual && codes.isEmpty()
             return if (detected) WhisperScript.rescueAmong(result.text, languageIds) else result.text

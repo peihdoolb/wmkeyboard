@@ -88,6 +88,14 @@ object CjkConfig {
         set(value) { field = value; CjkDictionaries.invalidate() }
 
     /**
+     * Japanese candidates in the old character forms (kyujitai, 國 for 国),
+     * through [HanVariant.toKyujitai] inside the Japanese composers (#962).
+     */
+    @Volatile
+    var kyujitaiOutput: Boolean = false
+        set(value) { field = value; CjkDictionaries.invalidate() }
+
+    /**
      * Pinyin's typed shortcuts: `rq`, `sj` and `xq` for the date, time and
      * weekday, and `v` and a number for Chinese numerals. See [PinyinShortcuts].
      */
@@ -119,6 +127,15 @@ object CjkConfig {
     @Volatile
     var looseKanaMarks: Boolean = false
         set(value) { field = value; CjkDictionaries.invalidate() }
+
+    /**
+     * Japanese romaji: Backspace before the reading is converted takes the
+     * last kana, every key that spelled it, rather than the last key
+     * (#1338): こんにちは goes to こんにち, not こんにちh. Changes no ranking, so
+     * nothing is invalidated.
+     */
+    @Volatile
+    var kanaBackspace: Boolean = false
 }
 
 /**

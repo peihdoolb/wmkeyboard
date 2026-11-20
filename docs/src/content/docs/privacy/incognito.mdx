@@ -19,7 +19,7 @@ so it's worth keeping them apart.
   <Shot id="privacy/incognito-toolbar-badge" alt="The incognito badge next to the toolbar, and the toolbox tool that turns it on." />
 </PhoneFrame>
 
-The badge sits at the right end of the toolbar whenever incognito is on, from either source. It never pushes a tool off the bar: when the pinned tools fill it, they shrink a little together to make room. Tap it to see why: a toast names the app when its field asked for incognito, which some apps do outside any private tab, or says the Incognito switch is on. When the Incognito tool is pinned to the toolbar, the badge stays hidden: the tool's highlighted button already shows that incognito is on. The keyboard also wears a large, faint incognito mark behind the keys, centred on the key rows and staying put whatever panel is open, so the sign stays in view while a tool or the clipboard has taken the toolbar's place. **Mark on the keyboard**, under <SettingsPath path="Tools / Incognito" />, switches that mark off and leaves the badge. **Badge on the toolbar**, in the same place, does the opposite: off, the toolbar's tools stay where they are and the mark is the only sign.
+The badge sits at the right end of the toolbar whenever incognito is on, from either source. It never pushes a tool off the bar: when the pinned tools fill it, they shrink a little together to make room. Tap it to see why: a toast names the app when its field asked for incognito, which some apps do outside any private tab, or says the Incognito switch is on. When the Incognito tool is pinned to the toolbar, the badge stays hidden: the tool's highlighted button already shows that incognito is on. The keyboard also wears a large, faint incognito mark behind the keys, centred on the key rows, the number row and an arrow row included, so the sign stays in view while a tool or the clipboard has taken the toolbar's place. A tool with no keys under it, such as the clipboard before you search it, has the mark centred on the tool's own area instead. **Mark on the keyboard**, under <SettingsPath path="Tools / Incognito" />, switches that mark off and leaves the badge. **Badge on the toolbar**, in the same place, does the opposite: off, the toolbar's tools stay where they are and the mark is the only sign.
 
 ## Turning incognito on
 
@@ -30,7 +30,7 @@ Incognito is one boolean, flipped from either of two places:
   learn what you type.` or `Incognito is off`. The tool isn't pinned to the
   toolbar by default, so open the toolbox (the grid button) to find it the
   first time.
-- <SettingsPath path="Privacy / Learning on this device / Incognito mode" />, which
+- <SettingsPath path="Privacy / Incognito / Incognito mode" />, which
   is the same switch, off by default.
 
 Both control one underlying setting, so toggling either place flips the
@@ -42,7 +42,7 @@ and switches back off the moment you leave it. A Chrome incognito tab sets
 that flag on every field inside it, and other browsers and some password
 managers do the same for their own private screens. This never touches the
 manual switch, so a private tab can't leave incognito on everywhere else.
-It's controlled by <SettingsPath path="Privacy / Learning on this device / Follow private browsing" />,
+It's controlled by <SettingsPath path="Privacy / Incognito / Follow private browsing" />,
 on by default.
 
 That automatic trigger relies entirely on a flag the host app has to set. An
@@ -273,7 +273,7 @@ incognito or secure fields at all.
 
 ## Options
 
-<SettingsPath path="Privacy / Learning on this device" />
+<SettingsPath path="Privacy / Incognito" />
 
 - **Incognito mode** (default **off**). Pauses learning and clipboard
   capture until you turn it off again.
@@ -285,6 +285,12 @@ incognito or secure fields at all.
   asks for it. The bin takes the app off the list, and its fields go back to
   Follow private browsing. A choice here holds whether Follow private browsing
   is on or off.
+- **Hide the keyboard from screenshots** (default **on**). In a password
+  field, and whenever incognito is on, the keyboard asks Android to keep its
+  window out of screenshots, screen recordings, screen sharing and the recent
+  apps preview, which show black where the keyboard is. The app you're typing
+  in decides for itself whether its own window is hidden. Turn it off if you
+  need to record the keyboard in those fields.
 
 <SettingsPath path="Tools / Incognito" />
 

@@ -56,6 +56,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.wasimaster.wmkeyboard.ime.ui.frostGlass
+import com.wasimaster.wmkeyboard.core.theme.FrostSurface
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Close
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.ExpandMore
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.FileOpen
@@ -282,6 +284,7 @@ private fun OverflowMenu(modifier: Modifier, pick: (GalleryAction) -> Unit) {
         modifier
             .widthIn(min = 200.dp)
             .clip(shape)
+            .frostGlass(kb, shape, FrostSurface.CARDS)
             .background(kb.popup)
             .chipBorder(kb, shape)
             .padding(vertical = 4.dp),
@@ -318,6 +321,7 @@ private fun RowScope.TypingHeader(text: String, placeholder: String, act: (Galle
             .weight(1f)
             .padding(start = 6.dp, end = 4.dp)
             .clip(shape)
+            .frostGlass(kb, shape, FrostSurface.CARDS)
             .background(kb.chip)
             .chipBorder(kb, shape)
             .padding(horizontal = 12.dp, vertical = 6.dp),
@@ -582,6 +586,10 @@ private fun noticeText(n: GalleryNotice): String = when (n.kind) {
     GalleryNotice.Kind.UPLOADED -> pluralStringResource(R.plurals.ime_gallery_notice_uploaded, n.count, n.count)
     GalleryNotice.Kind.ALREADY_UPLOADED -> pluralStringResource(R.plurals.ime_gallery_notice_already_uploaded, n.count, n.count)
     GalleryNotice.Kind.UPLOAD_FAILED -> pluralStringResource(R.plurals.ime_gallery_notice_upload_failed, n.count, n.count)
+    GalleryNotice.Kind.IMMICH_DELETED -> stringResource(R.string.ime_gallery_notice_immich_deleted)
+    GalleryNotice.Kind.IMMICH_DELETE_REFUSED -> stringResource(R.string.ime_gallery_notice_immich_delete_refused)
+    GalleryNotice.Kind.IMMICH_UPLOAD_WAITS -> stringResource(R.string.ime_gallery_notice_immich_upload_waits)
+    GalleryNotice.Kind.IMMICH_VIDEO_WAITS -> stringResource(R.string.ime_gallery_notice_immich_video_waits)
 }
 
 private const val COVER_PX = 96

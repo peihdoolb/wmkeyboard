@@ -105,4 +105,30 @@ class KanaGlideTest {
             assertTrue(spelling, spelling.all { it in KanaGlide.KEYS })
         }
     }
+
+    @Test
+    fun `a dakuten drawn over the shift key reads like one drawn over its own key`() {
+        val viaShift = "か${KanaGlide.SHIFT_DAKUTEN}つこう"
+        assertEquals("がつこう", KanaGlide.reading(viaShift))
+        val spellings = KanaGlide.spellings(pack("がっこう\t学校\t26742", "ぱん\tパン\t25500")).toMap()
+        assertEquals(spellings["か゛つこう"], spellings[viaShift])
+        // The handakuten has no place on shift.
+        assertTrue("は゜ん" in spellings)
+        assertFalse(spellings.keys.any { KanaGlide.SHIFT_DAKUTEN in it && '゜' in it })
+    }
+
+    @Test
+    fun `counted readings weigh their counts and lead uncounted ones`() {
+        val table = pack("がっこう\t学校\t26742", "かつこう\t恰好\t27500", "ぱん\tパン\t25500")
+        val counts = KanaGlide.readCounts(sequenceOf("がっこう\t3890", "not a row", "ぱん\tx"))
+        assertEquals(mapOf("がっこう" to 3890), counts)
+        val plain = KanaGlide.spellings(table).toMap()
+        val counted = KanaGlide.spellings(table, counts).toMap()
+        // Without counts the table's score decides: 恰好's 27500 is e^7 and leads the fold.
+        assertEquals(1097, plain["かつこう"])
+        // With them がっこう weighs its count, and the uncounted 恰好 falls under it.
+        assertEquals(3890, counted["かつこう"])
+        assertEquals(3890, counted["か゛つこう"])
+        assertTrue(counted.getValue("はん") < 3890)
+    }
 }

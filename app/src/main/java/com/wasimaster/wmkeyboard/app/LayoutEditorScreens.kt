@@ -2969,7 +2969,14 @@ internal fun KeyLayoutEditorScreen(
     val popupColumns = settings.watch { it.popup.alternatesColumns }
     val popupNearestFirst = settings.watch { it.popup.alternatesNearestFirst }
     val popupBalanced = settings.watch { it.popup.alternatesBalanced }
-    val secondaryLayoutList = secondaryLayouts(settings.watch { it.customLayouts })
+    // An "Open a layout" key reaches the secondary grids and, since #1230's
+    // follow-up, every enabled layout, which it switches the keyboard to.
+    val layoutCustoms = settings.watch { it.customLayouts }
+    val layoutEnabled = settings.watch { it.enabledLayoutIds }
+    val secondaryLayoutList = remember(layoutCustoms, layoutEnabled) {
+        secondaryLayouts(layoutCustoms) +
+            layoutEnabled.distinct().mapNotNull { findLayout(layoutCustoms, it) }.filterNot { it.secondary }
+    }
     val keyboardModeList = settings.watch { it.keyboardModes }
     val ref = selection
     if (panelKind == null && ref != null && selectedKey != null) {
@@ -3541,6 +3548,7 @@ internal fun KeyLayoutEditorScreen(
                 R.string.layout_editor_show_shift_title,
                 stringResource(R.string.layout_editor_show_shift_subtitle),
                 showShift,
+                info = stringResource(R.string.layout_editor_show_shift_info),
             ) { showShift = it }
         }
         item(level = SettingLevel.STANDARD) {
@@ -3894,6 +3902,7 @@ internal fun KeyLayoutEditorScreen(
                     null to stringResource(R.string.layout_editor_landscape_layout_same),
                 ) + others.map { it.id to it.name },
                 selected = spec.landscapeLayoutId,
+                info = stringResource(R.string.layout_editor_landscape_layout_info),
             ) { chosen -> edit { it.copy(landscapeLayoutId = chosen) } }
         }
         if (!secondary) item(level = SettingLevel.ADVANCED) {
@@ -3918,6 +3927,7 @@ internal fun KeyLayoutEditorScreen(
                     },
                 ),
                 edited.watch { it.tabletExpand },
+                info = stringResource(R.string.layout_editor_tablet_expand_info),
             ) { on -> edit { it.copy(tabletExpand = on) } }
         }
         item(level = SettingLevel.ADVANCED) {
@@ -3927,6 +3937,7 @@ internal fun KeyLayoutEditorScreen(
                 R.string.layout_editor_hex_grid_title,
                 stringResource(R.string.layout_editor_hex_grid_subtitle),
                 edited.watch { isHexGrid(it.grid) },
+                info = stringResource(R.string.layout_editor_hex_grid_info),
             ) { on -> edit { it.copy(grid = if (on) HexGridKind else null) } }
         }
         item(level = SettingLevel.ADVANCED) {
@@ -5831,6 +5842,12 @@ internal val KeyActionCatalog: List<KeyActionOption> = listOf(
         { KeyAction.CapsLock }, { it == KeyAction.CapsLock },
     ),
     KeyActionOption(
+        R.string.layout_editor_action_shift_off_title,
+        R.string.layout_editor_action_group_typing,
+        R.string.layout_editor_action_shift_off_detail,
+        { KeyAction.ShiftOff }, { it == KeyAction.ShiftOff },
+    ),
+    KeyActionOption(
         R.string.layout_editor_action_delete_title,
         R.string.layout_editor_action_group_typing,
         R.string.layout_editor_action_delete_detail,
@@ -6284,7 +6301,7 @@ internal fun KeyEditSheet(
                 NavRow(
                     title = R.string.layout_editor_tool_row_title,
                     subtitle = stringResource(R.string.layout_editor_tool_row_subtitle),
-                    value = stringResource(toolTitle(toolAction.tool)),
+                    value = toolAction.custom?.let { customButtonName(it) } ?: stringResource(toolTitle(toolAction.tool)),
                 ) { pickingTool = true }
             }
         }
@@ -6515,6 +6532,17 @@ internal fun KeyEditSheet(
         }
     }
 
+    // Issue #1409: what further taps of the space bar turn its space into.
+    if (key.action == KeyAction.Space) {
+        SettingsGroup(
+            stringResource(R.string.layout_editor_key_section_space_cycle),
+            foldKey = if (key.spaceCycle.isEmpty()) "key_space_cycle" else null,
+            level = SettingLevel.STANDARD,
+        ) {
+            item { SpaceCycleField(key, ref, onChange) }
+        }
+    }
+
     SettingsGroup(stringResource(R.string.layout_editor_key_section_look), foldKey = "key_look") {
         item {
             KeyWidthRow(
@@ -6561,6 +6589,7 @@ internal fun KeyEditSheet(
                     R.string.layout_editor_icon_beside_label_title,
                     stringResource(R.string.layout_editor_icon_beside_label_subtitle),
                     key.iconBesideLabel,
+                    info = stringResource(R.string.layout_editor_icon_beside_label_info),
                 ) { beside -> onChange { it.copy(iconBesideLabel = beside) } }
             }
         }
@@ -6740,12 +6769,18 @@ internal fun KeyEditSheet(
     if (pickingTool) {
         ToolPickerDialog(
             title = stringResource(R.string.layout_editor_tool_picker_title),
-            current = (key.action as? KeyAction.Tool)?.tool,
+            current = (key.action as? KeyAction.Tool)?.takeIf { it.custom == null }?.tool,
             options = ToolbarTool.entries.filter(::isSupportedTool),
             onDismiss = { pickingTool = false },
             onPick = { picked ->
                 pickingTool = false
                 picked?.let { tool -> onChange { it.copy(action = KeyAction.Tool(tool)) } }
+            },
+            // One of the user's custom buttons on the key (#1300).
+            customCurrent = (key.action as? KeyAction.Tool)?.custom,
+            onPickCustom = { id ->
+                pickingTool = false
+                onChange { it.copy(action = KeyAction.Tool(custom = id)) }
             },
         )
     }
@@ -7094,6 +7129,10 @@ private fun FlickFields(
     var pickingLayoutAt by remember(ref) { mutableStateOf<FlickDirection?>(null) }
     var pickingModeAt by remember(ref) { mutableStateOf<FlickDirection?>(null) }
     var pickingPluginAt by remember(ref) { mutableStateOf<FlickDirection?>(null) }
+    // What an arm's out-and-back runs (#1409), and its second question.
+    var pickingReturnAt by remember(ref) { mutableStateOf<FlickDirection?>(null) }
+    var pickingReturnEditAt by remember(ref) { mutableStateOf<FlickDirection?>(null) }
+    var pickingReturnToolAt by remember(ref) { mutableStateOf<FlickDirection?>(null) }
     if (!open) {
         WmRow(
             title = stringResource(R.string.layout_editor_flick_add_action),
@@ -7228,10 +7267,39 @@ private fun FlickFields(
             }
         }
     }
-    if (key.flick.isNotEmpty() || key.flickShift.isNotEmpty() || key.flickActions.isNotEmpty()) {
+    // Issue #1409: what swiping out to this arm and back runs, in place of
+    // the capital. Only for a direction that has an arm to go out to.
+    if (key.flickArm(direction) != null) {
+        val back = key.flickReturn[direction]
+        WmRow(
+            title = stringResource(R.string.layout_editor_flick_return_title),
+            subtitle = if (back != null) {
+                stringResource(R.string.layout_editor_flick_action_set, actionAlternateName(back, secondaryLayouts, keyboardModes))
+            } else {
+                stringResource(R.string.layout_editor_flick_return_none)
+            },
+            leading = { Icon(Icons.Outlined.Bolt, contentDescription = null) },
+            trailing = if (back != null) {
+                {
+                    IconButton(onClick = { onChange { it.copy(flickReturn = it.flickReturn - direction) } }) {
+                        Icon(
+                            Icons.Outlined.Close,
+                            contentDescription = stringResource(R.string.layout_editor_action_alternate_remove_desc),
+                        )
+                    }
+                }
+            } else {
+                null
+            },
+            onClick = { pickingReturnAt = direction },
+        )
+    }
+    if (key.flick.isNotEmpty() || key.flickShift.isNotEmpty() || key.flickActions.isNotEmpty() || key.flickReturn.isNotEmpty()) {
         TextButton(
             onClick = {
-                onChange { it.copy(flick = emptyMap(), flickShift = emptyMap(), flickActions = emptyMap()) }
+                onChange {
+                    it.copy(flick = emptyMap(), flickShift = emptyMap(), flickActions = emptyMap(), flickReturn = emptyMap())
+                }
                 open = false
             },
             modifier = Modifier.padding(horizontal = 8.dp),
@@ -7268,6 +7336,65 @@ private fun FlickFields(
         )
     }
 
+    fun setReturn(direction: FlickDirection, action: KeyAction) = onChange {
+        it.copy(flickReturn = (it.flickReturn + (direction to KeyAlternate(action))).inFlickOrder())
+    }
+    pickingReturnAt?.let { direction ->
+        KeyActionPickerDialog(
+            current = key.flickReturn[direction]?.action ?: KeyAction.None,
+            // The kinds that ask one more question and have a dialog for it
+            // here; a sequence, a layout, a mode or a plugin on a return is a
+            // job for the layout's JSON.
+            options = AlternateActionCatalog.filter { option ->
+                when (option.build()) {
+                    is KeyAction.EditSequence, is KeyAction.Layout, is KeyAction.Mode, is KeyAction.Plugin -> false
+                    else -> true
+                }
+            },
+            onPick = { action ->
+                pickingReturnAt = null
+                when (action) {
+                    is KeyAction.Edit -> pickingReturnEditAt = direction
+                    is KeyAction.Tool -> pickingReturnToolAt = direction
+                    KeyAction.None -> onChange { it.copy(flickReturn = it.flickReturn - direction) }
+                    else -> setReturn(direction, action)
+                }
+            },
+            onPickTool = { tool ->
+                pickingReturnAt = null
+                setReturn(direction, KeyAction.Tool(tool))
+            },
+            onDismiss = { pickingReturnAt = null },
+        )
+    }
+    pickingReturnEditAt?.let { direction ->
+        TextEditActionPickerDialog(
+            current = (key.flickReturn[direction]?.action as? KeyAction.Edit)?.op,
+            onDismiss = { pickingReturnEditAt = null },
+            onPick = { op ->
+                pickingReturnEditAt = null
+                setReturn(direction, KeyAction.Edit(op))
+            },
+        )
+    }
+    pickingReturnToolAt?.let { direction ->
+        ToolPickerDialog(
+            title = stringResource(R.string.layout_editor_tool_picker_title),
+            current = (key.flickReturn[direction]?.action as? KeyAction.Tool)?.takeIf { it.custom == null }?.tool,
+            options = ToolbarTool.entries.filter(::isSupportedTool),
+            onDismiss = { pickingReturnToolAt = null },
+            onPick = { picked ->
+                pickingReturnToolAt = null
+                picked?.let { tool -> setReturn(direction, KeyAction.Tool(tool)) }
+            },
+            customCurrent = (key.flickReturn[direction]?.action as? KeyAction.Tool)?.custom,
+            onPickCustom = { id ->
+                pickingReturnToolAt = null
+                setReturn(direction, KeyAction.Tool(custom = id))
+            },
+        )
+    }
+
     pickingSequenceAt?.let { direction ->
         TextEditSequenceDialog(
             current = (key.flickActions[direction]?.action as? KeyAction.EditSequence)?.ops.orEmpty(),
@@ -7293,12 +7420,18 @@ private fun FlickFields(
     pickingToolAt?.let { direction ->
         ToolPickerDialog(
             title = stringResource(R.string.layout_editor_tool_picker_title),
-            current = (key.flickActions[direction]?.action as? KeyAction.Tool)?.tool,
+            current = (key.flickActions[direction]?.action as? KeyAction.Tool)?.takeIf { it.custom == null }?.tool,
             options = ToolbarTool.entries.filter(::isSupportedTool),
             onDismiss = { pickingToolAt = null },
             onPick = { picked ->
                 pickingToolAt = null
                 picked?.let { tool -> finishArm(direction, KeyAction.Tool(tool)) }
+            },
+            // A flick that runs one of the user's custom buttons (#1300).
+            customCurrent = (key.flickActions[direction]?.action as? KeyAction.Tool)?.custom,
+            onPickCustom = { id ->
+                pickingToolAt = null
+                finishArm(direction, KeyAction.Tool(custom = id))
             },
         )
     }
@@ -7442,6 +7575,26 @@ private fun FlickPadCell(key: Key, direction: FlickDirection, takesActions: Bool
 
 /** Tells a flick arm's text field apart from its Shift field, which share a direction. */
 private const val FlickTextField = "text"
+
+/**
+ * The space bar's tap cycle (`Key.spaceCycle`, issue #1409) as one line of
+ * entries split by `|`, so the spaces inside each entry stay as typed:
+ * `, |. |? ` is Thumb-Key's comma, stop and question mark.
+ */
+@Composable
+private fun SpaceCycleField(key: Key, ref: KeyRef, onChange: ((Key) -> Key) -> Unit) {
+    CaptionText(stringResource(R.string.layout_editor_space_cycle_caption))
+    SheetField(
+        label = stringResource(R.string.layout_editor_space_cycle_label),
+        value = key.spaceCycle.joinToString(SpaceCycleSeparator),
+        supporting = stringResource(R.string.layout_editor_space_cycle_hint),
+        resetKey = ref to SpaceCycleSeparator,
+    ) { text ->
+        onChange { it.copy(spaceCycle = text.split(SpaceCycleSeparator).filter { entry -> entry.isNotEmpty() }) }
+    }
+}
+
+private const val SpaceCycleSeparator = "|"
 
 /** Tells a flick arm's Shift field apart from its text field, which share a direction. */
 private const val FlickShiftField = "shift"
@@ -7940,7 +8093,7 @@ private fun ActionAlternatesRows(
     pickingToolAt?.let { index ->
         ToolPickerDialog(
             title = stringResource(R.string.layout_editor_tool_picker_title),
-            current = (alternates.getOrNull(index)?.action as? KeyAction.Tool)?.tool,
+            current = (alternates.getOrNull(index)?.action as? KeyAction.Tool)?.takeIf { it.custom == null }?.tool,
             options = ToolbarTool.entries.filter(::isSupportedTool),
             onDismiss = { pickingToolAt = null },
             onPick = { picked ->
@@ -7952,6 +8105,16 @@ private fun ActionAlternatesRows(
                         },
                     )
                 }
+            },
+            // A long-press alternate that runs one of the user's custom buttons (#1300).
+            customCurrent = (alternates.getOrNull(index)?.action as? KeyAction.Tool)?.custom,
+            onPickCustom = { id ->
+                pickingToolAt = null
+                onChange(
+                    alternates.mapIndexed { i, a ->
+                        if (i == index) a.copy(action = KeyAction.Tool(custom = id)) else a
+                    },
+                )
             },
         )
     }
@@ -7980,7 +8143,9 @@ internal fun actionAlternateName(
     keyboardModes: List<KeyboardMode> = emptyList(),
 ): String {
     val action = alternate.action
-    if (action is KeyAction.Tool) return stringResource(toolTitle(action.tool))
+    if (action is KeyAction.Tool) {
+        return action.custom?.let { customButtonName(it) } ?: stringResource(toolTitle(action.tool))
+    }
     if (action is KeyAction.Layout) {
         return secondaryLayouts.firstOrNull { it.id == action.id }?.name
             ?: alternate.drawnLabel()
@@ -8235,6 +8400,7 @@ private fun RoleRow(role: KeyRole?, onChange: (KeyRole?) -> Unit) {
             )
         },
         onChange = onChange,
+        info = stringResource(R.string.layout_editor_role_info),
     )
 }
 
@@ -8681,6 +8847,7 @@ private fun KeyScreenRow(screen: KeyScreen, onChange: (KeyScreen) -> Unit) {
     ControlSetting(
         R.string.layout_editor_key_screen_title,
         subtitle = stringResource(R.string.layout_editor_key_screen_hint),
+        info = stringResource(R.string.layout_editor_key_screen_info),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
             for (choice in KeyScreen.entries) {

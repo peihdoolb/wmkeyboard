@@ -62,10 +62,11 @@ Something a model wrote isn't a bug in the app, and it has its own button. See [
 
 ## Checking version, licence, and source
 
-The **App** group, under Community, holds five rows:
+The **App** group, under Community, holds six rows:
 
 - **Version** shows the build, build type and store channel as its subtitle ("Standard build (release · Play Store)", "Standard build (release · F-Droid)", or "Offline build (release)" for the GitHub build with no internet permission), with the build number after "code," and the version name as the row's trailing value. A second line names the commit the build was made from and that commit's date ("Commit ca9cd11053 · 2026-11-14"), so a screenshot of the row says exactly which source a bug report is about. Builds made without git, such as from a source tarball, leave that line out. It navigates nowhere, but it isn't quite inert. Tap it seven times and you get [the hidden mini game](/reference/easter-eggs/#find-the-hidden-mini-game), with a toast counting you down from the fourth tap.
 - **What's new** opens the release notes of the version you have installed, on every build. See [Reading what changed](#reading-what-changed).
+- **Show what's new after an update** opens those same notes by themselves the first time the app opens after an update, once per version. A first install doesn't show them. On by default; turn it off to only read them from the row above.
 - **New settings** brings back the bar that walks through the settings the latest update added, with their gold borders, after you've closed it. On a first install there is nothing to show yet. See [Seeing what an update added](/reference/settings/#seeing-what-an-update-added).
 - **Licence** shows "MIT, © 2026 Wasi Master" and opens the app's own MIT licence text in full underneath it, monospaced and horizontally scrollable.
 - **Source code** opens the GitHub repository directly in your browser; unlike the Share rows further down, this one navigates immediately rather than opening a share sheet.
@@ -79,6 +80,8 @@ The **Data and diagnostics** group, right under the updates, gathers the screens
 - **Statistics** opens [Statistics](/reference/settings/statistics/): your level and achievements, a heatmap of where you tap, how much you type day by day, plus the switch that turns the counting off.
 - **Storage** opens the [storage screen](#seeing-what-the-app-is-using) below, which is where you see what the app keeps on your device and delete any of it.
 - **Resources** opens the [resources screen](#seeing-what-the-keyboard-holds-in-memory) below: memory, processor time and the models loaded right now, with a button to unload each.
+- **Credit and usage** lists what is left with every paid or limited service you use: see [Providers](/tools/providers/#credit-and-usage).
+- **Tools: permissions and space** shows each tool's permissions, last use and space, with ways to take a permission back or delete a tool's downloads: see [Permissions](/privacy/permissions/#tools-permissions-and-space).
 - **Feature libraries** lists the downloadable libraries some features need, which ones are missing, and downloads them in one place.
 - **Import** puts every import in the app on one screen, for setting up after an install.
 - **Diagnostics** opens the [diagnostics screen](#diagnosing-a-problem) covered below.
@@ -95,6 +98,7 @@ The **Settings app** group sits further down, under Feedback, because its rows a
 - **Show where settings are hidden** (off by default) puts a **more settings** row at the end of every group the depth left something out of, and shows Home's left-out rows as a closed **More** group.
 - **Show switched-off settings** (off by default) keeps the settings that only appear once another one is on in view all the time. While the setting they depend on is off they are greyed out and do nothing when tapped, though a drag that starts on one still scrolls the page. The same switch covers a setting greyed out because another setting overrides it, such as a size the active theme's own layout pins: with the switch off that row is hidden too, and comes back once the other setting lets it go. A search result or link to such a row still shows it. Together with the depth at **Everything**, every setting is on screen.
 - **Other paths under the path bar** (on by default) is the **Also under** line under a page's path, which names the other ways you have reached that page in this visit. Off gives its line back to the page. Pages opened by the New settings walk-through or a link never add to it.
+- **Help pictures** is how the pictures and clips in a setting's **?** reach the phone: **Ask** (the default) asks the next time you open an explanation that has one, **All at once** downloads the pack for the look you use, **One at a time** fetches each picture as you open it, and **Off** keeps explanations as words. Once any are on the phone, **Downloaded help pictures** under it shows their size and deletes them. See [Seeing what a setting does](/reference/settings/#seeing-what-a-setting-does).
 - **Short app name** is a switch, off by default. Turn it on and your app drawer and home screen call the app **WMK** instead of **WM Keyboard**, so a narrow launcher grid doesn't cut the name short. See [Changing the name under the icon](#changing-the-name-under-the-icon).
 - **Show in app drawer** is a switch, on by default. Turn it off and the icon leaves your app drawer and home screen, while the keyboard keeps working. See [Hiding the icon](#hiding-the-icon). Android TV doesn't show this row.
 
@@ -221,8 +225,9 @@ Tap a row to open that piece on its own: what it holds, how big each item in it 
 Notes on a few rows:
 
 - **Sticker packs** lists one row per pack, plus **Images you made stickers from**, the photos the [sticker editor](/emoji/stickers/#the-sticker-editor) keeps so you can edit a sticker again later. Deleting that row keeps every sticker and only costs you the ability to resume those edits.
-- **Downloads** covers the things the app fetched and can fetch again: word lists, CJK dictionaries, emoji keyword packs, and the speech and AI models, which are usually the biggest rows on the screen.
+- **Downloads** covers the things the app fetched and can fetch again: word lists, CJK dictionaries, emoji keyword packs, and the speech and AI models, which are usually the biggest rows on the screen. **Handwriting models** has a row of its own, one item per script the Handwriting tool downloaded; a deleted one downloads again the next time you write in that script.
 - **Search by meaning**, also under Downloads, holds the [Search by meaning](/smart/search-by-meaning/) model, one row for its text half and one for its pictures half, and the search indexes it built from your clipboard, notes, snippets, stickers and photos. Deleting the text model, the indexes, or the whole row turns search by meaning off. Deleting only the pictures model keeps it on Text.
+- **Help pictures**, under Downloads, holds the pictures and clips shown in a setting's **?**. Deleting them also forgets which packs you had, so the next **?** with a picture offers the download again.
 - **Import downloaded files**, above the groups, installs anything the app would otherwise download from a file you fetched elsewhere: language packs, interface languages, feature libraries, voice and AI models, text recognition data and GIF packs, any number at once. On the offline build its **Get the files** button links this version's release page, for interface languages, and the data repository's feature libraries. See [Using it without internet](/privacy/offline/).
 - **Your data** is the personal end: learned words, clipboard history, snippets, AI history, and your own imported word lists. This group is also where the reset lives, and it asks twice.
 
@@ -232,11 +237,12 @@ Anything the app writes that no row claims lands in **Other data** under The res
 
 <SettingsPath path="About / Resources" />
 
-**Resources** shows what the keyboard is using while it runs, and lets you unload the models it has loaded. It measures only while the screen is open, every two seconds, and nothing of it runs anywhere else, so it has no on/off switch and costs nothing when closed.
+**Resources** shows what the keyboard is using while it runs, and lets you unload the models it has loaded. The **Resources** tool opens it straight from the keyboard: pin it to the toolbar from the toolbox, or make a [custom button](/tools/custom-buttons/) that opens the page. It measures only while the screen is open, every two seconds, and nothing of it runs anywhere else, so it has no on/off switch and costs nothing when closed.
 
 Android counts memory and processor time for the whole app, not for each feature, and it doesn't tell any app how much battery its parts use. The screen shows what can be measured and says where a figure is an estimate:
 
 - **Memory now** is the total the keyboard uses, the same figure as the system's App info page, split into the kinds Android reports: native memory (where the speech, language and translation models live), the app code's objects, graphics, code and the rest.
+- **Load** says how busy the keyboard judges the phone to be, the state [Adapt to the phone's load](/typing/power-saving/#when-the-phone-is-busy) works from: normal, busy or heavy, with the kind of phone it took this for (low-end, mid-range or high-end) and which readings raised it (dropped frames, heat, low memory, slow suggestions). Tap it for the switch. It reads "Not measured yet" until the keyboard has opened once since the app started.
 - **Loaded models** lists each model in memory right now, such as the local language model, offline voice typing, translation, text scanning, the grammar checker or the glide model, with the size of its file as an estimate of what it holds. **Unload** frees one at once, and **Unload everything** frees them all along with decoded icons, thumbnails and open dictionaries. A model loads again the next time you use it, which takes a moment. The sticker generator and search by meaning run in processes of their own and appear with their memory but no button: each unloads its model a few minutes after you last use it. Tap a model to open the settings where you can switch it off or delete its download.
 - **Processor time** is the closest thing to battery use an app can measure for itself. It's counted per thread and grouped by the thread's name, so work that a model does on threads it named shows under **Models**, drawing under **Drawing**, and so on, each with its share of one core over the last two seconds.
 - **Running now** lists the app's services that Android is running, such as the keyboard and the spell checker.

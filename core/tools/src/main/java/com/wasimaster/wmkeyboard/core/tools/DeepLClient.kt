@@ -112,12 +112,18 @@ object DeepLClient {
                 headers = headers,
                 source = source,
                 route = path,
-            )
+            ).also { if (apiKey.isNotBlank()) ServiceUsage.record(USAGE_KEY) }
         } catch (e: ToolHttpException) {
             if (e.status == QUOTA_EXCEEDED) throw ToolHttpException(R.string.core_tools_error_deepl_quota, e.status)
             throw e
         }
     }
+
+    /** Where DeepL says how much of the billing period's characters are used (#1382). */
+    fun usageUrl(apiKey: String, endpoint: String): String = baseUrl(apiKey, endpoint) + "/v2/usage"
+
+    /** The [ServiceUsage] key DeepL's requests count under. */
+    const val USAGE_KEY = "deepl"
 
     /**
      * The root every path hangs off, without a trailing slash: the user's

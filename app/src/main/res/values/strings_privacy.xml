@@ -75,6 +75,10 @@
     <!-- ================================================================== -->
 
     <string name="privacy_learning_group_title">Learning on this device</string>
+    <string name="privacy_incognito_group_title">Incognito</string>
+    <string name="privacy_secure_window_title">Hide the keyboard from screenshots</string>
+    <string name="privacy_secure_window_subtitle">In password fields and while incognito</string>
+    <string name="privacy_secure_window_info">In a password field, and whenever incognito is on, the keyboard asks Android to keep it out of screenshots, screen recordings, screen sharing and the recent apps preview: those show black where the keyboard is. The app you are typing in decides for itself whether its own window is hidden. Turn this off if you need to record the keyboard in those fields.</string>
 
     <string name="privacy_learn_typing_title">Learn from typing</string>
     <string name="privacy_learn_typing_subtitle">The keyboard adjusts the suggestions to your typing. Nothing leaves your device</string>
@@ -122,12 +126,16 @@
     <!-- %1$d of %2$d: libraries on the phone, of all this build can use. -->
     <string name="privacy_native_import_subtitle">%1$d of %2$d on this phone. This is the offline build, so it cannot download them: get the files on another device and import them here, or install the standard build over this one</string>
     <string name="privacy_qualcomm_licence_title">Qualcomm NPU runtime</string>
+    <string name="privacy_qualcomm_licence_info">On-device AI can run on the phone\'s NPU, which is faster and uses less battery. That needs Qualcomm\'s QNN runtime, which Qualcomm gives out under its own licence. Turn this on to read the licence, accept it, and download the runtime from Maven Central. Until then, on-device AI runs without the NPU.</string>
     <string name="privacy_qualcomm_licence_accepted">Licence accepted. The NPU runtime downloads from Maven Central.</string>
     <string name="privacy_qualcomm_licence_not_accepted">Not accepted. On-device AI can\'t use the NPU.</string>
     <string name="privacy_qualcomm_licence_dialog_title">Qualcomm\'s licence</string>
     <string name="privacy_qualcomm_licence_dialog_body">To run AI on the NPU, the keyboard needs Qualcomm\'s QNN runtime for your phone\'s chip (about <xliff:g id="size" example="29 MB">%1$s</xliff:g>). The keyboard downloads it from Qualcomm\'s own package on Maven Central, so Qualcomm gives you these files under its AI Stack License, not WM Keyboard. The licence says that you must be 18 or older and that you accept its terms.</string>
     <string name="privacy_qualcomm_licence_accept">Accept and download</string>
     <string name="privacy_qualcomm_licence_view">View licence</string>
+    <string name="privacy_download_mirror_title">GitHub mirror</string>
+    <string name="privacy_download_mirror_hint">Where GitHub can\'t be reached, a GitHub proxy address, such as https://proxy.example/. Each GitHub download tries it first, then GitHub. Files with a published checksum are still checked. Empty: straight from GitHub.</string>
+    <string name="privacy_download_mirror_invalid">Not used: start the address with https://, and write {url} once at most</string>
     <string name="privacy_verify_checksums_title">Verify downloaded files</string>
     <string name="privacy_verify_checksums_subtitle">Check every download and import against its published checksum</string>
     <string name="privacy_verify_checksums_off_subtitle">Off: the keyboard uses files that fail their checksum. Turn this back on when you can.</string>
@@ -241,6 +249,7 @@
     <string name="privacy_lock_change_subtitle">Enter a new one twice. Only a scrambled copy is kept</string>
     <string name="privacy_lock_shortcut_title">Offer the fingerprint first</string>
     <string name="privacy_lock_shortcut_subtitle">Unlock with a finger, with the PIN, password or pattern one tap away</string>
+    <string name="privacy_lock_shortcut_info">The lock asks for a fingerprint first. The PIN, password or pattern is one tap away, for when the finger does not read.</string>
     <string name="privacy_lock_shortcut_unavailable">This phone has no fingerprint set up</string>
     <string name="privacy_lock_use_pin">Use PIN</string>
     <string name="privacy_lock_use_password">Use password</string>

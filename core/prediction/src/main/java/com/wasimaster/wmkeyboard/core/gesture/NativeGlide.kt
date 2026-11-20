@@ -4,6 +4,7 @@ import com.wasimaster.wmkeyboard.core.prediction.ChildBuffer
 import com.wasimaster.wmkeyboard.core.prediction.FuzzyBeamSearch
 import com.wasimaster.wmkeyboard.core.prediction.NativeFuzzySearch
 import com.wasimaster.wmkeyboard.core.prediction.PredictionNative
+import com.wasimaster.wmkeyboard.core.prediction.RankScale
 
 /**
  * [GlideBeam], [DuetBeam] and [CtcGlideBeam] in Rust (`wm-engine`'s `glide`), when
@@ -25,6 +26,9 @@ internal object NativeGlide {
         runCatching { PredictionNative.glideTuningVersion() }.getOrDefault(0)
     }
 
+    /** Whether the library reads each source's ranking scale after its weights. */
+    private val readsScales: Boolean get() = tuningVersion >= SCALES_VERSION
+
     /** [tuning] in the order `glide.rs` reads it. */
     fun tuningArray(tuning: GlideBeam.Tuning): DoubleArray = with(tuning) {
         doubleArrayOf(
@@ -36,13 +40,19 @@ internal object NativeGlide {
             endRadius.toDouble(), nearRadius.toDouble(), vocabularyRank.toDouble(), lookAheadCost,
             lookAheadBudget.toDouble(), joinerCost.toDouble(), freqWeight, joinCost,
             joinMinPart.toDouble(), joinPartPenalty,
-            maxPops.toDouble(), maxStates.toDouble(),
+            maxPops.toDouble(), maxStates.toDouble(), joinLinkCost,
         )
     }
 
-    /** [tuning] with the `[version, count, fields...]` envelope when the library reads it. */
+    /**
+     * [tuning] with the `[version, count, fields...]` envelope when the library
+     * reads it. A library before version 4 reads an envelope of exactly the
+     * first 32 fields, so the link cost goes only to one that reads it; the
+     * bare array is read as far as a library knows, so it can carry it.
+     */
     private fun tuningValues(tuning: GlideBeam.Tuning): DoubleArray {
-        val fields = tuningArray(tuning)
+        val all = tuningArray(tuning)
+        val fields = if (tuningVersion >= LINK_VERSION) all else all.copyOf(ENVELOPE_FIELDS)
         return if (tuningVersion >= 2) doubleArrayOf(2.0, fields.size.toDouble()) + fields else fields
     }
 
@@ -80,7 +90,7 @@ internal object NativeGlide {
         val stroke = Path(path)
         val walked = PredictionNative.glideDecode(
             tuningValues(tuning), stroke.xs, stroke.ys, stroke.ts, keys.nativeHandle, keyWidth,
-            s.handles.copyOf(s.count), s.kinds.copyOf(s.count), s.weights.copyOf(s.count), s.tiers.copyOf(s.count),
+            s.handles.copyOf(s.count), s.kinds.copyOf(s.count), s.weightsAndScales(), s.tiers.copyOf(s.count),
             s.floors.copyOf(s.count), limit, lookAhead, if (learned || seeding) 1 else 0, openHead, openTail,
         ) ?: return emptyList()
         if (!learned && !seeding) return candidates(walked)
@@ -96,18 +106,58 @@ internal object NativeGlide {
         } else {
             null
         }
-        return candidates(PredictionNative.glideFinish(words, stored, seeds))
+        val finished = candidates(PredictionNative.glideFinish(words, stored, seeds))
+        return if (seeds.isNullOrEmpty()) finished else strokeWinsTies(finished, words, readCount)
     }
 
-    /** The sources as `glide.rs` takes them, or null when one has no Rust twin. */
+    /**
+     * A seeded word scores exactly the leader's score, and the native sort
+     * broke that tie by the alphabet (#1250): one stroke of "more" kept under
+     * "me" was enough for "me" to lead every later "more". The stroke's own
+     * reading now wins a tie, so a seed sits beside it on the strip, one tap
+     * away, instead of in front of it.
+     */
+    private fun strokeWinsTies(
+        finished: List<GlideBeam.Candidate>,
+        walkedWords: Array<String>,
+        readCount: Int,
+    ): List<GlideBeam.Candidate> {
+        val read = HashMap<String, Int>(readCount * 2)
+        for (i in 0 until minOf(readCount, walkedWords.size)) read.putIfAbsent(walkedWords[i], i)
+        return finished.sortedWith(
+            compareByDescending<GlideBeam.Candidate> { it.score }.thenBy { read[it.word] ?: Int.MAX_VALUE },
+        )
+    }
+
+    /**
+     * The sources as `glide.rs` takes them, or null when one has no Rust twin.
+     *
+     * A library that reads ranking scales (`glideTuningVersion` 3) gets each
+     * list at the weight and scale the typing walk reads it at
+     * ([FuzzyBeamSearch.WalkSource.rankWeight], [RankScale]): a downloaded
+     * list of corpus counts read as stored let its commonest short words
+     * outweigh the stroke (`pinned` read `one`, a stroke lifted early off
+     * `bigger` read `be`). An older library gets the weights for the counts
+     * as stored, which is how it reads them.
+     */
     private class Sources(sources: List<FuzzyBeamSearch.WalkSource>, vocabularyRank: Int) {
         val handles = LongArray(sources.size)
         val kinds = IntArray(sources.size)
         val weights = DoubleArray(sources.size)
         val tiers = IntArray(sources.size)
         val floors = IntArray(sources.size)
+        private val scaleFloors = DoubleArray(sources.size)
+        private val scalePerNats = DoubleArray(sources.size)
         var count = 0
         var complete = true
+
+        /** `weights`, then each source's scale floor and stretch when the library reads them. */
+        fun weightsAndScales(): DoubleArray =
+            if (readsScales) {
+                weights.copyOf(count) + scaleFloors.copyOf(count) + scalePerNats.copyOf(count)
+            } else {
+                weights.copyOf(count)
+            }
 
         init {
             val scratch = ChildBuffer()
@@ -121,7 +171,9 @@ internal object NativeGlide {
                 }
                 handles[count] = handle
                 kinds[count] = NativeFuzzySearch.kindOf(walker)
-                weights[count] = src.logWeight
+                weights[count] = if (readsScales) src.rankWeight else src.logWeight
+                scaleFloors[count] = src.scale.floor
+                scalePerNats[count] = src.scale.perNat
                 tiers[count] = if (src.tier == FuzzyBeamSearch.Tier.USER) 1 else 0
                 floors[count] = walker.frequencyAtRank(vocabularyRank)
                 count++
@@ -160,7 +212,7 @@ internal object NativeGlide {
         val path = Path(stroke?.path.orEmpty())
         val walked = PredictionNative.ctcDecode(
             emissions.logProbs, emissions.steps, s.handles.copyOf(s.count), s.kinds.copyOf(s.count),
-            s.weights.copyOf(s.count), s.tiers.copyOf(s.count), s.floors.copyOf(s.count),
+            s.weightsAndScales(), s.tiers.copyOf(s.count), s.floors.copyOf(s.count),
             limit, width, weights,
             stroke?.let { tuningArray(it.tuning) } ?: DoubleArray(0), path.xs, path.ys, path.ts,
             stroke?.keys?.nativeHandle ?: 0L, stroke?.keyWidth ?: 0f, lookAhead, if (shapes != null) 1 else 0,
@@ -218,7 +270,7 @@ internal object NativeGlide {
             PredictionNative.duetDecode(
                 tuningArray(tuning), duetValues, kinds, sizes, stroke.xs, stroke.ys, stroke.ts,
                 keys.nativeHandle, keyWidth, s.handles.copyOf(s.count), s.kinds.copyOf(s.count),
-                s.weights.copyOf(s.count), s.tiers.copyOf(s.count), s.floors.copyOf(s.count), limit, partial,
+                s.weightsAndScales(), s.tiers.copyOf(s.count), s.floors.copyOf(s.count), limit, partial,
             ),
         )
     }
@@ -272,4 +324,13 @@ internal object NativeGlide {
 
     /** The radius [GlideBeam.decode]'s seeding asks the shape store for. */
     const val SEED_RADIUS = 0.35f
+
+    /** The first `glideTuningVersion` that reads the sources' ranking scales. */
+    private const val SCALES_VERSION = 3
+
+    /** The first `glideTuningVersion` that reads a 33rd tuning field, the link cost, in the envelope. */
+    private const val LINK_VERSION = 4
+
+    /** The fields an envelope before [LINK_VERSION] holds. */
+    private const val ENVELOPE_FIELDS = 32
 }

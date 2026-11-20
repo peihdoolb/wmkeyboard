@@ -927,6 +927,38 @@ private val bundledAttributions: List<Attribution> = buildList {
             "https://github.com/farhanishmam/BanglaTLit",
         ),
     )
+    // Shipped unchanged and read by our own code; the file lists every
+    // method's authors and licence.
+    add(
+        Attribution(
+            "jquery.ime input methods",
+            R.string.about_bundled_jquery_ime_used,
+            "Copyright the jquery.ime contributors and each method's authors, listed in the licence",
+            "GPL-3.0 / MIT", "jquery-ime.txt",
+            "https://github.com/wikimedia/jquery.ime",
+        ),
+    )
+    // Varnam's symbol tables, converted to text under assets/varnam/ with
+    // MPL-2.0's notice at the head of each; read by our own code, not govarnam.
+    add(
+        Attribution(
+            "Varnam schemes",
+            R.string.about_bundled_varnam_used,
+            "Copyright Navaneeth K N, Kumaran Venkataraman, Kishore96in, Raja Reddy Karri, Varun Reddy, Shwetha Thammaiah, Sharath Kr. Battaje",
+            "MPL-2.0", "mpl-2.0.txt",
+            "https://github.com/varnamproject/schemes",
+        ),
+    )
+    // Converted to this app's layout files; Apache-2.0 asks for the notice.
+    add(
+        Attribution(
+            "Indic Keyboard layouts",
+            R.string.about_bundled_indic_keyboard_used,
+            "Copyright 2013-2026 Jishnu Mohan, Swathanthra Malayalam Computing, ICFOSS, Arushi Dogra; Mon layout by Talachan",
+            "Apache-2.0", "apache-2.0.txt",
+            "https://github.com/smc/Indic-Keyboard",
+        ),
+    )
     // One row for 862 keyboards. Each carries its own MIT licence differing
     // only in the holder line, so the asset states the shared text once and
     // then names every holder; shipping 862 near-identical LICENSE.md files
@@ -1008,6 +1040,17 @@ private val bundledAttributions: List<Attribution> = buildList {
             "Copyright (c) 2026 Ekushey",
             "CC BY 4.0", "cc-by-4.0-bsti.txt",
             "https://github.com/ekushey-org/bangla-bsti-mobile",
+        ),
+    )
+    // Issue #1409: the letter tables only, read by our own generator
+    // (scripts/gen_thumbkey_layouts.py); none of Thumb-Key's code is in the app.
+    add(
+        Attribution(
+            "Thumb-Key",
+            R.string.about_bundled_thumbkey_used,
+            "Copyright Dessalines and Thumb-Key contributors",
+            "AGPL-3.0", null,
+            "https://github.com/dessalines/thumb-key",
         ),
     )
     add(
@@ -1558,6 +1601,8 @@ internal fun AboutSettings(
     onOpenStatistics: () -> Unit = {},
     onOpenEggGame: () -> Unit = {},
     onReplayOnboarding: () -> Unit = {},
+    /** Any other screen by its route: the credit overview (#1382) and the tool dashboard (#1397). */
+    onOpenRoute: (String) -> Unit = {},
 ) {
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
@@ -1660,6 +1705,20 @@ internal fun AboutSettings(
                 stringResource(R.string.about_whats_new_subtitle, BuildConfig.VERSION_NAME),
             ) { showNotes = true }
         }
+        item(level = SettingLevel.STANDARD) {
+            // The notes above, opened by themselves after an update (#730).
+            var on by remember { mutableStateOf(NewSettings.showNotesAfterUpdate(context)) }
+            ToggleSetting(
+                R.string.about_notes_after_update_title,
+                stringResource(R.string.about_notes_after_update_subtitle),
+                on,
+                default = true,
+                info = stringResource(R.string.about_notes_after_update_info),
+            ) {
+                on = it
+                NewSettings.setShowNotesAfterUpdate(context, it)
+            }
+        }
         item {
             // The bar that walks through what the latest update added (#970)
             // goes for good once it is closed; this brings it back, borders
@@ -1732,6 +1791,22 @@ internal fun AboutSettings(
                 onClick = onOpenResources,
             )
         }
+        item(level = SettingLevel.STANDARD) {
+            NavRow(
+                R.string.providers_credits_title,
+                stringResource(R.string.providers_credits_subtitle),
+                route = PROVIDER_CREDITS_ROUTE,
+                onClick = { onOpenRoute(PROVIDER_CREDITS_ROUTE) },
+            )
+        }
+        item(level = SettingLevel.STANDARD) {
+            NavRow(
+                R.string.tool_dashboard_title,
+                stringResource(R.string.tool_dashboard_subtitle),
+                route = TOOL_DASHBOARD_ROUTE,
+                onClick = { onOpenRoute(TOOL_DASHBOARD_ROUTE) },
+            )
+        }
         item(visible = FeatureLibraryList.offered, level = SettingLevel.STANDARD) { FeatureLibrariesNavRow() }
         item {
             NavRow(
@@ -1798,6 +1873,7 @@ internal fun AboutSettings(
                 stringResource(R.string.feedback_shake_subtitle),
                 settings.watch { it.feedbackShortcuts.shake },
                 default = SettingsDefaults.feedbackShortcuts.shake,
+                info = stringResource(R.string.feedback_shake_info),
             ) { scope.launch { repository.setFeedbackShake(it) } }
         }
         item {
@@ -1810,6 +1886,7 @@ internal fun AboutSettings(
                 supported && settings.watch { it.feedbackShortcuts.screenshot },
                 enabled = supported,
                 default = SettingsDefaults.feedbackShortcuts.screenshot,
+                info = stringResource(R.string.feedback_screenshot_info),
             ) { scope.launch { repository.setFeedbackScreenshot(it) } }
         }
         item {
@@ -1821,6 +1898,7 @@ internal fun AboutSettings(
                 ),
                 selected = settings.watch { it.feedbackShortcuts.telegramRoute },
                 default = SettingsDefaults.feedbackShortcuts.telegramRoute,
+                info = stringResource(R.string.feedback_telegram_route_info),
             ) { scope.launch { repository.setFeedbackTelegramRoute(it) } }
         }
     }
@@ -1884,6 +1962,7 @@ internal fun AboutSettings(
                 stringResource(R.string.settings_hidden_rows_subtitle),
                 settings.watch { it.appUi.hiddenSettingsRows },
                 default = SettingsDefaults.appUi.hiddenSettingsRows,
+                info = stringResource(R.string.settings_hidden_rows_info),
             ) { scope.launch { repository.setHiddenSettingsRows(it) } }
         }
         item {
@@ -1892,6 +1971,7 @@ internal fun AboutSettings(
                 stringResource(R.string.settings_switched_off_rows_subtitle),
                 settings.watch { it.appUi.switchedOffRows },
                 default = SettingsDefaults.appUi.switchedOffRows,
+                info = stringResource(R.string.settings_switched_off_rows_info),
             ) { scope.launch { repository.setSwitchedOffRows(it) } }
         }
         item {
@@ -1900,7 +1980,14 @@ internal fun AboutSettings(
                 stringResource(R.string.settings_also_under_subtitle),
                 settings.watch { it.appUi.alsoUnderLine },
                 default = SettingsDefaults.appUi.alsoUnderLine,
+                info = stringResource(R.string.settings_also_under_info),
             ) { scope.launch { repository.setAlsoUnderLine(it) } }
+        }
+        // The pictures above a setting's explanation: how they arrive, and
+        // the button that deletes the ones already here.
+        item {
+            HelpPicturesChoice()
+            HelpPicturesDelete()
         }
         item(level = SettingLevel.ADVANCED) {
             ToggleSetting(

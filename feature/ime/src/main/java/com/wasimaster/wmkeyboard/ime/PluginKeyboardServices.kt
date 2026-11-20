@@ -15,6 +15,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
+import android.os.SystemClock
 import android.provider.OpenableColumns
 import android.util.Base64
 import android.view.inputmethod.InputConnection
@@ -181,6 +182,7 @@ internal class PluginKeyboardServices(
         "device.battery" -> battery()
         "share.text" -> share(call)
         "share.open" -> open(call)
+        "share.visit" -> visit(call)
         "secrets.get" -> PluginSecrets.of(context, call.plugin.id).get(name(call))?.let(::JsonPrimitive) ?: JsonNull
         "secrets.set" -> {
             PluginSecrets.of(context, call.plugin.id).set(name(call), call.string("value").orEmpty())
@@ -217,7 +219,7 @@ internal class PluginKeyboardServices(
             JsonNull
         }
         "calendar.events" -> calendarEvents(call)
-        "calendar.calendars" -> calendars()
+        "calendar.calendars" -> calendars(call)
         "calendar.add" -> calendarAdd(call)
         "todo.list" -> todoList(call)
         "todo.add" -> todoAdd(call)
@@ -632,6 +634,31 @@ internal class PluginKeyboardServices(
         return JsonNull
     }
 
+    /**
+     * `share.open(url, ask=False)`: an http or https link straight to the app
+     * that handles it, no chooser. The interpreter lets this through only while
+     * the plugin answers the user's own tap, so a plugin can't open pages on
+     * its own; a saved link on the home network (http, an address) is allowed.
+     */
+    private fun visit(call: PluginCall): JsonElement {
+        val url = call.string("url").orEmpty().trim()
+        val uri = runCatching { java.net.URI(url) }.getOrNull()
+        val scheme = uri?.scheme?.lowercase()
+        if (uri == null || (scheme != "https" && scheme != "http") || uri.host.isNullOrEmpty() || uri.userInfo != null) {
+            throw PluginCallException("ValueError", "only http and https links can be opened")
+        }
+        val view = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            .addCategory(Intent.CATEGORY_BROWSABLE)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        onMain {
+            runCatching { context.startActivity(view) }.onFailure {
+                // Nothing claims the address: the chooser says so rather than nothing happening.
+                runCatching { context.startActivity(Intent.createChooser(view, url).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+            }
+        }
+        return JsonNull
+    }
+
     /** The phone's own voice, made the first time a plugin speaks and kept for the next. Main thread. */
     private var voice: android.speech.tts.TextToSpeech? = null
     private var voiceReady = false
@@ -824,14 +851,26 @@ internal class PluginKeyboardServices(
      * Android's calendar permission, asked through the same screen the
      * Calendar tool uses the first time. Like the location, the call that
      * asks fails, and the next one works.
+     *
+     * Asked once a day per plugin and kind at most. A plugin that reads the
+     * calendar as it opens (Day Planner) otherwise brought the permission
+     * screen up on every open for someone using it without the calendar
+     * (Telegram 9940); now the call just fails until the user allows it in
+     * Settings, or a day has passed.
      */
-    private fun needCalendar(write: Boolean) {
+    private fun needCalendar(pluginId: String, write: Boolean) {
         val missing = when {
             !DeviceCalendar.canRead(context) -> CalendarPermissionActivity::class.java
             write && !DeviceCalendar.canWrite(context) -> CalendarWritePermissionActivity::class.java
             else -> return
         }
-        onMain { context.startActivity(Intent(context, missing).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        val key = pluginId + if (missing == CalendarPermissionActivity::class.java) "/read" else "/write"
+        val now = SystemClock.elapsedRealtime()
+        val ask = synchronized(calendarAsked) {
+            val last = calendarAsked[key]
+            (last == null || now - last > DAY_MS).also { if (it) calendarAsked[key] = now }
+        }
+        if (ask) onMain { context.startActivity(Intent(context, missing).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
         throw PluginCallException(
             "PermissionError",
             if (write) "Android has not let the keyboard add calendar events yet: allow it, then try again"
@@ -844,7 +883,7 @@ internal class PluginKeyboardServices(
         val start = seconds(call, "start") ?: throw PluginCallException("ValueError", "calendar.events needs a start")
         val end = seconds(call, "end") ?: throw PluginCallException("ValueError", "calendar.events needs an end")
         if (end - start > MAX_CALENDAR_SPAN_S) throw PluginCallException("ValueError", "ask for at most 62 days of events at a time")
-        needCalendar(write = false)
+        needCalendar(call.plugin.id, write = false)
         if (end <= start) return JsonArray(emptyList())
         val events = DeviceCalendar.eventsBetween(context, (start * 1000).toLong(), (end * 1000).toLong())
             .sortedBy { if (it.allDay) localMidnightOf(it.begin) else it.begin }
@@ -865,8 +904,8 @@ internal class PluginKeyboardServices(
         )
     }
 
-    private fun calendars(): JsonElement {
-        needCalendar(write = false)
+    private fun calendars(call: PluginCall): JsonElement {
+        needCalendar(call.plugin.id, write = false)
         return JsonArray(
             DeviceCalendar.writableCalendars(context).map { c ->
                 buildJsonObject {
@@ -886,7 +925,7 @@ internal class PluginKeyboardServices(
         val start = seconds(call, "start") ?: throw PluginCallException("ValueError", "calendar.add needs a start")
         val end = seconds(call, "end") ?: throw PluginCallException("ValueError", "calendar.add needs an end")
         if (end < start) throw PluginCallException("ValueError", "an event cannot end before it starts")
-        needCalendar(write = true)
+        needCalendar(call.plugin.id, write = true)
         val writable = DeviceCalendar.writableCalendars(context)
         val asked = (call.args["calendar"] as? JsonPrimitive)?.contentOrNull?.toDoubleOrNull()?.toLong()
         val calendar = if (asked != null) {
@@ -1183,6 +1222,9 @@ internal class PluginKeyboardServices(
     private fun JsonObject?.orEmpty(): JsonObject = this ?: JsonObject(emptyMap())
 
     companion object {
+        /** When each plugin last brought up the calendar permission screen, by `id/read` or `id/write`. */
+        private val calendarAsked = HashMap<String, Long>()
+
         private val METHODS = setOf("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD")
         private val IMAGE_TYPES = setOf("image/png", "image/jpeg", "image/gif", "image/webp")
 

@@ -104,9 +104,9 @@
     <string name="layout_editor_foreign_from_unexpected">The app read this as an Unexpected Keyboard or CleverKeys layout. The swipes to the corners of each key come across as swipes, and you can also hold the key to get them. The app adds its own bottom row unless the layout has its own.</string>
     <!-- The language a converted layout types in. The file does not say, so the
          app makes a guess from the letters on the keys. -->
-    <!-- ".cin", "Rime", "m17n" and ".mim" are the names of formats; do not translate them. -->
+    <!-- ".cin", "Rime", "m17n", ".mim" and "jquery.ime" are the names of formats; do not translate them. -->
     <string name="layout_editor_im_title">Import an input method</string>
-    <string name="layout_editor_im_subtitle">Read a .cin table, a Rime schema with its dictionaries, or an m17n .mim file. Pick all the files the method needs at the same time.</string>
+    <string name="layout_editor_im_subtitle">Read a .cin table, a Rime schema with its dictionaries, an m17n .mim file, or a jquery.ime rule file. Pick all the files the method needs at the same time.</string>
     <string name="layout_editor_im_busy">Reading the input method. A large Rime dictionary can take a minute.</string>
     <string name="layout_editor_im_too_large">The files are too large to import.</string>
     <string name="layout_editor_im_failed">The app could not save the input method. Make sure there is free space on the device.</string>
@@ -190,6 +190,7 @@
 
     <string name="layout_editor_show_shift_title">Show the shift plane</string>
     <string name="layout_editor_show_shift_subtitle">Draws each key as it looks when you hold shift</string>
+    <string name="layout_editor_show_shift_info">Draws every key of the editor\'s preview as it looks while shift is held, so you can check the capital letters and the shifted symbols of the layout.</string>
     <string name="layout_editor_json_title">Edit as JSON</string>
     <string name="layout_editor_json_subtitle">Reach anything that this screen has no control for</string>
     <!-- Copy and paste one layer. %1$s is a layer name, for example "Symbols". -->
@@ -323,6 +324,7 @@
     <!-- Switch on the space bar's key sheet. Off: the icon replaces the language name. On: both are drawn. -->
     <string name="layout_editor_icon_beside_label_title">Keep the language name</string>
     <string name="layout_editor_icon_beside_label_subtitle">Draws the icon before the language name instead of in its place</string>
+    <string name="layout_editor_icon_beside_label_info">A key that shows a language normally draws its icon in place of the language\'s name. With this on, the key keeps the name and draws the icon before it.</string>
     <!-- %1$s is an icon name the user typed, for example "mic". -->
     <string name="layout_editor_icon_found_hint">Shows the \"<xliff:g id="icon_name" example="mic">%1$s</xliff:g>\" icon</string>
     <string name="layout_editor_icon_missing_hint">There is no icon with the name \"<xliff:g id="icon_name" example="mik">%1$s</xliff:g>\". The app draws the label instead</string>
@@ -343,6 +345,12 @@
     <string name="layout_editor_flick_down_right_label">Flick down right</string>
     <string name="layout_editor_flick_pad_desc">Flick directions pad</string>
     <string name="layout_editor_flick_clear">Remove all flick directions</string>
+    <string name="layout_editor_flick_return_title">Out and back</string>
+    <string name="layout_editor_flick_return_none">Swiping out to this arm and back types its capital. Tap to run an action instead.</string>
+    <string name="layout_editor_key_section_space_cycle">Taps after a space</string>
+    <string name="layout_editor_space_cycle_caption">Each further tap of the space bar, with nothing typed between, turns the space into the next entry: a comma, then a full stop, and so on. A tap after the last one types a plain space again. Leave it empty for the usual space bar.</string>
+    <string name="layout_editor_space_cycle_label">Entries, split by |</string>
+    <string name="layout_editor_space_cycle_hint">For example ", |. |? |! " (the space after each mark counts)</string>
     <string name="layout_editor_flick_field_hint">Blank: no flick in this direction</string>
     <string name="layout_editor_flick_set_hint">A flick this way types %1$s</string>
     <string name="layout_editor_flick_add_subtitle_action">A short swipe from the key in any of eight directions types something or does an action, such as moving the cursor</string>
@@ -409,6 +417,7 @@
 
     <string name="layout_editor_role_title">Field adaptation</string>
     <string name="layout_editor_role_subtitle">Email and web address fields change the comma and full stop keys</string>
+    <string name="layout_editor_role_info">In an email field or a web address field, the keyboard changes the comma key and the full stop key into the marks those fields need, such as @ and /. This sets which keys of your layout take that role.</string>
     <string name="layout_editor_role_comma">Comma slot</string>
     <string name="layout_editor_role_period">Full stop slot</string>
     <string name="layout_editor_role_plain">Exactly as laid out</string>
@@ -489,20 +498,26 @@
     <string name="layout_editor_key_hint_scale_hint">The corner hint on this key alone, larger or smaller than on the others</string>
 
     <string name="layout_editor_key_screen_title">Show this key</string>
+    <string name="layout_editor_key_screen_info">The kinds of screen on which this key is drawn. Use it to give a key to tablets only, or to remove it in landscape.</string>
     <string name="layout_editor_key_screen_hint">A key for one way up takes no room the other way, and the rest of its row closes up</string>
     <string name="layout_editor_key_screen_always">Always</string>
     <string name="layout_editor_key_screen_portrait">Upright</string>
     <string name="layout_editor_key_screen_landscape">Sideways</string>
     <string name="layout_editor_landscape_layout_title">Layout when sideways</string>
     <string name="layout_editor_landscape_layout_subtitle">Draw another layout\'s keys while the phone is turned sideways. It has to type the same way as this one</string>
+    <string name="layout_editor_landscape_layout_info">While the phone is held sideways, the keyboard draws the keys of another layout in place of this one. The two layouts must type in the same way, so that only the arrangement changes and not the language.</string>
     <string name="layout_editor_landscape_layout_same">This layout</string>
     <string name="layout_editor_tablet_expand_title">Add tablet keys automatically</string>
     <string name="layout_editor_tablet_expand_subtitle">On a tablet, add tab, backslash, caps lock, a second shift and the arrow keys around this layout</string>
+    <string name="layout_editor_tablet_expand_info">On a tablet, the keyboard adds the keys a wide screen has room for around this layout: tab, backslash, caps lock, a second shift and the arrow keys. Turn this off to keep the layout exactly as drawn.</string>
     <string name="layout_editor_tablet_expand_subtitle_na">This layout is not one the tablet keys can be added to, so this setting has no effect on it</string>
     <string name="layout_editor_hex_grid_title">Honeycomb grid</string>
     <string name="layout_editor_hex_grid_subtitle">Draw this layout\'s keys as hexagons, every other row half a key over, with the rows fitted into each other</string>
+    <string name="layout_editor_hex_grid_info">Draws the keys of this layout as hexagons. Every second row is moved half a key to the side, and the rows fit into each other like a honeycomb.</string>
     <string name="layout_editor_action_caps_lock_title">Caps lock</string>
     <string name="layout_editor_action_caps_lock_detail">Turns caps lock on and off with one press. For wide layouts that also have a shift key</string>
+    <string name="layout_editor_action_shift_off_title">Shift off</string>
+    <string name="layout_editor_action_shift_off_detail">Puts Shift and caps lock down, and does nothing when they are already off. For a flick arm beside one that turns Shift on</string>
     <!-- Name of the key that deletes the character before the cursor. -->
     <string name="layout_editor_action_delete_title">Delete</string>
     <string name="layout_editor_action_delete_detail">Backspace. It repeats while you hold it</string>
@@ -832,6 +847,8 @@
     <string name="textedit_action_delete_to_start">Delete everything before the cursor</string>
     <string name="textedit_action_delete_to_end">Delete everything after the cursor</string>
     <string name="textedit_action_type_clipboard">Type the clipboard (for fields that refuse a paste)</string>
+    <string name="textedit_action_case_up">Word one case up (lower, Title, UPPER)</string>
+    <string name="textedit_action_case_down">Word one case down (UPPER, Title, lower)</string>
 
     <!-- Chevron on a layout's row that opens or closes the list of its layers. %1$s is the layout's name. -->
     <string name="layout_editor_layers_expand_desc">Show the layers of <xliff:g id="layout" example="QWERTY">%1$s</xliff:g></string>
