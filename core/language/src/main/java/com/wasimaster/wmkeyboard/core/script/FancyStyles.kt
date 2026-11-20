@@ -253,6 +253,22 @@ object FancyStyles {
             ('a'..'z').map { it.toString() },
             ('A'..'Z').map { it.toString() },
         ),
+        // Every visible character held apart by a zero-width space — see
+        // [FancyAssembly.ZERO_WIDTH_SEPARATED].
+        style(
+            "bypass", "Bypass", "B\u200By\u200Bp\u200Ba\u200Bs\u200Bs",
+            listOf(
+                "a", "b", "c", "d", "e", "f", "g", "h", "i",
+                "j", "k", "l", "m", "n", "o", "p", "q", "r",
+                "s", "t", "u", "v", "w", "x", "y", "z",
+            ),
+            listOf(
+                "A", "B", "C", "D", "E", "F", "G", "H", "I",
+                "J", "K", "L", "M", "N", "O", "P", "Q", "R",
+                "S", "T", "U", "V", "W", "X", "Y", "Z",
+            ),
+            assembly = FancyAssembly.ZERO_WIDTH_SEPARATED,
+        ),
         style(
             "bold", "Bold", "𝐁𝐨𝐥𝐝",
             listOf(
@@ -668,22 +684,6 @@ object FancyStyles {
                 "S", "⊥", "∩", "Ʌ", "M", "X", "⅄", "Z",
             ),
             assembly = FancyAssembly.REVERSED,
-        ),
-        // Every visible character held apart by a zero-width space — see
-        // [FancyAssembly.ZERO_WIDTH_SEPARATED].
-        style(
-            "bypass", "Bypass", "B\u200By\u200Bp\u200Ba\u200Bs\u200Bs",
-            listOf(
-                "a", "b", "c", "d", "e", "f", "g", "h", "i",
-                "j", "k", "l", "m", "n", "o", "p", "q", "r",
-                "s", "t", "u", "v", "w", "x", "y", "z",
-            ),
-            listOf(
-                "A", "B", "C", "D", "E", "F", "G", "H", "I",
-                "J", "K", "L", "M", "N", "O", "P", "Q", "R",
-                "S", "T", "U", "V", "W", "X", "Y", "Z",
-            ),
-            assembly = FancyAssembly.ZERO_WIDTH_SEPARATED,
         ),
         // Unicode has subscripts for only 17 letters; the rest type plain, and
         // capitals type the small forms, as superscript's do.

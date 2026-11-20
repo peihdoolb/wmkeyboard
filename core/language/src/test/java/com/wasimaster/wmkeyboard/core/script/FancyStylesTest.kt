@@ -19,11 +19,12 @@ class FancyStylesTest {
     fun `normal plus the 50 styles and the two starting zalgo levels are present, in order`() {
         assertEquals(53, FancyStyles.all.size)
         assertEquals(FancyStyles.NORMAL_ID, FancyStyles.all.first().id)
-        assertEquals("bold", FancyStyles.all[1].id)
+        assertEquals("bypass", FancyStyles.all[1].id)
+        assertEquals("bold", FancyStyles.all[2].id)
         // The tail of the original 22, then the tail of the whole table: the
         // order is append-only, and both ends pin it.
-        assertEquals("underline", FancyStyles.all[22].id)
-        assertEquals("bypass", FancyStyles.all[32].id)
+        assertEquals("underline", FancyStyles.all[23].id)
+        assertEquals("subscript", FancyStyles.all[33].id)
         assertEquals("zalgo_heavy", FancyStyles.all.last().id)
         assertNotNull(FancyStyles.byId(FancyStyles.DEFAULT_ID))
         assertEquals(FancyStyles.all.size, FancyStyles.all.distinctBy { it.id }.size)
