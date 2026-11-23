@@ -72,6 +72,9 @@ enum class ProviderProblem {
 
     /** Written by a newer build; this one does not know the type. */
     UNKNOWN,
+
+    /** A plugin's row whose plugin is off, removed, or waiting for plugins to be turned on. */
+    PLUGIN_OFF,
 }
 
 /**
@@ -103,8 +106,11 @@ data class ResolvedProvider(
     /** This row, then its [backups]: the order a fetch walks. */
     val withBackups: List<ResolvedProvider> get() = if (backups.isEmpty()) listOf(this) else listOf(copy(backups = emptyList())) + backups
 
-    /** What the list shows: the name the user gave the server, else the type's own. */
-    val customName: String get() = credential?.name?.trim().orEmpty()
+    /** What the list shows: the name the user gave the server, a plugin row's own, else the type's. */
+    val customName: String
+        get() = credential?.name?.trim().orEmpty().ifEmpty {
+            if (type === ProviderTypes.PLUGIN) com.wasimaster.wmkeyboard.core.providers.PluginProviders.row(key)?.name.orEmpty() else ""
+        }
 }
 
 /** Every credential in force: the stored list, or the one the old settings make. */
@@ -200,11 +206,15 @@ val KeyboardSettings.deeplLive: DeepLSettings
  * the callers take as "fetch nothing" rather than the client's defaults.
  */
 fun KeyboardSettings.fiatRateProviders(): List<String> =
-    resolveProviders(ProviderTool.CURRENCY_FIAT).map { it.typeId.uppercase(java.util.Locale.ROOT) }
+    resolveProviders(ProviderTool.CURRENCY_FIAT).map(::rateProviderName)
 
 /** The same for coin prices. */
 fun KeyboardSettings.cryptoRateProviders(): List<String> =
-    resolveProviders(ProviderTool.CURRENCY_CRYPTO).map { it.typeId.uppercase(java.util.Locale.ROOT) }
+    resolveProviders(ProviderTool.CURRENCY_CRYPTO).map(::rateProviderName)
+
+/** A built-in source by its `CurrencyClient.Provider` name; a plugin's row by its `plugin:` key, which the client asks through the plugin. */
+private fun rateProviderName(row: ResolvedProvider): String =
+    if (row.type === ProviderTypes.PLUGIN) row.key else row.typeId.uppercase(java.util.Locale.ROOT)
 
 /** How [tool] uses its list. */
 fun KeyboardSettings.providerMode(tool: ProviderTool, env: ProviderEnv = ProviderEnvironment.current()): ChainMode =
@@ -234,6 +244,8 @@ object ProviderResolution {
         val problem = when {
             type == null -> ProviderProblem.UNKNOWN
             !ProviderCatalog.runnable(type, env) -> ProviderProblem.UNAVAILABLE
+            type === ProviderTypes.PLUGIN ->
+                if (com.wasimaster.wmkeyboard.core.providers.PluginProviders.row(entry.key)?.runnable == true) null else ProviderProblem.PLUGIN_OFF
             type === ProviderTypes.OFFLINE_GIFS && !env.offlineGifPacks -> ProviderProblem.NEEDS_PACKS
             // DeepL works with a key, a proxy that adds one, or both.
             type === ProviderTypes.DEEPL && apiKey.isBlank() && url.isBlank() -> ProviderProblem.NEEDS_KEY
@@ -444,12 +456,15 @@ object LegacyProviders {
             )
             // The more deliberate the setup, the earlier: a named SearXNG
             // instance, then a Tavily key only the user can have put there,
-            // then Brave, whose key may be the build's.
+            // then Brave, whose key may be the build's. The keyboard's own
+            // metasearch last, always: search works with nothing set up, and
+            // anything that is set up comes first.
             ProviderTool.SEARCH -> ProviderChain(
                 buildList {
                     if (has(ProviderTypes.SEARXNG)) add(entry(ProviderTypes.SEARXNG))
                     if (hasKey(ProviderTypes.TAVILY)) add(entry(ProviderTypes.TAVILY))
                     if (hasKey(ProviderTypes.BRAVE)) add(entry(ProviderTypes.BRAVE))
+                    add(entry(ProviderTypes.METASEARCH))
                 },
             )
             ProviderTool.PHOTOS -> ProviderChain(
@@ -740,10 +755,11 @@ fun availableVoiceEngines(): Set<String> = buildSet {
         add("moonshine")
     }
     // sherpa-onnx on ONNX Runtime, the `onnx` gate: Sherpa's streaming
-    // models and Meta's Omnilingual.
+    // models, Meta's Omnilingual and Alibaba's Qwen3-ASR (#1437).
     if (com.wasimaster.wmkeyboard.core.voice.sherpa.SherpaNative.shipped) {
         add("sherpa")
         add("omnilingual")
+        add("qwen3")
     }
     // Alpha Cephei's library, the `vosk` gate (#1165); not in F-Droid's build.
     if (com.wasimaster.wmkeyboard.core.voice.vosk.VoskNative.shipped) add("vosk")
@@ -811,6 +827,17 @@ fun KeyboardSettings.aiThrough(key: String, env: ProviderEnv = choiceEnv()): AiS
 /** The voice rows that can run, in the order the list has them. */
 fun KeyboardSettings.voiceRows(env: ProviderEnv = choiceEnv()): List<ResolvedProvider> =
     resolveProviders(ProviderTool.VOICE, env)
+
+/**
+ * The name the user gave the transcription server dictation in [languageId]
+ * goes to, for the voice panel's engine chip and pills (#1477); empty when
+ * it has none, or when the language has a server of its own, which is
+ * entered by address and never named.
+ */
+fun KeyboardSettings.voiceServerName(languageId: String, env: ProviderEnv = choiceEnv()): String {
+    if (!whisper.serverByLang[languageId]?.url.isNullOrBlank()) return ""
+    return voiceRows(env).firstOrNull { it.typeId == ProviderTypes.TRANSCRIPTION_SERVER.id }?.customName.orEmpty()
+}
 
 /** The OCR list's row for [engine], or null for [OcrEngine.ONLINE], which is the online rows. */
 fun ocrEngineType(engine: OcrEngine): ProviderType? = when (engine) {
@@ -881,10 +908,11 @@ fun KeyboardSettings.withProviderChoices(env: ProviderEnv = choiceEnv()): Keyboa
         )
     }
     val voices = stored.voiceRows(env)
-    val server = voices.firstOrNull { it.typeId == ProviderTypes.TRANSCRIPTION_SERVER.id }
+    // A plugin's voice row is a server whose address is its key.
+    val server = voices.firstOrNull { it.typeId == ProviderTypes.TRANSCRIPTION_SERVER.id || it.typeId == ProviderTypes.PLUGIN.id }
     val whisper = stored.whisper.copy(
         engine = voices.firstNotNullOfOrNull { ProviderTypes.VOICE_ENGINES[it.typeId] } ?: ProviderTypes.ENGINE_SYSTEM,
-        serverUrl = server?.url.orEmpty(),
+        serverUrl = server?.let { if (it.type === ProviderTypes.PLUGIN) it.key else it.url }.orEmpty(),
         serverKey = server?.apiKey.orEmpty(),
         serverModel = server?.model.orEmpty(),
         serverPath = server?.credential?.extra?.get(CredentialSpec.PATH)?.trim().orEmpty(),

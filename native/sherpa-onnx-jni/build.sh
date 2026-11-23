@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Builds libwmsherpa.so (sherpa_jni.cpp over a static sherpa-onnx) for every
-# ABI and copies it into core/voice/src/onnx/jniLibs/. Fetches sherpa-onnx and
-# ONNX Runtime's headers at their pinned commits unless SHERPA_SRC / ORT_SRC
-# point at checkouts of them. Needs CMake and Ninja on PATH. See README.md.
+# ABI and copies it into core/voice/src/onnx/jniLibs/. Fetches sherpa-onnx at its
+# pinned commit unless SHERPA_SRC points at a checkout; ONNX Runtime's headers
+# come from native/onnxruntime-headers unless ORT_SRC / ORT_HEADERS say
+# otherwise. Needs CMake and Ninja on PATH. See README.md.
 #
 #   ANDROID_NDK=/path/to/ndk native/sherpa-onnx-jni/build.sh
 set -euo pipefail
@@ -65,28 +66,31 @@ fi
 got=$(git -C "$SRC" rev-parse HEAD)
 [ "$got" = "$SHERPA_COMMIT" ] || { echo "sherpa-onnx is at $got, expected $SHERPA_COMMIT" >&2; exit 1; }
 
+# ONNX Runtime's headers: the flat folder the repository carries, the
+# onnxruntime-android AAR's headers/ (native/onnxruntime-headers/README.md:
+# github.com/microsoft/onnxruntime answered 404 from 2026-11-22). ORT_HEADERS
+# points at another such folder, ORT_SRC at a checkout at ORT_COMMIT.
 ORT=${ORT_SRC:-}
-if [ -z "$ORT" ]; then
-    ORT=$WORK/onnxruntime
-    retry fresh_clone "$ORT" --quiet --depth 1 --branch "$ORT_TAG" --filter=blob:none --sparse \
-        https://github.com/microsoft/onnxruntime
-    git -C "$ORT" sparse-checkout set --no-cone /include/onnxruntime/core/session \
-        /include/onnxruntime/core/providers/cpu /include/onnxruntime/core/providers/nnapi
+if [ -n "$ORT" ] && [ -z "${ORT_HEADERS:-}" ]; then
+    got=$(git -C "$ORT" rev-parse HEAD)
+    [ "$got" = "$ORT_COMMIT" ] || { echo "onnxruntime is at $got, expected $ORT_COMMIT" >&2; exit 1; }
+    # The flat header directory the AAR's headers/ folder has.
+    HEADERS=$WORK/ort-headers
+    mkdir -p "$HEADERS"
+    cp "$ORT"/include/onnxruntime/core/session/*.h "$ORT"/include/onnxruntime/core/session/*.inc "$HEADERS"/ 2>/dev/null || true
+    cp "$ORT"/include/onnxruntime/core/providers/cpu/cpu_provider_factory.h \
+       "$ORT"/include/onnxruntime/core/providers/nnapi/nnapi_provider_factory.h "$HEADERS"/
+else
+    HEADERS=$(cd "${ORT_HEADERS:-$REPO/native/onnxruntime-headers}" && pwd -P)
 fi
-got=$(git -C "$ORT" rev-parse HEAD)
-[ "$got" = "$ORT_COMMIT" ] || { echo "onnxruntime is at $got, expected $ORT_COMMIT" >&2; exit 1; }
-# The flat header directory the AAR's headers/ folder has.
-HEADERS=$WORK/ort-headers
-mkdir -p "$HEADERS"
-cp "$ORT"/include/onnxruntime/core/session/*.h "$ORT"/include/onnxruntime/core/session/*.inc "$HEADERS"/ 2>/dev/null || true
-cp "$ORT"/include/onnxruntime/core/providers/cpu/cpu_provider_factory.h \
-   "$ORT"/include/onnxruntime/core/providers/nnapi/nnapi_provider_factory.h "$HEADERS"/
-[ -f "$HEADERS/onnxruntime_cxx_api.h" ] || { echo "no ONNX Runtime headers in $ORT" >&2; exit 1; }
+[ -f "$HEADERS/onnxruntime_cxx_api.h" ] || { echo "no ONNX Runtime headers in $HEADERS" >&2; exit 1; }
 
 # Every path on the build machine is mapped out of the library (__FILE__ in
 # asserts, the NDK's libc++ headers), so two machines with the same NDK build
 # the same bytes. F-Droid's reproducible build relies on that.
 MAP="-ffile-prefix-map=$SRC=sherpa-onnx -ffile-prefix-map=$WORK=build -ffile-prefix-map=$HERE=. -ffile-prefix-map=$NDK=ndk"
+# Headers from outside the build tree map to where a checkout would put them.
+MAP="$MAP -ffile-prefix-map=$HEADERS=build/ort-headers"
 
 # clang target triple per ABI, for the link stub.
 triple() {

@@ -102,6 +102,9 @@ internal val ToolGrants: Map<ToolbarTool, List<ToolGrant>> = mapOf(
     ToolbarTool.SEND_FILES to listOf(ToolGrant.NEARBY),
     ToolbarTool.MEDIA_CONTROL to listOf(ToolGrant.NOTIFICATION_ACCESS),
     ToolbarTool.SCREENSHOT to listOf(ToolGrant.SYSTEM_BUTTONS),
+    ToolbarTool.SYSTEM_BACK to listOf(ToolGrant.SYSTEM_BUTTONS),
+    ToolbarTool.SYSTEM_HOME to listOf(ToolGrant.SYSTEM_BUTTONS),
+    ToolbarTool.SYSTEM_RECENTS to listOf(ToolGrant.SYSTEM_BUTTONS),
 )
 
 /** Storage categories that belong to one tool beyond those whose manage button opens the tool's page. */
@@ -299,7 +302,7 @@ internal fun ToolDashboardToolScreen(repository: SettingsRepository, tool: Toolb
                 }
             }
             val total = sizes.values.sum()
-            item(visible = total > 0) {
+            item(visible = total > 0, waitsOnSetting = false) {
                 ActionRow(
                     R.string.tool_dashboard_delete_title,
                     subtitle = stringResource(R.string.tool_dashboard_delete_subtitle, Formatter.formatShortFileSize(context, total)),

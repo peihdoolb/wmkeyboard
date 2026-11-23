@@ -57,6 +57,9 @@ import java.util.Locale
 import androidx.activity.compose.BackHandler
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
@@ -1065,6 +1068,70 @@ internal fun KeyLayoutsScreen(
     }
 }
 
+/** One way into your layouts, as the Import a layout sheet lists them. */
+private enum class LayoutImportSource(@StringRes val title: Int, @StringRes val subtitle: Int) {
+    FILE(R.string.layout_import_file_title, R.string.layout_editor_import_subtitle),
+    FOREIGN(R.string.layout_import_foreign_title, R.string.layout_editor_foreign_subtitle),
+    INPUT_METHOD(R.string.layout_import_im_title, R.string.layout_editor_im_subtitle),
+}
+
+/**
+ * Import a layout, as a sheet of sources: this app's own layout file, a
+ * layout from another keyboard, an input method's files. Not a ChoiceSheet,
+ * whose radio buttons read as a setting with a current answer; nothing here
+ * is selected. Built like the Import a theme sheet.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LayoutImportSheet(
+    methodBusy: Boolean,
+    onDismiss: () -> Unit,
+    onPick: (LayoutImportSource) -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    ) {
+        // The sheet keeps its content clear of the navigation bar itself, so
+        // no padding for it here (see ChoiceSheet).
+        ScrollRail(state = rememberScrollRailState(), fadeColor = BottomSheetDefaults.ContainerColor) {
+            Text(
+                stringResource(R.string.layout_editor_import_title),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(horizontal = 24.dp),
+            )
+            Spacer(Modifier.height(8.dp))
+            for (source in LayoutImportSource.entries) {
+                WmRow(
+                    title = stringResource(source.title),
+                    subtitle = stringResource(
+                        // A large Rime dictionary is still being read: say so
+                        // rather than offer a second pick on top of it.
+                        if (source == LayoutImportSource.INPUT_METHOD && methodBusy) {
+                            R.string.layout_editor_im_busy
+                        } else {
+                            source.subtitle
+                        },
+                    ),
+                    leading = {
+                        Icon(
+                            when (source) {
+                                LayoutImportSource.FILE -> Icons.Outlined.FileOpen
+                                LayoutImportSource.FOREIGN -> Icons.Outlined.SwapHoriz
+                                LayoutImportSource.INPUT_METHOD -> Icons.Outlined.KeyboardAlt
+                            },
+                            contentDescription = null,
+                        )
+                    },
+                    enabled = source != LayoutImportSource.INPUT_METHOD || !methodBusy,
+                    onClick = { onPick(source) },
+                )
+            }
+            Spacer(Modifier.height(32.dp))
+        }
+    }
+}
+
 /**
  * The rows that bring layouts in from a file and send the ones in use out to
  * one, with every picker and question they open. A group of their own so
@@ -1317,15 +1384,17 @@ internal fun LayoutImportsGroup(
         }
     }
 
+    // Every way of bringing a layout in, behind one row, as Keyboard themes
+    // has it (#1452): three import rows here were three things to read past
+    // on the way to the layouts, for something done now and then.
+    var importSheetOpen by remember { mutableStateOf(false) }
     SettingsGroup {
         item {
             WmRow(
                 title = stringResource(R.string.layout_editor_import_title),
-                subtitle = stringResource(R.string.layout_editor_import_subtitle),
+                subtitle = stringResource(R.string.layout_import_row_subtitle),
                 leading = { Icon(Icons.Outlined.FileOpen, contentDescription = null) },
-                onClick = {
-                    importLauncher.launch(LayoutFile.IMPORT_MIME_TYPES)
-                },
+                onClick = { importSheetOpen = true },
             )
         }
         item(level = SettingLevel.STANDARD) {
@@ -1339,25 +1408,20 @@ internal fun LayoutImportsGroup(
                 },
             )
         }
-        item(level = SettingLevel.STANDARD) {
-            WmRow(
-                title = stringResource(R.string.layout_editor_foreign_title),
-                subtitle = stringResource(R.string.layout_editor_foreign_subtitle),
-                leading = { Icon(Icons.Outlined.SwapHoriz, contentDescription = null) },
-                onClick = { foreignLauncher.launch(FOREIGN_LAYOUT_MIME_TYPES) },
-            )
-        }
-        item(level = SettingLevel.ADVANCED) {
-            WmRow(
-                title = stringResource(R.string.layout_editor_im_title),
-                subtitle = stringResource(R.string.layout_editor_im_subtitle),
-                leading = { Icon(Icons.Outlined.KeyboardAlt, contentDescription = null) },
-                enabled = !methodBusy,
-                onClick = { methodLauncher.launch(InputMethodImport.MIME_TYPES) },
-            )
+    }
+    if (importSheetOpen) {
+        LayoutImportSheet(
+            methodBusy = methodBusy,
+            onDismiss = { importSheetOpen = false },
+        ) { source ->
+            importSheetOpen = false
+            when (source) {
+                LayoutImportSource.FILE -> importLauncher.launch(LayoutFile.IMPORT_MIME_TYPES)
+                LayoutImportSource.FOREIGN -> foreignLauncher.launch(FOREIGN_LAYOUT_MIME_TYPES)
+                LayoutImportSource.INPUT_METHOD -> methodLauncher.launch(InputMethodImport.MIME_TYPES)
+            }
         }
     }
-
 
     confirmImport?.let { imported ->
         AlertDialog(
@@ -2319,6 +2383,18 @@ internal fun KeyLayoutEditorScreen(
         redo = emptyList()
     }
 
+    /**
+     * Drops the picked keys ahead of an undo or redo (#1449). They name seats
+     * in the layout being replaced: after undoing a drag that made a row, the
+     * pick pointed past the rows that were left, and the key sheet read it.
+     */
+    fun forgetPicks() {
+        selection = null
+        multi = null
+        extraSel = null
+        pendingSelect = null
+    }
+
     /** Restores a whole layout, for undo and redo. */
     fun save(next: LayoutSpec) {
         val stored = next.withLettersSwappedFor(pageKey)
@@ -2650,6 +2726,7 @@ internal fun KeyLayoutEditorScreen(
                 undo = undo.dropLast(1)
                 redo = redo + listOfNotNull(edited.now())
                 stepPushed = false
+                forgetPicks()
                 save(previous)
             },
         ) {
@@ -2665,6 +2742,7 @@ internal fun KeyLayoutEditorScreen(
                 redo = redo.dropLast(1)
                 undo = undo + listOfNotNull(edited.now())
                 stepPushed = false
+                forgetPicks()
                 save(next)
             },
         ) {
@@ -3939,6 +4017,17 @@ internal fun KeyLayoutEditorScreen(
                 edited.watch { isHexGrid(it.grid) },
                 info = stringResource(R.string.layout_editor_hex_grid_info),
             ) { on -> edit { it.copy(grid = if (on) HexGridKind else null) } }
+        }
+        // The rules that rewrite what is typed (#1493): Thai's tone after its
+        // vowel, a then 1 as ā. Its own screen, since a rule is two fields and
+        // a list of groups, not a value a row can hold.
+        if (!secondary) item(level = SettingLevel.STANDARD) {
+            val spec = edited.watch { it }
+            NavRow(
+                R.string.layout_editor_rules_title,
+                subtitle = layoutRulesSummary(spec),
+                route = layoutRulesRoute(layoutId),
+            ) { onNavigate(layoutRulesRoute(layoutId)) }
         }
         item(level = SettingLevel.ADVANCED) {
             NavRow(

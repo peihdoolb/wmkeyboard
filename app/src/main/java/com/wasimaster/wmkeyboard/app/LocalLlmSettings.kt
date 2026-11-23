@@ -70,7 +70,6 @@ import com.wasimaster.wmkeyboard.core.modules.FeatureModules
 import com.wasimaster.wmkeyboard.core.modules.ModuleState
 import com.wasimaster.wmkeyboard.core.modules.NativeDelivery
 import com.wasimaster.wmkeyboard.core.modules.NativeConsent
-import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import com.wasimaster.wmkeyboard.core.settings.MeteredDecision
 import com.wasimaster.wmkeyboard.core.settings.LocalLlmBackend
 import com.wasimaster.wmkeyboard.core.settings.SettingsRepository
@@ -276,6 +275,7 @@ internal fun LocalLlmModelManager(repository: SettingsRepository, settings: Live
                 val id = LocalLlmStore.CUSTOM_PREFIX + file.name
                 CustomModelRow(
                     file = file,
+                    tooBigForRam = customModelRamMb(file.length()) > totalRamMb,
                     selected = settings.watch { it.ai.localModelId == id },
                     onSelect = { scope.launch { repository.setAiLocalModelId(id) } },
                     onDelete = {
@@ -481,6 +481,7 @@ private fun CatalogModelRow(
                         )
                     }
                     TierBadge(model.tier)
+                    if (model.vision) PicturesBadge()
                 }
             },
             supporting = {
@@ -653,9 +654,11 @@ private fun LlamaModuleBanner(settings: LiveSettings) {
         is ModuleState.Installing -> StateBanner(stringResource(R.string.models_llm_llama_module_installing_info))
         is ModuleState.Missing if state.consent != null -> NativeConsentBanner(state.consent.orEmpty(), "llama")
         is ModuleState.Missing -> StateBanner(
-            stringResource(
-                if (state.failed) OfflineBuild.library(R.string.models_whisper_module_failed_info) else R.string.models_llm_llama_module_missing_info,
-            ),
+            if (state.failed) {
+                moduleFailedText(state, R.string.models_whisper_module_failed_info)
+            } else {
+                stringResource(R.string.models_llm_llama_module_missing_info)
+            },
             action = stringResource(if (state.failed) CommonR.string.common_retry else CommonR.string.common_download),
             tone = if (state.failed) BannerTone.WARNING else BannerTone.INFO,
             onAction = {
@@ -684,6 +687,7 @@ private fun LlamaModuleBanner(settings: LiveSettings) {
 @Composable
 private fun CustomModelRow(
     file: File,
+    tooBigForRam: Boolean,
     selected: Boolean,
     onSelect: () -> Unit,
     onDelete: () -> Unit,
@@ -706,6 +710,16 @@ private fun CustomModelRow(
                     Text(formatBytes(file.length()))
                     if (file.extension.equals(ModelFormat.GGUF.extension, ignoreCase = true)) {
                         RuntimeLabel(LocalLlmRuntime.LLAMA_CPP)
+                    }
+                    // A model of your own is judged the way the catalog's are
+                    // (#1425): one too big for the phone's memory slows the
+                    // keyboard to a crawl and can bring it down mid-word.
+                    if (tooBigForRam) {
+                        Text(
+                            stringResource(R.string.models_llm_custom_too_big),
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Bold,
+                        )
                     }
                 }
             },
@@ -768,6 +782,22 @@ private fun SelectionHighlight(
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .animateContentSize(),
         content = content,
+    )
+}
+
+/** "Reads pictures" next to a model's name: one that looks at a screenshot or a picture itself. */
+@Composable
+private fun PicturesBadge() {
+    Text(
+        stringResource(R.string.models_llm_reads_pictures),
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSecondaryContainer,
+        maxLines = 1,
+        softWrap = false,
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .padding(horizontal = 6.dp, vertical = 2.dp),
     )
 }
 
@@ -933,3 +963,14 @@ private fun importModel(context: Context, uri: android.net.Uri) {
 
 /** Shared with the AI panel, which draws the same readout on the keyboard. */
 internal fun formatBytes(bytes: Long): String = LocalLlmDownloadManager.formatBytes(bytes)
+
+/**
+ * About the memory a model file of [bytes] needs to run, in MB (#1425): the
+ * ratio the catalog's own minimums keep to their file sizes, never under the
+ * smallest of them.
+ */
+internal fun customModelRamMb(bytes: Long): Int =
+    maxOf(CUSTOM_MODEL_MIN_RAM_MB, (bytes * CUSTOM_MODEL_RAM_RATIO / (1024 * 1024)).toInt())
+
+private const val CUSTOM_MODEL_RAM_RATIO = 2.4
+private const val CUSTOM_MODEL_MIN_RAM_MB = 3072

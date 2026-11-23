@@ -131,6 +131,10 @@
     <string name="keypress_popup_radius_subtitle">How round the corners of a popup are</string>
     <string name="keypress_popup_radius_info">This is the corner radius of every popup. A value of 0 gives square corners. A high value makes the corners fully round.\n\nOnly the rounded and the cut popup shapes use this value. A theme can carry its own radius, and it wins over this setting.</string>
 
+    <string name="keypress_alternates_tiles_title">Alternates as separate keys</string>
+    <string name="keypress_alternates_tiles_subtitle">Show each press-and-hold alternate as a key of its own</string>
+    <string name="keypress_alternates_tiles_info">Off: the alternates that open when you hold a key share one bubble.\n\nOn: there is no bubble. Each alternate gets its own small key with a gap around it, in the popup colour, popup shape, border and key material of your theme. The one under your finger lights up.\n\nThis changes only the look. Each alternate still reaches as far as it does in the bubble, so sliding and lifting pick the same alternate either way.</string>
+
     <string name="keypress_preview_width_title">Preview bubble width</string>
     <string name="keypress_preview_width_subtitle">How wide the character bubble is, against its usual width</string>
     <string name="keypress_preview_width_info">At ×1.00 the bubble is as wide as it has always been: a little wider than the key when it covers the key, and just wide enough for the character when it floats. A larger value makes it wider, in proportion to the key. A smaller value makes it narrower and takes away the space on each side of the character first.</string>
@@ -143,10 +147,11 @@
     <string name="keypress_pop_text_title">Pop text</string>
     <string name="keypress_pop_text_subtitle">Typed text floats up from the keys and fades</string>
     <string name="keypress_pop_text_still_subtitle">Off while Reduce motion or power saving stills animations</string>
-    <string name="keypress_pop_text_info">A small decoration: what you type floats up out of the keyboard and fades away. With "Corrections", a word that autocorrect changed floats up from the space bar. With "Words", every word you finish does. With "Every key", each character also floats up from the key you pressed.\n\nIt never shows while Reduce motion is on, or while power saving stops animations.</string>
+    <string name="keypress_pop_text_info">A small decoration: what you type floats up out of the keyboard and fades away. With \"Corrections\", a word that autocorrect changed floats up from the space bar. With \"Words\", every word you finish does. With \"Keys only\", each character floats up from the key you pressed and finished words don\'t. With \"Every key\", each character floats up from its key and every finished word from the space bar.\n\nIt never shows while Reduce motion is on, or while power saving stops animations.</string>
     <string name="keypress_pop_text_never">Never</string>
     <string name="keypress_pop_text_corrections">Corrections</string>
     <string name="keypress_pop_text_words">Words</string>
+    <string name="keypress_pop_text_keys">Keys only</string>
     <string name="keypress_pop_text_every_key">Every key</string>
 
     <!-- Key press settings screen, "Alternate keys" group. These size and arrange the
@@ -258,7 +263,7 @@
 
     <string name="keypress_long_press_hints_title">Press and hold hints</string>
     <string name="keypress_long_press_hints_subtitle">Show the alternate character of each key in its corner</string>
-    <string name="keypress_long_press_hints_info">A small label in the top right corner of each key shows its first press and hold character. This is the digit, symbol or accent at the start of the popup. Keys that run a clipboard shortcut below show no hint.</string>
+    <string name="keypress_long_press_hints_info">A small label in the top right corner of each key shows its first press and hold character. This is the digit, symbol or accent at the start of the popup. Keys that run a clipboard shortcut below show no hint.\n\nThe Enter key\'s corner glyph follows this too. In a chat or search field it shows the line break or the app\'s action, whichever the key is not doing, so turning this off also clears that corner.</string>
 
 
     <string name="keypress_all_accents_title">All accents on press and hold</string>

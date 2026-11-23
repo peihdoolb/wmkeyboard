@@ -127,12 +127,29 @@ object ShellAccess {
         Request.ASKED
     }.getOrDefault(Request.UNAVAILABLE)
 
-    /** Whether an `su` binary is on the usual paths. Says nothing about whether it will grant. */
-    val suPresent: Boolean by lazy {
-        listOf("/system/bin/su", "/system/xbin/su", "/sbin/su", "/su/bin/su", "/debug_ramdisk/su", "/data/adb/ksu/bin/su")
-            .any { File(it).exists() } ||
-            System.getenv("PATH").orEmpty().split(':').any { File(it, "su").exists() }
-    }
+    /**
+     * Whether an `su` binary is on the usual paths. Says nothing about whether
+     * it will grant.
+     *
+     * Looked up on every read rather than once per process: KernelSU and
+     * APatch show `su` only to apps already allowed root, so an answer taken
+     * before the user allowed the keyboard stayed "no" for as long as the
+     * keyboard's process lived, hiding the Use root switch (#1512). A handful
+     * of stat calls.
+     */
+    val suPresent: Boolean
+        get() = SU_PATHS.any { File(it).exists() } ||
+            System.getenv("PATH").orEmpty().split(':').any { it.isNotEmpty() && File(it, "su").exists() }
+
+    private val SU_PATHS = listOf(
+        "/system/bin/su",
+        "/system/xbin/su",
+        "/sbin/su",
+        "/su/bin/su",
+        "/debug_ramdisk/su",
+        "/data/adb/ksu/bin/su",
+        "/data/adb/ap/bin/su",
+    )
 
     /** Which door a command would take now, without starting anything. */
     fun kind(): ShellKind = when {
@@ -231,6 +248,28 @@ object ShellAccess {
     fun injectKeyNow(event: KeyEvent, displayId: Int): Boolean =
         runCatching { service.value?.injectKey(event, displayId) ?: false }.getOrDefault(false)
 
+    /**
+     * One mouse event for the Trackpad tool's mouse mode (#1411), through the
+     * already-bound service; see [IShellService.injectMouse]. False when the
+     * service is not up or refused it. Call [connect] when the mode turns on.
+     */
+    fun injectMouseNow(
+        action: Int,
+        x: Float,
+        y: Float,
+        buttons: Int,
+        actionButton: Int = 0,
+        hScroll: Float = 0f,
+        vScroll: Float = 0f,
+        downTime: Long = 0L,
+        displayId: Int = 0,
+    ): Boolean = runCatching {
+        service.value?.injectMouse(action, x, y, buttons, actionButton, hScroll, vScroll, downTime, displayId) ?: false
+    }.getOrDefault(false)
+
+    /** Whether the user service is bound right now, so the fast calls above reach it. */
+    val connected: Boolean get() = service.value?.asBinder()?.isBinderAlive == true
+
     /** Binds the user service ahead of [injectMotionNow]; true once it is up. */
     suspend fun connect(context: Context): Boolean = userService(context) != null
 
@@ -269,5 +308,5 @@ object ShellAccess {
     }
 
     /** Bump when [IShellService] changes, so Shizuku replaces a running old copy. */
-    private const val SERVICE_VERSION = 2
+    private const val SERVICE_VERSION = 3
 }

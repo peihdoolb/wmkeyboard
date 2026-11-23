@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.app
 
+import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -598,7 +599,9 @@ internal fun SnippetSettings(
             }
         } else null,
     ) {
-        item(visible = editingFolders && canEditFolders) {
+        // The reorder list is a mode of this group, not a setting: Show
+        // switched-off settings greyed it in over the folders (#1112).
+        item(visible = editingFolders && canEditFolders, waitsOnSetting = false) {
             ReorderableColumn(
                 folders,
                 label = { it.name },
@@ -734,7 +737,12 @@ internal fun SnippetSettings(
                 R.string.expander_source_csv to R.string.expander_source_csv_body,
                 R.string.expander_source_gboard to R.string.expander_source_gboard_body,
                 R.string.expander_source_text to R.string.expander_source_text_body,
-                R.string.expander_source_url to R.string.expander_source_url_body,
+                // Last, so dropping it on the offline build moves no index below.
+                *if (OfflineBuild.isThisBuild) {
+                    emptyArray<Pair<Int, Int>>()
+                } else {
+                    arrayOf(R.string.expander_source_url to R.string.expander_source_url_body)
+                },
             ),
             onDismiss = { importSource = false },
             onPick = { index ->
@@ -944,7 +952,7 @@ internal fun SnippetFolderScreen(
         // One option for every snippet here at once (#1122): the built-in
         // folders hold dozens, and the editor changes one at a time.
         val inFolder = snippets.count { it.folderId == folderId }
-        item(visible = inFolder > 0) {
+        item(visible = inFolder > 0, waitsOnSetting = false) {
             WmRow(
                 title = stringResource(R.string.expander_folder_bulk_title),
                 subtitle = pluralStringResource(R.plurals.expander_folder_bulk_subtitle, inFolder, inFolder),
@@ -2715,11 +2723,21 @@ private fun SnippetPickerDialog(
     var query by remember { mutableStateOf("") }
     val picked = remember { mutableStateListOf<Long>().also { it.addAll(selected) } }
     val reduceMotion = LocalReduceMotion.current
-    val shown = candidates.filter { snippet ->
-        query.isBlank() ||
-            snippet.label.contains(query, ignoreCase = true) ||
-            snippet.tags.any { it.contains(query, ignoreCase = true) } ||
-            snippet.spellings().any { it.contains(query, ignoreCase = true) }
+    // What was typed first, then other forms of its words.
+    val shown = if (query.isBlank()) {
+        candidates
+    } else {
+        com.wasimaster.wmkeyboard.core.text.StemMatch.literalFirst(
+            candidates,
+            literal = { snippet ->
+                snippet.label.contains(query, ignoreCase = true) ||
+                    snippet.tags.any { it.contains(query, ignoreCase = true) } ||
+                    snippet.spellings().any { it.contains(query, ignoreCase = true) }
+            },
+            stemmed = com.wasimaster.wmkeyboard.core.engine.SearchStems.matcher(null, query) { snippet ->
+                (listOf(snippet.label) + snippet.tags + snippet.spellings()).joinToString(" ")
+            },
+        )
     }
     AlertDialog(
         onDismissRequest = onDismiss,

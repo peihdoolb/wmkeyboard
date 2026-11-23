@@ -20,7 +20,7 @@ sealed interface FontImportResult {
     data class NotAFont(@StringRes val messageRes: Int) : FontImportResult
 
     /**
-     * Over [FontStore.MAX_BYTES], unreadable, or nowhere to write.
+     * Over [FontStore.maxBytes], unreadable, or nowhere to write.
      *
      * [messageArgs] fills the format arguments of [messageRes], in order.
      */
@@ -84,6 +84,7 @@ object FontFile {
         emoji: Boolean = false,
         now: Long = System.currentTimeMillis(),
         loader: (File) -> Boolean = PLATFORM_LOADER,
+        readVariations: (File) -> FontVariations? = FontAxesReader::read,
     ): FontImportResult {
         if (store.fonts().size >= FontStore.MAX_FONTS) return FontImportResult.TooManyFonts
         val staging = store.stagingDir()
@@ -98,10 +99,10 @@ object FontFile {
                     val read = input.read(buffer)
                     if (read <= 0) break
                     written += read
-                    if (written > FontStore.MAX_BYTES) {
+                    if (written > FontStore.maxBytes(emoji)) {
                         return FontImportResult.Failed(
                             R.string.core_content_font_error_too_large,
-                            listOf(FontStore.MAX_BYTES / (1024 * 1024)),
+                            listOf(FontStore.maxBytes(emoji) / (1024 * 1024)),
                         )
                     }
                     sink.write(buffer, 0, read)
@@ -116,6 +117,9 @@ object FontFile {
                 return FontImportResult.NotAFont(R.string.core_content_font_error_load)
             }
 
+            // Read now, from the staged copy, so the picker knows whether to
+            // offer the axes the moment the font lands.
+            val variations = readVariations(staged) ?: FontVariations.STATIC
             val id = store.freeId(now)
             if (!store.adoptFile(id, staged)) {
                 return FontImportResult.Failed(R.string.core_content_font_error_save)
@@ -130,6 +134,7 @@ object FontFile {
                     addedAt = now,
                     langIds = langIds.map { it.trim() }.filter { it.isNotEmpty() }.distinct(),
                     emoji = emoji,
+                    variations = variations,
                 ),
             )
             if (font == null) {

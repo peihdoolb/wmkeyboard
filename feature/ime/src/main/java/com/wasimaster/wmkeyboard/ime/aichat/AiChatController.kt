@@ -52,6 +52,8 @@ import com.wasimaster.wmkeyboard.core.tools.AiToolProtocol
 import com.wasimaster.wmkeyboard.core.tools.AiTools
 import com.wasimaster.wmkeyboard.core.tools.AiToolResult
 import com.wasimaster.wmkeyboard.core.tools.AiToolRunner
+import com.wasimaster.wmkeyboard.core.tools.AiPictureText
+import com.wasimaster.wmkeyboard.core.tools.AiVision
 import com.wasimaster.wmkeyboard.core.tools.ToolHttp
 import com.wasimaster.wmkeyboard.core.tools.ToolHttpException
 import com.wasimaster.wmkeyboard.ime.aimemory.AiMemoryRecall
@@ -847,11 +849,43 @@ object AiChatController {
         val conversation = store(context).get(conversationId)
         val kept = conversation?.messages.orEmpty().withIndex().filter { !it.value.failed }
         // Pictures travel with the newest question only, and only to a
-        // provider with somewhere to put them (#698). Older ones stay marks:
+        // model that can read them (#698): one whose provider has somewhere
+        // to put them and that nothing says is blind. Older ones stay marks:
         // sending every picture again with every turn would cost the user
         // for pictures the model has already answered about.
         val newestUser = kept.lastOrNull { it.value.role == AiChatMessage.ROLE_USER }?.index
-        val sendsPictures = AiClient.supportsImages(choice.provider)
+        val newestImages = newestUser?.let { kept.firstOrNull { k -> k.index == it }?.value?.images }.orEmpty()
+        if (newestImages.isNotEmpty()) AiVision.learn(config)
+        return try {
+            remoteRound(context, settings, conversationId, choice, user, seq, privateChat, pages, config, chosen, kept, newestUser, AiVision.sees(config))
+        } catch (e: Exception) {
+            // The service turned the picture down: its model cannot see. It
+            // is remembered as blind, and the question goes again without
+            // the picture, so the picture tools can look at it instead.
+            if (newestImages.isEmpty() || !AiVision.sees(config) || !AiVision.refusedPicture(e) || seq != runSeq) throw e
+            AiVision.markBlind(config)
+            remoteRound(context, settings, conversationId, choice, user, seq, privateChat, pages, config, chosen, kept, newestUser, false)
+        }
+    }
+
+    /** One try of [runRemote], with or without the newest question's pictures. */
+    @Suppress("LongParameterList")
+    private fun remoteRound(
+        context: Context,
+        settings: KeyboardSettings,
+        conversationId: Long,
+        choice: ModelChoice,
+        user: String,
+        seq: Int,
+        privateChat: Boolean,
+        pages: String,
+        config: AiClient.Config,
+        chosen: AiSettings,
+        kept: List<IndexedValue<AiChatMessage>>,
+        newestUser: Int?,
+        sendsPictures: Boolean,
+    ): String {
+        val conversation = store(context).get(conversationId)
         val turns = kept.map { (index, message) ->
             AiClient.ChatTurn(
                 if (message.role == AiChatMessage.ROLE_USER) {
@@ -876,7 +910,7 @@ object AiChatController {
         // A cloud model gets memory only once the user has allowed it.
         val memory = AiMemoryRecall.access(context, settings, onDevice = false, incognito = privateChat, conversationId = conversationId)
         val runner = AiToolRunner(
-            context, settings, toolApprover(seq), toolHost(context, settings, conversationId, choice), memory,
+            context, settings, toolApprover(seq), toolHost(context, settings, conversationId, choice, sendsPictures), memory,
         )
         val memoryPart = memoryTail(
             context, settings, conversationId,
@@ -999,10 +1033,12 @@ object AiChatController {
     /** Why Deep research cannot run with [choice], as a string resource; null when it can. */
     fun researchBlock(settings: KeyboardSettings, choice: ModelChoice?): Int? = when {
         choice == null -> null
-        // The research loop asks for plans, notes and a long report, all of
-        // which want a tool-calling model with a big context: a model on the
-        // phone has neither, and Brave's Answers takes one message only.
-        !AiClient.supportsNativeTools(choice.provider) -> R.string.ime_ai_research_needs_model
+        // The steps are run here, not by the model calling tools: every one
+        // is a plain prompt and a text reply, so any model that writes can
+        // do it, one on the phone included ([runResearch] sizes the pages to
+        // its window). Brave's Answers is out because it takes one message
+        // and answers from its own searches, never from a prompt of ours.
+        choice.provider == AiProvider.BRAVE -> R.string.ime_ai_research_needs_chat_model
         ToolApiKeys.searchBackend(settings) == null -> R.string.ime_ai_research_needs_search
         else -> null
     }
@@ -1080,29 +1116,33 @@ object AiChatController {
             }
             append(asked.copy(mode = "", format = "").promptText())
         }
-        val chosen = settings.aiThrough(choice.rowKey) ?: settings.ai.copy(provider = choice.provider)
-        val config = AiClient.config(chosen).copy(
-            netSource = NetSource.AI_CHAT,
-            sessionId = UUID.nameUUIDFromBytes("wmkb-chat-$conversationId".toByteArray()).toString(),
-            reasoning = settings.ai.chatReasoning,
-        )
-        val maxTokens = AiClient.effectiveMaxTokens(chosen)
         var lastPartialAt = 0L
-        val model = AiResearch.Model { system, user, stream, onPartial ->
+        val onDevice = choice.provider == AiProvider.ON_DEVICE
+        val model = if (onDevice) onDeviceResearchModel(context, settings, choice, seq) else AiResearch.Model { system, user, stream, onPartial ->
+            val chosen = settings.aiThrough(choice.rowKey) ?: settings.ai.copy(provider = choice.provider)
+            val config = AiClient.config(chosen).copy(
+                netSource = NetSource.AI_CHAT,
+                sessionId = UUID.nameUUIDFromBytes("wmkb-chat-$conversationId".toByteArray()).toString(),
+                reasoning = settings.ai.chatReasoning,
+            )
             AiClient.completeStreaming(
                 // The plan and the look-again are quick judgements; only the
                 // report is worth the model's reasoning.
                 if (stream) config else config.copy(reasoning = false),
                 if (stream && settings.ai.chatFollowUps) system + AiFollowUps.RULE else system,
                 user,
-                maxTokens,
+                AiClient.effectiveMaxTokens(chosen),
                 onPhase = { phase -> if (stream) postPhase(seq, phase) },
                 onPartial = onPartial,
                 isActive = { seq == runSeq },
             ).text
         }
         val network = NetworkWatcher(context.applicationContext).apply { refresh() }.state.value
-        val limits = AiResearch.limits(settings.ai.research.depth, dataSaver = settings.dataSaver.appliesTo(network))
+        val limits = AiResearch.limits(
+            settings.ai.research.depth,
+            dataSaver = settings.dataSaver.appliesTo(network),
+            contextTokens = if (onDevice) settings.ai.localContextTokens.takeIf { it > 0 } ?: ON_DEVICE_DEFAULT_CONTEXT else 0,
+        )
         val approver = if (settings.ai.research.reviewPlan) toolApprover(seq) else null
         val listener = object : AiResearch.Listener {
             override fun started(step: AiToolActivity) = postToolStarted(seq, step)
@@ -1121,6 +1161,35 @@ object AiChatController {
         val format = AiChatModes.effectiveFormat(AiChatMode.RESEARCH, asked.answerFormat)
         return AiResearch(limits, model, AiResearchWeb(settings), listener) { seq == runSeq }
             .run(question, format, AiCalendarArgs.today())
+    }
+
+    /**
+     * Deep research's model when it is the one on the phone: each step a
+     * stateless [LocalLlmEngine.generate], so the chat's own session (and its
+     * system prompt with the tool protocol) is left as it was. No follow-up
+     * questions under the report: their rule costs words a small window
+     * needs for the sources.
+     */
+    private fun onDeviceResearchModel(
+        context: Context,
+        settings: KeyboardSettings,
+        choice: ModelChoice,
+        seq: Int,
+    ): AiResearch.Model {
+        val modelFile = LocalLlmStore.selectedModelFile(context.filesDir, choice.localModelId)
+            ?: throw java.io.IOException(context.getString(R.string.ime_ai_chat_error_no_model))
+        return AiResearch.Model { system, user, stream, onPartial ->
+            if (stream) postPhase(seq, AiPhase.WAITING)
+            LocalLlmEngine.generate(
+                context = context,
+                modelFile = modelFile,
+                backend = settings.ai.localBackend,
+                contextTokens = settings.ai.localContextTokens,
+                system = system,
+                user = user,
+                onPartial = if (stream) onPartial else null,
+            )
+        }
     }
 
     /** The research plan, always the run's first step, with an item ticked or added. */
@@ -1181,6 +1250,8 @@ object AiChatController {
         settings: KeyboardSettings,
         conversationId: Long,
         choice: ModelChoice,
+        /** The model in use is sent the pictures itself; false for one on the phone, which reads them through tools. */
+        seesImages: Boolean = false,
     ): KeyboardAiToolHost = KeyboardAiToolHost(
         context,
         hints = settings.enabledLanguages.map { it.id },
@@ -1188,7 +1259,18 @@ object AiChatController {
         homePrefs = settings.homeAssistant,
         homes = settings.homes(),
         images = store(context).get(conversationId)?.images.orEmpty(),
-        seesImages = choice.provider != AiProvider.ON_DEVICE && AiClient.supportsImages(choice.provider),
+        seesImages = seesImages,
+        // The model picked to look at pictures for one that cannot; none
+        // when it is the model in use, which looks for itself.
+        describer = PictureDescriber.chosen(context, settings)?.takeIf { it.key != choice.key }?.let { describer ->
+            { jpeg: ByteArray, question: String ->
+                PictureDescriber.look(
+                    context, settings, describer, jpeg,
+                    AiPictureText.DESCRIBE_SYSTEM, AiPictureText.describeRequest(question),
+                )
+            }
+        },
+        describerName = PictureDescriber.chosen(context, settings)?.let { PictureDescriber.label(context, it) }.orEmpty(),
         scanner = settings.scanner,
         ocrReaders = if (settings.scanner.ocrEngine == OcrEngine.ONLINE) OnlineOcr.rows(settings) else emptyList(),
         semantic = settings.semanticSearch,
@@ -1333,6 +1415,9 @@ object AiChatController {
 
     /** Characters of each linked page a summary hands an on-device model, whose context is small. */
     private const val ON_DEVICE_PAGE_CHARS = 2_500
+
+    /** The window a phone model gets when the user left it to the model; llama.cpp's own default. */
+    private const val ON_DEVICE_DEFAULT_CONTEXT = 4_096
 
     /** Earlier messages a research question carries for context, and how much of each. */
     private const val RESEARCH_CONTEXT_TURNS = 4

@@ -65,6 +65,8 @@ import androidx.annotation.StringRes
 import com.wasimaster.wmkeyboard.R
 import com.wasimaster.wmkeyboard.ime.wmpass.WmPassBridge
 import com.wasimaster.wmkeyboard.app.storage.DownloadsBundle
+import com.wasimaster.wmkeyboard.core.notify.BackgroundTasks
+import com.wasimaster.wmkeyboard.core.notify.TaskState
 import com.wasimaster.wmkeyboard.common.R as CommonR
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -476,6 +478,7 @@ private fun syncOutcomeText(context: Context, outcome: SyncRunner.Outcome, auto:
                 context.getString(R.string.backup_sync_error_passphrase)
             SyncRunner.ERROR_NEWER in outcome.failed.values ->
                 context.getString(R.string.backup_sync_error_newer)
+            outcome.tooBig.isNotEmpty() -> syncErrorText(context, outcome.tooBig, auto)
             outcome.applied == 0 -> context.getString(R.string.backup_sync_done_nothing)
             else -> context.resources.getQuantityString(
                 R.plurals.backup_sync_done_changes,
@@ -494,6 +497,13 @@ private fun syncErrorText(context: Context, reason: String, auto: AutoBackupSett
         context.getString(R.string.backup_sync_error_passphrase)
     } else if (reason == SyncRunner.ERROR_NEWER) {
         context.getString(R.string.backup_sync_error_newer)
+    } else if (reason == SyncRunner.ERROR_TOO_BIG_REMOTE) {
+        context.getString(R.string.backup_sync_error_too_big_remote)
+    } else if (reason == SyncRunner.ERROR_MEMORY) {
+        context.getString(R.string.backup_sync_error_memory)
+    } else if (SyncRunner.tooBigSections(reason) != null) {
+        val names = SyncRunner.tooBigSections(reason).orEmpty().joinToString { sectionLabel(context, it) }
+        context.getString(R.string.backup_sync_error_too_big, names)
     } else {
         val type = auto.sync.targets(auto.locations).firstOrNull()?.type ?: BackupDestination.FOLDER
         autoBackupErrorText(context, reason, type) ?: context.getString(R.string.backup_auto_error_io)
@@ -1055,6 +1065,14 @@ private fun SyncGroupDialog(
 }
 
 /**
+ * Whether Export to file seals the bundle (#970): Protect with a passphrase
+ * is on and a passphrase, with its salt, is set. The same test the clipboard
+ * board's sync makes before it encrypts.
+ */
+internal fun exportSealed(auto: AutoBackupSettings): Boolean =
+    auto.encrypt && auto.passphrase.isNotEmpty() && auto.kdfSalt.isNotEmpty()
+
+/**
  * The "include API keys" switch, which asks before it goes on without a
  * passphrase. It does not refuse: the keys and the storage are the user's.
  * It says plainly what the file will then hold.
@@ -1102,81 +1120,138 @@ internal fun BackupSettings(
     var confirmImport by remember { mutableStateOf<PendingImport?>(null) }
 
     // Everything downloaded, as a zip of its own (#1045): see [DownloadsBundle].
+    // Both directions run as background tasks (#1522): leaving this screen no
+    // longer cancels them, and the row and the shade both show how far along.
+    val startTask = rememberTaskStarter()
+    val exportTask = rememberTaskState(DOWNLOADS_EXPORT_TASK)
+    val importTask = rememberTaskState(DOWNLOADS_IMPORT_TASK)
+    val settingsExportTask = rememberTaskState(SETTINGS_EXPORT_TASK)
     val downloadsExport = rememberLauncherForActivityResult(
         CreateDocumentAt("application/zip", PickerPlaces.DOWNLOADS_EXPORT),
     ) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         PickerPlaces.remember(context, PickerPlaces.DOWNLOADS_EXPORT, uri)
-        scope.launch {
-            val done = runCatching {
-                withContext(Dispatchers.IO) {
-                    context.contentResolver.requireOutputStream(uri).use { DownloadsBundle.export(context, it) }
+        val app = context.applicationContext
+        startTask(
+            DOWNLOADS_EXPORT_TASK,
+            context.getString(R.string.backup_downloads_export_running),
+            context.getString(R.string.backup_downloads_failed),
+        ) { report ->
+            val done = app.contentResolver.requireOutputStream(uri).use { out ->
+                DownloadsBundle.export(app, out) { bytes, total, files ->
+                    report.update(bytes, total, downloadsProgressText(app, bytes, total, files))
                 }
-            }.getOrNull()
-            message = if (done == null) {
-                context.getString(R.string.backup_downloads_failed)
-            } else {
-                context.resources.getQuantityString(R.plurals.backup_downloads_exported, done.files, done.files)
             }
+            BackgroundTasks.Outcome(
+                app.resources.getQuantityString(R.plurals.backup_downloads_exported, done.files, done.files),
+            )
         }
     }
     val downloadsImport = rememberLauncherForActivityResult(OpenDocumentAt(PickerPlaces.DOWNLOADS_IMPORT)) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         PickerPlaces.remember(context, PickerPlaces.DOWNLOADS_IMPORT, uri)
-        scope.launch {
-            val done = runCatching {
-                withContext(Dispatchers.IO) {
-                    context.contentResolver.requireInputStream(uri).use { DownloadsBundle.import(context, it) }
+        val app = context.applicationContext
+        startTask(
+            DOWNLOADS_IMPORT_TASK,
+            context.getString(R.string.backup_downloads_import_running),
+            context.getString(R.string.backup_downloads_failed),
+        ) { report ->
+            val size = documentSize(app, uri)
+            val done = app.contentResolver.requireInputStream(uri).use { input ->
+                DownloadsBundle.import(app, input, size) { bytes, total, files ->
+                    report.update(bytes, total, downloadsProgressText(app, bytes, total, files))
                 }
-            }.getOrNull()
-            message = if (done == null) {
-                context.getString(R.string.backup_downloads_failed)
-            } else {
-                context.resources.getQuantityString(R.plurals.backup_downloads_imported, done.files, done.files, done.refused)
+            }
+            BackgroundTasks.Outcome(
+                app.resources.getQuantityString(R.plurals.backup_downloads_imported, done.files, done.files, done.refused),
+            )
+        }
+    }
+    // An ended task's sentence is shown once, here, then let go of.
+    for (
+        (key, task) in listOf(
+            DOWNLOADS_EXPORT_TASK to exportTask,
+            DOWNLOADS_IMPORT_TASK to importTask,
+            SETTINGS_EXPORT_TASK to settingsExportTask,
+        )
+    ) {
+        if (task is TaskState.Ended) {
+            LaunchedEffect(key, task) {
+                message = task.message
+                BackgroundTasks.dismiss(key)
             }
         }
     }
 
-    val exportLauncher = rememberLauncherForActivityResult(
-        CreateDocumentAt(ConfigBackup.MIME_TYPE, PickerPlaces.BACKUP_EXPORT),
-    ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
+    // Export to file, sealed under the backup passphrase while Protect with a
+    // passphrase is on and one is set (#970): the same container the automatic
+    // backups write, which the import below already opens by asking for it.
+    // Plain JSON otherwise, as before.
+    val writeExport: (Uri) -> Unit = { uri ->
         PickerPlaces.remember(context, PickerPlaces.BACKUP_EXPORT, uri)
-        val requested = settings.value.autoBackup.exportSectionSet
-        val includeSecrets = settings.value.autoBackup.includeSecrets
-        scope.launch {
+        val auto = settings.value.autoBackup
+        val requested = auto.exportSectionSet
+        val includeSecrets = auto.includeSecrets
+        val sealed = exportSealed(auto)
+        val app = context.applicationContext
+        // A background task (#1522): leaving the screen no longer stops it.
+        startTask(
+            SETTINGS_EXPORT_TASK,
+            context.getString(R.string.backup_export_running),
+            context.getString(R.string.backup_export_write_error),
+        ) { _ ->
             var skipped = emptySet<ConfigBackup.Section>()
             val written = runCancellable {
                 withContext(Dispatchers.IO) {
                     skipped = AutoBackupRunner.exportSectionsToDrop(repository, requested)
-                    context.contentResolver.requireOutputStream(uri).use { raw ->
-                        BufferedOutputStream(raw).use { out ->
-                            repository.exportConfigTo(
+                    app.contentResolver.requireOutputStream(uri).use { raw ->
+                        BufferedOutputStream(raw).use { file ->
+                            suspend fun bundleTo(out: java.io.OutputStream) = repository.exportConfigTo(
                                 out = out,
                                 sections = requested - skipped,
                                 includeSecrets = includeSecrets,
                                 appVersion = BuildConfig.VERSION_CODE,
                                 appVersionName = BuildConfig.VERSION_NAME,
                             )
+                            if (sealed) {
+                                // The cipher finishes at the close, after the bundle is written.
+                                BackupCrypto.encrypting(
+                                    out = file,
+                                    passphrase = auto.passphrase.toCharArray(),
+                                    salt = android.util.Base64.decode(auto.kdfSalt, android.util.Base64.NO_WRAP),
+                                ).buffered().use { bundleTo(it) }
+                            } else {
+                                bundleTo(file)
+                            }
                         }
                     }
                 }
             }
             // The dialog has one sentence for every failure; the log says which.
             written.exceptionOrNull()?.let { BackupLog.w("export to file failed", it) }
-            message = when {
-                written.isFailure -> context.getString(R.string.backup_export_write_error)
-                skipped.isNotEmpty() -> context.getString(
+            val text = when {
+                written.isFailure -> app.getString(R.string.backup_export_write_error)
+                skipped.isNotEmpty() -> app.getString(
                     R.string.backup_auto_done_skipped,
-                    WMFileTypes.displayName(context, uri),
-                    skipped.joinToString { sectionLabelLowercase(context, it) },
+                    WMFileTypes.displayName(app, uri),
+                    skipped.joinToString { sectionLabelLowercase(app, it) },
                 )
+                sealed -> app.getString(R.string.backup_export_done_encrypted)
                 ConfigBackup.Section.SETTINGS in requested && includeSecrets ->
-                    context.getString(R.string.backup_export_done_with_keys)
-                else -> context.getString(R.string.backup_export_done)
+                    app.getString(R.string.backup_export_done_with_keys)
+                else -> app.getString(R.string.backup_export_done)
             }
+            BackgroundTasks.Outcome(text, ok = written.isSuccess)
         }
     }
+    val exportLauncher = rememberLauncherForActivityResult(
+        CreateDocumentAt(ConfigBackup.MIME_TYPE, PickerPlaces.BACKUP_EXPORT),
+    ) { uri -> if (uri != null) writeExport(uri) }
+    // The encrypted automatic backups' type and name, so a file manager and
+    // the import treat a sealed export the same way.
+    val sealedExportLauncher = rememberLauncherForActivityResult(
+        CreateDocumentAt(ConfigBackup.ENCRYPTED_MIME_TYPE, PickerPlaces.BACKUP_EXPORT),
+    ) { uri -> if (uri != null) writeExport(uri) }
 
     // Another keyboard's backup goes through the same dialog an opened file
     // does, which reads it and lists what is inside before anything is written.
@@ -1255,7 +1330,11 @@ internal fun BackupSettings(
     val exportGuarded = rememberLockGuard(AppLockTargets["action_export_settings"]) {
         // Datestamped, Locale.US: see the automatic backup's names.
         val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
-        exportLauncher.launch("wmkeyboard-backup-$stamp.${ConfigBackup.FILE_EXTENSION}")
+        if (exportSealed(settings.value.autoBackup)) {
+            sealedExportLauncher.launch("wmkeyboard-backup-$stamp.${ConfigBackup.ENCRYPTED_FILE_EXTENSION}")
+        } else {
+            exportLauncher.launch("wmkeyboard-backup-$stamp.${ConfigBackup.FILE_EXTENSION}")
+        }
     }
 
     BackupStatusCard(repository, settings) { message = it }
@@ -1324,19 +1403,31 @@ internal fun BackupSettings(
         info = stringResource(R.string.backup_downloads_info),
         level = SettingLevel.STANDARD,
     ) {
+        // One at a time: both read and write the same folders.
+        val busy = exportTask is TaskState.Running || importTask is TaskState.Running
         item {
-            ActionRow(
-                title = R.string.backup_downloads_export_title,
-                subtitle = stringResource(R.string.backup_downloads_export_subtitle),
-                action = stringResource(R.string.backup_downloads_export_action),
-            ) { downloadsExport.launch("wmkeyboard-downloads.zip") }
+            if (exportTask is TaskState.Running) {
+                TaskProgressRow(stringResource(R.string.backup_downloads_export_running), exportTask)
+            } else {
+                ActionRow(
+                    title = R.string.backup_downloads_export_title,
+                    subtitle = stringResource(R.string.backup_downloads_export_subtitle),
+                    action = stringResource(R.string.backup_downloads_export_action),
+                    enabled = !busy,
+                ) { downloadsExport.launch("wmkeyboard-downloads.zip") }
+            }
         }
         item {
-            ActionRow(
-                title = R.string.backup_downloads_import_title,
-                subtitle = stringResource(R.string.backup_downloads_import_subtitle),
-                action = stringResource(R.string.backup_downloads_import_action),
-            ) { downloadsImport.launch(arrayOf("application/zip", "application/octet-stream")) }
+            if (importTask is TaskState.Running) {
+                TaskProgressRow(stringResource(R.string.backup_downloads_import_running), importTask)
+            } else {
+                ActionRow(
+                    title = R.string.backup_downloads_import_title,
+                    subtitle = stringResource(R.string.backup_downloads_import_subtitle),
+                    action = stringResource(R.string.backup_downloads_import_action),
+                    enabled = !busy,
+                ) { downloadsImport.launch(arrayOf("application/zip", "application/octet-stream")) }
+            }
         }
     }
 
@@ -1345,17 +1436,25 @@ internal fun BackupSettings(
         info = stringResource(R.string.backup_info),
     ) {
         item {
-            WmRow(
-                title = stringResource(R.string.backup_files_export_title),
-                subtitle = stringResource(R.string.backup_files_export_subtitle),
-                icon = Icons.Outlined.FileUpload,
-                enabled = settings.watch { it.autoBackup.exportSectionSet.isNotEmpty() },
-                disabledReason = DisabledReason(
-                    stringResource(R.string.backup_files_export_disabled),
-                    route = "backup/contents",
-                ),
-                onClick = exportGuarded,
-            )
+            if (settingsExportTask is TaskState.Running) {
+                TaskProgressRow(
+                    stringResource(R.string.backup_export_running),
+                    settingsExportTask,
+                    icon = Icons.Outlined.FileUpload,
+                )
+            } else {
+                WmRow(
+                    title = stringResource(R.string.backup_files_export_title),
+                    subtitle = stringResource(R.string.backup_files_export_subtitle),
+                    icon = Icons.Outlined.FileUpload,
+                    enabled = settings.watch { it.autoBackup.exportSectionSet.isNotEmpty() },
+                    disabledReason = DisabledReason(
+                        stringResource(R.string.backup_files_export_disabled),
+                        route = "backup/contents",
+                    ),
+                    onClick = exportGuarded,
+                )
+            }
         }
         item(level = SettingLevel.STANDARD) {
             NavRow(
@@ -1624,7 +1723,7 @@ private fun SharedBoardGroup(repository: SettingsRepository, settings: LiveSetti
             ) { scope.launch { repository.setClipboardBoardLocation(it) } }
         }
         // Every copy onto the board as well (#1201), not only those sent by hand.
-        item(visible = boardPicked.isNotEmpty() && boardPlaces.any { it.id == boardPicked }) {
+        item(visible = boardPicked.isNotEmpty() && boardPlaces.any { it.id == boardPicked }, waitsOnSetting = false) {
             ToggleSetting(
                 R.string.clipboard_board_auto_title,
                 stringResource(R.string.clipboard_board_auto_subtitle),
@@ -2337,3 +2436,28 @@ private const val CHECK_BEAT_MS = CHECK_DRAW_MS + 120L
 private const val CARD_TINT_MS = 300
 private const val HOP_SCALE = 1.18f
 private const val HOP_UP_MS = 140
+
+/** [BackgroundTasks] keys for the downloaded-files zip (#1522). */
+private const val DOWNLOADS_EXPORT_TASK = "downloads-export"
+private const val DOWNLOADS_IMPORT_TASK = "downloads-import"
+
+/** The same for Export to a file. */
+private const val SETTINGS_EXPORT_TASK = "settings-export"
+
+/** "120 MB of 480 MB, 312 files", or without the total while it is not known. */
+private fun downloadsProgressText(context: Context, bytes: Long, total: Long, files: Int): String {
+    val done = android.text.format.Formatter.formatShortFileSize(context, bytes)
+    return if (total > 0L) {
+        val all = android.text.format.Formatter.formatShortFileSize(context, total)
+        context.resources.getQuantityString(R.plurals.backup_downloads_progress, files, done, all, files)
+    } else {
+        context.resources.getQuantityString(R.plurals.backup_downloads_progress_unsized, files, done, files)
+    }
+}
+
+/** The picked file's length, or 0 when its provider does not say. */
+private fun documentSize(context: Context, uri: Uri): Long = runCatching {
+    context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.SIZE), null, null, null)?.use { c ->
+        if (c.moveToFirst() && !c.isNull(0)) c.getLong(0) else 0L
+    } ?: 0L
+}.getOrDefault(0L)

@@ -99,22 +99,16 @@ object LlamaCpp {
                 throw IOException(context.getString(message))
             }
             // Read before the retry below turns the state back into
-            // Installing: a Play fetch that failed says so, with Play's code,
-            // instead of "downloading" on every try (Telegram, 10216). Only
-            // Play's gate sets a code; a GitHub build's failed download has
-            // its own retry and is not Play's to explain.
+            // Installing: a fetch that failed says so, with Play's code or
+            // the GitHub download's reason, instead of "downloading" on every
+            // try (Telegram, 10216; #1518).
             val playError = (state as? ModuleState.Missing)?.takeIf { it.failed && !it.confirm }?.error
             gate.requestInstall()
+            val after = gate.state.value
             // Play may be waiting for a yes it can ask only in the settings
             // app; "try again in a moment" never came true then (Telegram, 4529).
-            val waiting = (gate.state.value as? ModuleState.Missing)?.confirm == true
-            throw IOException(
-                when {
-                    waiting -> context.getString(R.string.core_intel_llm_module_confirm)
-                    playError != null -> context.getString(R.string.core_intel_llm_module_failed, playError)
-                    else -> context.getString(R.string.core_intel_llm_module_downloading)
-                },
-            )
+            val waiting = (after as? ModuleState.Missing)?.confirm == true
+            throw LlmLibraryState.notHere(context, state, after, waiting, playError)
         }
         LlamaGpu.npu = backend == LocalLlmBackend.NPU && LlamaHexagon.usable
         if (!LlamaNative.loaded) LlamaNative.wantGpuLibrary = instance.gpuLibraryWanted(context, backend)
@@ -277,6 +271,10 @@ internal class LlamaCppRuntime : LlmRuntime {
      */
     private val stops = AtomicInteger()
 
+    /** A [release] came while a request held the model; that request frees it as it ends. */
+    @Volatile
+    private var releaseWanted = false
+
     private val idleTimer = Executors.newSingleThreadScheduledExecutor { r ->
         Thread(r, "llama-idle").apply { isDaemon = true }
     }
@@ -392,8 +390,18 @@ internal class LlamaCppRuntime : LlmRuntime {
         system: String,
     ): LlmRuntime.Chat = Chat(context.applicationContext, modelFile, backend, contextTokens, system)
 
+    /**
+     * Frees the model now, or, while a request holds it, as that request ends
+     * ([releaseWanted]). It used to be skipped then, and the keyboard asks
+     * only once, so a model answering when its service ended or Unload was
+     * pressed stayed loaded (#1219).
+     */
     override fun release() {
-        if (!lock.tryLock()) return
+        if (!lock.tryLock()) {
+            releaseWanted = true
+            // It may have ended between the two: then nobody is left to see the flag.
+            if (!lock.tryLock()) return
+        }
         try {
             releaseLocked()
         } finally {
@@ -650,8 +658,15 @@ internal class LlamaCppRuntime : LlmRuntime {
                 throw IOException(context.getString(R.string.core_intel_llm_engine_error_memory), e)
             }
         } finally {
-            idleRelease = idleTimer.schedule({ release() }, IDLE_RELEASE_MS, TimeUnit.MILLISECONDS)
-            lock.unlock()
+            try {
+                if (releaseWanted) {
+                    releaseLocked()
+                } else {
+                    idleRelease = idleTimer.schedule({ release() }, IDLE_RELEASE_MS, TimeUnit.MILLISECONDS)
+                }
+            } finally {
+                lock.unlock()
+            }
         }
     }
 
@@ -835,6 +850,7 @@ internal class LlamaCppRuntime : LlmRuntime {
     )
 
     private fun releaseLocked() {
+        releaseWanted = false
         vision?.close()
         vision = null
         session?.close()

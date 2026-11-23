@@ -109,7 +109,7 @@ enum class CustomToggle(val settingRow: String?, val route: String) {
     AUTOCORRECT("typing_autocorrect_title", "typing/corrections"),
     DOUBLE_SPACE_PERIOD("typing_double_space_title", "typing/writing"),
     SPACE_AFTER_PUNCTUATION("typing_auto_space_punctuation_title", "typing/writing"),
-    ARROW_ROW("layout_arrow_row_title", "layout"),
+    ARROW_ROW("layout_arrow_row_title", "layout/arrowrow"),
     SPLIT_KEYBOARD("layout_split_title", "layout/onehanded"),
     INCOGNITO("privacy_incognito_title", "privacy"),
     /**
@@ -118,7 +118,7 @@ enum class CustomToggle(val settingRow: String?, val route: String) {
      * like, even from Follow the system. An automatic day and night theme
      * pair still decides over it.
      */
-    DARK_THEME(null, "themes"),
+    DARK_THEME(null, "themes/modes"),
     ;
 
     fun isOn(s: KeyboardSettings): Boolean = when (this) {

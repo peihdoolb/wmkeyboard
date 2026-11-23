@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.app
 
+import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import com.wasimaster.wmkeyboard.core.voice.whisper.WhisperCatalog
 import com.wasimaster.wmkeyboard.core.ui.DisabledReason
 import com.wasimaster.wmkeyboard.core.download.DataMirror
@@ -56,6 +57,7 @@ import com.wasimaster.wmkeyboard.core.settings.HoldToTalkRange
 import com.wasimaster.wmkeyboard.core.settings.VoiceSilenceStopRange
 import com.wasimaster.wmkeyboard.core.settings.ClipboardView
 import com.wasimaster.wmkeyboard.core.settings.ClipGridColumnsRange
+import com.wasimaster.wmkeyboard.core.settings.ClipExpiryMinuteSteps
 import com.wasimaster.wmkeyboard.core.settings.ClipMaxItemsSteps
 import com.wasimaster.wmkeyboard.core.settings.ClipMaxTextCharsSteps
 import com.wasimaster.wmkeyboard.core.settings.ClipPanelExtraHeightRange
@@ -63,6 +65,7 @@ import com.wasimaster.wmkeyboard.core.settings.PanelOverKeysExtraHeightRange
 import com.wasimaster.wmkeyboard.core.settings.ClipPreviewLinesRange
 import com.wasimaster.wmkeyboard.core.settings.ClipTimeLabel
 import com.wasimaster.wmkeyboard.core.settings.CopiedCodeChip
+import com.wasimaster.wmkeyboard.core.settings.RefusedClipImage
 import com.wasimaster.wmkeyboard.core.settings.SensitiveClipHandling
 import com.wasimaster.wmkeyboard.core.settings.SettingsRepository
 import com.wasimaster.wmkeyboard.core.settings.VoiceBarSettings
@@ -111,7 +114,7 @@ internal fun PrivacySettings(
                 route = "permissions",
             ) { onNavigate("permissions") }
         }
-        item(level = SettingLevel.ADVANCED) {
+        item(visible = !OfflineBuild.isThisBuild, level = SettingLevel.ADVANCED, waitsOnSetting = false) {
             NavRow(
                 R.string.netlog_title,
                 stringResource(R.string.netlog_subtitle),
@@ -184,8 +187,8 @@ internal fun PrivacySettings(
         stringResource(R.string.privacy_downloads_group_title),
         level = if (libraryChoice) SettingLevel.BASIC else SettingLevel.STANDARD,
     ) {
-        item(level = SettingLevel.STANDARD, weight = 2) { DownloadMirrorRow(repository, settings) }
-        item(level = SettingLevel.ADVANCED) { VerifyChecksumsRow(repository, settings) }
+        item(visible = !OfflineBuild.isThisBuild, level = SettingLevel.STANDARD, weight = 2, waitsOnSetting = false) { DownloadMirrorRow(repository, settings) }
+        item(visible = !OfflineBuild.isThisBuild, level = SettingLevel.ADVANCED, waitsOnSetting = false) { VerifyChecksumsRow(repository, settings) }
         item(visible = FeatureLibraryList.offered) { FeatureLibrariesNavRow() }
         item { FeatureLibrariesRows() }
     }
@@ -556,10 +559,13 @@ internal fun VoiceSettings(repository: SettingsRepository, settings: LiveSetting
                 info = stringResource(R.string.voice_punctuation_info),
             ) { scope.launch { repository.setVoiceSpokenPunctuation(it) } }
         }
-        // Only Sherpa, Omnilingual and Vosk write bare words; plain voice
-        // typing takes the words exactly as said.
+        // Only Sherpa, Omnilingual and Vosk write bare words (Qwen3-ASR
+        // punctuates itself); plain voice typing takes the words exactly as said.
         if (typingMode != com.wasimaster.wmkeyboard.core.settings.VoiceBarSettings.TYPING_PLAIN &&
-            etListed.any { it.onnx || it == com.wasimaster.wmkeyboard.core.voice.executorch.EtEngine.VOSK }
+            etListed.any {
+                (it.onnx && it != com.wasimaster.wmkeyboard.core.voice.executorch.EtEngine.QWEN3) ||
+                    it == com.wasimaster.wmkeyboard.core.voice.executorch.EtEngine.VOSK
+            }
         ) {
             item { VoicePunctuationSetting(repository, settings, scope) }
         }
@@ -613,6 +619,8 @@ internal fun VoiceSettings(repository: SettingsRepository, settings: LiveSetting
         }
     }
     // What most people never change: kept in reach, out of the way.
+    // The engine chip's own rows (#1477) only mean something with the chip on.
+    val enginePickerOn = settings.watch { it.voiceBar.enginePicker }
     SettingsGroup(
         stringResource(R.string.tooldetail_advanced_group),
         foldKey = "voice_advanced",
@@ -700,6 +708,19 @@ internal fun VoiceSettings(repository: SettingsRepository, settings: LiveSetting
                 default = SettingsDefaults.voiceBar.enginePicker,
             ) { scope.launch { repository.setVoiceEnginePicker(it) } }
         }
+        // #1477: which engines the chip offers, and pills to tap between instead.
+        item(level = SettingLevel.ADVANCED, visible = enginePickerOn) {
+            VoiceEnginesShownRow(repository, settings)
+        }
+        item(level = SettingLevel.ADVANCED, visible = enginePickerOn) {
+            ToggleSetting(
+                R.string.voice_engine_pills_title,
+                stringResource(R.string.voice_engine_pills_subtitle),
+                settings.watch { it.voiceBar.enginePills },
+                info = stringResource(R.string.voice_engine_pills_info),
+                default = SettingsDefaults.voiceBar.enginePills,
+            ) { scope.launch { repository.setVoiceEnginePills(it) } }
+        }
         // Only the panel's mic reads a hold: the strip and collapsed-bar mics
         // are plain taps, and the panel is never opened in those modes.
         if (voiceUiMode == com.wasimaster.wmkeyboard.core.settings.VoiceBarSettings.MODE_PANEL) item {
@@ -726,10 +747,12 @@ internal fun VoiceSettings(repository: SettingsRepository, settings: LiveSetting
     }
     // The group shows for the engines that read it (#305): Whistle takes it as
     // keywords (#548), offline Whisper's whisper.cpp models as their prompt
-    // (#440), and Sherpa's transducers as hotwords. Where only LiteRT graphs
-    // run, Whisper has no way to take a hint. asr4all, Parakeet, Moonshine and
-    // Omnilingual have no way to take one either.
-    val etTakesWords = etEngine == null || etEngine == com.wasimaster.wmkeyboard.core.voice.executorch.EtEngine.SHERPA
+    // (#440), Sherpa's transducers as hotwords and Qwen3-ASR in its prompt
+    // (#1437). Where only LiteRT graphs run, Whisper has no way to take a
+    // hint. asr4all, Parakeet, Moonshine and Omnilingual have no way to take
+    // one either.
+    val etTakesWords = etEngine == null || etEngine == com.wasimaster.wmkeyboard.core.voice.executorch.EtEngine.SHERPA ||
+        etEngine == com.wasimaster.wmkeyboard.core.voice.executorch.EtEngine.QWEN3
     if ((!usingWhisper || WhisperCatalog.cppAvailable) && etTakesWords) {
         SettingsGroup(stringResource(R.string.voice_bias_group), foldKey = "voice_bias") {
             item {
@@ -1051,6 +1074,20 @@ internal fun ClipboardSettings(
                 icon = Icons.Outlined.Reorder,
             ) { scope.launch { repository.setClipboardHoldActions(it) } }
         }
+        // Issue #970: the ones never used, left out so the rest fit the row.
+        item(level = SettingLevel.ADVANCED) {
+            val labels = clipHoldActionLabels()
+            val order = settings.watch { it.clipboard.holdActions }
+            val hidden = settings.watch { it.clipboard.holdHidden }
+            MultiChoiceSetting(
+                R.string.clipboard_hold_shown_title,
+                subtitle = stringResource(R.string.clipboard_hold_shown_subtitle),
+                info = stringResource(R.string.clipboard_hold_shown_info),
+                options = order.map { it to labels.getValue(it) },
+                selected = ClipHoldAction.entries.toSet() - hidden,
+                default = ClipHoldAction.entries.toSet(),
+            ) { shown -> scope.launch { repository.setClipboardHoldHidden(ClipHoldAction.entries.toSet() - shown) } }
+        }
         item(level = SettingLevel.ADVANCED) {
             ToggleSetting(
                 R.string.clipboard_hold_paste_title,
@@ -1187,7 +1224,7 @@ internal fun ClipboardSettings(
                 default = SettingsDefaults.clipboard.clearButton,
             ) { scope.launch { repository.setClipboardClearButton(it) } }
         }
-        item {
+        item(visible = !OfflineBuild.isThisBuild, waitsOnSetting = false) {
             ToggleSetting(
                 R.string.clipboard_link_previews_title,
                 stringResource(R.string.clipboard_link_previews_subtitle),
@@ -1282,15 +1319,28 @@ internal fun ClipboardHistorySettings(
             // The readout lambda is not composable, so the "never" word
             // is resolved here and captured, like the hours format.
             val never = stringResource(R.string.clipboard_expiry_never)
+            val expiryMinutesFormat = stringResource(R.string.values_minutes)
+            // Stops, so 5, 10 and 15 minutes are reachable beside the hours (#1332).
+            val steps = ClipExpiryMinuteSteps
+            val stored = settings.watch { it.clipboard.expiryMinutes }
+            val index = steps.indices.minByOrNull { kotlin.math.abs(steps[it] - stored) } ?: 0
             SliderSetting(
                 R.string.clipboard_expiry_title,
                 subtitle = stringResource(R.string.clipboard_expiry_subtitle),
-                value = settings.watch { it.clipboard.expiryHours }.toFloat(),
-                range = 0f..168f,
-                display = { if (it.toInt() == 0) never else hoursFormat.format(it.toInt()) },
-                default = SettingsDefaults.clipboard.expiryHours.toFloat(),
+                value = index.toFloat(),
+                range = 0f..steps.lastIndex.toFloat(),
+                display = {
+                    val minutes = steps[it.roundToInt().coerceIn(steps.indices)]
+                    when {
+                        minutes == 0 -> never
+                        minutes < 60 -> expiryMinutesFormat.format(minutes)
+                        else -> hoursFormat.format(minutes / 60)
+                    }
+                },
+                default = steps.indexOf(SettingsDefaults.clipboard.expiryMinutes).coerceAtLeast(0).toFloat(),
+                typed = false,
                 info = stringResource(R.string.clipboard_expiry_info),
-            ) { scope.launch { repository.setClipboardExpiryHours(it.toInt()) } }
+            ) { scope.launch { repository.setClipboardExpiryMinutes(steps[it.roundToInt().coerceIn(steps.indices)]) } }
         }
         item(level = SettingLevel.ADVANCED) {
             // A slider over a handful of stops rather than every number: the
@@ -1662,6 +1712,21 @@ internal fun ClipboardRulesSettings(
                 default = SettingsDefaults.clipboard.stripMediaMetadata,
             ) { scope.launch { repository.setClipboardStripMediaMetadata(it) } }
         }
+        // A picture the field will not take (#1472): pasted, shared or copied.
+        item(level = SettingLevel.ADVANCED) {
+            ChoiceSetting(
+                title = R.string.clipboard_refused_image_title,
+                subtitle = stringResource(R.string.clipboard_refused_image_subtitle),
+                info = stringResource(R.string.clipboard_refused_image_info),
+                options = listOf(
+                    RefusedClipImage.PASTE to stringResource(R.string.clipboard_refused_image_paste),
+                    RefusedClipImage.SHARE to stringResource(R.string.clipboard_refused_image_share),
+                    RefusedClipImage.CLIPBOARD to stringResource(R.string.clipboard_refused_image_copy),
+                ),
+                selected = settings.watch { it.clipboard.refusedImage },
+                default = SettingsDefaults.clipboard.refusedImage,
+            ) { scope.launch { repository.setClipboardRefusedImage(it) } }
+        }
         item(level = SettingLevel.STANDARD) {
             ChoiceSetting(
                 title = R.string.clipboard_sensitive_title,
@@ -1734,6 +1799,7 @@ private fun clipHoldActionLabels(): Map<ClipHoldAction, String> = ClipHoldAction
     stringResource(
         when (it) {
             ClipHoldAction.DETAILS -> ImeR.string.ime_clip_details_desc
+            ClipHoldAction.EXPAND -> ImeR.string.ime_clip_expand
             ClipHoldAction.PASTE_NEXT -> ImeR.string.ime_clip_paste_next
             ClipHoldAction.COLLECT -> ImeR.string.ime_clip_collect
             ClipHoldAction.SEND_TO_BOARD -> ImeR.string.ime_clip_send_to_board

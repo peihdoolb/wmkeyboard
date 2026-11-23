@@ -53,7 +53,9 @@ data class GradientSpec(
  * [keyShapeKindOrNull] turns NONE away there.
  *
  * Order is the order the shape picker lists them in: no shape first, then the
- * four plain outlines, then the decorative ones.
+ * four plain outlines, then the decorative ones, then the catalogue of
+ * Material 3 Expressive shapes (#1515), cookies and stars and a heart, which
+ * came last and so sit at the end: a new value only ever goes on the end.
  *
  * A value added here is not readable by an older build — `ThemeCodec.decode`
  * drops a theme whose enum name it does not know — so a theme exported with
@@ -74,6 +76,36 @@ enum class KeyShapeKind {
     SCALLOP,
     TICKET,
     CIRCLE,
+    COOKIE,
+    SUNNY,
+    FLOWER,
+    CLOVER,
+    OVAL,
+    SEMICIRCLE,
+    TRIANGLE,
+    ARROW,
+    FAN,
+    DIAMOND,
+    CLAMSHELL,
+    PENTAGON,
+    GEM,
+    VERY_SUNNY,
+    COOKIE_4,
+    COOKIE_6,
+    COOKIE_7,
+    COOKIE_9,
+    CLOVER_8,
+    BURST,
+    SOFT_BURST,
+    BOOM,
+    SOFT_BOOM,
+    PUFFY,
+    PUFFY_DIAMOND,
+    GHOST,
+    PIXEL_CIRCLE,
+    PIXEL_TRIANGLE,
+    BUN,
+    HEART,
 }
 
 /**
@@ -89,6 +121,14 @@ fun keyShapeKindOrNull(name: String?): KeyShapeKind? =
     name?.let { wanted ->
         KeyShapeKind.entries.firstOrNull { it.name == wanted && it != KeyShapeKind.NONE }
     }
+
+/**
+ * [keyShapeKindOrNull] for the tools' background, the one surface besides the
+ * keys that may be none (#1481): a tool is its icon, and with no shape behind
+ * it the icon still reads. Takes the place of a background radius of 0.
+ */
+fun toolShapeKindOrNull(name: String?): KeyShapeKind? =
+    name?.let { wanted -> KeyShapeKind.entries.firstOrNull { it.name == wanted } }
 
 /**
  * The shape a container (list-menu popup, panel card) may safely inherit from
@@ -125,6 +165,31 @@ fun safeContainerKind(kind: KeyShapeKind): KeyShapeKind = when (kind) {
  */
 fun castsElevationShadow(kind: KeyShapeKind): Boolean = when (kind) {
     KeyShapeKind.SCALLOP, KeyShapeKind.TICKET -> false
+    // Every outline of the #1515 catalogue that curves inwards anywhere: the
+    // waves, the lobes, the points, the steps and the heart's cleft.
+    KeyShapeKind.COOKIE,
+    KeyShapeKind.SUNNY,
+    KeyShapeKind.FLOWER,
+    KeyShapeKind.CLOVER,
+    KeyShapeKind.ARROW,
+    KeyShapeKind.VERY_SUNNY,
+    KeyShapeKind.COOKIE_4,
+    KeyShapeKind.COOKIE_6,
+    KeyShapeKind.COOKIE_7,
+    KeyShapeKind.COOKIE_9,
+    KeyShapeKind.CLOVER_8,
+    KeyShapeKind.BURST,
+    KeyShapeKind.SOFT_BURST,
+    KeyShapeKind.BOOM,
+    KeyShapeKind.SOFT_BOOM,
+    KeyShapeKind.PUFFY,
+    KeyShapeKind.PUFFY_DIAMOND,
+    KeyShapeKind.GHOST,
+    KeyShapeKind.PIXEL_CIRCLE,
+    KeyShapeKind.PIXEL_TRIANGLE,
+    KeyShapeKind.BUN,
+    KeyShapeKind.HEART,
+    -> false
     // Draws the rounded outline wherever it draws at all.
     KeyShapeKind.NONE,
     KeyShapeKind.ROUNDED,
@@ -137,6 +202,15 @@ fun castsElevationShadow(kind: KeyShapeKind): Boolean = when (kind) {
     KeyShapeKind.SLANT,
     KeyShapeKind.HEXAGON,
     KeyShapeKind.CIRCLE,
+    // Convex: rounding a corner off with a curve keeps a polygon convex.
+    KeyShapeKind.OVAL,
+    KeyShapeKind.SEMICIRCLE,
+    KeyShapeKind.TRIANGLE,
+    KeyShapeKind.FAN,
+    KeyShapeKind.DIAMOND,
+    KeyShapeKind.CLAMSHELL,
+    KeyShapeKind.PENTAGON,
+    KeyShapeKind.GEM,
     -> true
 }
 
@@ -620,6 +694,23 @@ data class ThemeSpec(
      */
     val scriptFontIds: Map<String, String> = emptyMap(),
     /**
+     * Variable-font axis values for [fontId], per place on the board; see
+     * [FontAxesSpec]. Null draws the font at its own defaults. Like the font,
+     * these lose to the user's own tuning of the font that ends up drawn: a
+     * font the user tuned on the Fonts screen keeps their numbers whichever
+     * theme wears it. One unknown key to an older build.
+     */
+    val fontAxes: FontAxesSpec? = null,
+    /** The same for each of [scriptFontIds], keyed the same way. */
+    val scriptFontAxes: Map<String, FontAxesSpec> = emptyMap(),
+    /**
+     * How the key labels' font moves, up to [MAX_FONT_MOTIONS]; see
+     * [FontMotionSpec]. Only a variable font can move: on a static face these
+     * draw nothing. Held still by reduce motion and power saving, like the
+     * board effect.
+     */
+    val fontMotions: List<FontMotionSpec> = emptyList(),
+    /**
      * Key sound, as a KeySoundStyle name. A string rather than the enum for
      * the reason spelled out above [PhotoAttribution]; an unknown name costs
      * the field, not the theme. Null follows the global sound setting.
@@ -704,9 +795,24 @@ data class ThemeSpec(
      * They reach the keyboard through `applyThemeOverrides`, which lays them
      * onto `IconSettings.themeIcons` — under the user's own icon pack and their
      * per-slot picks, so a theme dresses the slots nobody has claimed and never
-     * overrules a standing choice.
+     * overrules a standing choice. Unless the theme names its own icon set in
+     * [keyIconPack]: then these come first on the keys.
      */
     val keyIcons: Map<String, String> = emptyMap(),
+    /**
+     * The icon set this theme's keys wear (#1488), so a theme can have the
+     * glyphs that read on its own colours: an installed icon pack's id (or its
+     * name, which is what survives an export to another phone), or `""` for
+     * the app's own icons. Null follows the Icons screen, which is what every
+     * theme did before the field existed.
+     *
+     * Set, the theme decides the keys outright: its own [keyIcons] first, then
+     * this set, and the Icons screen's pack and per-key picks no longer reach
+     * the Keys group. Tools and every other icon keep following the Icons
+     * screen. A pack this phone does not have counts as null, the way a
+     * missing font does.
+     */
+    val keyIconPack: String? = null,
     /**
      * Key pictures drawn nine-slice rather than fitted, keyed by the picture's
      * transport slot ([ASSET_KEY_TEXTURE], [ASSET_KEY_TEXTURE_ENTER],
@@ -921,6 +1027,26 @@ data class KeyOverride(
     /** How far that halo reaches past the key, in dp; null is [DEFAULT_KEY_GLOW_DP]. */
     val glowDp: Float? = null,
     /**
+     * How much of this key's glow lands on the keys round it, 0..1: their
+     * faces take a wash of the glow's colour on the side that faces this key,
+     * strongest at the edge nearest it, the way a lit key colours its
+     * neighbours (#1473). Null or 0 keeps the light in the gaps. See
+     * [KEY_GLOW_SPILL_RANGE].
+     */
+    val glowSpill: Float? = null,
+    /**
+     * The glow's colour while the key is held; null keeps [glow]. Set on a key
+     * with no glow at rest, the key lights up only under the finger.
+     */
+    val pressedGlow: Long? = null,
+    /**
+     * How bright the glow is while the key is held, as a multiple of how it
+     * looks at rest: under 1 dims it, over 1 brightens it, and the light on
+     * the neighbouring keys follows. Null is 1. See
+     * [KEY_PRESSED_GLOW_STRENGTH_RANGE].
+     */
+    val pressedGlowStrength: Float? = null,
+    /**
      * This key's own corner radius for the rounded and cut shapes, in dp;
      * null follows the board's. See [KEY_OVERRIDE_RADIUS_RANGE].
      */
@@ -932,15 +1058,23 @@ data class KeyOverride(
      * class out; false keeps one key solid. Nothing on a theme without glass.
      */
     val glass: Boolean? = null,
+    /**
+     * This key's label in its own variable-font axes, by tag: a heavier Enter,
+     * a condensed space bar. Laid over the board's own values for the label,
+     * so a key that only widens keeps the theme's weight. Set by a rule sheet's
+     * `font-variation` too. A font without the axis ignores it.
+     */
+    val fontAxes: Map<String, Float>? = null,
 ) {
     val isEmpty: Boolean
-        get() = background == null && text == null && border == null &&
+        get() = fontAxes.isNullOrEmpty() && background == null && text == null && border == null &&
             popupBackground == null && popupText == null && hint == null &&
             texture == null && pressedTexture == null && effect == null && effectParam == null &&
             pressedBackground == null &&
             labelScale == null && bold == null && shape == null &&
             gradient == null && glow == null && glowDp == null && cornerRadiusDp == null &&
-            glass == null && pressedText == null
+            glass == null && pressedText == null &&
+            glowSpill == null && pressedGlow == null && pressedGlowStrength == null
 
     /**
      * The kind of burst this key throws on its own, or null when it follows
@@ -1002,6 +1136,12 @@ val KEY_GLOW_RANGE = 1f..16f
 
 /** What [KeyOverride.glowDp] means when the key names a glow and no reach. */
 const val DEFAULT_KEY_GLOW_DP = 4f
+
+/** Bounds of [KeyOverride.glowSpill]. */
+val KEY_GLOW_SPILL_RANGE = 0f..1f
+
+/** Bounds of [KeyOverride.pressedGlowStrength]: from dark under the finger to three times as bright. */
+val KEY_PRESSED_GLOW_STRENGTH_RANGE = 0f..3f
 
 /** Bounds of [KeyOverride.cornerRadiusDp]; the board's own radius slider shares them. */
 val KEY_OVERRIDE_RADIUS_RANGE = 0..28
@@ -1212,6 +1352,23 @@ fun ThemeSpec.withEmbeddedImages(): ThemeSpec {
         // the one-level contract even for hand-edited files.
         variants = variants.map { it.withEmbeddedImages().copy(variants = emptyList()) },
     )
+}
+
+/**
+ * Bytes on disk of every image [withEmbeddedImages] would read, without
+ * reading any of them: what a caller checks before it builds the payload,
+ * so a theme library too big for the heap is turned away first (#1508).
+ */
+fun ThemeSpec.embeddedImageBytes(): Long {
+    fun size(path: String?): Long = path?.let { runCatching { File(it).length() }.getOrNull() } ?: 0L
+    var total = size(backgroundImage) + size(backgroundImageLandscape)
+    for ((_, path) in assetPaths()) total += size(path)
+    for (decal in decals) total += size(decal.image)
+    for (path in keyEffectImages) total += size(path)
+    for ((_, override) in keyOverrides) total += size(override.texture) + size(override.pressedTexture)
+    for ((_, path) in keyIcons) total += size(path)
+    for (variant in variants) total += variant.embeddedImageBytes()
+    return total
 }
 
 /** Slot name → local path, for every auxiliary image field. */
@@ -1870,6 +2027,40 @@ private val FrostTheme: ThemeSpec = ThemeSpec(
 )
 
 /**
+ * The font-motion showcase: the system font, whose Roboto is variable on most
+ * phones from Android 12, swelling a weight step heavier under the finger and
+ * leaning heavier while Shift is on. On a phone whose system font is static it
+ * is an ordinary warm dark theme: the motions have no axes to move.
+ */
+private val SwellTheme: ThemeSpec =
+    themeFromSeed("builtin_swell", "Swell", 0xFFE0A030, dark = true).copy(
+        fontMotions = listOf(
+            FontMotionSpec(
+                trigger = FontMotionTrigger.TOUCH.name,
+                axes = mapOf("wght" to 900f),
+                radiusDp = 120f,
+                decayMs = 550,
+                wobble = 0.5f,
+                scale = 1.35f,
+            ),
+            FontMotionSpec(
+                trigger = FontMotionTrigger.GLIDE.name,
+                axes = mapOf("wght" to 800f),
+                radiusDp = 90f,
+                decayMs = 450,
+                scale = 1.25f,
+            ),
+            FontMotionSpec(
+                trigger = FontMotionTrigger.SHIFT.name,
+                axes = mapOf("wght" to 700f),
+                target = FontMotionTarget.ALL.name,
+                wobble = 0.3f,
+                scale = 1.1f,
+            ),
+        ),
+    )
+
+/**
  * Built-in gallery themes. Users can't edit these in place — the editor
  * duplicates one into a custom theme instead — so ids stay stable.
  *
@@ -1925,7 +2116,9 @@ val BuiltInThemes: List<ThemeSpec> = listOf(
         keyBorderWidthDp = 1f,
     ),
     FrostTheme,
+    SwellTheme,
 ) + ExpressiveThemes + PaletteThemes
+
 
 /**
  * The name resource of every theme in [BuiltInThemes], keyed by the id of the
@@ -1949,6 +2142,7 @@ private val BuiltInThemeNameRes: Map<String, Int> = mapOf(
     "builtin_nebula" to R.string.core_theme_builtin_nebula_label,
     "builtin_sunset_drift" to R.string.core_theme_builtin_sunset_drift_label,
     "builtin_aurora" to R.string.core_theme_builtin_aurora_label,
+    "builtin_swell" to R.string.core_theme_builtin_swell_label,
     "builtin_deep_sea" to R.string.core_theme_builtin_deep_sea_label,
     "builtin_glacier" to R.string.core_theme_builtin_glacier_label,
     "builtin_bubble" to R.string.core_theme_builtin_bubble_label,

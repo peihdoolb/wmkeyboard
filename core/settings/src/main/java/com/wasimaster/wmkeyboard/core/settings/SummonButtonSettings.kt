@@ -63,6 +63,13 @@ data class SummonButtonSettings(
      * swipe near it goes to the nearest one bound ([flickDirectionOf]).
      */
     val flicks: Map<FlickDirection, FloatingAction> = emptyMap(),
+    /**
+     * How wide a fan of swipes each direction answers to, in degrees, where
+     * set (#1171); the rest take [DEFAULT_FLICK_ANGLE]. See [flickDirectionOf].
+     */
+    val flickAngles: Map<FlickDirection, Int> = emptyMap(),
+    /** How far a swipe from the fixed button goes before it counts, in dp; see [FlickDistanceDpRange]. */
+    val flickDistanceDp: Int = DEFAULT_FLICK_DISTANCE_DP,
     /** The quick menu's slots, in the order they fan out; at most [MAX_FLOATING_MENU_ITEMS]. */
     val menu: List<FloatingAction> = DefaultFloatingMenu,
     /**
@@ -232,7 +239,8 @@ fun SummonButtonSettings.readsScreen(): Boolean {
  */
 fun SummonButtonSettings.pressesSystemButtons(): Boolean =
     (gestureActions() + opensMenuItems()).any {
-        it is FloatingAction.System || it == FloatingAction.Tool(ToolbarTool.SCREENSHOT)
+        it is FloatingAction.System || it == FloatingAction.Tool(ToolbarTool.SCREENSHOT) ||
+            (it is FloatingAction.Tool && it.tool in SystemButtonTools)
     }
 
 /** Whether any of the button's gestures, or its quick menu, cycles the ringer (#1326), which wants Do Not Disturb access for silent. */

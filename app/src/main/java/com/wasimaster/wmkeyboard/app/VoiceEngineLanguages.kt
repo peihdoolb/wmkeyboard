@@ -50,6 +50,10 @@ internal fun voiceLanguages(languages: List<LanguageDef>): List<LanguageDef> =
     languages.map { language -> RomanizedSpeech.spokenAs(language.id)?.let(LanguageRegistry::byId) ?: language }
         .distinctBy { it.id }
 
+/** An engine's name as the voice settings write it, for the engines-shown list (#1477). */
+@Composable
+internal fun voiceEngineTitle(engine: String): String = voiceEngineLabel(engine)
+
 /**
  * The engine, and the model, for each of the user's languages: English on the
  * system recognizer and Bangla on a Whisper model, say. A language left on
@@ -214,6 +218,7 @@ private fun voiceEngineLabel(engine: String): String = stringResource(
         "moonshine" -> R.string.voice_engine_moonshine
         "sherpa" -> R.string.voice_engine_sherpa
         "omnilingual" -> R.string.voice_engine_omnilingual
+        "qwen3" -> R.string.voice_engine_qwen3
         "vosk" -> R.string.voice_engine_vosk
         "server" -> R.string.voice_engine_server
         else -> R.string.voice_engine_system

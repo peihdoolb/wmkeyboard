@@ -28,7 +28,7 @@ You feel that trade every time you dictate, because Whisper doesn't stream. It r
 Offline Whisper runs two kinds of model, and the catalog lists both.
 
 - **whisper.cpp models** run on [whisper.cpp](https://github.com/ggml-org/whisper.cpp), which is built into the app. They are the ones pointed at first, and they can do everything below that the other kind can't:
-  - **Any language, by name.** Each of Whisper's 99 languages, Bangla included, can be told to the model instead of left for it to guess. A dictation in [several languages](/tools/voice/#language-and-engine) is detected among those languages only, so a short phrase is never read as some third one.
+  - **Any language, by name.** Each of Whisper's languages, Bangla included, can be told to the model instead of left for it to guess. Cantonese is named to Large v3 and Turbo, the models that know it; an earlier model is told Chinese for it. A dictation in [several languages](/tools/voice/#language-and-engine) is detected among those languages only, so a short phrase is never read as some third one.
   - **Your own words.** The same **Words to listen for** list the system recognizer gets goes to the model as a prompt, so names and terms come out spelled your way.
   - **Words while it works.** The line under the microphone shows the transcript as it is decoded, instead of only saying "Transcribing".
   - **Longer clips.** A clip can run to two minutes instead of 30 seconds.
@@ -137,6 +137,8 @@ A phone that cannot download can import a model instead. Below the catalog, **Ge
 
 The keyboard can't tell which languages a fine-tune was trained for, so with other models on the phone it picks one per language by the usual rules and the fine-tune may not be the one it lands on. Open **Model per language** and pick it for the languages it was made for. A file with the same name and size as a catalog model but different contents also imports this way: several fine-tunes are published as `ggml-model-q5_0.bin`, and a catalog file is told apart from the others by its hash. Its row has no translate option, since a fine-tune may not have kept that task. Importing a file with the same name again replaces the earlier copy, and deleting the model removes it for good, since there's nothing to download it from again. Builds without whisper.cpp can't import one.
 
+**Get from Hugging Face**, under the import, saves the trip through a browser. Type the repository's name or paste its address, and the keyboard lists the `.bin` files in it with ggml or whisper in their names, smallest first. Pick one, give it a name, and it downloads that file from the commit it listed, checked against the SHA-256 Hugging Face publishes, then reads its header and keeps it under **Your models** as above. The download goes on if you leave the screen. For a gated or private repository, add your Hugging Face token on the On-device AI screen first.
+
 When exactly one model is on disk, the app quietly adopts it as that fallback, so dictation works right after your first download with no setup step in between. It does the same again if you delete whichever model was holding the job.
 
 ## Options
@@ -157,7 +159,7 @@ The **Recognition engine** list on the **Voice typing** screen is where you add 
 
 Dictation still resolves per language, from the language of the active layout, the same way the system recognizer follows the layout's locale. A [Voice typing language](/tools/voice/#language-and-engine) you picked takes the layout's place. With several picked, the model for the first is used and left to detect which one you speak, so pick a multilingual model that covers them all. The app also fills the fallback in for you when a model is the only one on disk, and clears the choice if you delete that model.
 
-Nine of the 10 multilingual models support translation. Turbo doesn't, because large-v3-turbo was trained for transcription only, and none of the 19 single-language models do either. If a language routes to one of those, the translate toggle has no visible effect for it.
+Nine of the 10 multilingual models support translation. Turbo doesn't, because large-v3-turbo was trained for transcription only, and none of the 19 single-language models do either. If a language routes to one of those, the translate toggle has no visible effect for it. On the voice panel the toggle is a small round button with the translate icon, under the language chip in the top left corner, filled while translation is on.
 
 ### Running on the GPU
 

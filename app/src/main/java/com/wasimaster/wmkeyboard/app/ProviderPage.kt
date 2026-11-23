@@ -133,6 +133,9 @@ internal val ProviderEndpoints: Map<String, List<ServiceEndpoint>> = mapOf(
     ProviderTypes.WIBY.id to listOf(ServiceEndpoint.WIBY),
     ProviderTypes.MARGINALIA.id to listOf(ServiceEndpoint.MARGINALIA),
     ProviderTypes.WIKIPEDIA_SEARCH.id to listOf(ServiceEndpoint.WIKIPEDIA),
+    ProviderTypes.METASEARCH.id to listOf(
+        ServiceEndpoint.MWMBL, ServiceEndpoint.MARGINALIA, ServiceEndpoint.WIKIPEDIA, ServiceEndpoint.WIBY,
+    ),
     ProviderTypes.UNSPLASH.id to listOf(ServiceEndpoint.UNSPLASH),
     ProviderTypes.PEXELS.id to listOf(ServiceEndpoint.PEXELS),
     ProviderTypes.WIKTIONARY.id to listOf(ServiceEndpoint.KAIKKI),
@@ -256,7 +259,7 @@ internal fun ProviderPage(
             row?.let { ProviderEdits.usedBy(s, it.entry.credentialKey, tool, env) }.orEmpty()
         }
         SettingsGroup {
-            item(visible = usedBy.isNotEmpty()) {
+            item(visible = usedBy.isNotEmpty(), waitsOnSetting = false) {
                 WmRow(
                     title = stringResource(R.string.providers_page_used_by_title),
                     subtitle = usedBy.joinToString(", ") { context.getString(it.labelRes) },
@@ -347,10 +350,11 @@ internal fun ProviderOwnSettings(
         }
         ProviderTypes.WHISTLE.id -> if (WhistleEngine.shipped) WhistleModelManager(settings)
         ProviderTypes.ASR4ALL.id, ProviderTypes.PARAKEET.id, ProviderTypes.MOONSHINE.id,
-        ProviderTypes.SHERPA.id, ProviderTypes.OMNILINGUAL.id, ProviderTypes.VOSK.id,
+        ProviderTypes.SHERPA.id, ProviderTypes.OMNILINGUAL.id, ProviderTypes.QWEN3.id, ProviderTypes.VOSK.id,
         -> EtEngine.byId(type.id)?.takeIf { it.runtimeShipped }?.let {
             EtModelManager(it, settings)
-            if (it == EtEngine.SHERPA) SherpaCustomModels(settings)
+            // Models of the user's own, from files or Hugging Face (#1005, #1437).
+            if (it.takesCustomModels) EtCustomModelsGroup(it, settings)
             // How long Asr4All looks ahead before it writes (#1322).
             if (it == EtEngine.ASR4ALL) Asr4AllTierGroup(repository, settings)
             // Parakeet Ultra past 50 seconds, cut at its own pauses (#1173).

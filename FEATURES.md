@@ -12,8 +12,8 @@ something only some of them do. Unmarked means Gboard or SwiftKey has it too.
 | Area | Families | Features | Capabilities |
 |---|---|---|---|
 | Typing core: prediction, autocorrect, learning, spell check | 9 | 50 | 205 |
-| Input behaviour: glide, gestures, cursor, editing, keys | 11 | 80 | 220 |
-| Languages, scripts, layouts, transliteration | 11 | 65 | 220 |
+| Input behaviour: glide, gestures, cursor, editing, keys | 11 | 80 | 221 |
+| Languages, scripts, layouts, transliteration | 11 | 66 | 224 |
 | Themes and appearance | 14 | 73 | 183 |
 | Emoji, GIFs, stickers, kaomoji | 16 | 96 | 94 |
 | Toolbar and the tool set | 10 | 88 | 364 |
@@ -23,7 +23,7 @@ something only some of them do. Unmarked means Gboard or SwiftKey has it too.
 | Accessibility, form factors, platform integration | 13 | 61 | 111 |
 | Extensibility: addons, plugins, imports, formats | 5 | 35 | 164 |
 | Modes, rows, field adaptation, runtime | 12 | 97 | 203 |
-| **Total** | **134** | **830** | **2288** |
+| **Total** | **134** | **831** | **2293** |
 
 ## Typing core: prediction, autocorrect, learning, spell check
 
@@ -443,6 +443,10 @@ something only some of them do. Unmarked means Gboard or SwiftKey has it too.
     - Free to ignore — Lifting off a target commits the decoder's own first choice, outlined so it can be told apart
     - Drag down to cancel — More than a key below the anchor the targets dim and a lift types nothing
     - Chained strokes — A pause on the last word of a spacebar-crossing stroke asks for that word
+  - Pause to pick a letter `RARE` — Off by default (Typing > Gestures > Glide typing). Hold still mid-glide on a key with flick letters (or long-press letters, by choice) and they appear around the finger on the flick cross's 3×3 pad; slide onto one and keep gliding (#1519)
+    - A constraint, not a keystroke — The pick goes on the stroke's grid at its key's centre and the word read at the lift must contain it, in pick order; with no such word, the stroke's drawn letters (GlideLiteral) with the pick spliced in
+    - Walk cut out — The walk out to the letter and on to its first bend is dropped like the Shift detour (#163); the pause stays, so the decoder's pause mark places the letter on its key
+    - Letters only — Symbols, digits and multi-letter arms are left off; a key with letters takes the pause from the word picker, every other key keeps it
   - Live preview while swiping — Decoded word drawn over the keys and pushed to the strip at a 40 ms wall-clock cadence (rate-independent of digitizer Hz)
   - Auto-space after a glided word `uncommon` — Keyboard's own space: punctuation typed after takes it back, a space press is spent confirming it
   - One-backspace glide undo — Backspace straight after a swipe removes the whole word plus its auto-space, then re-derives bigram context
@@ -543,6 +547,7 @@ something only some of them do. Unmarked means Gboard or SwiftKey has it too.
     - Nested TrackpadSettings — stepXDp 12, stepYDp 28, holdToOpen, multiTap, haptics, trail, magnifier; one KeyboardSettings slot, flat DataStore keys `trackpad_*`
     - Direct-boot safe, no focus ring, no default leader letter — Only touches the input connection; pointer-only so panelFocusRegions is empty; every letter was taken, T is the toolbox
     - Survives navigation, not a new field — A caret move never cancels it; a genuinely new editor does, while a restart of the same field keeps it
+    - Mouse mode (#1411) — A Cursor / Mouse chip in the surface's corner (a sibling of the surface, so its tap never clicks) switches the surface to drive a pointer over the app: drag moves, tap clicks, two quick taps double-click, two-finger tap right-clicks, two-finger drag scrolls, hold-then-drag drags with the button held. Offered only once trackpad.mouseEnabled is on (default off); trackpad.mouseMode is stored, so the panel reopens in the mode it was left in. The tool page's group carries the enable switch, the ShellFeatures master switch and LauncherShizukuRow, so Shizuku can be set up from there. PointerController (ime/pointer) draws the arrow as a drawable in the IME window's decorView overlay, clamped to the band above the board (boardTopInWindow), and picks the door live per event: ShellRoute when the Shizuku master switch is on and the user service is bound (IShellService.injectMouse, v3: TOOL_TYPE_MOUSE/SOURCE_MOUSE events built in the shell process, hidden setActionButton, hover on move, fractional AXIS_VSCROLL/HSCROLL), else GestureRoute through TouchMouseService (dispatchGesture only, no window content, no events): tap, long press for right click, continued strokes on API 26+ sent once the previous piece has run out (a still 80 ms before the lift so nothing flings), one swipe at lift on API 24-25. PointerMotion adds speed-based acceleration (dp/ms over 0.25, slope 1.6, cap 4x). Hidden on the lock screen, floating, fullscreen extract, a band under 96 dp, and in the Play build (ChannelFeatures.TOUCH_MOUSE; the service is removed from the Play manifest). Settings: pointerSpeed and scrollSpeed 25-400 %, pointerAcceleration, naturalScroll; the tool page's Mouse mode group shows the door in use. Started and ended by the surface's DisposableEffect, ended on onFinishInputView/onWindowHidden and resumed on the next show
   - Volume keys as cursor `RARE` — Volume down/up move the caret left/right while the keyboard is showing; off by default
     - Media-aware release — Re-checks isMusicActive on every press and hands the keys back to the system while audio plays
     - Free auto-repeat — Holding repeats via Android's own hardware key repeat; both DOWN and UP are swallowed
@@ -566,7 +571,7 @@ something only some of them do. Unmarked means Gboard or SwiftKey has it too.
   - Selection macros `RARE` — With text selected, the keyboard offers what that shape of text is for and what any text is for: Undo, Select all, then Call | Message | WhatsApp | Contact on a number, Email first on an address, Open, Remove trackers and QR on a link, and the edits, a find and replace, line tools, case and chat formatting, conversions, grammar, AI, both Bengali directions, speech, maps and calendars on prose. Off by default
     - Reads the selection whole — A sentence with a number in it is a sentence, and two lines are never one thing; its own pass over the selection rather than the clipboard's fragment scan, which is the surface that has room to show what it found and where
     - Four readings — Phone, address, link, plain text; bare domains need an ending off a short allow list so a selected filename is not a link, and phone shapes reuse the clipboard's own PhoneFormats masks
-    - Format is entity-aware — A number is re-rendered into the user's own mask separators and all (01712345678 to +880 1712-345678), a link loses utm_*/fbclid/gclid and about twenty more while its path and fragment survive, an address is lower-cased; the chip is dropped when the rewrite would change nothing
+    - Format is entity-aware — A number is re-rendered into the user's own mask separators and all (01712345678 to +880 1712-345678), or the OS's format for the phone's country with no mask; with no mask a selection has to be a real number in the numbering plans to read as one, and Call/WhatsApp gain its dial code from them; a link loses utm_*/fbclid/gclid and about twenty more while its path and fragment survive, an address is lower-cased; the chip is dropped when the rewrite would change nothing
     - Case ladder behind Format on prose — lower / Title / UPPER / Sentence in place of the row, each chip written in the case it applies; acronyms survive Title and Sentence unless the whole selection is capitals, and the result stays selected so the chips chain
     - Two placements — Its own BarRow.MACROS, animated in and out and reorderable with every other row, or over the suggestion strip at no height cost, since nothing is being typed while text is selected
     - Forty-nine actions in seven groups behind one allow list — Editing, Lines, Format, Convert, Language, Look up, Open in; twenty-eight shipped on, the chat markers, programmer's cases, decoders, speech, zones, maps, calendars, Search and Translate off because each is a taste or a round trip
@@ -582,6 +587,7 @@ something only some of them do. Unmarked means Gboard or SwiftKey has it too.
     - Banglish both ways — To Bangla through the spelling map, then the phonetic index under the strip's own confidence rule, then literal Avro, letter runs only; to Banglish through the inverted map and a rule romaniser with the inherent vowel dropped where speech drops it
     - Hinglish both ways — To Hindi and To Hinglish, the same converter over the Hindi scheme; back to Latin through a schwa-deleting romaniser (करना to karna, नमस्ते to namaste), offered only while the Hindi phonetic layout is enabled
     - Zawgyi both ways — Zawgyi ⇄ Unicode on Burmese text, the direction picked by myanmar-tools' detector; written past a Zawgyi field's own conversion so it is never converted twice
+    - Convert script `RARE` — Indic text, or IAST/ISO 15919/ITRANS, rewritten in any of 49 scripts and romanisations from a ladder (vidyut-lipi, its own `lipi` gate); the source read from the Unicode block or the marked letters, plain letters only on the Sanskrit keyboard and read as the user's chosen scheme; in the PROCESS_TEXT sheet too
     - Grammar, AI and speech — Harper over the selection alone with every fix committed at once; AI buttons that run a chosen action on the selection and land in the AI panel, whose Replace now swaps the selection rather than the field; reading aloud through the vocabulary speaker with a chip that reads Stop
     - Intents with fallbacks — Contacts, Maps and Calendar each try two intents and toast when no app takes them; Calendar first opens the Calendar tool's composer, prefilled, while that tool is on and saves in the keyboard
     - One-time list reset — The on-list and the order carry a list version; a list stored under an older one reads as the shipped list, so every existing user gets the new actions once
@@ -815,6 +821,11 @@ something only some of them do. Unmarked means Gboard or SwiftKey has it too.
   - Per-script pinned fonts `uncommon` — 25 scripts map to a specific Google font; Music to Noto Music, Braille to Noto Sans Symbols 2
     - Per-script font pickers — Curated alternative families per script, shown only while a language on that script is enabled
     - Per-glyph fallback — A glyph the pinned face lacks falls back to the system font rather than blanking
+  - Indic script conversion `RARE` — vidyut-lipi 0.2.0 (MIT, Ambuda) in its own on-demand gate (`lipi`, 858 KB arm64), not in the engine every keyboard start loads
+    - 41 scripts, 8 romanisations — Devanagari to Gunjala Gondi, Thai, Khmer, Tibetan and Javanese among them; IAST, ISO 15919, ITRANS, Harvard-Kyoto, SLP1, Velthuis, WX, Baraha
+    - Source from the text — The Unicode block most letters are in (Grantha and Brahmi by code point), Assamese told from Bengali by ৰ/ৱ, IAST from ṛ ṃ ṣ and ISO from ṁ/r̥, ITRANS from R^i and ~N; Pinyin, Latvian and Polish vowels are not read as a romanisation
+    - Sanskrit in another script — The Sanskrit layout keeps typing Devanagari while each word reaches the field in IAST, ISO 15919, Grantha, Kannada, Telugu, Malayalam, Tamil, Bengali, Sharada, Siddham or seven more, through the legacy-font output path and its strip button
+    - Built from source for F-Droid — A plain Rust crate, byte-identical between two builds, in the table's fdroidBuild list
   - Zawgyi for Burmese `RARE` — Google myanmar-tools' Markov detector and its CLDR-derived converters, ported into the Rust engine (no download) and held to upstream's own corpus and compatibility table
     - Zawgyi output — A strip button on Burmese layouts writes Zawgyi; typing, the strip and prediction stay Unicode and the commit is converted, a letter-by-letter run rewritten whole so ေ lands in front of its consonant
     - Context read back as Unicode — The text before the cursor goes through Zawgyi to Unicode before prediction reads it, in a Zawgyi field or one already holding Zawgyi
@@ -1068,6 +1079,15 @@ something only some of them do. Unmarked means Gboard or SwiftKey has it too.
     - Exact prefix commit — Spans are Mozc's own `consumed_key_size` and segment keys, in kana, mapped back to romaji through the transducer's spans
     - Learns — Conversions, boundaries and predictions go to Mozc's user history, written a few seconds after a pick. Not in incognito or password fields
     - Before first unlock — Mozc's dictionary and history are credential-protected, so a locked phone types on the built-in engine
+  - Chewing engine `RARE` — Zhuyin Engine = Built-in | Chewing; with Chewing the Zhuyin layout converts whole sentences phrase by phrase through libchewing 0.13.1 (新酷音), the way Taiwan's Zhuyin keyboards do. Built-in stays the default
+    - Own library on its own gate — `libwmchewing.so` (native/chewing-jni: the `chewing` Rust crate behind a JNI bridge; ~550 KB arm64, 16 KB pages, JNI symbols only, reproducible) behind the `chewing` gate: `:feature:chewing` on Play, NativeDelivery elsewhere, F-Droid behind its opt-in. LGPL-2.1, so a separately replaceable library
+    - Its own dictionary — libchewing-data 2026.3.22's characters and phrases compiled into one trie (`chewing-dictc`, deterministic), ~4.5 MB, as a checksum-pinned CJK pack; not in the library
+    - Sentence first — The strip leads with the whole sentence and Chewing's next two conversions (台灣 / 臺灣), then the phrases the reading starts with, longest first; a phrase commits its syllables and the rest converts again
+    - Chewing's composing text — The field shows the complete syllables converted and the one being typed as bopomofo; Enter writes what it shows
+    - Tones optional — libchewing's fuzzy lookup: the next initial closes a toneless syllable, which matches any tone
+    - Learns phrases — A pick goes to libchewing's user dictionary; a sentence teaches its phrases and runs of single characters, a toneless pick is learned under the dictionary's tones. Written a few seconds after a pick, carried by the settings backup. Not in incognito or password fields
+    - Ahead of RIME on Zhuyin — An engine picked for one method answers before one picked for the whole language
+    - Before first unlock — The dictionary and learned phrases are credential-protected, so a locked phone types on the built-in engine
   - Candidate surface — The suggestion strip is replaced by ranked candidates while a buffer is composing
     - Expanded grid — Ranked to depth 128 for lattice methods so a tap in the wrapping grid still resolves
     - Prefix-consistency contract — candidates(b,100).take(12) must equal candidates(b,12) or strip and grid would disagree
@@ -1478,7 +1498,8 @@ something only some of them do. Unmarked means Gboard or SwiftKey has it too.
   - Animated-emoji index `RARE` — animated.txt: 881 code-point spellings that have a Noto Animated Emoji asset.
   - Regeneration pipeline in-repo `uncommon` — tools/emoji/: generate_catalog, generate_gemoji, generate_animated, generate_dict_catalog, export_keyword_pack, add_names.
 - **Emoji search** `uncommon` — Semantic, multilingual, typo-tolerant search over the merged catalogue.
-  - Six scoring layers that stack `RARE` — Exact shortcode 1000 > shortcode prefix 500 > exact keyword 100 > synonym 60 > keyword prefix 40 > fuzzy 30.
+  - Seven scoring layers that stack `RARE` — Exact shortcode 1000 > shortcode prefix 500 > exact keyword 100 > synonym 60 > same stem 50 > keyword prefix 40 > fuzzy 30.
+    - Other forms of a word — "cats" finds 🐈 under "cat", "dancing" the "dance" emoji; a lazily built stem index beside the keyword index, each word by its own script
     - One-typo fuzzy matching — Damerau-Levenshtein distance exactly 1, for query tokens of 4+ characters
     - Curated synonym expansion — 43 concept keys (7 Bengali): party→celebration/confetti, fire→flame/comet
     - Underscore-as-space normalisation — face_with_monocle reaches the catalogue directly, so the shortcode table only carries names that differ
@@ -2035,6 +2056,11 @@ something only some of them do. Unmarked means Gboard or SwiftKey has it too.
     - Insert chip — Types the formatted result at the cursor
     - Precision 0–12 decimals — Default 8, trailing zeros stripped, scientific fallback past 1e15/1e-9
     - Localised error messages — Errors carry a string res plus one detail argument, not English strings
+    - Sums with units `RARE` — Numbat 1.24 (MIT/Apache-2.0) behind its own on-demand gate (`numbat`, 1.9 MB arm64): `3 km/h * 20 min` is 1 km, `5 ft + 30 cm -> m` is 1.824 m, physical constants by name (`c * 2 s -> km`), dates (`now() + 3 weeks`), dimension errors worded as such
+      - CalcEngine first, always — `CalcRouting` hands Numbat only what CalcEngine refuses and that has a letter in it, so plain sums stay instant and never wait on a download
+      - Money as a unit, offline — Currency units rebuilt from the keyboard's own CurrencyClient table (ECB list plus every other code it holds, coins included); Numbat's own fetching compiled out
+      - Calculator chip too — "5 ft + 30 cm", "1 h + 30 min" on the strip, only for arithmetic on a quantity or a conversion; `am`/`pm`/`a`/`at`-style words Numbat would read as units keep a sentence a sentence; the first such sum fetches the library, behind data saving
+      - Guarded for a long-lived in-process context — Definitions, lists, recursive prelude functions and temperatures refused; context rebuilt every 256 sums
   - Unit converter `uncommon` — 14 categories, 118 units, all local
     - Categories — Length, mass, temperature, area, volume, speed, time, data, energy, power, pressure, angle, frequency, fuel economy
     - Reciprocal units — Fuel economy handled as base = factor / value, so mpg↔L/100km is right
@@ -2080,6 +2106,7 @@ something only some of them do. Unmarked means Gboard or SwiftKey has it too.
     - App screens — Tools › Notes: search, filter chips, sort, long-press bulk select (pin/archive/tag/lock/trash with undo), autosaving editor with Markdown preview and tickable checklists, tag manager (rename merges on a collision, nine-swatch colour, remove), trash with restore and delete forever, export all as a zip of Markdown, import .txt/.md
     - Locked notes — Body masked everywhere on the keyboard and never inserted, copied, shared or body-searched; the app asks the fingerprint lock's bare prompt before opening one (skipped when the Notes screen is itself locked); left out of backups unless secrets are included, and a restore keeps the locked notes the file left out
     - Save as note — SelectionMacro.SAVE_NOTE on the selection bar: a new note per selection, or appended to the last note edited (setting); refused in a password field and before the first unlock
+    - Dates in any language — The notes assistant's key details and reminders read the phone language's and the note script's date words from the same ICU tables as the date chip, with a following clock time ("nächsten Freitag 14:30")
     - Settings — NotesSettings nested in KeyboardSettings: sort, preview lines, Markdown on/off, panel opens on list or last note, append mode, trash retention 7/30/90/never; `notesVersion` reload signal after a restore or sync
   - To-do list `uncommon` — Tasks with one level of steps in the keyboard and the settings app (#920); one JSON file (`todo/tasks.json`) shared by both processes, replacing the Todo List plugin
     - Keyboard panel — Tick a box, tap the words to open the steps and Add a step, hold to edit (Delete, Type it, Add a step); Enter adds and keeps the box open; Hide done, Clear done with Undo
@@ -2228,6 +2255,7 @@ something only some of them do. Unmarked means Gboard or SwiftKey has it too.
     - Weekend presets — Seven options including Fri&Sat, Thu&Fri, and none
     - Hijri day adjustment −2..+2 — Tabular calendar can miss local sighting by a day or two
     - Chinese computed astronomically — Real new-moon and solar-longitude calculations
+    - Date chip in every language ICU knows — "morgen", "nächsten Freitag", "dans 3 jours", "через 5 дней", "明後日", "8月14日", "আগামীকাল" resolve from Android's own CLDR data (RelativeDateTimeFormatter, DateFormatSymbols, DateTimePatternGenerator), 0 bytes added; keyboard languages plus the text's script, case- and accent-insensitive, forward only, the bracketed date in that language; two-way words (Hindi कल) and morning words ("guten Morgen") stay quiet
   - Weather `RARE` — Open-Meteo current conditions, no key
     - Fetch the forecast as you type — Off on F-Droid, where a weather chip reads "Get the forecast" and fetches nothing until it is tapped
     - Location typed, searched, or read once (#350) — Open-Meteo geocoding, manual latitude/longitude, or Use my location; the saved place never follows the phone afterwards
@@ -2392,6 +2420,7 @@ something only some of them do. Unmarked means Gboard or SwiftKey has it too.
     - Searchable text beyond the clip's own — File name, link-preview title/description/site, source app and MIME subtype
     - Clips with no text findable by what they are — Kind words "image picture screenshot", "folder directory", "video movie" indexed
     - One matchesQuery predicate shared by the panel filter and store.search
+    - Other forms of the query's words after the literal hits — "meetings" finds "meeting at 5" (clipStemMatcher, keyboard language else script); off for a regex search
   - Link previews `uncommon` — Off by default; makes a direct request to the copied site
     - Title, description and site name fetched on panel open — Max 8 pending links per pass
     - A failed fetch is recorded so it is not retried on every open
@@ -2453,7 +2482,13 @@ something only some of them do. Unmarked means Gboard or SwiftKey has it too.
     - Google's G- branding prefix stripped from the pasted value — Pasting "G-123456" into a six-box OTP field would be wrong
     - Shape rules — Digits required; alphanumeric codes need ≥2 digits; 4-digit years 1900–2099 rejected
   - Phone-number extraction `RARE`
-    - 7–15 digits by shape, 4–15 once masks are set
+    - Every country's numbering plans `RARE` — libphonenumber's metadata (Apache-2.0) cut to validity: per region dial code, international and trunk prefixes, possible lengths, general/fixed-line/mobile/other patterns; an 86 KB asset (27 KB compressed) instead of the 360 KB library, built by `tools/phonemeta/build_phone_meta.py` and ICU-checked in CI
+    - Only real numbers become chips — With no masks set, a run has to be a number some type of the plan has, in the phone's country or the one its `+`/`00`/international prefix names; invoice totals and order ids drop out
+    - Phone's country — Mobile network, then SIM, then the app locale's region; no permission; re-read every five minutes for travel
+    - Mobiles first — Among the phone chips, a number that can take an SMS goes ahead of a landline or a hotline
+    - One number, one chip — 01712-345678 and +880 1712 345678 de-duplicate on E.164
+    - Chip shows the number formatted, pastes it as copied — The user's mask where one matches, else the OS's own libphonenumber (PhoneNumberUtils), costing the APK nothing
+    - 7–15 digits by shape, 4–15 once masks are set — The shape rules alone decide only without the table or a country
     - Date shapes rejected as whole matches — yyyy-m-d and d-m-yy only, so 555-12-3456 still counts as a number
     - Runs after #, $, £ or € rejected — Order numbers and totals share the shape
     - Unpunctuated, unprefixed runs over 11 digits rejected
@@ -2470,11 +2505,12 @@ something only some of them do. Unmarked means Gboard or SwiftKey has it too.
     - Dial-code length derived from E.164 zones — Zones 1 and 7 = 1 digit, a 44-entry two-digit set, everything else 3
     - Live test field in settings — Paste a number and see match / no match / "all numbers pass" before trusting it
     - Masks can only remove numbers, never add one back — Every impostor guard still applies on top
+    - Masks win over the numbering plans — Where masks are set they decide what is a number, and a matching mask decides how it is written
   - Fragment chips in the panel `RARE`
     - Dashed cut-out styling, deliberately unlike a filled history card
     - Kind tag printed above the value — CODE / PHONE / LINK plus a per-kind icon
     - Long-press shows the fragment highlighted inside its source clip — ±60 chars of surrounding text, ellipsised
-    - De-duplicated across clips by kind+value
+    - De-duplicated across clips by kind+value, phone numbers by E.164
 - **One-time codes from notifications** `RARE` — Verification code lifted off the shade onto the suggestion strip; off by default
   - Capture path `RARE`
     - Single notification-listener component shared with the media tool — Renaming it would silently revoke the grant existing users gave
@@ -4086,6 +4122,11 @@ something only some of them do. Unmarked means Gboard or SwiftKey has it too.
     - Skip on every page but the last; a replay has no Skip
     - Miniature keyboard previews for the layout, digit-row and globe-key choices
     - Languages and haptic style seeded from the device on a fresh run only
+- **Search finds other forms of a word** `RARE` — Own light stemmers in wm-engine (native/wm-engine/src/stem, +52 KB arm64): en (Porter step 1), fr/es/pt/it/de/sv/no/ru/fi/hu/bg/cs/lv/hi/bn/id/ar/fa ported from Lucene's light stemmers, gl and el our own; 21 languages, no Snowball
+  - Used by clipboard, emoji, kaomoji, snippets (panel and picker), notes (panel and settings), toolbox, the Tools page and settings search
+  - Literal matches always first (StemMatch.literalFirst), then stem-only matches in the search's own order
+  - Keyboard language for a word in its script, else the word's own script (English words in a Bengali clip still stem)
+  - Matches Lucene's reference output exactly on fr/de/es/pt/it/ru/sv/hu vocabularies (~260k words); candidates' stems cached (SearchStems, 1.5M-char budget)
 - **Settings search** `RARE` — About 500 hand-written index entries plus one per supported toolbar tool
   - Index structure
     - Every entry carries title, subtitle, breadcrumb, route and the title's string resource

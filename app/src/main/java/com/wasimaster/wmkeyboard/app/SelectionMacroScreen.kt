@@ -15,7 +15,10 @@ import com.wasimaster.wmkeyboard.R
 import com.wasimaster.wmkeyboard.core.plugins.PluginStore
 import com.wasimaster.wmkeyboard.ime.ui.pluginActionIcon
 import com.wasimaster.wmkeyboard.core.settings.SelectionMenuItem
+import com.wasimaster.wmkeyboard.core.selection.ScriptConvert
+import com.wasimaster.wmkeyboard.core.selection.SelectionMacro
 import com.wasimaster.wmkeyboard.core.selection.SelectionMacros
+import com.wasimaster.wmkeyboard.core.transliteration.Lipi
 import com.wasimaster.wmkeyboard.core.settings.effectiveTimeZones
 import com.wasimaster.wmkeyboard.core.settings.SelectionMacroPlacement
 import com.wasimaster.wmkeyboard.core.settings.SettingsDefaults
@@ -96,6 +99,16 @@ internal fun SelectionMacroSettingsScreen(
                 default = SettingsDefaults.selectionMacros.inEverySelection,
             ) { scope.launch { repository.setSelectionMacrosInEverySelection(it) } }
         }
+        // How much is selected, at the head of the bar (#1427).
+        item(visible = macrosOn, level = SettingLevel.STANDARD) {
+            ToggleSetting(
+                R.string.selection_macros_count_title,
+                stringResource(R.string.selection_macros_count_subtitle),
+                settings.watch { it.selectionMacros.showCount },
+                info = stringResource(R.string.selection_macros_count_info),
+                default = SettingsDefaults.selectionMacros.showCount,
+            ) { scope.launch { repository.setSelectionMacrosShowCount(it) } }
+        }
         // The always-shown row (#763). Hidden on the strip placement, which it
         // does not apply to: there it would take the suggestions for good.
         item(visible = macrosOn && ownRow, level = SettingLevel.STANDARD) {
@@ -111,6 +124,7 @@ internal fun SelectionMacroSettingsScreen(
 
     // The whole group goes with the switch above it — SettingsGroup draws
     // nothing when its builder adds no rows, heading included.
+    val convertOn = settings.watch { SelectionMacro.CONVERT_SCRIPT in it.selectionMacros.macros }
     SettingsGroup(stringResource(R.string.selection_macros_actions_group)) {
         if (!macrosOn) return@SettingsGroup
         item(level = SettingLevel.STANDARD) {
@@ -160,6 +174,19 @@ internal fun SelectionMacroSettingsScreen(
                 }.toString(),
                 route = SelectionMacroZonesRoute,
             ) { onNavigate(SelectionMacroZonesRoute) }
+        }
+        // Convert script's library and its one question, only while it is on
+        // and the build can have the library at all.
+        item(visible = convertOn && Lipi.shipped, level = SettingLevel.STANDARD) { LipiLibraryRow() }
+        item(visible = convertOn, level = SettingLevel.ADVANCED) {
+            ChoiceSetting(
+                R.string.lipi_latin_input_title,
+                subtitle = stringResource(R.string.lipi_latin_input_subtitle),
+                info = stringResource(R.string.lipi_latin_input_info),
+                options = LipiPlainLetterOptions,
+                selected = settings.watch { ScriptConvert.plainLetters(it.selectionMacros.scriptLatinInput).native },
+                default = SettingsDefaults.selectionMacros.scriptLatinInput,
+            ) { scope.launch { repository.setSelectionMacrosScriptLatin(it) } }
         }
     }
 

@@ -82,6 +82,10 @@
     <string name="core_tools_provider_brave">Brave Search</string>
     <string name="core_tools_provider_mwmbl" translatable="false">Mwmbl</string>
     <string name="core_tools_provider_mwmbl_desc">A free, non-profit search engine with its own index. No key. Web results only, no images.</string>
+    <string name="core_tools_provider_plugin">Plugin</string>
+    <string name="core_tools_provider_plugin_desc">A provider from a plugin you installed. It sends the request to the plugin, which may send it to the websites it lists.</string>
+    <string name="core_tools_provider_metasearch">Built-in search</string>
+    <string name="core_tools_provider_metasearch_desc">The keyboard\'s own search. It asks Mwmbl, Marginalia, Wikipedia and Wiby at the same time and merges their results on your phone. Pictures come from Wikimedia Commons. No key and nothing to set up.</string>
     <string name="core_tools_provider_wiby" translatable="false">Wiby</string>
     <string name="core_tools_provider_wiby_desc">A search engine for the small web: personal and hobby pages, the way the web used to be. No key. Web results only, no images.</string>
     <string name="core_tools_provider_marginalia" translatable="false">Marginalia Search</string>
@@ -166,6 +170,8 @@
     <string name="core_tools_provider_omnilingual" translatable="false">Omnilingual</string>
     <string name="core_tools_provider_vosk" translatable="false">Vosk</string>
     <string name="core_tools_provider_vosk_desc">Small Kaldi models from Alpha Cephei for 29 languages, about 40 MB each, that type as you speak on the phone. Light enough for an older phone.</string>
+    <string name="core_tools_provider_qwen3" translatable="false">Qwen3-ASR</string>
+    <string name="core_tools_provider_qwen3_desc">Alibaba\'s model for 30 languages and 22 Chinese dialects, with punctuation of its own, on the phone. A large model for recent phones. Each phrase arrives at the pause after it.</string>
     <string name="core_tools_provider_omnilingual_desc">Meta\'s one model for 1,600 languages, hundreds of them with no other voice typing, on the phone. Each phrase arrives at the pause after it.</string>
     <string name="core_tools_provider_transcription_server">Transcription server</string>
     <string name="core_tools_provider_transcription_server_desc">A server that speaks OpenAI\'s audio transcription API: speaches, whisper.cpp\'s server, LocalAI, Groq or OpenAI. Each clip is sent to it when you stop speaking.</string>

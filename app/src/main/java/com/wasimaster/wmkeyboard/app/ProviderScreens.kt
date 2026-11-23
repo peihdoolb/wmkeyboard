@@ -77,6 +77,7 @@ import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.CurrencyBitcoin
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.CurrencyExchange
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Delete
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Dns
+import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Extension
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.DragIndicator
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.ErrorOutline
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Key
@@ -95,9 +96,12 @@ import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Translate
 import com.wasimaster.wmkeyboard.app.homeassistant.HomeProviderExtras
 import com.wasimaster.wmkeyboard.app.homeassistant.homeReady
 import com.wasimaster.wmkeyboard.core.homeassistant.backend.HomeKind
+import com.wasimaster.wmkeyboard.core.providers.AiPreset
+import com.wasimaster.wmkeyboard.core.providers.AiPresets
 import com.wasimaster.wmkeyboard.core.providers.ChainMode
 import com.wasimaster.wmkeyboard.core.providers.CredentialSpec
 import com.wasimaster.wmkeyboard.core.providers.Need
+import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import com.wasimaster.wmkeyboard.core.providers.ProviderCatalog
 import com.wasimaster.wmkeyboard.core.providers.ProviderChain
 import com.wasimaster.wmkeyboard.core.providers.ProviderCredential
@@ -107,7 +111,9 @@ import com.wasimaster.wmkeyboard.core.providers.ProviderEnvironment
 import com.wasimaster.wmkeyboard.core.providers.ProviderLogos
 import com.wasimaster.wmkeyboard.core.providers.ProviderTool
 import com.wasimaster.wmkeyboard.core.providers.ProviderType
+import com.wasimaster.wmkeyboard.core.providers.PluginProviders
 import com.wasimaster.wmkeyboard.core.providers.ProviderTypes
+import com.wasimaster.wmkeyboard.core.plugins.PluginProviderRef
 import com.wasimaster.wmkeyboard.core.providers.SameKind
 import com.wasimaster.wmkeyboard.core.settings.AiProvider
 import com.wasimaster.wmkeyboard.core.settings.AiProviders
@@ -165,10 +171,20 @@ internal fun ProvidersGroup(
     /** After every saved change: for a cache that answered for the old setup. */
     onChanged: () -> Unit = {},
 ) {
+    // A list of online services only has nothing the offline build could run.
+    if (OfflineBuild.isThisBuild && !ProviderCatalog.anyOffline(tool)) return
     val scope = rememberCoroutineScope()
     val navigate = LocalSettingsNavigate.current
     val env = rememberProviderEnv(tool)
-    val rows = settings.watch { it.resolveProviders(tool, env, all = true) }
+    // The offline build shows only what runs on the phone: an online
+    // service's row is a switch that could never do anything there. The rows
+    // stay in the stored list, so a move to the standard build finds them.
+    val offlineBuild = OfflineBuild.isThisBuild
+    val rows = settings.watch { s ->
+        s.resolveProviders(tool, env, all = true).let { all ->
+            if (offlineBuild) all.filterNot { ProviderCatalog.hiddenOffline(it.type) } else all
+        }
+    }
     val mode = settings.watch { it.providerMode(tool, env) }
     val stored = settings.watch { tool in it.providers.chains }
     // Only a list that folds two of a kind, with some kind on it twice, has anything to decide here.
@@ -187,8 +203,14 @@ internal fun ProvidersGroup(
     }
     fun chain(): ProviderChain = settings.value.providerChain(tool, env)
     fun openRow(row: ResolvedProvider) {
-        // A kind a newer build added: nothing to open, only to remove.
-        if (row.type == null) removing = row else navigate(providerRoute(tool, row.key))
+        // A kind a newer build added: nothing to open, only to remove. A
+        // plugin's row is set up on its plugin's page.
+        val plugin = if (row.type === ProviderTypes.PLUGIN) PluginProviderRef.parse(row.key)?.first else null
+        when {
+            row.type == null -> removing = row
+            plugin != null -> if (PluginProviders.row(row.key) != null) navigate(pluginRoute(plugin)) else removing = row
+            else -> navigate(providerRoute(tool, row.key))
+        }
     }
     fun toggle(row: ResolvedProvider, on: Boolean) = save(ProviderEdits.setChain(tool, chain().toggled(row.key, on)))
 
@@ -331,6 +353,14 @@ internal fun ProvidersGroup(
                     is ProviderPick.Add -> save(ProviderEdits.addEntry(settings.value, tool, pick.entry, env))
                     is ProviderPick.Edit -> editing = pick.target
                 }
+            },
+            onPreset = { preset ->
+                adding = false
+                editing = ProviderEditTarget(ProviderTypes.OPENAI_COMPATIBLE, AiPresets.credential(preset), isNew = true)
+            },
+            onPlugin = { plugin ->
+                adding = false
+                save(ProviderEdits.addEntry(settings.value, tool, PluginProviders.entry(plugin.key), env))
             },
             onDismiss = { adding = false },
         )
@@ -890,6 +920,7 @@ private const val LIGHT_MAX_LUMINANCE = 0.45f
 /** The glyph a kind of provider is drawn with: by what it is first, then by what it does. */
 internal fun providerIcon(type: ProviderType?): ImageVector = when {
     type == null -> Icons.Outlined.Public
+    type === ProviderTypes.PLUGIN -> Icons.Outlined.Extension
     HomeKind.of(type.id) != null -> Icons.Outlined.HomeIotDevice
     ProviderTool.VOICE in type.serves && !type.selfHosted -> Icons.Outlined.Mic
     type.onDevice -> Icons.Outlined.PhoneAndroid
@@ -927,6 +958,8 @@ internal fun providerAccent(type: ProviderType?): Color = when (type?.id) {
     ProviderTypes.WIBY.id -> Color(0xFF2E7D32)
     ProviderTypes.MARGINALIA.id -> Color(0xFF6D4C41)
     ProviderTypes.WIKIPEDIA_SEARCH.id -> Color(0xFF3A3A3A)
+    ProviderTypes.PLUGIN.id -> Color(0xFF00897B)
+    ProviderTypes.METASEARCH.id -> Color(0xFF5E35B1)
     ProviderTypes.BROWSER.id -> Color(0xFF00838F)
     ProviderTypes.UNSPLASH.id -> Color(0xFF111111)
     ProviderTypes.PEXELS.id -> Color(0xFF05A081)
@@ -1000,7 +1033,9 @@ private val ClearOfStatusBar = Modifier.statusBarsPadding()
 /**
  * "Add a provider" as a sheet of kinds, the build's suggestions first. A
  * server kind also lists the servers set up for another tool, so a
- * LibreTranslate server added once can be used again.
+ * LibreTranslate server added once can be used again. Under the
+ * OpenAI-compatible kind come the services it reaches by name
+ * ([AiPresets]), each opening its editor with the address filled in.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1010,9 +1045,12 @@ internal fun ProviderTypeSheet(
     chain: ProviderChain,
     credentials: List<ProviderCredential>,
     onPick: (ProviderType, ProviderCredential?) -> Unit,
+    onPreset: (AiPreset) -> Unit,
+    onPlugin: (PluginProviders.Row) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val types = remember(tool, env, chain) { ProviderCatalog.addable(tool, chain, env) }
+    val plugins = remember(tool, env, chain) { ProviderCatalog.addablePlugins(tool, chain, env) }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         modifier = ClearOfStatusBar,
@@ -1031,6 +1069,16 @@ internal fun ProviderTypeSheet(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
             )
             Spacer(Modifier.height(8.dp))
+            // Each provider a plugin offers for this list, by its own name.
+            for (plugin in plugins) {
+                val about = plugin.summary.ifBlank { stringResource(R.string.providers_type_plugin_by, plugin.pluginName) }
+                WmRow(
+                    title = plugin.name,
+                    subtitle = if (plugin.runnable) about else about + "\n" + stringResource(R.string.providers_status_plugin_off),
+                    leading = { ProviderTile(ProviderTypes.PLUGIN, active = plugin.runnable) },
+                    onClick = { onPlugin(plugin) },
+                )
+            }
             for (type in types) {
                 val tags = providerTags(type)
                 val desc = stringResource(type.descriptionRes(tool))
@@ -1054,6 +1102,20 @@ internal fun ProviderTypeSheet(
                             title = stringResource(R.string.providers_type_use_existing, credentialLabel(type, credential)),
                             icon = if (credential.url.isNotBlank()) Icons.Outlined.Dns else Icons.Outlined.Key,
                             onClick = { onPick(type, credential) },
+                        )
+                    }
+                }
+                if (type === ProviderTypes.OPENAI_COMPATIBLE) {
+                    for (preset in AiPresets.all) {
+                        WmRow(
+                            title = preset.label,
+                            subtitle = if (preset.selfHosted) {
+                                stringResource(R.string.providers_preset_server)
+                            } else {
+                                stringResource(R.string.providers_preset_online, hostOf(preset.url))
+                            },
+                            icon = if (preset.selfHosted) Icons.Outlined.Dns else Icons.Outlined.Public,
+                            onClick = { onPreset(preset) },
                         )
                     }
                 }

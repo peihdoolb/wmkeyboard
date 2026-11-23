@@ -47,6 +47,8 @@
     <string name="providers_status_needs_model">Needs a model name</string>
     <string name="providers_status_needs_packs">Import a GIF pack first</string>
     <string name="providers_status_unavailable">Not available in this build</string>
+    <string name="providers_type_plugin_by">From the plugin %1$s</string>
+    <string name="providers_status_plugin_off">Its plugin is off or removed</string>
     <string name="providers_status_unknown">Added by a newer version of the app</string>
     <string name="providers_status_off">Off</string>
     <!-- A LanguageTool row in the grammar tool's list. %1$s is the server's host. -->
@@ -170,6 +172,8 @@
     <string name="providers_type_use_existing">Use %1$s</string>
     <string name="providers_type_existing_key">%1$s, key ending %2$s</string>
     <string name="providers_type_new_server">Add another server</string>
+    <string name="providers_preset_online">OpenAI-compatible service at %1$s. Paste its key and pick a model.</string>
+    <string name="providers_preset_server">OpenAI-compatible server you run. The address points at this phone; change it to your computer\'s.</string>
     <string name="providers_tag_free">Free software</string>
     <string name="providers_tag_on_device">On the phone</string>
     <string name="providers_tag_self_hosted">Your own server</string>

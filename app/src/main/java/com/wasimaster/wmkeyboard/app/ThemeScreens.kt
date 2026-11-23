@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.app
 
+import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import com.wasimaster.wmkeyboard.core.fonts.FontFile
 import com.wasimaster.wmkeyboard.core.fonts.FontImportResult
 import com.wasimaster.wmkeyboard.content.R as ContentR
@@ -7,6 +8,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.LocalContentColor
 import com.wasimaster.wmkeyboard.ime.ui.rememberIconFile
+import com.wasimaster.wmkeyboard.ime.ui.IconDefaults
+import com.wasimaster.wmkeyboard.ime.ui.ResolvedIcon
+import com.wasimaster.wmkeyboard.ime.ui.resolvePackIcon
 import com.wasimaster.wmkeyboard.ime.ui.SlotIcon
 import com.wasimaster.wmkeyboard.core.icons.LibraryIcon
 import com.wasimaster.wmkeyboard.core.icons.IconSlots
@@ -119,6 +123,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import com.wasimaster.wmkeyboard.core.ui.ScrollRail
+import com.wasimaster.wmkeyboard.core.ui.rememberScrollRailState
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -154,7 +163,12 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
@@ -214,6 +228,7 @@ import com.wasimaster.wmkeyboard.core.settings.AppColorScope
 import com.wasimaster.wmkeyboard.core.theme.AppColorSource
 import com.wasimaster.wmkeyboard.core.theme.DEFAULT_KEY_GLOW_DP
 import com.wasimaster.wmkeyboard.core.theme.KEY_GLOW_RANGE
+import com.wasimaster.wmkeyboard.core.theme.KEY_PRESSED_GLOW_STRENGTH_RANGE
 import com.wasimaster.wmkeyboard.core.theme.KEY_OVERRIDE_RADIUS_RANGE
 import com.wasimaster.wmkeyboard.core.theme.LooseTheme
 import com.wasimaster.wmkeyboard.core.theme.ORB_SPOT_POSITION_RANGE
@@ -353,6 +368,7 @@ import com.wasimaster.wmkeyboard.core.theme.withAlphaFraction
 import com.wasimaster.wmkeyboard.core.theme.brush
 import com.wasimaster.wmkeyboard.core.theme.keyShapeFor
 import com.wasimaster.wmkeyboard.core.theme.keyShapeKindOrNull
+import com.wasimaster.wmkeyboard.core.theme.toolShapeKindOrNull
 import com.wasimaster.wmkeyboard.core.theme.safeContainerKind
 import com.wasimaster.wmkeyboard.core.theme.findThemeFamily
 import com.wasimaster.wmkeyboard.core.theme.flattenedThemes
@@ -933,6 +949,36 @@ internal fun keyShapeName(kind: KeyShapeKind): String = stringResource(
         KeyShapeKind.SCALLOP -> R.string.theme_key_shape_scallop_label
         KeyShapeKind.TICKET -> R.string.theme_key_shape_ticket_label
         KeyShapeKind.CIRCLE -> R.string.theme_key_shape_circle_label
+        KeyShapeKind.COOKIE -> R.string.theme_key_shape_cookie_label
+        KeyShapeKind.SUNNY -> R.string.theme_key_shape_sunny_label
+        KeyShapeKind.FLOWER -> R.string.theme_key_shape_flower_label
+        KeyShapeKind.CLOVER -> R.string.theme_key_shape_clover_label
+        KeyShapeKind.OVAL -> R.string.theme_key_shape_oval_label
+        KeyShapeKind.SEMICIRCLE -> R.string.theme_key_shape_semicircle_label
+        KeyShapeKind.TRIANGLE -> R.string.theme_key_shape_triangle_label
+        KeyShapeKind.ARROW -> R.string.theme_key_shape_arrow_label
+        KeyShapeKind.FAN -> R.string.theme_key_shape_fan_label
+        KeyShapeKind.DIAMOND -> R.string.theme_key_shape_diamond_label
+        KeyShapeKind.CLAMSHELL -> R.string.theme_key_shape_clamshell_label
+        KeyShapeKind.PENTAGON -> R.string.theme_key_shape_pentagon_label
+        KeyShapeKind.GEM -> R.string.theme_key_shape_gem_label
+        KeyShapeKind.VERY_SUNNY -> R.string.theme_key_shape_very_sunny_label
+        KeyShapeKind.COOKIE_4 -> R.string.theme_key_shape_cookie_4_label
+        KeyShapeKind.COOKIE_6 -> R.string.theme_key_shape_cookie_6_label
+        KeyShapeKind.COOKIE_7 -> R.string.theme_key_shape_cookie_7_label
+        KeyShapeKind.COOKIE_9 -> R.string.theme_key_shape_cookie_9_label
+        KeyShapeKind.CLOVER_8 -> R.string.theme_key_shape_clover_8_label
+        KeyShapeKind.BURST -> R.string.theme_key_shape_burst_label
+        KeyShapeKind.SOFT_BURST -> R.string.theme_key_shape_soft_burst_label
+        KeyShapeKind.BOOM -> R.string.theme_key_shape_boom_label
+        KeyShapeKind.SOFT_BOOM -> R.string.theme_key_shape_soft_boom_label
+        KeyShapeKind.PUFFY -> R.string.theme_key_shape_puffy_label
+        KeyShapeKind.PUFFY_DIAMOND -> R.string.theme_key_shape_puffy_diamond_label
+        KeyShapeKind.GHOST -> R.string.theme_key_shape_ghost_label
+        KeyShapeKind.PIXEL_CIRCLE -> R.string.theme_key_shape_pixel_circle_label
+        KeyShapeKind.PIXEL_TRIANGLE -> R.string.theme_key_shape_pixel_triangle_label
+        KeyShapeKind.BUN -> R.string.theme_key_shape_bun_label
+        KeyShapeKind.HEART -> R.string.theme_key_shape_heart_label
     },
 )
 
@@ -1045,11 +1091,19 @@ private const val THUMB_DECODE_PX = 96
 /** What chips draw with when a theme sets no chip radius; mirrors the keyboard. */
 private const val DefaultChipRadiusDp = 12
 
+/** Width of one tile in [KeyShapePickerDialog]: room for "4-sided cookie" on two lines. */
+private const val ShapeTileWidthDp = 64
+
 /**
- * Radio list of every key shape, each row with the shape drawn beside its name.
- * Shared by every shape a theme sets (keys, popups, tools, chips, menus and
- * cards), hence the caller's [title].
+ * Grid of every key shape, each drawn over its name, the picked one on a filled
+ * tile. Shared by every shape a theme sets (keys, popups, tools, chips, menus
+ * and cards), hence the caller's [title].
+ *
+ * A grid rather than the radio list it was: with the Material shapes of #1515
+ * there are over forty, and a list of them was a long scroll in which the shape
+ * the eye picks by sat at the far end of each row from the button.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun KeyShapePickerDialog(
     selected: KeyShapeKind?,
@@ -1065,11 +1119,20 @@ internal fun KeyShapePickerDialog(
     // shape picker is the one caller that passes true.
     offerNone: Boolean = false,
 ) {
+    val scroll = rememberScrollState()
+    // Where the grid sits in the column and where the picked tile sits in the
+    // grid, so the dialog opens scrolled to the shape in use (the Heart is
+    // eleven rows down).
+    var gridTop by remember { mutableIntStateOf(-1) }
+    var pickedTop by remember { mutableIntStateOf(-1) }
+    LaunchedEffect(gridTop, pickedTop) {
+        if (gridTop >= 0 && pickedTop > 0) scroll.scrollTo(gridTop + pickedTop)
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(title)) },
         text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            Column(modifier = Modifier.verticalScroll(scroll)) {
                 if (onAuto != null) {
                     Row(
                         modifier = Modifier
@@ -1086,31 +1149,52 @@ internal fun KeyShapePickerDialog(
                         )
                     }
                 }
-                for (kind in KeyShapeKind.entries) {
-                    if (kind == KeyShapeKind.NONE && !offerNone) continue
-                    val picked = kind == selected
-                    ScrollAnchor(picked) {
-                        Row(
+                FlowRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onPlaced { gridTop = it.positionInParent().y.roundToInt() },
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    for (kind in KeyShapeKind.entries) {
+                        if (kind == KeyShapeKind.NONE && !offerNone) continue
+                        val picked = kind == selected
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onPick(kind) }
+                                .width(ShapeTileWidthDp.dp)
+                                .then(
+                                    if (picked) {
+                                        Modifier.onPlaced { pickedTop = it.positionInParent().y.roundToInt() }
+                                    } else {
+                                        Modifier
+                                    },
+                                )
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    if (picked) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
+                                )
+                                .selectable(selected = picked, role = Role.RadioButton, onClick = { onPick(kind) })
                                 .padding(vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            RadioButton(selected = picked, onClick = { onPick(kind) })
-                            Spacer(Modifier.width(8.dp))
-                            Text(keyShapeName(kind), modifier = Modifier.weight(1f))
-                            Spacer(Modifier.width(8.dp))
                             KeyShapeSwatch(
                                 kind = kind,
                                 radiusDp = radiusDp,
-                                // The picked shape carries the accent, so the row
+                                // The picked shape carries the accent, so the tile
                                 // that is on reads at a glance from the swatches.
                                 color = if (picked) {
                                     MaterialTheme.colorScheme.primary
                                 } else {
                                     MaterialTheme.colorScheme.onSurfaceVariant
                                 },
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                keyShapeName(kind),
+                                style = MaterialTheme.typography.labelSmall,
+                                textAlign = TextAlign.Center,
+                                maxLines = 2,
+                                modifier = Modifier.padding(horizontal = 2.dp),
                             )
                         }
                     }
@@ -1724,176 +1808,30 @@ fun ThemesScreen(
         }
     }
 
-    SettingsGroup(stringResource(R.string.theme_mode_section_title)) {
-        item {
-            ChoiceControl(
-                options = ThemeMode.entries.map { it to stringResource(themeModeLabelRes(it)) },
-                selected = settings.watch { it.themeMode },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                label = stringResource(R.string.theme_mode_choice_label),
-                detail = { mode -> ChoiceDetail(stringResource(themeModeDescRes(mode))) },
-            ) { mode -> scope.launch { repository.setThemeMode(mode) } }
-        }
-        item {
-            ToggleSetting(
-                R.string.theme_material_you_title,
-                stringResource(R.string.theme_material_you_subtitle),
-                checked = settings.watch { it.dynamicColor },
-                default = SettingsDefaults.dynamicColor,
-                info = stringResource(R.string.theme_material_you_info),
-            ) { scope.launch { repository.setDynamicColor(it) } }
-        }
-    }
-
-    // null = closed; true = choosing the light theme; false = the dark theme.
-    var pickerForLight by remember { mutableStateOf<Boolean?>(null) }
-    // null = closed; true = editing when day starts, false = when night does.
-    var timePickerForDay by remember { mutableStateOf<Boolean?>(null) }
-    // What decides which rows the auto group holds, and what its "?" says;
-    // each row reads its own value.
+    // Light or dark, Auto (light and dark) and App colors have a page of their
+    // own (#1451). Laid out here they stood between the title and the gallery,
+    // and the gallery is what nearly every visit to this screen is for.
     val autoOn = settings.watch { it.autoTheme.enabled }
-    val autoTrigger = settings.watch { it.autoTheme.trigger }
-    val shuffles = settings.watch { it.autoTheme.usesRandomSlot }
-    // The chosen trigger's explanation rides in the section's "?" with the
-    // rest; the one state that needs doing something about — sun times with
-    // no place to compute them for — is a banner instead.
-    val hasSunLocation = settings.watch { it.weather.latitude != null && it.weather.longitude != null }
-    val sunPlace = settings.watch { it.weather.placeName }.takeIf { it.isNotBlank() }
-        ?: stringResource(R.string.theme_auto_trigger_sun_place_fallback)
-    val triggerNote = when (autoTrigger) {
-        AutoThemeTrigger.SYSTEM -> stringResource(R.string.theme_auto_trigger_system_body)
-        AutoThemeTrigger.SUN ->
-            if (hasSunLocation) stringResource(R.string.theme_auto_trigger_sun_body, sunPlace) else null
-        else -> null
-    }
-    SettingsGroup(
-        stringResource(R.string.theme_auto_section_title),
-        info = listOfNotNull(stringResource(R.string.theme_auto_section_body), triggerNote)
-            .joinToString("\n\n"),
-        level = SettingLevel.STANDARD,
-    ) {
+    // Every way of bringing a theme in, behind one row (#1452): they were ten
+    // buttons over the gallery, five rows of them on a phone, for something
+    // done now and then.
+    var importSheetOpen by remember { mutableStateOf(false) }
+    SettingsGroup {
         item {
-            ToggleSetting(
-                R.string.theme_auto_title,
-                stringResource(R.string.theme_auto_subtitle),
-                checked = autoOn,
-                default = SettingsDefaults.autoTheme.enabled,
-                info = stringResource(R.string.theme_auto_info),
-            ) { scope.launch { repository.setAutoThemeEnabled(it) } }
+            NavRow(
+                R.string.theme_modes_title,
+                stringResource(R.string.theme_modes_subtitle),
+                value = stringResource(themeModeLabelRes(settings.watch { it.themeMode })),
+                route = THEME_MODES_ROUTE,
+            ) { onNavigate(THEME_MODES_ROUTE) }
         }
-        if (autoOn) {
-            item {
-                NavRow(
-                    R.string.theme_auto_light_title,
-                    value = autoSlotSummary(settings, darkSlot = false),
-                ) { pickerForLight = true }
-            }
-            item {
-                NavRow(
-                    R.string.theme_auto_dark_title,
-                    value = autoSlotSummary(settings, darkSlot = true),
-                ) { pickerForLight = false }
-            }
-            item(visible = shuffles, level = SettingLevel.ADVANCED) {
-                ChoiceSetting(
-                    title = R.string.theme_shuffle_interval_title,
-                    subtitle = stringResource(R.string.theme_shuffle_interval_subtitle),
-                    options = RotationInterval.entries
-                        .map { it to stringResource(it.labelRes) },
-                    selected = settings.watch { it.autoTheme.shuffleInterval },
-                    default = SettingsDefaults.autoTheme.shuffleInterval,
-                    info = stringResource(R.string.theme_shuffle_interval_info),
-                ) { value -> scope.launch { repository.setAutoThemeShuffleInterval(value) } }
-            }
-            item(visible = shuffles) {
-                ActionRow(
-                    title = R.string.theme_shuffle_now_title,
-                    subtitle = stringResource(R.string.theme_shuffle_now_subtitle),
-                    action = stringResource(R.string.theme_shuffle_now_action),
-                ) { scope.launch { repository.shuffleAutoThemeNow() } }
-            }
-            item {
-                ChoiceControl(
-                    options = AutoThemeTrigger.entries.map { it to stringResource(it.labelRes) },
-                    selected = autoTrigger,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    label = stringResource(R.string.theme_auto_trigger_label),
-                    detail = { trigger ->
-                        ChoiceDetail(stringResource(autoTriggerDescRes(trigger)))
-                    },
-                ) { trigger -> scope.launch { repository.setAutoThemeTrigger(trigger) } }
-            }
-            when (autoTrigger) {
-                AutoThemeTrigger.SYSTEM -> Unit
-                AutoThemeTrigger.SCHEDULE -> {
-                    item {
-                        NavRow(
-                            R.string.theme_auto_light_from_title,
-                            value = formatMinutesOfDay(settings.watch { it.autoTheme.dayStartMinutes }),
-                        ) { timePickerForDay = true }
-                    }
-                    item {
-                        NavRow(
-                            R.string.theme_auto_dark_from_title,
-                            value = formatMinutesOfDay(settings.watch { it.autoTheme.nightStartMinutes }),
-                        ) { timePickerForDay = false }
-                    }
-                }
-                AutoThemeTrigger.SUN -> if (!hasSunLocation) {
-                    item { StateBanner(stringResource(R.string.theme_auto_trigger_sun_no_location_body)) }
-                }
-            }
+        item {
+            NavRow(
+                R.string.theme_import_row_title,
+                stringResource(R.string.theme_import_row_subtitle),
+            ) { importSheetOpen = true }
         }
     }
-    timePickerForDay?.let { forDay ->
-        TimeOfDayPickerDialog(
-            title = stringResource(
-                if (forDay) R.string.theme_auto_light_from_title
-                else R.string.theme_auto_dark_from_title,
-            ),
-            minutes = settings.watch {
-                if (forDay) it.autoTheme.dayStartMinutes else it.autoTheme.nightStartMinutes
-            },
-            onPick = { picked ->
-                scope.launch {
-                    if (forDay) repository.setAutoThemeDayStart(picked)
-                    else repository.setAutoThemeNightStart(picked)
-                }
-                timePickerForDay = null
-            },
-            onDismiss = { timePickerForDay = null },
-        )
-    }
-    pickerForLight?.let { forLight ->
-        val darkSlot = !forLight
-        ThemePickerDialog(
-            title = stringResource(
-                if (forLight) R.string.theme_auto_light_title else R.string.theme_auto_dark_title,
-            ),
-            settings = settings,
-            selectedId = settings.watch { it.autoTheme.slotFixedId(darkSlot) },
-            randomOn = settings.watch { it.autoTheme.slotRandom(darkSlot) },
-            poolIds = settings.watch { it.autoTheme.slotPool(darkSlot) },
-            onModeChange = { on ->
-                scope.launch { repository.setAutoThemeSlotRandom(darkSlot, on) }
-            },
-            onPick = { id ->
-                scope.launch {
-                    if (forLight) repository.setAutoThemeLightId(id)
-                    else repository.setAutoThemeDarkId(id)
-                }
-                // Selecting one theme closes the dialog; assembling a set does
-                // not, because that takes more than one press.
-                pickerForLight = null
-            },
-            onToggle = { id, inPool ->
-                scope.launch { repository.setAutoThemePoolMember(darkSlot, id, inPool) }
-            },
-            onDismiss = { pickerForLight = null },
-        )
-    }
-
-    AppColorsGroup(repository, settings)
 
     // The gallery is a grid of theme cards, which are their own surfaces, so
     // it keeps a plain header rather than being wrapped in a settings card.
@@ -1921,7 +1859,20 @@ fun ThemesScreen(
     val newThemeName = stringResource(R.string.theme_new_default_name)
     val newThemeDark = isSystemInDarkTheme()
     val customs = settings.watch { it.customThemes }.sortedBy { it.name.lowercase() }
-    val customEntries = if (grouped) customs else customs.flattenedThemes()
+    // The theme in use leads Your themes (#1452), so editing it does not start
+    // with a hunt down an alphabetical list. Taken as the screen opens and not
+    // after every tap: a card that jumped to the top the moment it was pressed
+    // would pull the rest of the list out from under the finger.
+    val inUseId = settings.watch {
+        if (it.autoTheme.enabled) it.effectiveThemeId(it.autoDarkSlotNow()) else it.keyboardThemeId
+    }
+    val leadId = remember { inUseId }
+    val customEntries = (if (grouped) customs else customs.flattenedThemes()).let { entries ->
+        val lead = entries.indexOfFirst { entry ->
+            if (grouped) entry.selfAndVariants().any { it.id == leadId } else entry.id == leadId
+        }
+        if (lead <= 0) entries else listOf(entries[lead]) + entries.filterIndexed { index, _ -> index != lead }
+    }
     // Which look each family's card is showing, when the user tapped a dot.
     // Falls back to the selected member, then the parent, in the card logic.
     val shownVariant = remember { mutableStateMapOf<String, String>() }
@@ -2090,73 +2041,34 @@ fun ThemesScreen(
             },
         )
     }
-    FlowRow(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        OutlinedButton(onClick = { importLauncher.launch(ThemeCodec.IMPORT_MIME_TYPES + PackBundle.MIME_TYPE) }) {
-            Icon(Icons.Outlined.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(stringResource(CommonR.string.common_import))
-        }
-        OutlinedButton(onClick = { themeCopyOpen = true }) {
-            Icon(Icons.Outlined.Screenshot, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(stringResource(R.string.theme_copy_action))
-        }
-        OutlinedButton(onClick = { florisLauncher.launch(FlexTheme.IMPORT_MIME_TYPES) }) {
-            Icon(Icons.Outlined.SwapHoriz, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(stringResource(R.string.theme_import_floris_action))
-        }
-        OutlinedButton(onClick = { heliChooser = true }) {
-            Icon(Icons.Outlined.SwapHoriz, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(stringResource(R.string.theme_import_heli_action))
-        }
-        OutlinedButton(onClick = { futoLauncher.launch(FutoTheme.IMPORT_MIME_TYPES) }) {
-            Icon(Icons.Outlined.SwapHoriz, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(stringResource(R.string.theme_import_futo_action))
-        }
-        OutlinedButton(onClick = { multilingChooser = true }) {
-            Icon(Icons.Outlined.SwapHoriz, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(stringResource(R.string.theme_import_multiling_action))
-        }
-        OutlinedButton(onClick = { kineticaLauncher.launch(KineticaTheme.IMPORT_MIME_TYPES) }) {
-            Icon(Icons.Outlined.SwapHoriz, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(stringResource(R.string.theme_import_kinetica_action))
-        }
-        OutlinedButton(onClick = { clinkLauncher.launch(ClinkTheme.IMPORT_MIME_TYPES) }) {
-            Icon(Icons.Outlined.SwapHoriz, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(stringResource(R.string.theme_import_clink_action))
-        }
+    if (importSheetOpen) {
         val kyngClipboard = LocalClipboardManager.current
-        OutlinedButton(onClick = {
-            val pasted = kyngClipboard.getText()?.text
-            scope.launch { applyKyngTheme(pasted) }
-        }) {
-            Icon(Icons.Outlined.ContentPaste, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(stringResource(R.string.theme_import_kyng_action))
-        }
-        // The Play build has no Rboard browser (it would fetch a collection of
-        // unlicensed third-party artwork from inside the app), so there is
-        // nothing to choose between and the button opens the file picker.
-        OutlinedButton(onClick = {
-            if (BuildConfig.ENABLE_PLAY_STORE) {
-                gboardLauncher.launch(GboardTheme.IMPORT_MIME_TYPES)
-            } else {
-                gboardChooser = true
+        ThemeImportSheet(onDismiss = { importSheetOpen = false }) { source ->
+            importSheetOpen = false
+            when (source) {
+                ThemeImportSource.FILE -> importLauncher.launch(ThemeCodec.IMPORT_MIME_TYPES + PackBundle.MIME_TYPE)
+                ThemeImportSource.SCREENSHOT -> { themeCopyOpen = true }
+                ThemeImportSource.FLORIS -> florisLauncher.launch(FlexTheme.IMPORT_MIME_TYPES)
+                ThemeImportSource.HELI -> { heliChooser = true }
+                ThemeImportSource.FUTO -> futoLauncher.launch(FutoTheme.IMPORT_MIME_TYPES)
+                ThemeImportSource.MULTILING -> { multilingChooser = true }
+                ThemeImportSource.KINETICA -> kineticaLauncher.launch(KineticaTheme.IMPORT_MIME_TYPES)
+                ThemeImportSource.CLINK -> clinkLauncher.launch(ClinkTheme.IMPORT_MIME_TYPES)
+                ThemeImportSource.KYNG -> {
+                    val pasted = kyngClipboard.getText()?.text
+                    scope.launch { applyKyngTheme(pasted) }
+                }
+                // The Play build has no Rboard browser (it would fetch a
+                // collection of unlicensed third-party artwork from inside the
+                // app), so there is nothing to choose between and the row
+                // opens the file picker.
+                // The offline build cannot fetch the collection either.
+                ThemeImportSource.GBOARD -> if (BuildConfig.ENABLE_PLAY_STORE || OfflineBuild.isThisBuild) {
+                    gboardLauncher.launch(GboardTheme.IMPORT_MIME_TYPES)
+                } else {
+                    gboardChooser = true
+                }
             }
-        }) {
-            Icon(Icons.Outlined.SwapHoriz, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(stringResource(R.string.theme_import_gboard_action))
         }
     }
     if (gboardChooser) {
@@ -2413,7 +2325,7 @@ fun ThemesScreen(
     // One row for getting more (#43), as Layout & size has (#1318): the
     // community repository is one of the stores the add-on screen lists, so
     // a second row for it only split the same catalogue in two.
-    SettingsGroup {
+    if (!OfflineBuild.isThisBuild) SettingsGroup {
         item {
             AddonStoreRow(AddonType.Theme, onNavigate, subtitle = stringResource(R.string.theme_get_more_subtitle))
         }
@@ -2459,6 +2371,259 @@ fun ThemesScreen(
             },
         )
     }
+}
+
+/** One way into Your themes, as the Import a theme sheet lists them (#1452). */
+private enum class ThemeImportSource(@StringRes val title: Int, @StringRes val subtitle: Int) {
+    FILE(R.string.theme_import_file_title, R.string.theme_import_file_subtitle),
+    SCREENSHOT(R.string.theme_copy_action, R.string.theme_import_screenshot_subtitle),
+    FLORIS(R.string.theme_import_floris_action, R.string.theme_import_floris_subtitle),
+    HELI(R.string.theme_import_heli_action, R.string.theme_import_heli_subtitle),
+    FUTO(R.string.theme_import_futo_action, R.string.theme_import_futo_subtitle),
+    MULTILING(R.string.theme_import_multiling_action, R.string.theme_import_multiling_subtitle),
+    KINETICA(R.string.theme_import_kinetica_action, R.string.theme_import_kinetica_subtitle),
+    CLINK(R.string.theme_import_clink_action, R.string.theme_import_clink_subtitle),
+    KYNG(R.string.theme_import_kyng_action, R.string.theme_import_kyng_subtitle),
+    GBOARD(R.string.theme_import_gboard_action, R.string.theme_import_gboard_subtitle),
+}
+
+/**
+ * Import a theme, as a sheet of sources: a theme file, a screenshot, then the
+ * other keyboards one by one. Not a [ChoiceSheet], whose radio buttons read as
+ * a setting with a current answer; nothing here is selected.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ThemeImportSheet(onDismiss: () -> Unit, onPick: (ThemeImportSource) -> Unit) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    ) {
+        // The sheet keeps its content clear of the navigation bar itself, so
+        // no padding for it here (see ChoiceSheet).
+        ScrollRail(state = rememberScrollRailState(), fadeColor = BottomSheetDefaults.ContainerColor) {
+            Text(
+                stringResource(R.string.theme_import_row_title),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(horizontal = 24.dp),
+            )
+            Spacer(Modifier.height(8.dp))
+            for (source in ThemeImportSource.entries) {
+                if (source == ThemeImportSource.FLORIS) {
+                    Text(
+                        stringResource(R.string.theme_import_other_keyboards_heading),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 4.dp),
+                    )
+                }
+                WmRow(
+                    title = stringResource(source.title),
+                    subtitle = stringResource(
+                        // The Play build opens a Gboard file straight away: it
+                        // has no Rboard collection to offer beside it.
+                        if (source == ThemeImportSource.GBOARD && BuildConfig.ENABLE_PLAY_STORE) {
+                            R.string.theme_import_gboard_file_subtitle
+                        } else {
+                            source.subtitle
+                        },
+                    ),
+                    icon = when (source) {
+                        ThemeImportSource.FILE -> Icons.Outlined.FileDownload
+                        ThemeImportSource.SCREENSHOT -> Icons.Outlined.Screenshot
+                        ThemeImportSource.KYNG -> Icons.Outlined.ContentPaste
+                        else -> Icons.Outlined.SwapHoriz
+                    },
+                    onClick = { onPick(source) },
+                )
+            }
+            Spacer(Modifier.height(32.dp))
+        }
+    }
+}
+
+/** Keyboard themes › Theme modes (#1451). */
+internal const val THEME_MODES_ROUTE = "themes/modes"
+
+/**
+ * Keyboard themes › Theme modes: light or dark, Auto (light and dark) and App
+ * colors. They sat over the theme gallery until #1451, so every visit to pick
+ * or edit a theme began with a scroll past rows that are set once.
+ */
+@Composable
+internal fun ThemeModesSettings(repository: SettingsRepository, settings: LiveSettings) {
+    val scope = rememberCoroutineScope()
+    SettingsGroup(stringResource(R.string.theme_mode_section_title)) {
+        item {
+            ChoiceControl(
+                options = ThemeMode.entries.map { it to stringResource(themeModeLabelRes(it)) },
+                selected = settings.watch { it.themeMode },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                label = stringResource(R.string.theme_mode_choice_label),
+                detail = { mode -> ChoiceDetail(stringResource(themeModeDescRes(mode))) },
+            ) { mode -> scope.launch { repository.setThemeMode(mode) } }
+        }
+        item {
+            ToggleSetting(
+                R.string.theme_material_you_title,
+                stringResource(R.string.theme_material_you_subtitle),
+                checked = settings.watch { it.dynamicColor },
+                default = SettingsDefaults.dynamicColor,
+                info = stringResource(R.string.theme_material_you_info),
+            ) { scope.launch { repository.setDynamicColor(it) } }
+        }
+    }
+
+    // null = closed; true = choosing the light theme; false = the dark theme.
+    var pickerForLight by remember { mutableStateOf<Boolean?>(null) }
+    // null = closed; true = editing when day starts, false = when night does.
+    var timePickerForDay by remember { mutableStateOf<Boolean?>(null) }
+    // What decides which rows the auto group holds, and what its "?" says;
+    // each row reads its own value.
+    val autoOn = settings.watch { it.autoTheme.enabled }
+    val autoTrigger = settings.watch { it.autoTheme.trigger }
+    val shuffles = settings.watch { it.autoTheme.usesRandomSlot }
+    // The chosen trigger's explanation rides in the section's "?" with the
+    // rest; the one state that needs doing something about — sun times with
+    // no place to compute them for — is a banner instead.
+    val hasSunLocation = settings.watch { it.weather.latitude != null && it.weather.longitude != null }
+    val sunPlace = settings.watch { it.weather.placeName }.takeIf { it.isNotBlank() }
+        ?: stringResource(R.string.theme_auto_trigger_sun_place_fallback)
+    val triggerNote = when (autoTrigger) {
+        AutoThemeTrigger.SYSTEM -> stringResource(R.string.theme_auto_trigger_system_body)
+        AutoThemeTrigger.SUN ->
+            if (hasSunLocation) stringResource(R.string.theme_auto_trigger_sun_body, sunPlace) else null
+        else -> null
+    }
+    SettingsGroup(
+        stringResource(R.string.theme_auto_section_title),
+        info = listOfNotNull(stringResource(R.string.theme_auto_section_body), triggerNote)
+            .joinToString("\n\n"),
+        level = SettingLevel.STANDARD,
+    ) {
+        item {
+            ToggleSetting(
+                R.string.theme_auto_title,
+                stringResource(R.string.theme_auto_subtitle),
+                checked = autoOn,
+                default = SettingsDefaults.autoTheme.enabled,
+                info = stringResource(R.string.theme_auto_info),
+            ) { scope.launch { repository.setAutoThemeEnabled(it) } }
+        }
+        if (autoOn) {
+            item {
+                NavRow(
+                    R.string.theme_auto_light_title,
+                    value = autoSlotSummary(settings, darkSlot = false),
+                ) { pickerForLight = true }
+            }
+            item {
+                NavRow(
+                    R.string.theme_auto_dark_title,
+                    value = autoSlotSummary(settings, darkSlot = true),
+                ) { pickerForLight = false }
+            }
+            item(visible = shuffles, level = SettingLevel.ADVANCED) {
+                ChoiceSetting(
+                    title = R.string.theme_shuffle_interval_title,
+                    subtitle = stringResource(R.string.theme_shuffle_interval_subtitle),
+                    options = RotationInterval.entries
+                        .map { it to stringResource(it.labelRes) },
+                    selected = settings.watch { it.autoTheme.shuffleInterval },
+                    default = SettingsDefaults.autoTheme.shuffleInterval,
+                    info = stringResource(R.string.theme_shuffle_interval_info),
+                ) { value -> scope.launch { repository.setAutoThemeShuffleInterval(value) } }
+            }
+            item(visible = shuffles) {
+                ActionRow(
+                    title = R.string.theme_shuffle_now_title,
+                    subtitle = stringResource(R.string.theme_shuffle_now_subtitle),
+                    action = stringResource(R.string.theme_shuffle_now_action),
+                ) { scope.launch { repository.shuffleAutoThemeNow() } }
+            }
+            item {
+                ChoiceControl(
+                    options = AutoThemeTrigger.entries.map { it to stringResource(it.labelRes) },
+                    selected = autoTrigger,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    label = stringResource(R.string.theme_auto_trigger_label),
+                    detail = { trigger ->
+                        ChoiceDetail(stringResource(autoTriggerDescRes(trigger)))
+                    },
+                ) { trigger -> scope.launch { repository.setAutoThemeTrigger(trigger) } }
+            }
+            when (autoTrigger) {
+                AutoThemeTrigger.SYSTEM -> Unit
+                AutoThemeTrigger.SCHEDULE -> {
+                    item {
+                        NavRow(
+                            R.string.theme_auto_light_from_title,
+                            value = formatMinutesOfDay(settings.watch { it.autoTheme.dayStartMinutes }),
+                        ) { timePickerForDay = true }
+                    }
+                    item {
+                        NavRow(
+                            R.string.theme_auto_dark_from_title,
+                            value = formatMinutesOfDay(settings.watch { it.autoTheme.nightStartMinutes }),
+                        ) { timePickerForDay = false }
+                    }
+                }
+                AutoThemeTrigger.SUN -> if (!hasSunLocation) {
+                    item { StateBanner(stringResource(R.string.theme_auto_trigger_sun_no_location_body)) }
+                }
+            }
+        }
+    }
+    timePickerForDay?.let { forDay ->
+        TimeOfDayPickerDialog(
+            title = stringResource(
+                if (forDay) R.string.theme_auto_light_from_title
+                else R.string.theme_auto_dark_from_title,
+            ),
+            minutes = settings.watch {
+                if (forDay) it.autoTheme.dayStartMinutes else it.autoTheme.nightStartMinutes
+            },
+            onPick = { picked ->
+                scope.launch {
+                    if (forDay) repository.setAutoThemeDayStart(picked)
+                    else repository.setAutoThemeNightStart(picked)
+                }
+                timePickerForDay = null
+            },
+            onDismiss = { timePickerForDay = null },
+        )
+    }
+    pickerForLight?.let { forLight ->
+        val darkSlot = !forLight
+        ThemePickerDialog(
+            title = stringResource(
+                if (forLight) R.string.theme_auto_light_title else R.string.theme_auto_dark_title,
+            ),
+            settings = settings,
+            selectedId = settings.watch { it.autoTheme.slotFixedId(darkSlot) },
+            randomOn = settings.watch { it.autoTheme.slotRandom(darkSlot) },
+            poolIds = settings.watch { it.autoTheme.slotPool(darkSlot) },
+            onModeChange = { on ->
+                scope.launch { repository.setAutoThemeSlotRandom(darkSlot, on) }
+            },
+            onPick = { id ->
+                scope.launch {
+                    if (forLight) repository.setAutoThemeLightId(id)
+                    else repository.setAutoThemeDarkId(id)
+                }
+                // Selecting one theme closes the dialog; assembling a set does
+                // not, because that takes more than one press.
+                pickerForLight = null
+            },
+            onToggle = { id, inPool ->
+                scope.launch { repository.setAutoThemePoolMember(darkSlot, id, inPool) }
+            },
+            onDismiss = { pickerForLight = null },
+        )
+    }
+
+    AppColorsGroup(repository, settings)
+    Spacer(Modifier.height(24.dp))
 }
 
 // ---- gallery windowing ----
@@ -3866,7 +4031,7 @@ private fun ThemeEditorContent(
                     )
                 }
                 item(level = SettingLevel.STANDARD) {
-                    val toolShape = look.watchWith { s, t -> keyShapeKindOrNull(t.toolShape) ?: s.toolShape }
+                    val toolShape = look.watchWith { s, t -> toolShapeKindOrNull(t.toolShape) ?: s.toolShape }
                     WmRow(
                         title = stringResource(R.string.theme_tool_shape_title),
                         icon = SettingsRowIcons[R.string.theme_tool_shape_title],
@@ -4638,7 +4803,7 @@ private fun ThemeEditorContent(
         }
         // Likewise: somebody who never opens the online picker has no key to
         // manage. The picker's own "add a key" action reaches this screen.
-        item(visible = showServices, level = SettingLevel.STANDARD) {
+        item(visible = showServices && !OfflineBuild.isThisBuild, level = SettingLevel.STANDARD) {
             NavRow(
                 R.string.photo_services_title,
                 subtitle = stringResource(R.string.photo_services_subtitle),
@@ -4731,7 +4896,7 @@ private fun ThemeEditorContent(
     }
     if (toolShapePickerOpen) {
         KeyShapePickerDialog(
-            selected = look.watchWith { s, t -> keyShapeKindOrNull(t.toolShape) ?: s.toolShape },
+            selected = look.watchWith { s, t -> toolShapeKindOrNull(t.toolShape) ?: s.toolShape },
             radiusDp = look.watchWith { s, t -> t.toolCircleRadiusDp ?: s.toolCircleRadiusDp },
             onPick = { kind ->
                 update { t -> t.copy(toolShape = kind.name) }
@@ -4739,6 +4904,7 @@ private fun ThemeEditorContent(
             },
             onDismiss = { toolShapePickerOpen = false },
             title = R.string.theme_tool_shape_title,
+            offerNone = true,
         )
     }
     if (chipShapePickerOpen) {
@@ -6506,7 +6672,9 @@ private fun ThemeEditorContent(
     // animations does the same on the keyboard, though not in this preview.
     // Either way the theme's effects can be let through it, which is the
     // second way out the note offers; once they are, it has nothing to say.
-    val anyMotion = look.watch { it.boardEffect != null || it.keyLighting != null || it.touchBloom != null }
+    val anyMotion = look.watch {
+        it.boardEffect != null || it.keyLighting != null || it.touchBloom != null || it.fontMotions.isNotEmpty()
+    }
     val motionHeld = settings.watch { it.reduceMotion }
     val effectsLetThrough = settings.watch { it.accessibility.themeEffectsWithReduceMotion }
     val systemStill = remember { SystemMotion.animationsOff(context) }
@@ -6971,6 +7139,21 @@ private fun ThemeEditorContent(
                 subtitle = stringResource(R.string.theme_script_font_add_body),
             ) { scriptPickerOpen = true }
         }
+        // Only with a variable font in play: the theme's own, or one in the
+        // library the theme could switch to. Otherwise greyed, saying why.
+        item(level = SettingLevel.STANDARD) {
+            val fontsReady = look.watch { t -> themeFontsAvailable(context, t) }
+            WmRow(
+                title = stringResource(R.string.theme_fonts_title),
+                subtitle = stringResource(R.string.theme_fonts_row_body),
+                icon = SettingsRowIcons[R.string.theme_fonts_title],
+                flightTo = "theme_fonts",
+                enabled = fontsReady,
+                disabledReason = DisabledReason(stringResource(R.string.theme_fonts_unavailable_reason)),
+                highlightKey = R.string.theme_fonts_title,
+                onClick = { onNavigate(themeFontsRoute(lookId)) },
+            )
+        }
         // A theme's sound is resolved past the key-sound gate, so with key
         // sounds off there is nothing for it to replace.
         if (soundOn) item(level = SettingLevel.STANDARD) {
@@ -7047,11 +7230,13 @@ private fun ThemeEditorContent(
     ThemeKeyIconsSection(
         themeId = lookId,
         keyIcons = look.watch { it.keyIcons },
+        keyIconPack = look.watch { it.keyIconPack },
         onSet = { slot, path ->
             update { t ->
                 t.copy(keyIcons = if (path == null) t.keyIcons - slot else t.keyIcons + (slot to path))
             }
         },
+        onPack = { pack -> update { t -> t.copy(keyIconPack = pack) } },
     )
     Spacer(Modifier.height(24.dp))
 }
@@ -7062,64 +7247,147 @@ private fun ThemeEditorContent(
  * way a background photo is, so it travels in the theme's export and survives
  * being deleted from the library.
  *
- * A theme's icon is the weakest layer: an icon pack or an icon picked on the
- * Icons screen wins over it (see `IconSettings`). A row whose slot is taken
- * that way says so, rather than leaving a pick that seems to do nothing — the
- * same complaint the key font had.
+ * By default a theme's icon is the weakest layer: an icon pack or an icon
+ * picked on the Icons screen wins over it (see `IconSettings`). A row whose
+ * slot is taken that way says so, rather than leaving a pick that seems to do
+ * nothing — the same complaint the key font had.
+ *
+ * The Icon set row (#1488) turns that round for this theme: with a set picked,
+ * the theme's pictures come first on the keys, then that set, and the Icons
+ * screen no longer reaches them while the theme is on.
  */
 @Composable
 private fun ThemeKeyIconsSection(
     themeId: String,
     keyIcons: Map<String, String>,
+    keyIconPack: String?,
     onSet: (slot: String, path: String?) -> Unit,
+    onPack: (String?) -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val repository = remember(context) { SettingsRepository(context.applicationContext) }
     val stored by repository.settings.collectAsState(initial = null)
     val icons = stored?.icons
-    val packSlots = remember(icons?.activePackId) {
+    val store = remember(context) { IconPackStore.get(context) }
+    val revision by store.revision.collectAsState()
+    val packSlots = remember(icons?.activePackId, revision) {
         icons?.activePackId?.takeIf { it.isNotEmpty() }
-            ?.let { IconPackStore.get(context).pack(it)?.slots?.toSet() }
+            ?.let { store.pack(it)?.slots?.toSet() }
             .orEmpty()
     }
+    // The installed pack the theme's set resolves to, matched the way the
+    // keyboard matches it (IconResolver): by id, then by name.
+    val themePack = remember(keyIconPack, revision) {
+        keyIconPack?.takeIf { it.isNotEmpty() }?.let { wanted ->
+            store.pack(wanted) ?: store.packs().firstOrNull { it.name.equals(wanted, ignoreCase = true) }
+        }
+    }
+    // Whether the theme decides its keys: the built-in set, or a pack this
+    // phone has. A pack it lacks leaves the keys to the Icons screen.
+    val ownsKeys = keyIconPack != null && (keyIconPack.isEmpty() || themePack != null)
     var picking by remember { mutableStateOf<IconSlot?>(null) }
+    var pickingSet by remember { mutableStateOf(false) }
     SettingsGroup(
         stringResource(R.string.theme_key_icons_section_title),
         foldKey = "theme/key_icons",
         info = stringResource(R.string.theme_key_icons_section_body),
         level = SettingLevel.STANDARD,
     ) {
+        item(key = "icon_set") {
+            WmRow(
+                title = stringResource(R.string.theme_key_icon_set_title),
+                subtitle = when {
+                    keyIconPack == null -> stringResource(R.string.theme_follow_settings_label)
+                    keyIconPack.isEmpty() -> stringResource(R.string.theme_key_icon_set_builtin_label)
+                    themePack != null -> themePack.name
+                    else -> stringResource(R.string.theme_key_icon_set_missing_label, keyIconPack)
+                },
+                onClick = { pickingSet = true },
+            )
+        }
         for (slot in IconSlots.inGroup(IconSlotGroup.KEY)) {
             item(key = slot.id) {
                 val path = keyIcons[slot.id]
-                val hidden = path != null && (icons?.overrides?.containsKey(slot.id) == true || slot.id in packSlots)
+                val hidden = path != null && !ownsKeys &&
+                    (icons?.overrides?.containsKey(slot.id) == true || slot.id in packSlots)
                 val themed = rememberIconFile(path)
+                // What the theme's own set draws here, when it has a set and no
+                // picture for this key: the row shows the key as the theme has
+                // it, not as the Icons screen would.
+                val fromSet by produceState<ResolvedIcon?>(null, ownsKeys, themePack?.id, slot.id, revision) {
+                    val packId = themePack?.id
+                    value = if (ownsKeys && packId != null) {
+                        withContext(Dispatchers.IO) { resolvePackIcon(store, packId, slot.id) }
+                    } else {
+                        null
+                    }
+                }
                 WmRow(
                     title = slotLabel(context, slot),
                     subtitle = stringResource(
                         when {
                             hidden -> R.string.theme_key_icons_hidden_label
                             path != null -> R.string.theme_key_icons_from_theme_label
+                            ownsKeys -> R.string.theme_key_icons_from_set_label
                             else -> R.string.theme_follow_settings_label
                         },
                     ),
                     leading = {
-                        if (themed != null) {
-                            TintedResolvedIcon(
-                                themed,
+                        val shown = themed ?: fromSet
+                        val builtin = if (ownsKeys && themePack == null) IconDefaults.forSlot(slot.id) else null
+                        when {
+                            shown != null -> TintedResolvedIcon(
+                                shown,
                                 tint = LocalContentColor.current,
                                 contentDescription = null,
                                 modifier = Modifier.size(24.dp),
                             )
-                        } else {
-                            SlotIcon(slot.id, contentDescription = null, modifier = Modifier.size(24.dp))
+                            builtin != null -> Icon(builtin, contentDescription = null, modifier = Modifier.size(24.dp))
+                            else -> SlotIcon(slot.id, contentDescription = null, modifier = Modifier.size(24.dp))
                         }
                     },
                     onClick = { picking = slot },
                 )
             }
         }
+    }
+    if (pickingSet) {
+        val packs = remember(revision) { store.packs() }
+        // Follow settings, the app's own icons, then each installed pack.
+        val choices: List<Pair<String?, String>> = listOf(
+            null to stringResource(R.string.theme_follow_settings_label),
+            "" to stringResource(R.string.theme_key_icon_set_builtin_label),
+        ) + packs.map { it.id to it.name }
+        val current = if (keyIconPack.isNullOrEmpty()) keyIconPack else themePack?.id ?: keyIconPack
+        AlertDialog(
+            onDismissRequest = { pickingSet = false },
+            title = { Text(stringResource(R.string.theme_key_icon_set_title)) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    for ((value, label) in choices) {
+                        val chosen = value == current
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .selectable(selected = chosen, role = Role.RadioButton, onClick = {
+                                    pickingSet = false
+                                    onPack(value)
+                                })
+                                .padding(vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = chosen, onClick = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(label, modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { pickingSet = false }) { Text(stringResource(CommonR.string.common_cancel)) }
+            },
+        )
     }
     picking?.let { slot ->
         val current = keyIcons[slot.id]
@@ -7985,6 +8253,35 @@ private fun KeyOverrideDialog(
                     display = { "${it.roundToInt()} dp" },
                 ) { v -> onChange(override.copy(glowDp = v.roundToInt().toFloat())) }
             }
+            NullableColorRow(
+                R.string.theme_key_override_pressed_glow_title,
+                override.pressedGlow, fallback = override.glow ?: theme.accent,
+                supportsAlpha = true,
+                onChange = { onChange(override.copy(pressedGlow = it)) },
+            )
+            // The two that need a glow to work on: at rest, held, or both.
+            if (override.glow != null || override.pressedGlow != null) {
+                SliderRow(
+                    R.string.theme_key_override_pressed_glow_strength_title,
+                    value = override.pressedGlowStrength ?: 1f,
+                    range = KEY_PRESSED_GLOW_STRENGTH_RANGE,
+                    display = { "${(it * 100).roundToInt()}%" },
+                    info = stringResource(R.string.theme_key_override_pressed_glow_strength_info),
+                ) { v ->
+                    val snapped = (v * 20f).roundToInt() / 20f
+                    onChange(override.copy(pressedGlowStrength = snapped.takeIf { it != 1f }))
+                }
+                SliderRow(
+                    R.string.theme_key_override_glow_spill_title,
+                    value = override.glowSpill ?: 0f,
+                    range = 0f..1f,
+                    display = { "${(it * 100).roundToInt()}%" },
+                    info = stringResource(R.string.theme_key_override_glow_spill_info),
+                ) { v ->
+                    val snapped = (v * 20f).roundToInt() / 20f
+                    onChange(override.copy(glowSpill = snapped.takeIf { it > 0f }))
+                }
+            }
             if (popupsShown) {
                 NullableColorRow(
                     R.string.theme_popup_background_title,
@@ -8135,7 +8432,42 @@ private fun KeyOverrideDialog(
                     display = { "${(it * 100).toInt()}%" },
                 ) { onChange(override.copy(labelScale = (it * 20).toInt() / 20f)) }
             }
+            KeyOverrideFontAxes(theme, override, onChange)
         }
+    }
+}
+
+/**
+ * One key's own font axes, for a theme whose key font is variable: a heavier
+ * Enter, a narrower space bar. A slider the key has not moved shows the
+ * theme's value, and only the axes that were moved are stored, so the rest
+ * keep following the theme.
+ */
+@Composable
+private fun KeyOverrideFontAxes(theme: ThemeSpec, override: KeyOverride, onChange: (KeyOverride) -> Unit) {
+    if (!fontAxesSupported) return
+    val lookup = rememberFontAxes(theme.fontId ?: KeyboardFonts.DEFAULT_ID)
+    val variations = (lookup as? AxesLookup.Variable)?.variations ?: return
+    val own = override.fontAxes.orEmpty()
+    val base = theme.fontAxes?.keys.orEmpty()
+    WmRow(
+        title = stringResource(R.string.theme_key_override_axes_title),
+        subtitle = stringResource(R.string.theme_key_override_axes_body),
+        icon = SettingsRowIcons[R.string.fonts_axes_title],
+    )
+    for (axis in variations.axes.filter { !it.hidden }) {
+        SliderRow(
+            title = axis.name.ifBlank { axis.tag },
+            value = own[axis.tag] ?: base[axis.tag] ?: variations.restValue(axis.tag, 500) ?: axis.default,
+            range = axis.min..axis.max,
+            display = { formatAxisValue(axis, it) },
+        ) { v -> onChange(override.copy(fontAxes = own + (axis.tag to axis.clamp(v)))) }
+    }
+    if (own.isNotEmpty()) {
+        WmRow(
+            title = stringResource(R.string.fonts_axes_reset_title),
+            onClick = { onChange(override.copy(fontAxes = null)) },
+        )
     }
 }
 
@@ -8713,8 +9045,9 @@ internal fun SliderRow(
     range: ClosedFloatingPointRange<Float>,
     display: (Float) -> String,
     info: String? = null,
+    live: Boolean = true,
     onChange: (Float) -> Unit,
-) = SliderRow(stringResource(title), value, range, display, info, SettingsRowIcons[title], onChange)
+) = SliderRow(stringResource(title), value, range, display, info, SettingsRowIcons[title], live, onChange)
 
 /** [SliderRow] for a title that is not one fixed resource. */
 @Composable
@@ -8725,11 +9058,18 @@ internal fun SliderRow(
     display: (Float) -> String,
     info: String? = null,
     icon: ImageVector? = null,
+    /**
+     * Whether to keep writing while the finger is down. On by default: most
+     * of these rows sit under a preview of the theme being edited, which has
+     * to follow the thumb. Off for a row whose effect the preview cannot show
+     * while it is being dragged (a font motion's peak only shows under a
+     * finger on the keys), where each write would be a whole theme saved and
+     * redrawn for nothing.
+     */
+    live: Boolean = true,
     onChange: (Float) -> Unit,
 ) {
-    // One of the few sliders that keeps writing while the finger is down
-    // (`live`): this row's own screen draws the theme it is editing, so the
-    // preview above it has to follow the thumb. See rememberLiveSlider.
+    // See rememberLiveSlider for what `live` costs.
     SliderSetting(
         title = title,
         value = value,
@@ -8737,7 +9077,7 @@ internal fun SliderRow(
         display = display,
         info = info,
         icon = icon,
-        live = true,
+        live = live,
         onChange = onChange,
     )
 }
@@ -8907,7 +9247,8 @@ private fun BackgroundSourceDialog(
                     colors = transparentListColors(),
                     modifier = Modifier.clickable { onDevice(true) },
                 )
-                ListItem(
+                // A search of online photo sites, so not in the offline build.
+                if (!OfflineBuild.isThisBuild) ListItem(
                     headlineContent = { Text(stringResource(R.string.photo_find_title)) },
                     supportingContent = { Text(stringResource(R.string.photo_find_subtitle)) },
                     leadingContent = { Icon(Icons.Outlined.Search, contentDescription = null) },
@@ -9108,7 +9449,7 @@ private fun boardEffectLabel(value: BoardEffectKind): Int = when (value) {
     BoardEffectKind.MELD -> R.string.theme_board_effect_kind_meld_label
 }
 @StringRes
-private fun lightingPatternLabel(value: KeyLightingPattern): Int = when (value) {
+internal fun lightingPatternLabel(value: KeyLightingPattern): Int = when (value) {
     KeyLightingPattern.STEADY -> R.string.theme_lighting_pattern_steady_label
     KeyLightingPattern.BREATHE -> R.string.theme_lighting_pattern_breathe_label
     KeyLightingPattern.WAVE -> R.string.theme_lighting_pattern_wave_label

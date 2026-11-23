@@ -270,6 +270,11 @@ object SmartSuggest {
         val dateChips: Boolean = true,
         /** Today as a Julian Day Number; date chips stay off at the default. */
         val todayJdn: Long = -1,
+        /**
+         * The keyboard's languages as locale tags, whose own date words the
+         * date chip reads too ("morgen", "dans 3 jours"). See [DatePhrases].
+         */
+        val dateLanguages: List<String> = emptyList(),
         /** The user's date patterns (#1089); empty keeps the chip's own wording. */
         val dateFormats: List<String> = emptyList(),
         /** Which of [dateFormats] the chip shows, counted from the first and wrapping. */
@@ -336,7 +341,24 @@ object SmartSuggest {
         val searchTriggers: List<SearchTrigger> = emptyList(),
         /** Plugin keywords, without the @, to the plugin's id and name; empty while the switch is off. */
         val pluginKeywords: Map<String, Pair<String, String>> = emptyMap(),
+        // ---- sums with units ----
+        /**
+         * Numbat, for the sums [CalcEngine] cannot read: "5 ft + 30 cm -> m",
+         * "3 km/h * 20 min". Null when its library is not on the phone, and
+         * then the strip behaves as it always has.
+         */
+        val numbat: NumbatLookup? = null,
     )
+
+    /**
+     * Answers an expression with [Numbat], or says it cannot yet. [answer]
+     * returns null while Numbat is still loading (the caller warms it up and
+     * runs [detect] again once it is ready), never for an expression it read
+     * and refused, which is a [Numbat.Outcome.Failure].
+     */
+    fun interface NumbatLookup {
+        fun answer(expression: String): Numbat.Outcome?
+    }
 
     /** Characters of context the scanners look back over. */
     const val LOOKBEHIND = 48
@@ -367,6 +389,9 @@ object SmartSuggest {
         if (ctx.searchTriggers.isNotEmpty()) detectSearch(text, ctx)?.let { return it }
         if (ctx.pluginKeywords.isNotEmpty()) detectPluginKeyword(text, ctx)?.let { return it }
         val tail = text.takeLast(LOOKBEHIND)
+        // Ahead of currency and units: "5 ft + 30 cm" ends in "30 cm", which
+        // the unit chip would answer alone, and the sum is what was meant.
+        if (ctx.calcEnabled && ctx.numbat != null) detectNumbat(tail, ctx, ctx.numbat, text)?.let { return it }
         if (ctx.currencyEnabled) detectCurrency(tail, ctx)?.let { return it }
         if (ctx.unitsEnabled) detectUnit(tail, ctx)?.let { return it }
         if (ctx.calcEnabled) detectCalcPhrase(tail, ctx)?.let { return it }
@@ -429,7 +454,8 @@ object SmartSuggest {
             return SmartHit(
                 kind = Kind.CONTACT,
                 query = contact.name,
-                result = contact.number,
+                // Shown the way the phone writes numbers; the prefill keeps the contact's own spelling.
+                result = com.wasimaster.wmkeyboard.core.phone.PhoneNumbers.format(contact.number) ?: contact.number,
                 insert = null,
                 replaceSpan = 0,
                 tool = ToolbarTool.SELECTION_ACTIONS,
@@ -1303,6 +1329,62 @@ object SmartSuggest {
         )
     }
 
+    // ---- sums with units ----
+
+    /**
+     * A run that starts with a number and holds letters: "3 km/h * 20 min",
+     * "5 ft + 30 cm -> m", optionally closed by "=". [CalcRouting.routeChip]
+     * decides which of these are sums at all.
+     */
+    private val NUMBAT_TAIL = Regex("""(?<![\w.,])([(\d][\d.,()+\-*/^×÷−·→>²³µ°\s\p{L}]{2,60}?)(=?)$""")
+
+    /**
+     * A sum with units at the cursor, answered by Numbat. Like [detectCalc],
+     * every start the pattern offers is tried left to right, so prose before
+     * the sum ("it is 5 then 3 km/h * 20 min") falls away, Numbat refusing
+     * each start that is not one. Only quantities make a chip: a date or a
+     * string at the end of a sentence was not asked for.
+     */
+    private fun detectNumbat(tail: String, ctx: Context, lookup: NumbatLookup, text: String): SmartHit? {
+        val offset = text.length - tail.length
+        var from = 0
+        while (from <= tail.length) {
+            val match = NUMBAT_TAIL.find(tail, from) ?: return null
+            from = match.range.first + 1
+            if (insideLink(text, offset + match.range.first)) continue
+            val raw = match.groupValues[1]
+            val expression = raw.trim()
+            if (CalcRouting.routeChip(expression, ctx.degrees) != CalcRouting.Route.NUMBAT) continue
+            // Still loading: nothing more to try until it is ready.
+            val outcome = lookup.answer(CalcRouting.forNumbat(expression)) ?: return null
+            val answer = outcome as? Numbat.Outcome.Answer ?: continue
+            if (!answer.isQuantity) continue
+            val value = answer.value ?: continue
+            val result = Numbat.format(answer, ctx.precision)
+            // "3 km/h" coming back as "3 km/h" is not an answer.
+            if (result.replace(" ", "") == expression.replace(" ", "")) continue
+            val unit = if (answer.unit.isEmpty()) "" else " ${answer.unit}"
+            val short = CalcEngine.format(value, 2) + unit
+            val explicit = match.groupValues[2] == "="
+            return SmartHit(
+                kind = Kind.CALC,
+                query = expression,
+                result = result,
+                insert = result,
+                // As for arithmetic: a typed "=" appends, and otherwise the
+                // span is the sum as typed, trailing space included.
+                replaceSpan = if (explicit) 0 else raw.trimStart().length,
+                tool = ToolbarTool.CALCULATOR,
+                prefill = ToolPrefill.Calc(expression),
+                tiers = buildList {
+                    add(ChipTier(expression, result))
+                    if (short != result) add(ChipTier(expression, "~$short"))
+                },
+            )
+        }
+        return null
+    }
+
     // ---- plain numbers ----
 
     /**
@@ -1548,7 +1630,7 @@ object SmartSuggest {
 
     private fun detectDate(tail: String, ctx: Context): SmartHit? {
         if (ctx.todayJdn <= 0 || !toolOn(ToolbarTool.CALENDAR, ctx)) return null
-        val d = DateSuggest.find(tail, ctx.todayJdn) ?: return null
+        val d = DateSuggest.find(tail, ctx.todayJdn, ctx.dateLanguages) ?: return null
         val date = CalendarSystems.jdnToGregorian(d.jdn)
         // The user's own format, when one is set and reads (#1089): it is both
         // what the chip shows and what a tap writes.
@@ -2014,7 +2096,8 @@ object SmartSuggest {
             return SmartHit(
                 kind = Kind.CONTACT,
                 query = contact.name,
-                result = contact.number,
+                // Shown the way the phone writes numbers; the prefill keeps the contact's own spelling.
+                result = com.wasimaster.wmkeyboard.core.phone.PhoneNumbers.format(contact.number) ?: contact.number,
                 insert = null,
                 replaceSpan = 0,
                 // No tool of its own; the selection macros are the other place

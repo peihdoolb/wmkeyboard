@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.app
 
+import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import com.wasimaster.wmkeyboard.app.share.ShareSheetSettingsScreen
 import com.wasimaster.wmkeyboard.app.share.ShareSheetRoute
 import android.app.AppOpsManager
@@ -442,7 +443,17 @@ class MainActivity : FragmentActivity() {
                     val stopAtKeyboard = Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM
                     if (stopAtKeyboard) ResizeForKeyboard()
                     val favouritesWanted by showFavourites.collectAsStateWithLifecycle()
-                    Box(if (stopAtKeyboard) Modifier.imePadding() else Modifier) {
+                    // Painted in the page's own colour before the padding, so
+                    // the strip the padding leaves is the page too (#614). Bare,
+                    // it showed the window's AppCompat background, a grey slab
+                    // on a dark theme, wherever the keyboard's reported height
+                    // ran ahead of the keys it drew: while it changed height,
+                    // jumped, or came up over a newly focused field.
+                    Box(
+                        Modifier
+                            .background(MaterialTheme.colorScheme.background)
+                            .then(if (stopAtKeyboard) Modifier.imePadding() else Modifier),
+                    ) {
                         SettingsNavHost(
                             repository = repository,
                             settings = settings,
@@ -941,6 +952,7 @@ private fun SettingsNavHost(
         val reduceMotion = settings.watch { it.reduceMotion }
         CompositionLocalProvider(
             LocalSettingsNavigate provides navigate,
+            LocalSettingsRepository provides repository,
             LocalSharedTransition provides if (twoPane) null else shared,
             LocalSettingsCrumbTrail provides crumbs,
             LocalAdvancedFolds provides folds,
@@ -1533,7 +1545,18 @@ private fun SettingsNavGraph(
                 { navController.popBackStack() },
                 route = "fonts",
             ) {
-                FontPickerScreen(repository, settings, script)
+                FontPickerScreen(repository, settings, script) { route -> navController.navigate(route) }
+            }
+        }
+        composable("fonts/axes/{script}/{fontId}") { backStackEntry ->
+            val script = backStackEntry.arguments?.getString("script").orEmpty()
+            val fontId = backStackEntry.arguments?.getString("fontId").orEmpty()
+            SettingsScreen(
+                stringResource(R.string.fonts_axes_title),
+                { navController.popBackStack() },
+                route = "fonts/axes",
+            ) {
+                FontAxesScreen(repository, settings, script, fontId)
             }
         }
         composable("backup") {
@@ -1757,7 +1780,17 @@ private fun SettingsNavGraph(
             ) {
                 AppearanceToolboxSettings(
                     repository, settings,
+                    onNavigate = { navController.navigate(it) },
                 )
+            }
+        }
+        composable("appearance/toolbox/arrange") {
+            SettingsScreen(
+                stringResource(R.string.toolbox_arrange_title),
+                { navController.popBackStack() },
+                route = "appearance/toolbox/arrange",
+            ) {
+                ToolboxArrangeScreen(repository, settings)
             }
         }
         composable("layout") {
@@ -1767,6 +1800,42 @@ private fun SettingsNavGraph(
                 route = "layout",
             ) {
                 LayoutSettings(repository, settings, onNavigate = { navController.navigate(it) })
+            }
+        }
+        composable("layout/numberrow") {
+            SettingsScreen(
+                stringResource(R.string.layout_number_row_title),
+                { navController.popBackStack() },
+                route = "layout/numberrow",
+            ) {
+                LayoutNumberRowSettings(repository, settings, onNavigate = { navController.navigate(it) })
+            }
+        }
+        composable("layout/arrowrow") {
+            SettingsScreen(
+                stringResource(R.string.layout_arrow_row_title),
+                { navController.popBackStack() },
+                route = "layout/arrowrow",
+            ) {
+                LayoutArrowRowSettings(repository, settings, onNavigate = { navController.navigate(it) })
+            }
+        }
+        composable("layout/symbols") {
+            SettingsScreen(
+                stringResource(R.string.layout_symbols_title),
+                { navController.popBackStack() },
+                route = "layout/symbols",
+            ) {
+                LayoutSymbolsSettings(repository, settings)
+            }
+        }
+        composable("layout/bottomrow") {
+            SettingsScreen(
+                stringResource(R.string.layout_bottom_row_keys_title),
+                { navController.popBackStack() },
+                route = "layout/bottomrow",
+            ) {
+                LayoutBottomRowSettings(repository, settings)
             }
         }
         composable("layout/size") {
@@ -1857,6 +1926,15 @@ private fun SettingsNavGraph(
                 ) { id -> navController.navigate("theme_edit/$id") }
             }
         }
+        composable("themes/modes") {
+            SettingsScreen(
+                stringResource(R.string.theme_modes_title),
+                { navController.popBackStack() },
+                route = "themes/modes",
+            ) {
+                ThemeModesSettings(repository, settings)
+            }
+        }
         // Not in the Play build at all, so nothing can reach it there: see
         // the Themes screen's Gboard button.
         if (!BuildConfig.ENABLE_PLAY_STORE) {
@@ -1907,6 +1985,23 @@ private fun SettingsNavGraph(
             }
             // Its own Scaffold, like the layout's JSON: the code needs the height.
             ThemeRuleSheetScreen(repository, settings, themeId) { navController.popBackStack() }
+        }
+        composable("theme_fonts/{themeId}") { backStackEntry ->
+            val requested = backStackEntry.arguments?.getString("themeId").orEmpty()
+            // Same reading of a copied link as theme_edit above.
+            val darkSlot = isSystemInDarkTheme()
+            val themeId = settings.watch { s ->
+                SettingLinks.themeEditTarget(requested, s.effectiveThemeId(darkSlot)) { id ->
+                    s.customThemes.findThemeFamily(id) != null
+                }
+            }
+            SettingsScreen(
+                stringResource(R.string.theme_fonts_title),
+                { navController.popBackStack() },
+                route = "theme_fonts",
+            ) {
+                ThemeFontsScreen(repository, settings, themeId)
+            }
         }
         composable("theme_assets/{themeId}") { backStackEntry ->
             val requested = backStackEntry.arguments?.getString("themeId").orEmpty()
@@ -2365,14 +2460,30 @@ private fun SettingsNavGraph(
             val layoutId = backStackEntry.arguments?.getString("layoutId").orEmpty()
             // The tab to open on, from a row of the gallery's layer list.
             val layer = backStackEntry.arguments?.getString("layer")?.takeIf { it.isNotEmpty() }
+            // The layout's own name over its editor (#1450), so it stays in
+            // sight while the name row scrolls away under the grid.
+            val layoutName = settings.watch {
+                com.wasimaster.wmkeyboard.core.layout.findLayout(it.customLayouts, layoutId)?.name
+            }
             SettingsScreen(
-                stringResource(R.string.home_screen_layout_edit_title),
+                layoutName?.takeIf { it.isNotBlank() } ?: stringResource(R.string.home_screen_layout_edit_title),
                 { navController.popBackStack() },
                 route = keyLayoutEditRoute(layoutId, layer),
             ) {
                 KeyLayoutEditorScreen(repository, settings, layoutId, initialLayer = layer) { route ->
                     navController.navigate(route)
                 }
+            }
+        }
+        // A layout's typing rules (#1493).
+        composable("keymap_rules/{layoutId}") { backStackEntry ->
+            val layoutId = backStackEntry.arguments?.getString("layoutId").orEmpty()
+            SettingsScreen(
+                stringResource(R.string.layout_editor_rules_title),
+                { navController.popBackStack() },
+                route = layoutRulesRoute(layoutId),
+            ) {
+                LayoutRulesScreen(repository, settings, layoutId)
             }
         }
         // Its own Scaffold rather than SettingsScreen, like the plugin editor:
@@ -3735,12 +3846,14 @@ internal fun AdvancedSettings(onNavigate: (String) -> Unit) {
                 onNavigate("modes")
             }
         }
-        item {
+        // Add-ons come from repositories on the web, so not in the offline build.
+        item(visible = !OfflineBuild.isThisBuild, waitsOnSetting = false) {
             NavRow(R.string.home_addons_title, stringResource(R.string.home_addons_subtitle), route = "addons") {
                 onNavigate("addons")
             }
         }
-        item {
+        // Data saving means nothing to a build that never connects.
+        item(visible = !OfflineBuild.isThisBuild, waitsOnSetting = false) {
             NavRow(
                 R.string.home_datasaver_title, stringResource(R.string.home_datasaver_subtitle), route = "datasaver",
             ) { onNavigate("datasaver") }
@@ -3915,6 +4028,8 @@ internal class SettingsGroupScope {
         val level: SettingLevel = SettingLevel.BASIC,
         /** What the row costs to compose, in ordinary rows; see [item]. */
         val weight: Int = 1,
+        /** Hidden because another setting is off, so Show switched-off settings may grey it in; see [item]. */
+        val waitsOnSetting: Boolean = true,
         val content: @Composable () -> Unit,
     )
 
@@ -3962,15 +4077,58 @@ internal class SettingsGroupScope {
      * body that would crash once [visible] has gone false — one that reads
      * through a null check the condition is doing, say — wants the `if` after
      * all.
+     *
+     * [waitsOnSetting] false is for a row that hides because its job is done
+     * or cannot be done here, not because another setting is off: an "Allow"
+     * row whose permission is already granted (#1112). Show switched-off
+     * settings leaves it hidden instead of greying it in, since there is no
+     * setting that would ever bring it back.
      */
     fun item(
         visible: Boolean,
         key: Any? = null,
         level: SettingLevel = SettingLevel.BASIC,
         weight: Int = 1,
+        waitsOnSetting: Boolean = true,
         content: @Composable () -> Unit,
     ) {
-        items += Entry(visible = visible, conditional = true, key = key, level = level, weight = weight, content = content)
+        items += Entry(
+            visible = visible,
+            conditional = true,
+            key = key,
+            level = level,
+            weight = weight,
+            waitsOnSetting = waitsOnSetting,
+            content = content,
+        )
+    }
+
+    /**
+     * Several rows that all wait on one setting, [on]: autocorrect's own
+     * rows, say, under the Autocorrect switch. Each row of [rows] is added as
+     * if it had been given `visible = on` (and its own visibility, if it had
+     * one), so the run expands into place like any conditional row, and Show
+     * switched-off settings greys the whole run in while [on] is off (#1112).
+     * Wrapped in an `if` instead, the rows were simply not there, and no
+     * setting could show them before their parent was turned on.
+     *
+     * The rows of [rows] are listed whatever [on] is, so a row there that
+     * reads through a null check [on] stands for still wants an `if` of its own.
+     */
+    fun dependsOn(on: Boolean, rows: SettingsGroupScope.() -> Unit) {
+        for (e in SettingsGroupScope().apply(rows).items) {
+            items += Entry(
+                visible = on && e.visible,
+                conditional = true,
+                key = e.key,
+                level = e.level,
+                weight = e.weight,
+                // A row hidden for a reason of its own (a permission already
+                // granted) stays hidden; one that would show waits on [on].
+                waitsOnSetting = e.waitsOnSetting || (!on && e.visible),
+                content = e.content,
+            )
+        }
     }
 }
 
@@ -4027,7 +4185,7 @@ internal fun SettingsGroup(
     // depends on is turned on.
     if (depthControl.switchedOffRows || (LocalDepthReveal.current?.arrived ?: SettingsHighlight.pending)) {
         scope.items.replaceAll { e ->
-            if (!e.conditional || e.visible) {
+            if (!e.conditional || e.visible || !e.waitsOnSetting) {
                 e
             } else {
                 SettingsGroupScope.Entry(true, true, e.key, e.level, e.weight) { SwitchedOffRow(e.content) }

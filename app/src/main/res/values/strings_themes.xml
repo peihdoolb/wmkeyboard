@@ -6,6 +6,10 @@
     <!-- The name of the theme that follows the system colours. Shown in the
          theme gallery and in every theme picker. -->
     <string name="theme_default_name">Default (system)</string>
+    <!-- Row at the top of Keyboard themes, and the title of the page it opens:
+         the light or dark mode, Auto theme and App colors (#1451). -->
+    <string name="theme_modes_title">Theme modes</string>
+    <string name="theme_modes_subtitle">Light or dark, Auto theme and app colors</string>
     <string name="theme_mode_section_title">Mode</string>
     <!-- Caption over the light/dark choice. It says which two things the
          choice applies to, because the option names do not. -->
@@ -184,6 +188,24 @@
     <!-- Button that makes a theme from a screenshot of a keyboard. Keep it short:
          it sits beside Import, FlorisBoard and HeliBoard. -->
     <string name="theme_copy_action">Screenshot</string>
+    <!-- Keyboard themes: the row that opens every way of importing a theme,
+         and the sheet it opens (#1452). The sheet lists a theme file, a
+         screenshot, then the other keyboards by name. -->
+    <string name="theme_import_row_title">Import a theme</string>
+    <string name="theme_import_row_subtitle">From a theme file, a screenshot or another keyboard</string>
+    <string name="theme_import_file_title">Theme file</string>
+    <string name="theme_import_file_subtitle">A WM Keyboard theme, or a ZIP of several</string>
+    <string name="theme_import_screenshot_subtitle">The colors, key shape and background, read off a picture of a keyboard</string>
+    <string name="theme_import_other_keyboards_heading">From another keyboard</string>
+    <string name="theme_import_floris_subtitle">A .flex theme file</string>
+    <string name="theme_import_heli_subtitle">HeliBoard or LeanType colors, pasted or from a file</string>
+    <string name="theme_import_futo_subtitle">A FUTO Keyboard theme ZIP</string>
+    <string name="theme_import_multiling_subtitle">The colors from its settings export, pasted or from a file</string>
+    <string name="theme_import_kinetica_subtitle">The theme in a Kinetica backup file</string>
+    <string name="theme_import_clink_subtitle">A .clinktheme file</string>
+    <string name="theme_import_kyng_subtitle">A share code copied to the clipboard</string>
+    <string name="theme_import_gboard_subtitle">A Gboard theme ZIP or an Rboard pack, or the Rboard collection</string>
+    <string name="theme_import_gboard_file_subtitle">A Gboard theme ZIP or an Rboard pack</string>
     <!-- Title of the dialog that shows a theme read from a screenshot. -->
     <string name="theme_copy_title">Theme from a screenshot</string>
     <!-- Name given to a theme read from a screenshot. The user can change it. -->
@@ -327,6 +349,51 @@
     <!-- The corners curve inwards, like a cinema ticket. -->
     <string name="theme_key_shape_ticket_label">Ticket</string>
     <string name="theme_key_shape_circle_label">Circle</string>
+    <!-- A circle whose edge has twelve small waves, like a cookie. -->
+    <string name="theme_key_shape_cookie_label">Cookie</string>
+    <!-- A circle with eight soft points, like a drawing of the sun. -->
+    <string name="theme_key_shape_sunny_label">Sun</string>
+    <string name="theme_key_shape_flower_label">Flower</string>
+    <!-- Four round leaves, like a four-leaf clover. -->
+    <string name="theme_key_shape_clover_label">Clover</string>
+    <string name="theme_key_shape_oval_label">Oval</string>
+    <string name="theme_key_shape_semicircle_label">Semicircle</string>
+    <string name="theme_key_shape_triangle_label">Triangle</string>
+    <!-- A rounded arrowhead pointing up. -->
+    <string name="theme_key_shape_arrow_label">Arrow</string>
+    <!-- A quarter of a circle, like a folding fan. -->
+    <string name="theme_key_shape_fan_label">Fan</string>
+    <string name="theme_key_shape_diamond_label">Diamond</string>
+    <!-- A wide hexagon with soft corners, like a clam's shell. -->
+    <string name="theme_key_shape_clamshell_label">Clamshell</string>
+    <string name="theme_key_shape_pentagon_label">Pentagon</string>
+    <!-- A cut gemstone seen from above. -->
+    <string name="theme_key_shape_gem_label">Gem</string>
+    <!-- The sun shape with deeper, sharper points. -->
+    <string name="theme_key_shape_very_sunny_label">Very sunny</string>
+    <!-- The cookie shape with only four, six, seven or nine waves. -->
+    <string name="theme_key_shape_cookie_4_label">4-sided cookie</string>
+    <string name="theme_key_shape_cookie_6_label">6-sided cookie</string>
+    <string name="theme_key_shape_cookie_7_label">7-sided cookie</string>
+    <string name="theme_key_shape_cookie_9_label">9-sided cookie</string>
+    <string name="theme_key_shape_clover_8_label">8-leaf clover</string>
+    <!-- A star with twelve sharp points, like a starburst sticker. -->
+    <string name="theme_key_shape_burst_label">Burst</string>
+    <string name="theme_key_shape_soft_burst_label">Soft burst</string>
+    <!-- A star with many long, thin points, like a comic-book explosion. -->
+    <string name="theme_key_shape_boom_label">Boom</string>
+    <string name="theme_key_shape_soft_boom_label">Soft boom</string>
+    <!-- Small round bumps all the way round, like a cloud. -->
+    <string name="theme_key_shape_puffy_label">Puffy</string>
+    <string name="theme_key_shape_puffy_diamond_label">Puffy diamond</string>
+    <!-- Round on top, with two little lobes at the bottom, like a cartoon ghost. -->
+    <string name="theme_key_shape_ghost_label">Ghost</string>
+    <!-- A circle drawn in square pixels, like in an old video game. -->
+    <string name="theme_key_shape_pixel_circle_label">Pixel circle</string>
+    <string name="theme_key_shape_pixel_triangle_label">Pixel triangle</string>
+    <!-- Two rounded halves pinched in the middle, like a burger bun. -->
+    <string name="theme_key_shape_bun_label">Bun</string>
+    <string name="theme_key_shape_heart_label">Heart</string>
     <string name="theme_letter_keys_title">Letter keys</string>
     <string name="theme_key_gradient_title">Key gradient</string>
     <string name="theme_key_gradient_subtitle">The keyboard paints this sheen over the letter keys</string>
@@ -499,8 +566,8 @@
     <string name="theme_glass_dispersion_title">Color split</string>
     <string name="theme_glass_dispersion_body">How far red and blue part where the pane bends the backdrop, like light through the edge of a prism.</string>
     <string name="theme_glass_window_blur_title">Blur behind the keyboard</string>
-    <string name="theme_glass_window_blur_subtitle">The app behind the keyboard shows through the board, blurred. Android 12 and later. Off while the phone\'s blur or the keyboard\'s power saving is off, and in the floating keyboard. Turn this off, and set Behind the glass to Nothing, for a solid keyboard</string>
-    <string name="theme_glass_window_blur_info">The app behind the keyboard shows through the board, blurred. This needs Android 12 or later. It is off while the phone\'s own blur or the keyboard\'s power saving turns blur off, and in the floating keyboard. For a solid keyboard, turn this off and set Behind the glass to Nothing.</string>
+    <string name="theme_glass_window_blur_subtitle">The app behind the keyboard shows through the board, blurred. Android 12 and later. Off while the phone\'s blur or the keyboard\'s power saving is off, and in the floating keyboard. Turn this off, and set Behind the glass to Nothing, for a solid keyboard. On some phones the app above can show an old picture while this is on; turn it off if text seems to jump back</string>
+    <string name="theme_glass_window_blur_info">The app behind the keyboard shows through the board, blurred. This needs Android 12 or later. It is off while the phone\'s own blur or the keyboard\'s power saving turns blur off, and in the floating keyboard. For a solid keyboard, turn this off and set Behind the glass to Nothing.\n\nOn some phones the app above can show an old picture while this is on: text you type seems to vanish or jump back, though taps still land where they should. The text in the app is fine; only the picture of it is late. Turn this off if that happens.</string>
     <string name="theme_glass_window_blur_unavailable">This phone isn\'t blurring windows right now: its blur is off, or it has none. The glass shows your wallpaper instead of the app, so the background won\'t change from app to app. Look for a window blur switch in the phone\'s settings (on Samsung, turn off Reduce transparency and blur under Accessibility › Visibility enhancements), or turn off battery saver.</string>
     <string name="theme_glass_blur_strength_title">Blur strength</string>
     <string name="theme_glass_blur_strength_body">How far the system blurs the app behind the board, and the keys behind a popup or menu.</string>
@@ -633,6 +700,14 @@
     <string name="theme_key_override_gradient_angle_title">Gradient angle</string>
     <string name="theme_key_override_glow_title">Glow</string>
     <string name="theme_key_override_glow_size_title">Glow reach</string>
+    <!-- How much of a key's glow washes over the keys beside it, as a percentage. -->
+    <string name="theme_key_override_glow_spill_title">Light on nearby keys</string>
+    <string name="theme_key_override_glow_spill_info">The keys round this one take on its glow on the side that faces it, as if it lit them.</string>
+    <!-- The glow's colour while the key is held down. -->
+    <string name="theme_key_override_pressed_glow_title">Glow while held</string>
+    <!-- How bright the glow is while the key is held, as a percentage of the glow at rest. -->
+    <string name="theme_key_override_pressed_glow_strength_title">Held glow brightness</string>
+    <string name="theme_key_override_pressed_glow_strength_info">Under 100% dims the glow while the key is held, over 100% makes it brighter. The light on nearby keys follows.</string>
     <string name="theme_key_override_radius_title">Corner radius</string>
     <string name="theme_key_override_radius_info">Gives this key its own corner radius, apart from the radius of the other keys.</string>
     <string name="theme_key_background_title">Key background</string>
@@ -727,7 +802,15 @@
 
     <!-- Theme editor: the glyphs the theme draws on the keyboard's own keys. -->
     <string name="theme_key_icons_section_title">Key icons</string>
-    <string name="theme_key_icons_section_body">The theme can draw its own icon on the delete, shift, enter and other keys. Pick a picture from Your icons. The theme keeps its own copy, so the icon goes with the theme when you export it. An icon pack or an icon you picked under Appearance, then Icons, comes first.</string>
+    <string name="theme_key_icons_section_body">The theme can draw its own icon on the delete, shift, enter and other keys. Pick a picture from Your icons. The theme keeps its own copy, so the icon goes with the theme when you export it.\n\nIcon set picks the icons for every key this theme leaves without a picture of its own. On Follow settings, an icon pack or an icon you picked under Appearance, then Icons, comes first, even over the theme\'s pictures. Pick a set and the theme decides its keys itself while it is on: its pictures, then that set. Tool icons always follow the Icons screen.</string>
+    <!-- Row title: which set of icons this theme's keys use. -->
+    <string name="theme_key_icon_set_title">Icon set</string>
+    <!-- Choice: the keyboard's own built-in key icons, whatever icon pack is chosen elsewhere. -->
+    <string name="theme_key_icon_set_builtin_label">The app\'s own icons</string>
+    <!-- Shown when the theme names an icon pack this phone does not have. %1$s is the pack's name. -->
+    <string name="theme_key_icon_set_missing_label">%1$s (not installed, so the Icons screen decides)</string>
+    <!-- Under a key's row: its icon comes from the icon set this theme picked. -->
+    <string name="theme_key_icons_from_set_label">From the theme\'s icon set</string>
     <string name="theme_key_icons_from_theme_label">From this theme</string>
     <string name="theme_key_icons_hidden_label">Hidden by your icon pack or the Icons screen</string>
     <string name="theme_key_icons_remove_action">Remove from the theme</string>
@@ -1086,4 +1169,52 @@
         <item quantity="one">Ungrouped into <xliff:g id="count" example="1">%1$d</xliff:g> theme</item>
         <item quantity="other">Ungrouped into <xliff:g id="count" example="3">%1$d</xliff:g> themes</item>
     </plurals>
+
+    <!-- ==================================================================== -->
+    <!-- Theme editor > Font axes and motion.                                  -->
+    <!-- ==================================================================== -->
+    <string name="theme_fonts_title">Font axes and motion</string>
+    <string name="theme_fonts_row_body">Set the axes of a variable font for this theme, and make the key labels move.</string>
+    <string name="theme_fonts_unavailable_reason">This needs a variable font. Give the theme a variable font in Font and sound, or import one on the Fonts screen.</string>
+    <string name="theme_fonts_missing_body">This theme is not available. It can be a built-in theme, which you cannot change.</string>
+    <string name="theme_fonts_font_group_title">Font</string>
+    <string name="theme_fonts_key_font_chip">Key font</string>
+    <string name="theme_fonts_axes_info">These values apply to this theme\'s font. If you set values for the same font on the Fonts screen, your values apply instead.</string>
+    <string name="theme_fonts_user_tuned_body">You set values for this font on the Fonts screen. The keyboard shows your values, not these values.</string>
+    <string name="theme_fonts_static_body">This font is not variable. Select a variable font for the theme below, or in Font and sound.</string>
+    <string name="theme_fonts_use_font_title">Use <xliff:g id="font" example="Roboto Flex">%1$s</xliff:g></string>
+    <string name="theme_fonts_use_font_body">A variable font from your library</string>
+    <string name="theme_motion_section_title">Font motion</string>
+    <string name="theme_motion_section_body">Font motion changes the axes of the key labels while you type. Each motion moves the axes that you add to it, from their usual value to the value that you set here. Reduce motion and power saving stop it.</string>
+    <string name="theme_motion_static_body">Font motion needs a variable font for the keys.</string>
+    <string name="theme_motion_item_title">Motion <xliff:g id="number" example="1">%1$d</xliff:g></string>
+    <string name="theme_motion_add_action">Add a motion</string>
+    <string name="theme_motion_remove_action">Remove this motion</string>
+    <string name="theme_motion_trigger_title">What moves the font</string>
+    <string name="theme_motion_trigger_pattern">Lighting pattern</string>
+    <string name="theme_motion_trigger_pattern_body">A pattern from key lighting moves the letters. Some patterns run all the time, and some answer your key presses.</string>
+    <string name="theme_motion_trigger_touch">Finger</string>
+    <string name="theme_motion_trigger_touch_body">The letters near your finger change when you press, and go back when you lift it.</string>
+    <string name="theme_motion_trigger_glide">Glide</string>
+    <string name="theme_motion_trigger_glide_body">The letters near your finger change as you glide, and go back after the finger moves on.</string>
+    <string name="theme_motion_trigger_shift">Shift</string>
+    <string name="theme_motion_trigger_shift_body">All the labels change while Shift or Caps Lock is on.</string>
+    <string name="theme_motion_trigger_energy">Typing speed</string>
+    <string name="theme_motion_trigger_energy_body">All the labels change more when you type faster, and go back when you stop.</string>
+    <string name="theme_motion_pattern_title">Pattern</string>
+    <string name="theme_motion_axes_title">Axes to move</string>
+    <string name="theme_motion_axes_body">Add an axis, then set the value it moves to.</string>
+    <string name="theme_motion_axis_peak"><xliff:g id="axis" example="Weight">%1$s</xliff:g>: moves to</string>
+    <string name="theme_motion_axis_remove_desc">Stop moving <xliff:g id="axis" example="Weight">%1$s</xliff:g></string>
+    <string name="theme_motion_all_keys_title">Move all key labels</string>
+    <string name="theme_motion_all_keys_body">Off, only the keys that type a character move. On, the words on the function keys move too.</string>
+    <string name="theme_motion_speed_title">Speed</string>
+    <string name="theme_motion_reach_title">Reach</string>
+    <string name="theme_motion_settle_title">Time to go back</string>
+    <string name="theme_motion_wobble_title">Bounce</string>
+    <string name="theme_key_override_axes_title">Font axes for this key</string>
+    <string name="theme_key_override_axes_body">Give this key its own weight, width or other axes. An axis that you do not move uses the value of the theme.</string>
+    <string name="theme_motion_wobble_body">How far the letters go past their usual value when they go back. 0 has no bounce.</string>
+    <string name="theme_motion_scale_title">Size</string>
+    <string name="theme_motion_scale_body">How big the letters get at the peak of the motion. ×1 keeps their size. The size moves smoothly while the axes move in steps, so a little growth makes the motion easier to see.</string>
 </resources>

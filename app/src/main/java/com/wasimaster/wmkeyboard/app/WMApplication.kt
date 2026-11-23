@@ -86,6 +86,10 @@ open class WMApplication : Application() {
         // Where a Khipro spec set newer than the bundled one is kept (#909);
         // loaded the first time Khipro types, not here.
         com.wasimaster.wmkeyboard.core.transliteration.KhiproSpecs.attach(this)
+        // Phone-number validity for every country (libphonenumber's plans,
+        // 86 KB) and the region a national number is read in. The table is
+        // read on a thread of its own; formatting is the OS's.
+        com.wasimaster.wmkeyboard.core.phone.PhoneNumbers.init(this)
         // Where the jquery.ime methods that ship are read from; each is read
         // the first time a layout types through it, not here.
         val appAssets = assets
@@ -193,6 +197,8 @@ open class WMApplication : Application() {
         com.wasimaster.wmkeyboard.core.layout.KeymanLayoutPack.attach(this)
         val repository = SettingsRepository(this)
         SyncWatcher.start(this, repository)
+        // The installed plugins' providers, as rows of the provider lists.
+        com.wasimaster.wmkeyboard.ime.PluginProviderBridge.start(this, repository)
         // A Keyman layout that is on, however it got on, brings its grids down.
         KeymanLayoutPackWatcher.start(this, repository)
         // "Ask AI" in other apps' selection menus follows its switch and the

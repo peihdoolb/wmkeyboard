@@ -27,7 +27,7 @@ its own switch:
 
 | Section | Default | What it covers |
 |---|---|---|
-| Settings | On | Every keyboard preference |
+| Settings | On | Every keyboard preference, and the photo on the [privacy shade](/privacy/privacy-shade/#a-photo-on-the-shade) if you set one |
 | Include API keys | Off | Translate, GIF, search and AI keys (only shown while Settings is on) |
 | Themes | On | Your custom themes, including their background images |
 | Dictionary | Off | Words and next-word patterns the keyboard learned from you |
@@ -57,7 +57,12 @@ anything you typed.
 
 Tap **Export to a file** to write a `wmkeyboard-backup-<date>-<time>.wmconfig.json`
 file through Android's own save dialog. It goes wherever you choose, not to
-any WM Keyboard server. What you pick is remembered. The automatic backup and
+any WM Keyboard server. With **Protect with a passphrase** on and a passphrase
+set (see [Automatic backup](#automatic-backup)), the file is encrypted under that
+passphrase, the same way the automatic backups are, and is named
+`.wmconfig.enc` instead. Importing it asks for the passphrase. Without a
+passphrase, the file is plain JSON that any text editor can read, clips and
+notes included. What you pick is remembered. The automatic backup and
 sync each have a list of their own, because a file you hand to someone, a copy
 for yourself and what your devices share are three different decisions.
 
@@ -226,7 +231,7 @@ you need the passphrase to restore it. The app stores that passphrase on your
 device, because a backup that runs while you're asleep has nobody to type it.
 So it protects the file where it lands, in a cloud folder for instance, and
 not against a person holding your unlocked device. Write it down. Without it,
-a backup cannot be restored. The same passphrase protects the sync files.
+a backup cannot be restored. The same passphrase protects the sync files, and a file you save with **Export to a file** while it is on.
 The file is sealed with AES-256-GCM under a key derived from the passphrase
 over a random salt kept on this device. A backup of up to 4 MiB, which is
 nearly all of them, is sealed in one piece under PBKDF2-HMAC-SHA256 at
@@ -242,6 +247,8 @@ to open rather than restoring part of a backup. Earlier releases can't open
 that larger kind, and say the passphrase is wrong or the file is damaged;
 from this one on, a file made by a newer version says so instead. Backups
 made by any older version still restore. Sync files follow the same rules.
+To restore a backup from 0.6.4 or later on 0.6.3, the Google Play build, run
+it through the [backup converter](/privacy/backup-converter/) first.
 
 With the frequent backup on, **What goes in a backup** shows one list with two ticks per row, Main and Frequent, instead of a list for each.
 
@@ -369,6 +376,17 @@ over 4 MiB is the one exception (see the passphrase section above): an
 older release can't open it, and from this release on the screen says the
 other device runs a newer version instead of blaming the passphrase.
 
+A sync holds its sections in memory, and a large sticker collection or set of
+themes with photos can be more than a phone has room for. Before it reads
+anything, each sync checks how much the pictures in themes, sticker packs,
+icon packs and word lists would take. A section too big for the phone's
+memory is left out of that sync whole, and the sync screen names it as too
+big for this device to sync. Everything else still syncs, and the section
+picks up where it left off on a sync that has room for it. A sync file from
+another device too big to read is passed over the same way. The sync at app
+start is skipped when a sync ran or was tried in the last five minutes, so a
+sync that keeps failing can't hold the keyboard up each time it starts.
+
 Sync settings are never exported, backed up or synced themselves, the pause
 and the sync group included. A phone restored from a backup doesn't start
 syncing until you turn it on.
@@ -469,6 +487,8 @@ everything is on [Backup & restore settings](/reference/settings/backup/).
 
 A backup carries your own RIME words and imported RIME schemas with your personal dictionary, along with which word you picked for each reading on the built-in Chinese and Japanese boards, but nothing that was downloaded. RIME's compiled files stay out too, since RIME builds them again by itself. If the new phone may not reach GitHub, where downloads come from, press **Save downloaded files** on the Backup screen first. It writes one zip with your word lists, RIME's packs, voice and AI models and feature libraries. **Restore downloaded files** on the next phone puts them back. A library goes back in only if its checksum matches what that version of the keyboard expects, so use the same version on both phones. If you restore a backup without those files, the message that follows says how many feature libraries are missing and opens [the page that lists them](/privacy/offline/#feature-libraries).
 
+A large set takes a while to save or restore. While it runs, the row turns into a bar with the size done, the whole size and the number of files, and a notification under **Downloads and file jobs** shows the same, then one line when it finishes or fails. You can leave the screen or the app meanwhile: going back no longer stops it. **Export to a file** works the same way. Android can still stop the app if it needs the memory, so keep the app open for a set of several hundred megabytes.
+
 Themes, sticker packs, icon packs, custom word lists and your own vocabulary
 lists all *replace* rather than merge on import. Restore onto a phone that
 already has its own customizations in those categories and they're discarded
@@ -507,6 +527,9 @@ moves fine as a file you export by hand.
   embedded in the export file and written back to local storage on import,
   so a restore on a different phone gets a working theme with the image
   included rather than just the color settings.
+- **So does the privacy shade's photo.** The keyboard's own copy of it rides
+  in the Settings section and is written back on import. Sync leaves it
+  out, along with the setting that names it, so each phone keeps its own.
 - **A failed write leaves nothing behind.** If the app can't write to the
   file you chose, you get "The app could not write that file." rather than a
   half-written export. An automatic backup goes further. It writes the file

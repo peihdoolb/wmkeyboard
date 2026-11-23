@@ -196,6 +196,9 @@
     <string name="ime_service_zawgyi_off_toast">Burmese is written as Unicode</string>
     <string name="ime_service_traditional_on_toast">Chinese is written in Traditional characters (繁體)</string>
     <string name="ime_service_traditional_off_toast">Chinese is written in Simplified characters (简体)</string>
+    <!-- Dictation last resorts, on the voice panel under an error when the phone's recognizer would not start. %1$s is another keyboard's name, such as Gboard. -->
+    <string name="ime_voice_last_resort_keyboard">Use %1$s voice typing</string>
+    <string name="ime_voice_last_resort_window">Open the phone\'s voice window</string>
     <string name="ime_service_kyujitai_on_toast">Japanese is written in the old character forms (舊字體)</string>
     <string name="ime_service_kyujitai_off_toast">Japanese is written in the new character forms (新字体)</string>
     <string name="ime_zawgyi_field_toast">Writing Zawgyi in this text box</string>
@@ -307,6 +310,9 @@
     <string name="ime_floating_system_app_drawer">App drawer</string>
     <string name="ime_floating_system_notifications">Notifications</string>
     <string name="ime_floating_system_quick_settings">Quick settings</string>
+    <string name="ime_floating_system_home">Home</string>
+    <string name="ime_floating_system_lock_screen">Lock screen</string>
+    <string name="ime_floating_system_power_dialog">Power menu</string>
     <string name="ime_floating_system_failed">Android did not press that button</string>
     <!-- The floating button's phone controls (#1326). -->
     <string name="ime_floating_device_ringer">Ringer mode</string>
@@ -324,6 +330,12 @@
     <string name="ime_floating_device_bluetooth_desc">Turns Bluetooth on or off</string>
     <string name="ime_floating_device_bluetooth_page_desc">Opens Android\'s Bluetooth page</string>
     <string name="ime_floating_device_hotspot_desc">Opens Android\'s hotspot page</string>
+    <string name="ime_floating_device_play_pause">Play or pause</string>
+    <string name="ime_floating_device_previous_track">Previous track</string>
+    <string name="ime_floating_device_next_track">Next track</string>
+    <string name="ime_floating_device_play_pause_desc">Plays or pauses the music or video that is playing, or last played</string>
+    <string name="ime_floating_device_previous_track_desc">Goes back a track in the music that is playing</string>
+    <string name="ime_floating_device_next_track_desc">Skips to the next track in the music that is playing</string>
     <!-- After a page or panel description above, in builds with Shizuku or root support. -->
     <string name="ime_floating_device_shell_hint">%1$s. Allow the keyboard in Shizuku, or turn on Use root, and it switches it itself</string>
     <!-- Toasts: "Wi-Fi on", "Bluetooth off". %1$s is the control's name above. -->
@@ -377,7 +389,7 @@
     <string name="ime_disabled_spell_unchanged">Change the spelling first. An empty or unchanged spelling has nothing to apply.</string>
     <string name="ime_disabled_clip_tidy">Select a text clip first. Tidy works on text, not on images.</string>
     <string name="ime_disabled_clip_combine">Select two or more text clips to combine them.</string>
-    <string name="ime_disabled_clip_share">Select a text clip to share it. Pictures and clips marked sensitive are not shared.</string>
+    <string name="ime_disabled_clip_share">Select a text clip or a picture to share it. Clips marked sensitive are not shared.</string>
     <string name="ime_service_privacy_shade_floating_toast">The privacy shade works with the docked keyboard. Dock the keyboard first.</string>
     <string name="ime_privacy_shade_hint">Drag the handle up to see the last lines</string>
     <string name="ime_two_thumb_retype_refused">Couldn\'t retype: the word before the caret couldn\'t be read back, so Backspace deleted a character</string>

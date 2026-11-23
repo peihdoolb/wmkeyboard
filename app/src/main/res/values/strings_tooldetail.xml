@@ -148,6 +148,11 @@
     <string name="tooldetail_calendar_save_keyboard_label">In the keyboard</string>
     <string name="tooldetail_calendar_save_app_label">In the calendar app</string>
     <string name="tooldetail_calendar_weather_group">Weather</string>
+    <string name="tooldetail_calendar_swipe_view_title">Swipe to change the view</string>
+    <string name="tooldetail_calendar_swipe_view_subtitle">A swipe moves between Month, Day and Agenda; arrows step the date</string>
+    <string name="tooldetail_calendar_swipe_view_info">Out of the box, a swipe left or right across the calendar moves to the next or previous month, or the next or previous day on the Day view, and the pill at the top picks the view. With this on, a swipe across the calendar moves to the view beside it instead, in the pill\'s order. The pill gives way to two arrows that step the date: a month on Month and Agenda, a day on Day. A swipe along the month\'s name at the top steps the date too.</string>
+    <string name="tooldetail_calendar_agenda_middle_title">Agenda in the middle</string>
+    <string name="tooldetail_calendar_agenda_middle_subtitle">Order the views Month, Agenda, Day</string>
     <string name="tooldetail_calendar_weather_title">Weather on events</string>
     <string name="tooldetail_calendar_weather_subtitle">The forecast for the time and place of each event, up to 16 days ahead</string>
     <string name="tooldetail_calendar_weather_info">An event card shows a weather icon and the temperature for its start, at the place of the event. If the event has no place, or the keyboard cannot find it, the card uses the location of the weather tool. Tap the icon to see the forecast for each hour of that day, with the chance of rain.\n\nThe keyboard sends the place of each event to the place search of Open-Meteo, and gets the forecast from Open-Meteo. It does not send the title or any other part of the event. It refreshes the forecast when it is older than the refresh time of the weather tool. While data saving is on or you are offline, the cards show only a forecast that the keyboard already has. This setting needs the weather tool to be turned on.</string>
@@ -355,6 +360,25 @@
     <string name="tooldetail_trackpad_magnifier_subtitle">Show the text at the cursor, larger, above the cursor while you drag</string>
     <string name="tooldetail_trackpad_magnifier_info">The magnifier shows the line of text around the cursor. It goes above the cursor when the app tells the keyboard where the cursor is. If the app does not, it goes above the keyboard.</string>
     <string name="tooldetail_trackpad_info">One finger moves the cursor. Hold, then drag to select. Two fingers move a word at a time, and a two-finger tap types a space.</string>
+    <!-- The Trackpad tool's mouse mode (#1411). -->
+    <string name="tooldetail_trackpad_mouse_group">Mouse mode</string>
+    <string name="tooldetail_trackpad_mouse_info">Turn on Mouse mode, then switch the trackpad to Mouse with the chip in its corner, and it moves a pointer over the app above the keyboard. Tap to click, tap with two fingers to right-click, drag with two fingers to scroll, and hold, then drag, to drag and drop. Clicks go through Shizuku when the keyboard may use it, otherwise through the touch mouse service.</string>
+    <string name="tooldetail_trackpad_mouse_enabled_title">Mouse mode</string>
+    <string name="tooldetail_trackpad_mouse_enabled_subtitle">Show a Cursor / Mouse switch on the trackpad, so it can move a pointer over the app and click</string>
+    <string name="tooldetail_trackpad_mouse_shizuku_title">Use Shizuku or root</string>
+    <string name="tooldetail_trackpad_mouse_shizuku_subtitle">Click as a real mouse through Shizuku: right-click menus, wheel scrolling and hover. The same switch as Privacy › Permissions › Shizuku or root</string>
+    <string name="tooldetail_trackpad_mouse_route_title">How clicks reach the app</string>
+    <string name="tooldetail_trackpad_mouse_route_shell">Through Shizuku, as a real mouse: right-click menus, wheel scrolling and hover work as with a mouse plugged in</string>
+    <string name="tooldetail_trackpad_mouse_route_service">Through the touch mouse service: a click is a tap at the pointer, a right-click a long press, a scroll a swipe. Tap to open Android\'s accessibility settings</string>
+    <string name="tooldetail_trackpad_mouse_route_off">Not set up. Tap to turn on the touch mouse service, or use Shizuku below, so the pointer can click</string>
+    <string name="tooldetail_trackpad_pointer_speed_title">Pointer speed</string>
+    <string name="tooldetail_trackpad_pointer_speed_subtitle">How far the pointer moves for each drag on the trackpad</string>
+    <string name="tooldetail_trackpad_pointer_accel_title">Pointer acceleration</string>
+    <string name="tooldetail_trackpad_pointer_accel_subtitle">A quick flick moves the pointer further than a slow drag of the same length</string>
+    <string name="tooldetail_trackpad_scroll_speed_title">Scroll speed</string>
+    <string name="tooldetail_trackpad_scroll_speed_subtitle">How far a two-finger drag scrolls the app</string>
+    <string name="tooldetail_trackpad_natural_scroll_title">Natural scrolling</string>
+    <string name="tooldetail_trackpad_natural_scroll_subtitle">Two fingers move the page the way a finger on the screen would. Off, they scroll the other way, like a mouse wheel</string>
 
     <!-- Numpad tool. -->
     <string name="tooldetail_numpad_calc_title">Calculator layout</string>
@@ -1184,6 +1208,8 @@
     <string name="tooldetail_screenshot_service_title">System buttons service</string>
     <string name="tooldetail_screenshot_service_off_subtitle">Off. The tool needs it to take a screenshot</string>
     <string name="tooldetail_screenshot_service_on_subtitle">On. The tool presses Android\'s screenshot button</string>
+    <string name="tooldetail_system_button_service_off_subtitle">Off. The tool needs it to press Android\'s button</string>
+    <string name="tooldetail_system_button_service_on_subtitle">On. The tool presses Android\'s button for you</string>
     <string name="tooldetail_launcher_split_helper_title">Split screen helper</string>
     <string name="tooldetail_launcher_split_helper_off_subtitle">Off. Turn on if split screen opens apps full screen</string>
     <string name="tooldetail_launcher_split_helper_on_subtitle">On. Split screen goes through Android\'s split screen switch</string>
@@ -1352,6 +1378,9 @@
     <string name="tooldetail_notes_assist_decks_title">Study decks</string>
     <string name="tooldetail_notes_assist_decks_subtitle">Turn a note of terms and meanings into Vocabulary flashcards</string>
     <string name="tooldetail_notes_assist_decks_info">When a note is a list of terms and their meanings, the assistant offers to turn it into flashcards for the Vocabulary tool.</string>
+    <string name="tooldetail_notes_assist_organise_title">Organise</string>
+    <string name="tooldetail_notes_assist_organise_subtitle">Rewrite a note under headings and lists, shown before it is kept</string>
+    <string name="tooldetail_notes_assist_organise_info">Organise asks the on-device model to rewrite an open note so it is quick to read: the main point first, related lines under headings, points as lists, tasks as task boxes. The rewrite shows at the top of the note first. Replace the note puts it in place of the text, and Put the old text back undoes that. Keep as a new note saves it beside the old one. A rewrite that leaves part of the note out is not shown. Notes too long for the model to read whole are not offered. The note never leaves the phone.</string>
     <string name="tooldetail_notes_markdown_subtitle">Show headings, lists and checklists formatted in the keyboard and in previews. Off, every note is plain text.</string>
     <string name="tooldetail_notes_panel_start_title">The keyboard panel opens on</string>
     <string name="tooldetail_notes_panel_start_subtitle">What you see when you tap the tool</string>
@@ -1575,11 +1604,38 @@
     <string name="tooldetail_privacy_shade_on_subtitle">Covers the app above the keyboard. Drag its handle up to see the last lines, and tap the handle to cover them again.</string>
     <string name="tooldetail_privacy_shade_on_info">Covers the app above the keyboard with a shade, so a person beside you cannot read your chat. Drag the handle of the shade up to see the last lines, and tap the handle to cover them again. This setting is off by default.</string>
     <string name="tooldetail_privacy_shade_style_title">Colour</string>
-    <string name="tooldetail_privacy_shade_style_info">The colour of the privacy shade that covers the app: dark, grey, light or warm.</string>
+    <string name="tooldetail_privacy_shade_style_info">The colour of the privacy shade that covers the app: dark, black, grey, light or warm. Black is pure black with no hint written on it, so an OLED screen keeps those pixels off.</string>
     <string name="tooldetail_privacy_shade_style_dark">Dark</string>
     <string name="tooldetail_privacy_shade_style_grey">Grey</string>
     <string name="tooldetail_privacy_shade_style_light">Light</string>
     <string name="tooldetail_privacy_shade_style_warm">Warm</string>
+    <string name="tooldetail_privacy_shade_style_black">Black</string>
+    <!-- #1428: the shade as a black screen over a video or a download. -->
+    <string name="tooldetail_privacy_shade_keep_on_title">Keep the screen on</string>
+    <string name="tooldetail_privacy_shade_keep_on_subtitle">The screen does not turn off while the shade is up</string>
+    <string name="tooldetail_privacy_shade_keep_on_info">While the shade is up, the screen does not turn off by itself, so a video or a download under it keeps going. The keyboard has to stay open for this. This uses more battery, so it is off by default.</string>
+    <string name="tooldetail_privacy_shade_dim_title">Lowest brightness</string>
+    <string name="tooldetail_privacy_shade_dim_subtitle">Dims the screen while the shade is up</string>
+    <string name="tooldetail_privacy_shade_dim_info">While the shade is up, the screen goes to its lowest brightness, keys included. The brightness comes back when the shade goes down or the keyboard closes. With the Black colour at 100% opacity, an OLED screen keeps the pixels under the shade off. This setting is off by default.</string>
+    <string name="tooldetail_privacy_shade_timer_title">Take down after</string>
+    <string name="tooldetail_privacy_shade_timer_info">The shade goes down by itself this long after it came up, and with it the screen is free to turn off again. The time keeps counting while the keyboard is closed. The default is never.</string>
+    <string name="tooldetail_privacy_shade_timer_never">Never</string>
+    <plurals name="tooldetail_privacy_shade_timer_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <!-- #1417: the user's own photo on the shade. -->
+    <string name="tooldetail_privacy_shade_photo_group">Photo on the shade</string>
+    <string name="tooldetail_privacy_shade_photo_group_info">Shows one of your photos on the shade, see-through over its colour. The keyboard keeps its own smaller copy of the photo, with no location or camera details, in its private storage. A full backup carries the copy, and sync does not. This is off by default.</string>
+    <string name="tooldetail_privacy_shade_photo_pick_title">Choose a photo</string>
+    <string name="tooldetail_privacy_shade_photo_change_title">Change the photo</string>
+    <string name="tooldetail_privacy_shade_photo_none">No photo. The shade shows only its colour</string>
+    <string name="tooldetail_privacy_shade_photo_set">Your photo is on the shade</string>
+    <string name="tooldetail_privacy_shade_photo_remove_desc">Take the photo off the shade</string>
+    <string name="tooldetail_privacy_shade_photo_failed">The keyboard could not read that photo</string>
+    <string name="tooldetail_privacy_shade_photo_opacity_title">Photo opacity</string>
+    <string name="tooldetail_privacy_shade_photo_opacity_subtitle">How much of the photo shows against the shade\'s colour</string>
+    <string name="tooldetail_privacy_shade_photo_opacity_info">How strongly the photo shows against the colour of the shade. At 100% you see only the photo. The app under the shade stays as hidden as the Opacity setting makes it, whatever this value is. The default is 50%.</string>
     <string name="tooldetail_privacy_shade_opacity_title">Opacity</string>
     <string name="tooldetail_privacy_shade_opacity_subtitle">Lower lets you make out your own messages up close, while someone a seat away cannot</string>
     <string name="tooldetail_privacy_shade_opacity_info">How solid the privacy shade is. At a lower value you can still read your own messages from close up, while a person one seat away cannot.</string>

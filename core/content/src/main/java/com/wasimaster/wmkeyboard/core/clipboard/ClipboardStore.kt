@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.core.clipboard
 
+import com.wasimaster.wmkeyboard.core.engine.SearchStems
 import com.wasimaster.wmkeyboard.core.util.SnapshotFile
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -102,6 +103,13 @@ data class ClipItem(
      * Kept as typed, without a leading `#`, each one at most once.
      */
     val tags: List<String> = emptyList(),
+    /**
+     * The user asked for this clip's whole text on its card (#612), from its
+     * hold popup, rather than the few lines the preview setting gives every
+     * clip. Kept with the clip, so it stays open across panel opens and
+     * restarts until it is asked back.
+     */
+    val expanded: Boolean = false,
 )
 
 /**
@@ -206,6 +214,16 @@ fun clipQueryMatcher(query: String, regex: Boolean, whole: Boolean = false): (Cl
         { item -> item.searchHaystack().contains(trimmed, ignoreCase = true) }
     }
 }
+
+/**
+ * The second half of a plain-text clipboard search: clips holding another
+ * form of [query]'s words, "meetings" finding "meeting at 5", stemmed in
+ * [languageTag] ([SearchStems]). The panel lists them after the clips
+ * [clipQueryMatcher] finds, which hold the query as typed. Null for a regex
+ * search, which means exactly what it says, and for a blank query.
+ */
+fun clipStemMatcher(query: String, regex: Boolean, languageTag: String?): ((ClipItem) -> Boolean)? =
+    if (regex) null else SearchStems.matcher(languageTag, query) { it.searchHaystack() }
 
 /**
  * [pattern] compiled the way the clipboard's search reads patterns (#612):
@@ -795,6 +813,18 @@ class ClipboardStore(
         val index = items.indexOfFirst { it.id == id }
         if (index < 0 || items[index].tags == tags) return false
         items[index] = items[index].copy(tags = tags)
+        return true
+    }
+
+    /**
+     * Shows a clip's whole text on its card, or its preview again (#612; see
+     * [ClipItem.expanded]). Returns whether there was such a clip and it changed.
+     */
+    @Synchronized
+    fun setExpanded(id: Long, expanded: Boolean): Boolean {
+        val index = items.indexOfFirst { it.id == id }
+        if (index < 0 || items[index].expanded == expanded) return false
+        items[index] = items[index].copy(expanded = expanded)
         return true
     }
 

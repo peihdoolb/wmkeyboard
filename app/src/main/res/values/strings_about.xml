@@ -192,6 +192,7 @@
     <string name="about_bundled_apng_used">Reads animated PNG stickers</string>
     <string name="about_bundled_lottie_used">Draws animated Telegram stickers</string>
     <string name="about_bundled_zxing_used">Makes the QR codes</string>
+    <string name="about_bundled_libphonenumber_used">Tells real phone numbers, and mobiles, from other digit runs in every country</string>
     <string name="about_bundled_zxingcpp_used">Reads QR codes and barcodes on the device without Google services (native library)</string>
     <string name="about_bundled_zueci_used">Converts the character sets codes are written in, inside the zxing-cpp reader (native library)</string>
     <string name="about_bundled_pymini_plugins">The Python interpreter, ported to Rust, that runs plugins and Clink actions</string>
@@ -202,9 +203,11 @@
     <string name="about_bundled_opencv_used">Finds, flattens and cleans up pages in the built-in document scanner (native library)</string>
     <string name="about_bundled_hunspell_used">Checks spelling and compound words against imported Hunspell dictionaries (native library)</string>
     <string name="about_bundled_zinnia_used">Reads Chinese and Japanese handwriting on the device without Google services (native library)</string>
+    <string name="about_bundled_lipi_used">Converts text between Indic scripts and IAST, ITRANS and the other romanisations, for Convert script and Sanskrit in another script (native library)</string>
     <string name="about_bundled_divvunspell_used">Checks spelling against GiellaLT finite-state spellers for Sámi, Greenlandic, Faroese and other languages (native library)</string>
     <string name="about_bundled_voikko_used">Checks Finnish spelling, compound words and inflections against the downloaded voikko-fi dictionary (native library)</string>
     <string name="about_bundled_harper_used">Checks the grammar and the style offline (native library)</string>
+    <string name="about_bundled_numbat_used">Works out sums with units, constants and dates in the calculator (native library)</string>
     <string name="about_bundled_bergamot_used">Translates on the device without Google services (native library, 64-bit Android 9 and later)</string>
     <string name="about_bundled_bergamot_libs_used">Built into the Bergamot translator\'s native library</string>
     <string name="about_bundled_ct2_used">Runs the NLLB-200 translation model on the device (native library, 64-bit phones)</string>
@@ -231,6 +234,7 @@
     <string name="about_bundled_whisper_cpp_used">The engine that runs the faster Offline Whisper models on your device, and those models</string>
     <string name="about_bundled_rime_used">The optional RIME engine for Chinese and Cantonese, with LevelDB, yaml-cpp, marisa-trie, OpenCC and Boost</string>
     <string name="about_bundled_mozc_used">The optional Mozc engine for Japanese, with Abseil and Protocol Buffers, and the Mozc dictionary it downloads (IPAdic, the Okinawa dictionary and the Japanese usage dictionary)</string>
+    <string name="about_bundled_chewing_used">The optional Chewing engine for Zhuyin (native library, which you can replace with one built from its source) and the libchewing-data dictionary it downloads</string>
     <string name="about_bundled_executorch_used">The engine that runs the Offline Asr4All models on your device</string>
     <!-- Asr4All is a model name and is not translated. -->
     <string name="about_bundled_futo_swipe_used">Glide typing powered by FUTO Swipe: the neural glide models, downloaded on request when that glide engine is picked</string>
@@ -250,6 +254,7 @@
     <string name="about_bundled_smart_turn_used">The model behind Smart Turn, downloaded on request, which hears whether you have finished speaking</string>
     <string name="about_bundled_vosk_library_used">Offline Vosk\'s speech recognition library, downloaded from Maven Central when you pick it, and the models it downloads from alphacephei.com on request</string>
     <string name="about_bundled_kaldi_used">Built into the Vosk library: the speech recognition toolkit and the transducer library its models run on</string>
+    <string name="about_bundled_qwen3_asr_used">Offline Qwen3-ASR\'s speech recognition model for 30 languages, downloaded on request</string>
     <string name="about_bundled_omnilingual_used">Offline Omnilingual\'s speech recognition model for 1,600 languages, downloaded on request</string>
     <string name="about_bundled_opus_used">Compresses voice recordings before they are sent to a transcription server</string>
     <string name="about_bundled_rnnoise_used">Reduce background noise at Light, in front of the offline voice engines</string>
@@ -274,6 +279,8 @@
     <!-- Zawgyi is the name of a Burmese font encoding. Keep it as it is. -->
     <string name="about_bundled_myanmar_tools_used">Tells Zawgyi Burmese from Unicode, and converts between the two</string>
     <string name="about_bundled_cldr_zawgyi_used">The rules the Zawgyi and Unicode converters follow</string>
+    <string name="about_bundled_lucene_stemmers_used">Lets the keyboard\'s searches find other forms of a word, \"running\" for \"run\": 18 of the 21 languages\' stemmers are ports of these (native engine)</string>
+    <string name="about_bundled_savoy_stemmers_used">The French, Spanish, Portuguese, Italian, German, Swedish, Norwegian, Russian, Finnish, Hungarian and Bengali search stemmers the Lucene ports follow</string>
     <string name="about_bundled_icu4x_used">Lowercases and normalises words for the prediction engine, and finds the words in Thai, Lao, Khmer and Burmese text</string>
     <string name="about_bundled_futo_layouts_used">The key grids of the layouts converted from FUTO Keyboard\'s layout files</string>
     <string name="about_bundled_floris_layouts_used">The key grids of the layouts converted from FlorisBoard\'s layout files</string>

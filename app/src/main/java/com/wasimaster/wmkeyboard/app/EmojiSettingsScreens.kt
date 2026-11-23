@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.app
 
+import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.annotation.StringRes
 import androidx.activity.result.contract.ActivityResultContracts
@@ -89,6 +90,8 @@ internal fun EmojiSettings(
     val barMode = settings.watch { it.emojiBarMode }
     val emojiRowOverridden = settings.watch { it.modesOverridingRow(BarRow.EMOJI).isNotEmpty() }
     val extensions = LocalExtensions.current
+    // Before anything else: while it shows, the keyboard is drawing boxes.
+    MissingEmojiBanner(repository, settings)
     SettingsGroup(stringResource(R.string.langemoji_emoji_access_title)) {
         item(level = SettingLevel.ADVANCED) {
             ToggleSetting(
@@ -196,6 +199,8 @@ internal fun EmojiSettings(
                         stringResource(R.string.langemoji_emoji_recent_label),
                     EmojiBarContent.FAVOURITES to
                         stringResource(R.string.langemoji_emoji_favourites_label),
+                    EmojiBarContent.TYPING to
+                        stringResource(R.string.langemoji_emoji_bar_typing_label),
                 ),
                 selected = settings.watch { it.emojiBarContent },
                 default = SettingsDefaults.emojiBarContent,
@@ -332,8 +337,9 @@ internal fun EmojiSettings(
             )
             // The direct fetch of a current Noto, next to the choice it fixes:
             // "Google" above can only ask the system font provider, which
-            // serves the build it has rather than the newest one.
-            EmojiFontDownloadRow(
+            // serves the build it has rather than the newest one. A download,
+            // so not on the offline build; the file import below stays.
+            if (!OfflineBuild.isThisBuild) EmojiFontDownloadRow(
                 installedId = installedId,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             ) { fontId ->
@@ -389,7 +395,7 @@ internal fun EmojiSettings(
         }
         // Straight after the picker, because "Installed" is the option that
         // needs a font to have arrived from somewhere first.
-        item(level = SettingLevel.STANDARD) { AddonStoreRow(AddonType.EmojiFont, onNavigate) }
+        item(visible = !OfflineBuild.isThisBuild, level = SettingLevel.STANDARD, waitsOnSetting = false) { AddonStoreRow(AddonType.EmojiFont, onNavigate) }
         item(level = SettingLevel.STANDARD) {
             // The phone is always the one to blame here: an emoji the chosen
             // font is missing is drawn in the phone's own emoji font instead,
@@ -826,6 +832,7 @@ private fun emojiBarContentDescRes(content: EmojiBarContent): Int = when (conten
     EmojiBarContent.MOST_USED -> R.string.langemoji_emoji_bar_content_most_used_desc
     EmojiBarContent.RECENTS -> R.string.langemoji_emoji_bar_content_recents_desc
     EmojiBarContent.FAVOURITES -> R.string.langemoji_emoji_bar_content_favourites_desc
+    EmojiBarContent.TYPING -> R.string.langemoji_emoji_bar_content_typing_desc
 }
 
 /** Which emoji set each answer draws, for the sheet. */

@@ -246,6 +246,15 @@
       ]
     },
     {
+      "id": "chewing",
+      "property": "chewing",
+      "doc": "`:feature:chewing`: libchewing (`libwmchewing`, `native/chewing-jni`, `:core:input`), behind the optional Chewing engine for Zhuyin, which converts whole phrases the way Taiwan's Chewing (新酷音) does. LGPL-2.1-or-later, so its own library and its own gate, replaceable on its own. Its dictionary is a separate download; the built-in Zhuyin composer needs neither.",
+      "play": "split",
+      "libraries": [
+        { "name": "libwmchewing.so", "dir": "core/input/src/chewing/jniLibs", "fdroidBuild": "native/chewing-jni/build.sh", "keep": ["com.wasimaster.wmkeyboard.core.input.chewing.ChewingNative"] }
+      ]
+    },
+    {
       "id": "langid",
       "property": "langid",
       "doc": "`:feature:langid`: language identification on builds without ML Kit's identifier (F-Droid, offline): fastText's lid.176 (`libwmfasttext`, model compiled in) first and CLD3 (`libwmcld3`) when it is unsure, both `:core:intelligence`. Reads the source language for the translate tool's Bergamot and NLLB engines and the sticker prompt. Fetched the first time it is asked.",
@@ -280,6 +289,15 @@
       "play": "split",
       "libraries": [
         { "name": "libwmzinnia.so", "dir": "core/intelligence/src/zinnia/jniLibs", "fdroidBuild": "native/zinnia-jni/build.sh", "keep": ["com.wasimaster.wmkeyboard.core.handwriting.ZinniaNative"] }
+      ]
+    },
+    {
+      "id": "lipi",
+      "property": "lipi",
+      "doc": "`:feature:lipi`: vidyut-lipi, the transliterator between the Brahmic scripts and IAST, ISO 15919, ITRANS and the other romanisations (`libwmlipi`, `native/lipi-jni`, `:core:language`), behind the Convert script selection action and Sanskrit's Write in another script. About 860 KB, so its own gate rather than part of `wm_engine`, which loads at every keyboard start.",
+      "play": "split",
+      "libraries": [
+        { "name": "libwmlipi.so", "dir": "core/language/src/lipi/jniLibs", "fdroidBuild": "native/lipi-jni/build.sh", "keep": ["com.wasimaster.wmkeyboard.core.transliteration.LipiNative"] }
       ]
     },
     {
@@ -341,6 +359,15 @@
       "play": "split",
       "libraries": [
         { "name": "libwmzxing.so", "dir": "core/intelligence/src/zxing/jniLibs", "fdroidBuild": "native/zxingcpp-jni/build.sh", "keep": ["com.wasimaster.wmkeyboard.core.barcode.ZxingNative"] }
+      ]
+    },
+    {
+      "id": "numbat",
+      "property": "numbat",
+      "doc": "`:feature:numbat`: Numbat, the calculator language behind sums with units, constants and dates in the calculator tool and the calculator chip (`libwmnumbat`, `native/numbat-jni`, `:core:tools`). About 2 MB, so its own gate rather than part of `wm_engine`; plain arithmetic never needs it, since `CalcEngine` answers that first. Asked for the first time a sum with units is typed on the strip or in the calculator.",
+      "play": "split",
+      "libraries": [
+        { "name": "libwmnumbat.so", "dir": "core/tools/src/numbat/jniLibs", "fdroidBuild": "native/numbat-jni/build.sh", "keep": ["com.wasimaster.wmkeyboard.core.tools.NumbatNative"] }
       ]
     },
     {

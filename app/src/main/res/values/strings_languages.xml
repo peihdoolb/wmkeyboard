@@ -52,6 +52,8 @@
     <string name="languages_layouts_title">Layouts</string>
     <!-- Description of the button beside the Layouts heading that opens every layout card of the language in a full-screen grid. -->
     <string name="languages_layouts_gallery_open">Show all layouts</string>
+    <!-- Description of the search button beside the Layouts heading that opens the language's More layouts page, where the layout search box is. -->
+    <string name="languages_layouts_search_open">Search more layouts</string>
     <string name="languages_layouts_info">Each card shows the keyboard as it looks with your theme and settings. Tap a card to turn that layout on or off. Scroll the row sideways to see all the layouts.</string>
     <string name="languages_layout_keep_one">At least one layout must stay on.</string>
 
@@ -166,6 +168,12 @@
     <string name="languages_space_after_suggestion_subtitle">Add a space when you select a word from the suggestion strip</string>
     <!-- %1$s is the English name of the language, for example "Bengali". -->
     <string name="languages_space_after_suggestion_info">Turn this off to type a word you select from the suggestion strip in <xliff:g id="language" example="Bengali">%1$s</xliff:g> without a space after it, so you can add an ending straight away. Other languages still get the space. The Space after a suggestion switch in Typing turns the space off for all languages.</string>
+    <string name="languages_suggestion_text_group">Suggestion text</string>
+    <!-- %1$s is the English name of the language, for example "Chinese". -->
+    <string name="languages_suggestion_text_size_own">Set for <xliff:g id="language" example="Chinese">%1$s</xliff:g> only</string>
+    <string name="languages_suggestion_text_size_global">Same as in Appearance › Toolbar</string>
+    <!-- %1$s is the English name of the language, for example "Chinese". -->
+    <string name="languages_suggestion_text_size_info">Gives <xliff:g id="language" example="Chinese">%1$s</xliff:g> its own size for the words in the suggestion strip, and for the candidate row in Chinese, Japanese and Cantonese. Your other languages keep the size in Appearance › Toolbar. Use it for a script that needs larger text to read, such as a font with Pinyin over the characters. Reset the row to follow Appearance › Toolbar again.</string>
     <string name="languages_glide_group">Glide typing</string>
     <string name="languages_glide_radius_own">Set for <xliff:g id="language" example="Japanese">%1$s</xliff:g> only</string>
     <string name="languages_glide_radius_global">Same as in Typing › Gestures › Glide typing</string>
@@ -267,11 +275,20 @@
     <string name="languages_numeral_system_subtitle">The digits that the number row and the keypad show while you type <xliff:g id="language" example="Arabic">%1$s</xliff:g></string>
     <!-- %1$s is the English name of the language. %2$s is the digits of that
          language, shown as a range, for example "٠-٩". -->
-    <string name="languages_numeral_system_info">You select the digits for <xliff:g id="language" example="Arabic">%1$s</xliff:g>: its own digits, which are <xliff:g id="numeral_system" example="٠-٩">%2$s</xliff:g>, or 0-9. This applies to this language only. The keys always show the digits that you select. To set where the keyboard also types them, open Layout &amp; size, then Numerals.</string>
+    <string name="languages_numeral_system_info">You select the digits for <xliff:g id="language" example="Arabic">%1$s</xliff:g>: its own digits, which are <xliff:g id="numeral_system" example="٠-٩">%2$s</xliff:g>, or 0-9. This applies to this language only. The keys always show the digits that you select. To set where the keyboard also types them, open Layout &amp; size, then Symbols layer, and look under Numerals.</string>
 
     <string name="languages_secondary_title">Also suggest from</string>
     <!-- %1$s is the English name of the language this screen is about. -->
     <string name="languages_picker_hidden_group">Language switcher</string>
+    <!-- A language switched off with its downloads kept (#1484), on its own
+         page and on the Languages screen. -->
+    <string name="languages_off_title">Use this language</string>
+    <string name="languages_off_subtitle">Off keeps its downloads, but takes it out of the switcher and of suggestions</string>
+    <!-- %1$s is the English name of the language. -->
+    <string name="languages_off_info">Switched off, <xliff:g id="language" example="Swedish">%1$s</xliff:g> is out of the language switcher, and no keyboard suggests its words through Also suggest from, as if you had removed it. Nothing it downloaded is deleted, so switching it back on is instant: it comes back with its layouts and its Also suggest from picks as they were. It stays on the Languages screen, struck through, with a switch to turn it back on. To keep a language for its words only, use Do not show in the language switcher instead.</string>
+    <!-- Under a switched-off language on the Languages screen. %1$s is its
+         layouts, separated by commas. -->
+    <string name="languages_off_row_subtitle">Off, downloads kept · <xliff:g id="layouts" example="QWERTY, Dvorak">%1$s</xliff:g></string>
     <string name="languages_picker_hidden_title">Do not show in the language switcher</string>
     <string name="languages_picker_hidden_subtitle">Keep this language for its suggestions only</string>
     <string name="languages_picker_hidden_info"><xliff:g id="language" example="Bangla (Romanized)">%1$s</xliff:g> stays on, but the globe key, the spacebar swipe and the language list do not stop at it. Its words continue to show on each keyboard that has it below Also suggest from. Use this when you want a language only for its words, such as English suggestions on a Swedish keyboard, and one keyboard less to switch through.</string>
@@ -677,6 +694,35 @@ With this on, the keyboard draws Burmese in its own copy of Noto Sans Myanmar, a
     <string name="languages_mozc_clear_title">Forget what Mozc learned</string>
     <string name="languages_mozc_clear_subtitle">Clears the conversions, predictions and reading boundaries Mozc learned from your picks. The dictionary stays.</string>
     <string name="languages_mozc_clear_done">Cleared.</string>
+
+    <!-- The Chewing engine for Zhuyin (libchewing, 新酷音). Chewing is the
+         engine's name and stays in Latin letters; Zhuyin is the input method. -->
+    <string name="languages_chewing_group_title">Zhuyin conversion</string>
+    <string name="languages_chewing_group_info">The built-in engine converts Zhuyin with the pinyin dictionary, a word at a time. Chewing (新酷音) is the open-source engine behind many of Taiwan\'s Zhuyin keyboards: you type a whole sentence and it converts it phrase by phrase, learning the phrases you pick. It needs its own library and dictionary.</string>
+    <string name="languages_chewing_engine_title">Zhuyin engine</string>
+    <string name="languages_chewing_engine_info">The engine that converts Zhuyin (bopomofo) into characters on the Zhuyin layout. With Chewing, the composing text shows the sentence converted as you type, and the strip offers the whole sentence first, then the phrases it can start with. Enter writes what the composing text shows. The 12-key Zhuyin pad stays on the built-in engine. Chewing writes Traditional characters.</string>
+    <string name="languages_chewing_engine_chewing">Chewing</string>
+    <string name="languages_chewing_engine_subtitle">With Chewing, the Zhuyin layout converts whole sentences phrase by phrase, as Taiwan\'s Zhuyin keyboards do. Tone marks are optional.</string>
+    <!-- %1$s is a size such as 560 KB. -->
+    <string name="languages_chewing_library_missing">Chewing needs its library, about <xliff:g id="size" example="560 KB">%1$s</xliff:g>. The built-in engine types until it is here.</string>
+    <string name="languages_chewing_library_missing_unsized">Chewing needs its library. The built-in engine types until it is here.</string>
+    <!-- %1$s and %2$s are sizes such as 120 KB and 560 KB. -->
+    <string name="languages_chewing_library_installing">Downloading the Chewing library: <xliff:g id="done" example="120 KB">%1$s</xliff:g> of <xliff:g id="total" example="560 KB">%2$s</xliff:g></string>
+    <string name="languages_chewing_library_installing_unsized">Downloading the Chewing library…</string>
+    <string name="languages_chewing_library_failed">The Chewing library did not download.</string>
+    <string name="languages_chewing_status_title">Chewing status</string>
+    <string name="languages_chewing_status_off">Chewing starts when you pick it above.</string>
+    <string name="languages_chewing_status_locked">Chewing starts after you unlock the phone. Until then the built-in engine types.</string>
+    <string name="languages_chewing_status_needs_library">Waiting for the Chewing library.</string>
+    <string name="languages_chewing_status_needs_data">Download the Chewing dictionary below. Chewing starts when it is here.</string>
+    <string name="languages_chewing_status_starting">Starting…</string>
+    <!-- %1$s is the dictionary's release, such as 2026.3.22. -->
+    <string name="languages_chewing_status_ready">Ready, dictionary <xliff:g id="version" example="2026.3.22">%1$s</xliff:g></string>
+    <!-- %1$s is libchewing's own error message, in English. -->
+    <string name="languages_chewing_status_failed">Chewing did not start: <xliff:g id="detail" example="dictionary: invalid data">%1$s</xliff:g></string>
+    <string name="languages_chewing_clear_title">Forget what Chewing learned</string>
+    <string name="languages_chewing_clear_subtitle">Clears the phrases Chewing learned from your picks. The dictionary stays.</string>
+    <string name="languages_chewing_clear_done">Cleared.</string>
 
     <string name="languages_cjk_traditional_title">Traditional characters</string>
     <string name="languages_cjk_traditional_subtitle">The keyboard converts candidates to Traditional (繁體). With the phrase table pack, it converts word by word, so 头发 becomes 頭髮.</string>

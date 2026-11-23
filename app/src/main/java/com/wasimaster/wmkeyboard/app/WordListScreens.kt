@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.app
 
+import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -455,11 +456,14 @@ internal fun CustomDictionarySettings(
                                 ),
                             )
                         }
-                        Spacer(Modifier.width(8.dp))
-                        OutlinedButton(
-                            enabled = !busy,
-                            onClick = { urlDialogFor = langId },
-                        ) { Text(stringResource(R.string.customdict_from_url_action)) }
+                        // A download, which the offline build cannot make.
+                        if (!OfflineBuild.isThisBuild) {
+                            Spacer(Modifier.width(8.dp))
+                            OutlinedButton(
+                                enabled = !busy,
+                                onClick = { urlDialogFor = langId },
+                            ) { Text(stringResource(R.string.customdict_from_url_action)) }
+                        }
                     }
                 }
             }
@@ -852,7 +856,7 @@ internal fun EmojiKeywordSettings(
                 default = SettingsDefaults.emoji.autoDownloadKeywords,
             ) { scope.launch { repository.setEmojiAutoDownloadKeywords(it) } }
         }
-        item { AddonStoreRow(AddonType.EmojiKeywords, onNavigate) }
+        item(visible = !OfflineBuild.isThisBuild, waitsOnSetting = false) { AddonStoreRow(AddonType.EmojiKeywords, onNavigate) }
     }
 
     for (languageId in languageIds) {
@@ -932,11 +936,13 @@ internal fun EmojiKeywordSettings(
                             ),
                         )
                     }
-                    Spacer(Modifier.width(8.dp))
-                    OutlinedButton(
-                        enabled = !busy,
-                        onClick = { urlDialogFor = languageId },
-                    ) { Text(stringResource(R.string.customdict_from_url_action)) }
+                    if (!OfflineBuild.isThisBuild) {
+                        Spacer(Modifier.width(8.dp))
+                        OutlinedButton(
+                            enabled = !busy,
+                            onClick = { urlDialogFor = languageId },
+                        ) { Text(stringResource(R.string.customdict_from_url_action)) }
+                    }
                 }
             }
         }

@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.app
 
+import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -472,7 +473,7 @@ private fun InstalledSoundSection(
         }
         // Beside the file importer: the store is the other way to get a sound,
         // and it is the one that works when the user has no file to import.
-        AddonStoreRow(AddonType.Sound, onNavigate)
+        if (!OfflineBuild.isThisBuild) AddonStoreRow(AddonType.Sound, onNavigate)
         OutlinedButton(
             onClick = { importLauncher.launch(SoundFile.IMPORT_MIME_TYPES) },
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -687,7 +688,7 @@ private fun InstalledSoundPackSection(
             }
         }
         PerLayoutSoundPackSection(repository, settings, packs)
-        AddonStoreRow(AddonType.SoundPack, onNavigate)
+        if (!OfflineBuild.isThisBuild) AddonStoreRow(AddonType.SoundPack, onNavigate)
         OutlinedButton(
             onClick = { importLauncher.launch(SoundPackFile.IMPORT_MIME_TYPES) },
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -1016,7 +1017,7 @@ internal fun KeyPressDeleteSettings(
         }
         // Each direction on its own (#1269), so one can be kept without the
         // other. While Swipe up to clear all is on, it has the swipe up.
-        if (lineSwipes) {
+        dependsOn(lineSwipes) {
             item(level = SettingLevel.STANDARD) {
                 ToggleSetting(
                     R.string.typing_backspace_lines_up_title,
@@ -1779,6 +1780,17 @@ internal fun KeyPressPopupSettings(
                 default = SettingsDefaults.popup.cornerRadiusDp.toFloat(),
             ) { scope.launch { repository.setKeyPopupCornerRadiusDp(it.toInt()) } }
         }
+        // The long-press popup's look beside the shape it is drawn in (#1461).
+        // Not tied to the switch at the top: that one is the preview bubble.
+        item {
+            ToggleSetting(
+                R.string.keypress_alternates_tiles_title,
+                stringResource(R.string.keypress_alternates_tiles_subtitle),
+                settings.watch { it.popup.alternatesTiles },
+                info = stringResource(R.string.keypress_alternates_tiles_info),
+                default = SettingsDefaults.popup.alternatesTiles,
+            ) { scope.launch { repository.setAlternatesTiles(it) } }
+        }
         // Gap list item 30: the preview bubble's own width and corners, beside
         // its height. These two stop at the bubble; the radius above is every
         // popup's, and the bubble follows it until its own is set.
@@ -1849,6 +1861,7 @@ internal fun KeyPressPopupSettings(
                     PopTextMode.NEVER to stringResource(R.string.keypress_pop_text_never),
                     PopTextMode.CORRECTIONS to stringResource(R.string.keypress_pop_text_corrections),
                     PopTextMode.WORDS to stringResource(R.string.keypress_pop_text_words),
+                    PopTextMode.KEYS to stringResource(R.string.keypress_pop_text_keys),
                     PopTextMode.EVERY_KEY to stringResource(R.string.keypress_pop_text_every_key),
                 ),
                 selected = settings.watch { it.popup.popText },

@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.app
 
+import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.BackHandler
@@ -22,7 +23,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -67,6 +67,8 @@ import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Share
 import com.wasimaster.wmkeyboard.core.stickers.CustomSticker
 import com.wasimaster.wmkeyboard.core.stickers.StickerAddResult
 import com.wasimaster.wmkeyboard.core.stickers.StickerImage
+import com.wasimaster.wmkeyboard.core.notify.BackgroundTasks
+import com.wasimaster.wmkeyboard.core.notify.TaskState
 import com.wasimaster.wmkeyboard.core.stickers.StickerImportResult
 import com.wasimaster.wmkeyboard.core.stickers.StickerKeywords
 import com.wasimaster.wmkeyboard.core.stickers.StickerPack
@@ -113,6 +115,23 @@ internal fun StickerPacksScreen(onNavigate: (String) -> Unit) {
     var publishing by remember { mutableStateOf<StickerPack?>(null) }
     publishing?.let { PublishStickerPackDialog(it) { publishing = null } }
 
+    // Writing a pack file or a zip of packs, and reading several files at
+    // once, run as background tasks (#1522): leaving this screen leaves them
+    // running, the shade shows how far along, and a row here does too.
+    val startTask = rememberTaskStarter()
+    val exportTask = rememberTaskState(STICKER_EXPORT_TASK)
+    val importTask = rememberTaskState(STICKER_IMPORT_TASK)
+    for ((key, task) in listOf(STICKER_EXPORT_TASK to exportTask, STICKER_IMPORT_TASK to importTask)) {
+        if (task is TaskState.Ended) {
+            LaunchedEffect(key, task) {
+                revision++
+                message = task.message
+                BackgroundTasks.dismiss(key)
+            }
+        }
+    }
+    val writeError = stringResource(R.string.import_sticker_pack_write_error)
+
     // CreateDocument cannot carry a payload, so the pack waiting to be written
     // is parked here between launching the picker and its result.
     var pendingExport by remember { mutableStateOf<StickerPack?>(null) }
@@ -122,24 +141,21 @@ internal fun StickerPacksScreen(onNavigate: (String) -> Unit) {
         val pack = pendingExport
         pendingExport = null
         if (uri == null || pack == null) return@rememberLauncherForActivityResult
-        scope.launch {
-            val ok = withContext(Dispatchers.IO) {
-                runCatching {
-                    context.contentResolver.requireOutputStream(uri).use { out ->
-                        StickerPackFile.write(
-                            out,
-                            pack,
-                            appVersion = BuildConfig.VERSION_CODE,
-                            appVersionName = BuildConfig.VERSION_NAME,
-                        ) { store.fileFor(pack.id, it) }
-                    }
-                }.isSuccess
+        val app = context.applicationContext
+        startTask(
+            STICKER_EXPORT_TASK,
+            context.getString(R.string.import_sticker_pack_saving, pack.name),
+            writeError,
+        ) { _ ->
+            app.contentResolver.requireOutputStream(uri).use { out ->
+                StickerPackFile.write(
+                    out,
+                    pack,
+                    appVersion = BuildConfig.VERSION_CODE,
+                    appVersionName = BuildConfig.VERSION_NAME,
+                ) { store.fileFor(pack.id, it) }
             }
-            message = if (ok) {
-                context.getString(R.string.import_sticker_pack_saved, pack.name)
-            } else {
-                context.getString(R.string.import_sticker_pack_write_error)
-            }
+            BackgroundTasks.Outcome(app.getString(R.string.import_sticker_pack_saved, pack.name))
         }
     }
 
@@ -151,31 +167,34 @@ internal fun StickerPacksScreen(onNavigate: (String) -> Unit) {
         val picked = pendingBulkExport
         pendingBulkExport = null
         if (uri == null || picked == null) return@rememberLauncherForActivityResult
-        scope.launch {
-            val ok = withContext(Dispatchers.IO) {
-                runCatching {
-                    context.contentResolver.requireOutputStream(uri).use { out ->
-                        PackBundle.write(
-                            out,
-                            picked.map { pack ->
-                                StickerPackFile.fileName(pack) to { stream: java.io.OutputStream ->
-                                    StickerPackFile.write(
-                                        stream,
-                                        pack,
-                                        appVersion = BuildConfig.VERSION_CODE,
-                                        appVersionName = BuildConfig.VERSION_NAME,
-                                    ) { store.fileFor(pack.id, it) }
-                                }
-                            },
-                        )
-                    }
-                }.isSuccess
+        val app = context.applicationContext
+        val total = picked.size
+        startTask(
+            STICKER_EXPORT_TASK,
+            context.resources.getQuantityString(R.plurals.import_sticker_packs_saving, total, total),
+            writeError,
+        ) { report ->
+            val packsLine = { done: Int ->
+                app.resources.getQuantityString(R.plurals.import_sticker_packs_progress, total, done, total)
             }
-            message = if (ok) {
-                context.resources.getQuantityString(R.plurals.pick_exported_message, picked.size, picked.size)
-            } else {
-                context.getString(R.string.import_sticker_pack_write_error)
+            report.update(0, total.toLong(), packsLine(0))
+            app.contentResolver.requireOutputStream(uri).use { out ->
+                PackBundle.write(
+                    out,
+                    picked.mapIndexed { index, pack ->
+                        StickerPackFile.fileName(pack) to { stream: java.io.OutputStream ->
+                            StickerPackFile.write(
+                                stream,
+                                pack,
+                                appVersion = BuildConfig.VERSION_CODE,
+                                appVersionName = BuildConfig.VERSION_NAME,
+                            ) { store.fileFor(pack.id, it) }
+                            report.update(index + 1L, total.toLong(), packsLine(index + 1))
+                        }
+                    },
+                )
             }
+            BackgroundTasks.Outcome(app.resources.getQuantityString(R.plurals.pick_exported_message, total, total))
         }
     }
 
@@ -185,12 +204,12 @@ internal fun StickerPacksScreen(onNavigate: (String) -> Unit) {
     // from Export selected, skip the picking: every sticker of every pack
     // comes in, and one message says how it went.
     var importing by remember { mutableStateOf<Uri?>(null) }
-    var importingMany by remember { mutableStateOf(false) }
     val importLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenMultipleDocuments(),
     ) { uris ->
         if (uris.isEmpty()) return@rememberLauncherForActivityResult
         val one = uris.singleOrNull()
+        val app = context.applicationContext
         scope.launch {
             val bundled = one != null &&
                 withContext(Dispatchers.IO) { PackBundle.isBundle(context, one, StickerPackFile.FILE_EXTENSION) }
@@ -198,24 +217,27 @@ internal fun StickerPacksScreen(onNavigate: (String) -> Unit) {
                 importing = one
                 return@launch
             }
-            importingMany = true
-            val results = withContext(Dispatchers.IO) { importStickerFilesWhole(context, store, uris) }
-            importingMany = false
-            revision++
-            message = bulkImportSummary(
-                context,
-                imported = results.count { it.second is StickerImportResult.Imported },
-                failed = results.filter { it.second !is StickerImportResult.Imported }.map { it.first },
-            )
+            startTask(
+                STICKER_IMPORT_TASK,
+                app.getString(R.string.import_stickers_reading),
+                StickerImportResult.Failed.describe(app),
+            ) { report ->
+                val results = importStickerFilesWhole(app, store, uris) { files, total, packs ->
+                    report.update(
+                        files.toLong(),
+                        total.toLong(),
+                        app.resources.getQuantityString(R.plurals.import_sticker_packs_read, packs, packs),
+                    )
+                }
+                BackgroundTasks.Outcome(
+                    bulkImportSummary(
+                        app,
+                        imported = results.count { it.second is StickerImportResult.Imported },
+                        failed = results.filter { it.second !is StickerImportResult.Imported }.map { it.first },
+                    ),
+                )
+            }
         }
-    }
-    if (importingMany) {
-        AlertDialog(
-            onDismissRequest = {},
-            title = { Text(stringResource(R.string.import_stickers_reading)) },
-            text = { CircularProgressIndicator() },
-            confirmButton = {},
-        )
     }
     importing?.let { uri ->
         StickerFileImport(uri) { report ->
@@ -270,6 +292,17 @@ internal fun StickerPacksScreen(onNavigate: (String) -> Unit) {
                 }
             },
         )
+    }
+
+    if (exportTask is TaskState.Running || importTask is TaskState.Running) {
+        SettingsGroup {
+            (exportTask as? TaskState.Running)?.let { running ->
+                item { TaskProgressRow(stringResource(R.string.import_sticker_packs_saving_row), running) }
+            }
+            (importTask as? TaskState.Running)?.let { running ->
+                item { TaskProgressRow(stringResource(R.string.import_stickers_reading), running) }
+            }
+        }
     }
 
     SettingsGroup(
@@ -337,8 +370,9 @@ internal fun StickerPacksScreen(onNavigate: (String) -> Unit) {
                 )
             }
         }
-        item { AddonStoreRow(AddonType.Stickers, onNavigate) }
-        item {
+        item(visible = !OfflineBuild.isThisBuild, waitsOnSetting = false) { AddonStoreRow(AddonType.Stickers, onNavigate) }
+        // Both read a pack off its servers by its link, so not in the offline build.
+        item(visible = !OfflineBuild.isThisBuild, waitsOnSetting = false) {
             WmRow(
                 title = stringResource(R.string.import_signal_row_title),
                 subtitle = stringResource(R.string.import_signal_row_subtitle),
@@ -348,7 +382,7 @@ internal fun StickerPacksScreen(onNavigate: (String) -> Unit) {
                 onClick = { onNavigate(SIGNAL_STICKERS_ROUTE) },
             )
         }
-        item {
+        item(visible = !OfflineBuild.isThisBuild, waitsOnSetting = false) {
             WmRow(
                 title = stringResource(R.string.import_telegram_row_title),
                 subtitle = stringResource(R.string.import_telegram_row_subtitle),
@@ -1216,3 +1250,7 @@ internal fun NameDialog(
         },
     )
 }
+
+/** [BackgroundTasks] keys for the Sticker packs screen's file work (#1522). */
+private const val STICKER_EXPORT_TASK = "sticker-packs-export"
+private const val STICKER_IMPORT_TASK = "sticker-packs-import"

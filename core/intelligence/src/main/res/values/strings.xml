@@ -47,6 +47,14 @@
     <string name="core_intel_llm_model_gguf_qwen25_vl_3b_subtitle">Reads pictures and screenshots well, the text in them too. It needs a high-end device. Its licence allows research use only.</string>
     <string name="core_intel_llm_model_gguf_smolvlm_500m_subtitle">A very small model that can read pictures. It describes a picture, but often misreads the text in a screenshot.</string>
     <string name="core_intel_llm_model_gguf_smollm2_360m_subtitle">Small and fast. It is good for quick rewrites on a basic device.</string>
+    <string name="core_intel_llm_model_phi4_mini_subtitle">Microsoft\'s small Phi. It writes and reasons well for its size, but it needs a powerful device.</string>
+    <string name="core_intel_llm_model_deepseek_r1_15b_subtitle">A small model trained on DeepSeek R1\'s reasoning. It thinks before it answers, which makes it slow for quick rewrites.</string>
+    <string name="core_intel_llm_model_gguf_qwen3_vl_4b_subtitle">Reads pictures and screenshots, the text in them too, and writes well. It needs a high-end device.</string>
+    <string name="core_intel_llm_model_gguf_ministral3_3b_subtitle">Mistral\'s small model. It writes well in European languages and can read pictures. It needs a high-end device.</string>
+    <string name="core_intel_llm_model_gguf_qwen3_vl_2b_subtitle">A smaller Qwen3-VL. It reads pictures and screenshots on a mid-range device.</string>
+    <string name="core_intel_llm_model_gguf_lfm25_12b_subtitle">Liquid AI\'s model built for phones. It answers quickly and writes well for its size.</string>
+    <string name="core_intel_llm_model_gguf_minicpm_v47_1b_subtitle">A small model that reads pictures, the text in screenshots too. Its picture reader is a large download of its own.</string>
+    <string name="core_intel_llm_model_gguf_lfm25_350m_subtitle">Liquid AI\'s smallest model. It is fast on a basic device and good for short rewrites.</string>
 
     <!-- ================================================================== -->
     <!-- On-device model download: why a download stopped.                  -->
@@ -72,7 +80,7 @@
 
     <string name="core_intel_llm_engine_error_load">The model did not load. The file is probably damaged. Delete the model in settings and download it again.</string>
     <!-- Compute is the name of the setting that selects the GPU or the CPU. -->
-    <string name="core_intel_llm_engine_error_vision">This model can\'t read pictures. Gemma 4 can, and so can Qwen 2.5 VL and SmolVLM. A GGUF model that you imported also needs its mmproj file.</string>
+    <string name="core_intel_llm_engine_error_vision">This model can\'t read pictures. The models marked Reads pictures in the catalog can, and a model under Describe pictures with can look at a picture for this one. A GGUF model that you imported also needs its mmproj file.</string>
     <string name="core_intel_llm_engine_error_gpu">The model failed on the GPU. The GPU memory is much smaller than the system memory. The next try uses the CPU. To always use the CPU, set Compute to CPU in settings. You can also select a smaller model.</string>
     <string name="core_intel_llm_engine_error_memory">The model ran out of memory, or it failed. Select a smaller model.</string>
     <!-- NPU is the phone's AI accelerator, a hardware acronym that stays in
@@ -110,6 +118,13 @@
 
     <string name="core_intel_llm_module_failed">Google Play could not download the AI part of the keyboard (error %1$d). Check the connection and free space, then try again. The GitHub build carries it without Play.</string>
     <string name="core_intel_llm_module_downloading">The AI part of the keyboard is downloading. Try again in a moment.</string>
+    <!-- The same, with how far it got: "3.1 MB of 22 MB". -->
+    <string name="core_intel_llm_module_downloading_sized">The AI part of the keyboard is downloading: <xliff:g id="bytes" example="3.1 MB">%1$s</xliff:g> of <xliff:g id="total" example="22 MB">%2$s</xliff:g>. Try again when it finishes.</string>
+    <!-- A build that downloads its own libraries (GitHub): the last download
+         failed for a connection reason. Followed by the where line below. -->
+    <string name="core_intel_llm_library_failed_online">The AI part of the keyboard did not download. Check the connection.</string>
+    <!-- After a failed download's reason: the keyboard has started it again. -->
+    <string name="core_intel_llm_library_failed_where">It is downloading again now. Settings › About › Feature libraries shows how far it is and has a Try again button.</string>
     <!-- Google Play holds the download until the user agrees, and it can ask
          only inside the app, not over the keyboard. -->
     <string name="core_intel_llm_module_confirm">Google Play wants your OK before it downloads the AI part of the keyboard. Open WM Keyboard\'s settings and it will ask.</string>

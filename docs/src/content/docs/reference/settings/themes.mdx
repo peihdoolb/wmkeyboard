@@ -11,17 +11,23 @@ import Shot from '@components/Shot.astro';
 
 Two screens live behind **Keyboard themes**. One is a gallery for picking, creating, and managing themes. The other is an editor for building one from scratch. This page is the field reference for both. For the reasoning and the bigger picture, read [Theming overview](/themes/overview/) and [Theme editor](/themes/editor/) instead.
 
-<PhoneFrame caption="The theme gallery: Mode, Auto (light + dark), and the Themes grid.">
-<Shot id="reference/settings/themes-gallery-overview" alt="The theme gallery: Mode, Auto (light + dark), and the Themes grid." />
+<PhoneFrame caption="The theme gallery, with Theme modes above it.">
+<Shot id="reference/settings/themes-gallery-overview" alt="The theme gallery, with the Theme modes row above it." />
 </PhoneFrame>
 
 ## Theme list
 
 <SettingsPath path="Appearance / Keyboard themes" />
 
-Reach it from **Appearance → Style → Keyboard themes**, or by searching "themes" in settings search. The whole screen is one scroll, in three groups.
+Reach it from **Appearance → Style → Keyboard themes**, or by searching "themes" in settings search. Its first row, **Theme modes**, opens a page of its own with three groups: Mode, Auto (light + dark) and App colors. They used to sit above the gallery, so reaching a theme meant scrolling past them first. The rest of the screen is the gallery.
 
-### Mode
+### Theme modes
+
+<SettingsPath path="Appearance / Keyboard themes / Theme modes" />
+
+The row shows the current mode beside its name.
+
+#### Mode
 
 | Setting | Control | Options | Default |
 |---|---|---|---|
@@ -30,7 +36,7 @@ Reach it from **Appearance → Style → Keyboard themes**, or by searching "the
 
 Both apply to the settings app itself and to the **Default (system)** theme only. Every built-in and custom theme carries its own fixed palette regardless of either setting. Amoled always renders dark, and it forces the Default theme's board to pure black. System instead waits on the phone's own light/dark setting.
 
-### Auto (light + dark)
+#### Auto (light + dark)
 
 | Setting | Control | Options | Default |
 |---|---|---|---|
@@ -45,7 +51,7 @@ Both apply to the settings app itself and to the **Default (system)** theme only
 | Light theme from *(Time of day only)* | Time picker | Any clock time | 7:00 AM |
 | Dark theme from *(Time of day only)* | Time picker | Any clock time | 7:00 PM |
 
-**Sunrise & sunset** shows explanatory text instead of a control. It reads the location already saved in the weather tool and works the times out locally, with no network call. With no location saved, it falls back to System light/dark. While Auto theme is on, the Themes grid below still shows which card is selected, but tapping one only previews it. A note above the grid says so.
+**Sunrise & sunset** shows explanatory text instead of a control. It reads the location already saved in the weather tool and works the times out locally, with no network call. With no location saved, it falls back to System light/dark. While Auto theme is on, the Themes grid on Keyboard themes still shows which card is selected, but tapping one only previews it. A note above the grid says so.
 
 Each half of the pair is independent: one can hold a single theme while the other selects from a set. A random half shows how many themes it selects from in place of a theme name. The picker's list is the same either way, with radio buttons for One theme and checkboxes for Random, and a checkbox on each family name that ticks or unticks every look in it.
 
@@ -57,9 +63,9 @@ Each half of the pair is independent: one can hold a single theme while the othe
 <Shot id="reference/settings/themes-auto-schedule" alt="Auto theme on, with Time of day chosen and both clock rows visible." />
 </PhoneFrame>
 
-### App colors
+#### App colors
 
-<SettingsPath path="Appearance / Keyboard themes / Match the app colors" />
+<SettingsPath path="Appearance / Keyboard themes / Theme modes / Match the app colors" />
 
 | Setting | Control | Options | Default |
 |---|---|---|---|
@@ -88,9 +94,10 @@ The choice of color for one app is made on the keyboard: the **Appearance** tool
 | Control | What it does |
 |---|---|
 | Create theme | Makes a new custom theme named "My theme", seeded from the first swatch in the theme editor's color row, generated dark or light to match what your phone is showing right now, sets it active, and opens the editor on it right away |
-| Import | Opens a file picker for a theme file, adds it to Your themes under a fresh id, and switches to it immediately (the editor doesn't open). Pick several files and each is added without switching, then one message counts them and names any file it could not read. Every file-based import button below takes several files the same way. A `.zip` of themes saved from the picking bar's upload icon imports every theme inside it. See [Several files at once](/themes/sharing/#several-files-at-once) |
-| FlorisBoard | Reads a FlorisBoard `.flex` theme file and converts it into a custom theme. See [Importing other keyboards](/reference/importing-other-keyboards/) |
-| Gboard | Asks **Open a file** (a Gboard theme `.zip` or an Rboard pack) or **Browse Rboard** (the Rboard collection, fetched from GitHub only when that screen opens; not in the Google Play build, where the button opens the file picker). Each theme is previewed with what did not come across, then saved without being switched on. See [Gboard themes and Rboard packs](/reference/importing-other-keyboards/#gboard-themes-and-rboard-packs) |
+| Import a theme | Opens a sheet of every way to bring a theme in: **Theme file**, **Screenshot**, then **From another keyboard** with FlorisBoard, HeliBoard, FUTO, Multiling O, Kinetica, Clink, Kyng and Gboard. They used to be ten buttons above the cards |
+| Theme file *(in the sheet)* | Opens a file picker for a theme file, adds it to Your themes under a fresh id, and switches to it immediately (the editor doesn't open). Pick several files and each is added without switching, then one message counts them and names any file it could not read. Every file-based source in the sheet takes several files the same way. A `.zip` of themes saved from the picking bar's upload icon imports every theme inside it. See [Several files at once](/themes/sharing/#several-files-at-once) |
+| FlorisBoard *(in the sheet)* | Reads a FlorisBoard `.flex` theme file and converts it into a custom theme. See [Importing other keyboards](/reference/importing-other-keyboards/) |
+| Gboard *(in the sheet)* | Asks **Open a file** (a Gboard theme `.zip` or an Rboard pack) or **Browse Rboard** (the Rboard collection, fetched from GitHub only when that screen opens; not in the Google Play build, where the entry opens the file picker). Each theme is previewed with what did not come across, then saved without being switched on. See [Gboard themes and Rboard packs](/reference/importing-other-keyboards/#gboard-themes-and-rboard-packs) |
 | Card tap | Applies that theme to the keyboard immediately. On a family card, tapping a dot applies that look and turns the card's preview to it |
 | Card pencil (custom theme) | Opens that theme in the editor |
 | Card pencil (built-in theme) | Copies the built-in into a new custom theme named "*(name) copy*", makes the copy active, and opens the editor on the copy (the original is untouched) |
@@ -99,7 +106,7 @@ The choice of color for one app is made on the keyboard: the **Appearance** tool
 | Card export | Saves a `.wmtheme.json` file named after the theme, with any background image embedded as base64. A grouped card exports the whole family; a separate card exports just the one look |
 | Card delete *(custom themes only)* | Confirms first, then removes the theme. Its background and texture images are swept off disk once nothing else still points at them, since looks and family copies share image files. Deleting a variant's own card (Separate style) removes just that look and falls the selection back to the family; deleting a family card, or the first look's card, removes the whole family and falls back to Default |
 
-The grid runs two cards per row. **Default (system)** comes first, with no edit, export, or delete, since it's generated live rather than stored. Then **Your themes**, which only shows once you have at least one. Then **Built-in**, under its own note: "Press a theme to use it. The pencil icon makes a copy that you can edit." Built-in cards never show a delete button. A second caption explains the pin: your own themes always show in the Appearance tool, built-ins only when pinned.
+The grid runs two cards per row. **Default (system)** comes first, with no edit, export, or delete, since it's generated live rather than stored. Then **Your themes**, which only shows once you have at least one. Your themes are in alphabetical order, except that the theme in use when the screen opened comes first, so the one you are most likely to edit is at the top. The order is taken as the screen opens, so a card you tap doesn't jump while you are on the screen. Then **Built-in**, under its own note: "Press a theme to use it. The pencil icon makes a copy that you can edit." Built-in cards never show a delete button. A second caption explains the pin: your own themes always show in the Appearance tool, built-ins only when pinned. While the gallery is grouped, the tool groups families the same way, one card per family with a dot for each look, so every look of a pinned family is reachable from the keyboard; see [Families & looks](/themes/families/#looks-in-the-keyboards-appearance-tool).
 
 There are 29 built-in themes: 19 original WM Keyboard designs, plus 10 ports of well-known editor colour schemes (Dracula, Alucard, Nord, Solarized Dark, Solarized Light, Catppuccin Mocha, Catppuccin Latte, Catppuccin Frappé, Catppuccin Macchiato, Tokyo Night). Cyberpunk sits with the ports in the source but isn't one: it's ours, and it's the theme that uses the whole feature set at once (animated board gradient, cut keys, translucent faces, neon outline). Twenty-four of the 29 sit in six families (Nightfall, Pastel, Gradients, Dracula, Solarized, Catppuccin), so the grouped grid shows eleven built-in cards. See [Theming overview](/themes/overview/#choosing-a-theme) for the full list and what each one shows.
 
@@ -180,7 +187,7 @@ The last two rows stay hidden until you have started using photos, so a theme wi
 | Kind of glass | Segmented row: Frosted / Liquid (Android 13 and later; frosted elsewhere) | Frosted |
 | Refraction *(Liquid)* | Slider, 0–100% | 60% |
 | Color split *(Liquid)* | Slider, 0–100% | 25% |
-| Blur behind the keyboard | Toggle; Android 12 and later, off while the phone's blur, power saving or the floating keyboard is in force | Off |
+| Blur behind the keyboard | Toggle; Android 12 and later, off while the phone's blur, power saving or the floating keyboard is in force. On some phones the app above can show an old picture while it's on; turn it off if text seems to jump back | Off |
 | Blur strength *(blur behind on)* | Slider, 4–64 dp | 24 dp |
 | Board opacity without blur *(blur behind on)* | Slider, 50–100% | 92% |
 | Glass surfaces | Chips: Letter keys, Modifier keys, Enter key, Space bar, Bars, Tool buttons, Chips, Cards, Popups, Menus | All but Enter key |
@@ -202,7 +209,7 @@ See [Frosted glass](/themes/glass/).
 
 | Setting | Control | Default |
 |---|---|---|
-| Key shape | Row → picker dialog: None / Rounded / Square / Pill / Cut / Squircle / Arch / Leaf / Slanted / Hexagon / Scalloped / Ticket / Circle | Rounded |
+| Key shape | Row → picker grid: None / Rounded / Square / Pill / Cut / Squircle / Arch / Leaf / Slanted / Hexagon / Scalloped / Ticket / Circle, then the Material shapes: Cookie / Sun / Flower / Clover / Oval / Semicircle / Triangle / Arrow / Fan / Diamond / Clamshell / Pentagon / Gem / Very sunny / 4-, 6-, 7- and 9-sided cookie / 8-leaf clover / Burst / Soft burst / Boom / Soft boom / Puffy / Puffy diamond / Ghost / Pixel circle / Pixel triangle / Bun / Heart | Rounded |
 | Honeycomb grid | Toggle; draws every layout as a [honeycomb](/languages/custom-layouts/#honeycomb-layouts) while this theme is on | Off |
 | Letter keys | Color, alpha | `#303338` |
 | Key gradient | [Gradient](#gradients), off by default | Off |
@@ -219,7 +226,7 @@ See [Frosted glass](/themes/glass/).
 | Key border | Color, Auto → no border | Auto |
 | Border width *(border color set)* | Slider, 0–3dp | 0dp |
 
-The Key shape row opens a dialog rather than filling a segmented row. Twelve names don't fit side by side, and a name on its own doesn't tell you much. So each row of the dialog draws the shape at key proportions and at this theme's corner radius. Rounded and Cut both follow the corner-radius value (global or per-theme, see [Corners](#corners)), but Cut clamps its own radius to 2–14dp regardless of the slider. The other ten size themselves off the key's own width and height, and ignore the slider. Shape descriptions are on [the theme editor page](/themes/editor/#key-shapes). Setting a key border color alone shows no visible border until you also raise **Border width** above 0.
+The Key shape row opens a dialog rather than filling a segmented row. Forty-odd names don't fit side by side, and a name on its own doesn't tell you much. So the dialog is a grid that draws each shape at key proportions and at this theme's corner radius, with its name under it. Rounded and Cut both follow the corner-radius value (global or per-theme, see [Corners](#corners)), but Cut clamps its own radius to 2–14dp regardless of the slider. All the others size themselves off the key's own width and height, and ignore the slider. Shape descriptions are on [the theme editor page](/themes/editor/#key-shapes). Setting a key border color alone shows no visible border until you also raise **Border width** above 0.
 
 ### Key textures
 

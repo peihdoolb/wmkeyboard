@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.app
 
+import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import com.wasimaster.wmkeyboard.core.settings.key
 import com.wasimaster.wmkeyboard.core.netlog.InternetPermission
 import android.content.ComponentName
@@ -35,6 +36,7 @@ import com.wasimaster.wmkeyboard.core.settings.LauncherOpenMode
 import com.wasimaster.wmkeyboard.core.settings.MAX_SEARCH_RESULTS
 import com.wasimaster.wmkeyboard.ime.AppLaunchModes
 import com.wasimaster.wmkeyboard.core.accessibility.SystemButtonsService
+import com.wasimaster.wmkeyboard.core.accessibility.TouchMouseService
 import com.wasimaster.wmkeyboard.core.accessibility.SplitScreenHelperService
 import com.wasimaster.wmkeyboard.core.endpoints.ServiceEndpoint
 import com.wasimaster.wmkeyboard.core.media.hasNotificationAccess
@@ -45,12 +47,14 @@ import com.wasimaster.wmkeyboard.core.settings.AppSortOrder
 import com.wasimaster.wmkeyboard.core.settings.LauncherFloatFallback
 import com.wasimaster.wmkeyboard.core.settings.LauncherIconShape
 import com.wasimaster.wmkeyboard.core.shell.ShellAccess
+import com.wasimaster.wmkeyboard.core.shell.ShellFeatures
 import com.wasimaster.wmkeyboard.app.launcher.LauncherFreeformRow
 import com.wasimaster.wmkeyboard.app.launcher.LauncherRouteCheckRow
 import com.wasimaster.wmkeyboard.app.launcher.LauncherShizukuRow
 import com.wasimaster.wmkeyboard.core.settings.PhotoSearchEngine
 import com.wasimaster.wmkeyboard.core.settings.PhotoSearchTarget
 import com.wasimaster.wmkeyboard.core.settings.SettingsDefaults
+import com.wasimaster.wmkeyboard.core.settings.TrackpadSpeedRange
 import com.wasimaster.wmkeyboard.core.settings.toolKeywordScripts
 import com.wasimaster.wmkeyboard.core.settings.HandwritingFullScreenMode
 import com.wasimaster.wmkeyboard.core.tools.PasswordGen
@@ -1285,6 +1289,24 @@ internal fun ToolDetailSettings(
                         scope.launch { repository.setCalendarWeekend(it) }
                     }
                 }
+                // #1445: swipes between the views, arrows for the date.
+                item(level = SettingLevel.STANDARD) {
+                    ToggleSetting(
+                        R.string.tooldetail_calendar_swipe_view_title,
+                        stringResource(R.string.tooldetail_calendar_swipe_view_subtitle),
+                        settings.watch { it.calendarTool.swipeChangesView },
+                        info = stringResource(R.string.tooldetail_calendar_swipe_view_info),
+                        default = SettingsDefaults.calendarTool.swipeChangesView,
+                    ) { scope.launch { repository.setCalendarSwipeChangesView(it) } }
+                }
+                item(level = SettingLevel.ADVANCED) {
+                    ToggleSetting(
+                        R.string.tooldetail_calendar_agenda_middle_title,
+                        stringResource(R.string.tooldetail_calendar_agenda_middle_subtitle),
+                        settings.watch { it.calendarTool.agendaInMiddle },
+                        default = SettingsDefaults.calendarTool.agendaInMiddle,
+                    ) { scope.launch { repository.setCalendarAgendaInMiddle(it) } }
+                }
                 item(visible = showsHijri, level = SettingLevel.ADVANCED) {
                     SliderSetting(
                         R.string.tooldetail_calendar_hijri_title,
@@ -1301,7 +1323,8 @@ internal fun ToolDetailSettings(
                 }
             }
             CalendarNewEventRows(repository, settings)
-            SettingsGroup(stringResource(R.string.tooldetail_calendar_weather_group), level = SettingLevel.STANDARD) {
+            // The forecast is fetched, so the offline build leaves the group out.
+            if (!OfflineBuild.isThisBuild) SettingsGroup(stringResource(R.string.tooldetail_calendar_weather_group), level = SettingLevel.STANDARD) {
                 item {
                     ToggleSetting(
                         R.string.tooldetail_calendar_weather_title,
@@ -1459,7 +1482,13 @@ internal fun ToolDetailSettings(
                         info = stringResource(R.string.tooldetail_camera_search_with_info),
                         options = listOf(
                             PhotoSearchTarget.LENS to stringResource(R.string.tooldetail_camera_search_with_lens),
-                            PhotoSearchTarget.WEB to stringResource(R.string.tooldetail_camera_search_with_web),
+                            // An upload, which the offline build cannot make; Lens
+                            // and the share sheet hand the photo to another app.
+                            *if (OfflineBuild.isThisBuild) {
+                                emptyArray<Pair<PhotoSearchTarget, String>>()
+                            } else {
+                                arrayOf(PhotoSearchTarget.WEB to stringResource(R.string.tooldetail_camera_search_with_web))
+                            },
                             PhotoSearchTarget.SHARE to stringResource(R.string.tooldetail_camera_search_with_share),
                         ),
                         selected = settings.watch { it.camera.searchWith },
@@ -1477,7 +1506,7 @@ internal fun ToolDetailSettings(
                         },
                     ) { scope.launch { repository.setCameraSearchWith(it) } }
                 }
-                item(visible = onWeb) {
+                item(visible = onWeb && !OfflineBuild.isThisBuild) {
                     ChoiceSetting(
                         R.string.tooldetail_camera_search_engine_title,
                         info = stringResource(R.string.tooldetail_camera_search_engine_info),
@@ -1710,6 +1739,7 @@ internal fun ToolDetailSettings(
                     ) { onNavigate(panelEditRoute(PanelKind.TRACKPAD)) }
                 }
             }
+            if (ChannelFeatures.TOUCH_MOUSE) TrackpadMouseSettings(repository, settings)
         }
         ToolbarTool.SELECT_MODE -> {
             SettingsGroup(
@@ -1893,6 +1923,7 @@ internal fun ToolDetailSettings(
                         R.string.tooldetail_privacy_shade_style_title,
                         options = listOf(
                             PrivacyShadeStyle.DARK to stringResource(R.string.tooldetail_privacy_shade_style_dark),
+                            PrivacyShadeStyle.BLACK to stringResource(R.string.tooldetail_privacy_shade_style_black),
                             PrivacyShadeStyle.GREY to stringResource(R.string.tooldetail_privacy_shade_style_grey),
                             PrivacyShadeStyle.LIGHT to stringResource(R.string.tooldetail_privacy_shade_style_light),
                             PrivacyShadeStyle.WARM to stringResource(R.string.tooldetail_privacy_shade_style_warm),
@@ -1928,7 +1959,42 @@ internal fun ToolDetailSettings(
                         info = stringResource(R.string.tooldetail_privacy_shade_touch_info),
                     ) { scope.launch { repository.setPrivacyShadeTouchThrough(it) } }
                 }
+                // A black screen over a video or a download (#1428).
+                item {
+                    ToggleSetting(
+                        R.string.tooldetail_privacy_shade_keep_on_title,
+                        stringResource(R.string.tooldetail_privacy_shade_keep_on_subtitle),
+                        settings.watch { it.privacyShade.keepScreenOn },
+                        default = SettingsDefaults.privacyShade.keepScreenOn,
+                        info = stringResource(R.string.tooldetail_privacy_shade_keep_on_info),
+                    ) { scope.launch { repository.setPrivacyShadeKeepScreenOn(it) } }
+                }
+                item {
+                    ToggleSetting(
+                        R.string.tooldetail_privacy_shade_dim_title,
+                        stringResource(R.string.tooldetail_privacy_shade_dim_subtitle),
+                        settings.watch { it.privacyShade.dimScreen },
+                        default = SettingsDefaults.privacyShade.dimScreen,
+                        info = stringResource(R.string.tooldetail_privacy_shade_dim_info),
+                    ) { scope.launch { repository.setPrivacyShadeDimScreen(it) } }
+                }
+                item {
+                    ChoiceSetting(
+                        R.string.tooldetail_privacy_shade_timer_title,
+                        options = PrivacyShadeSettings.TIMER_CHOICES.map { minutes ->
+                            minutes to if (minutes == 0) {
+                                stringResource(R.string.tooldetail_privacy_shade_timer_never)
+                            } else {
+                                pluralStringResource(R.plurals.tooldetail_privacy_shade_timer_minutes, minutes, minutes)
+                            }
+                        },
+                        selected = settings.watch { it.privacyShade.timerMinutes },
+                        default = SettingsDefaults.privacyShade.timerMinutes,
+                        info = stringResource(R.string.tooldetail_privacy_shade_timer_info),
+                    ) { scope.launch { repository.setPrivacyShadeTimerMinutes(it) } }
+                }
             }
+            PrivacyShadePhotoGroup(repository, settings)
             PrivacyShadeAppsGroup(repository, settings)
         }
         ToolbarTool.POWER_SAVING -> {
@@ -2116,7 +2182,7 @@ internal fun ToolDetailSettings(
                 }
             }
             SettingsGroup(stringResource(R.string.tooldetail_power_drop_background_group), level = SettingLevel.ADVANCED) {
-                item {
+                item(visible = !OfflineBuild.isThisBuild, waitsOnSetting = false) {
                     ToggleSetting(
                         R.string.tooldetail_power_drop_network_title,
                         stringResource(R.string.tooldetail_power_drop_network_subtitle),
@@ -3207,7 +3273,7 @@ internal fun ToolDetailSettings(
                         info = stringResource(R.string.tooldetail_qr_scan_haptics_info),
                     ) { scope.launch { repository.setQrScanHaptics(it) } }
                 }
-                item {
+                item(visible = !OfflineBuild.isThisBuild, waitsOnSetting = false) {
                     ToggleSetting(
                         R.string.tooldetail_qr_scan_preview_title,
                         stringResource(R.string.tooldetail_qr_scan_preview_subtitle),
@@ -3911,8 +3977,9 @@ internal fun ToolDetailSettings(
             }
         }
         ToolbarTool.LOCATION -> LocationToolSettings(repository, settings)
-        // Its one setting is Android's: the service that presses the button (#1148).
-        ToolbarTool.SCREENSHOT -> {
+        // Its one setting is Android's: the service that presses the button
+        // (#1148), and the same for Back, Home and Recent apps (#1521).
+        ToolbarTool.SCREENSHOT, ToolbarTool.SYSTEM_BACK, ToolbarTool.SYSTEM_HOME, ToolbarTool.SYSTEM_RECENTS -> {
             val on = rememberGrantState { SystemButtonsService.isEnabled(it) }
             val ask = rememberDisclosedSpecialAccess(SpecialAccess.SYSTEM_BUTTONS)
             SettingsGroup {
@@ -3920,10 +3987,11 @@ internal fun ToolDetailSettings(
                     NavRow(
                         R.string.tooldetail_screenshot_service_title,
                         subtitle = stringResource(
-                            if (on) {
-                                R.string.tooldetail_screenshot_service_on_subtitle
-                            } else {
-                                R.string.tooldetail_screenshot_service_off_subtitle
+                            when {
+                                tool == ToolbarTool.SCREENSHOT && on -> R.string.tooldetail_screenshot_service_on_subtitle
+                                tool == ToolbarTool.SCREENSHOT -> R.string.tooldetail_screenshot_service_off_subtitle
+                                on -> R.string.tooldetail_system_button_service_on_subtitle
+                                else -> R.string.tooldetail_system_button_service_off_subtitle
                             },
                         ),
                     ) { ask() }
@@ -5008,6 +5076,22 @@ private fun missingSubtitle(tag: String, installedBytes: Long): String {
     )
 }
 
+/**
+ * Why [tag]'s download failed. When it stopped at the engine library, the
+ * library's own reason (a server error, a full phone, data saving), which the
+ * row used to hide behind "check your network connection" whatever happened
+ * (#1498); the model's own failure keeps that sentence.
+ */
+@Composable
+private fun failedSubtitle(tag: String): String {
+    val library = HandwritingModels.libraryGateFor(tag).state.collectAsState().value
+    return if (library is ModuleState.Missing && library.failed) {
+        moduleFailedText(library, R.string.privacy_handwriting_status_failed)
+    } else {
+        stringResource(R.string.privacy_handwriting_status_failed)
+    }
+}
+
 /** How long with nothing arriving before the row admits it is stuck. */
 private const val HANDWRITING_STALL_HINT_MS = 20_000L
 
@@ -5106,7 +5190,7 @@ private fun HandwritingModelManager(settings: LiveSettings) {
                             "checking" -> stringResource(R.string.privacy_handwriting_status_checking)
                             "downloaded" -> stringResource(R.string.privacy_handwriting_status_downloaded)
                             "downloading" -> downloadSubtitle(progress[language.tag])
-                            "error" -> stringResource(R.string.privacy_handwriting_status_failed)
+                            "error" -> failedSubtitle(language.tag)
                             else -> missingSubtitle(language.tag, sizes[language.tag] ?: 0L)
                         },
                     trailing = {
@@ -5616,6 +5700,7 @@ private fun AiReplyToolSettings(
                     ReplyImageMode.AUTO to stringResource(R.string.toolai_reply_image_mode_auto),
                     ReplyImageMode.IMAGE to stringResource(R.string.toolai_reply_image_mode_image),
                     ReplyImageMode.OCR to stringResource(R.string.toolai_reply_image_mode_ocr),
+                    ReplyImageMode.DESCRIBE to stringResource(R.string.toolai_reply_image_mode_describe),
                 ),
                 selected = settings.watch { it.ai.reply.imageMode },
                 default = SettingsDefaults.ai.reply.imageMode,
@@ -5775,4 +5860,119 @@ private fun calendarReminderLabel(minutes: Int): String = when {
     minutes % 1440 == 0 -> pluralStringResource(R.plurals.tooldetail_calendar_days_before, minutes / 1440, minutes / 1440)
     minutes % 60 == 0 -> pluralStringResource(R.plurals.tooldetail_calendar_hours_before, minutes / 60, minutes / 60)
     else -> pluralStringResource(R.plurals.tooldetail_calendar_minutes_before, minutes, minutes)
+}
+
+/**
+ * The Trackpad tool's mouse mode (#1411): the switch that offers it on the
+ * trackpad, which door its clicks go through, and the pointer's feel. Which
+ * mode the trackpad is in is switched on the trackpad itself.
+ */
+@Composable
+private fun TrackpadMouseSettings(repository: SettingsRepository, settings: LiveSettings) {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val percentFormat = stringResource(R.string.typing_value_percent)
+    val enabled = settings.watch { it.trackpad.mouseEnabled }
+    LaunchedEffect(Unit) {
+        ShellAccess.init(context)
+        ShellAccess.refresh()
+    }
+    // The keyboard's Shizuku switch, the same one Privacy › Permissions ›
+    // Shizuku or root keeps: it lives in device preferences, not the settings
+    // store, so this page holds its own copy for the row.
+    var shellOn by remember { mutableStateOf(ShellFeatures.isEnabled(context)) }
+    val shizukuGranted by ShellAccess.shizukuGranted.collectAsState()
+    val serviceOn = rememberGrantState { TouchMouseService.isEnabled(it) }
+    val shell = shellOn && shizukuGranted
+    val ask = rememberDisclosedSpecialAccess(SpecialAccess.TOUCH_MOUSE)
+    val range = TrackpadSpeedRange.first.toFloat()..TrackpadSpeedRange.last.toFloat()
+    SettingsGroup(
+        stringResource(R.string.tooldetail_trackpad_mouse_group),
+        info = stringResource(R.string.tooldetail_trackpad_mouse_info),
+        level = SettingLevel.STANDARD,
+    ) {
+        item {
+            ToggleSetting(
+                R.string.tooldetail_trackpad_mouse_enabled_title,
+                stringResource(R.string.tooldetail_trackpad_mouse_enabled_subtitle),
+                enabled,
+                default = SettingsDefaults.trackpad.mouseEnabled,
+            ) { scope.launch { repository.setTrackpadMouseEnabled(it) } }
+        }
+        item(visible = enabled) {
+            NavRow(
+                R.string.tooldetail_trackpad_mouse_route_title,
+                subtitle = stringResource(
+                    when {
+                        shell -> R.string.tooldetail_trackpad_mouse_route_shell
+                        serviceOn -> R.string.tooldetail_trackpad_mouse_route_service
+                        else -> R.string.tooldetail_trackpad_mouse_route_off
+                    },
+                ),
+            ) {
+                when {
+                    // Already clicking through Shizuku: nothing to set here.
+                    shell -> Unit
+                    // On already: no disclosure for a grant that is given.
+                    // Android's page is where it is turned off again.
+                    serviceOn -> runCatching {
+                        context.startActivity(
+                            Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                        )
+                    }
+                    else -> ask()
+                }
+            }
+        }
+        // Shizuku's door, for anyone who has it: the master switch and the
+        // row that gets, starts or allows it, as on the permissions page.
+        item(visible = enabled && ShellFeatures.offered) {
+            ToggleSetting(
+                R.string.tooldetail_trackpad_mouse_shizuku_title,
+                stringResource(R.string.tooldetail_trackpad_mouse_shizuku_subtitle),
+                shellOn,
+                default = false,
+            ) {
+                shellOn = it
+                ShellFeatures.setEnabled(context, it)
+            }
+        }
+        item(visible = enabled && ShellFeatures.offered && shellOn) { LauncherShizukuRow() }
+        item(visible = enabled) {
+            SliderSetting(
+                R.string.tooldetail_trackpad_pointer_speed_title,
+                subtitle = stringResource(R.string.tooldetail_trackpad_pointer_speed_subtitle),
+                value = settings.watch { it.trackpad.pointerSpeed }.toFloat(),
+                range = range,
+                display = { percentFormat.format(it.toInt()) },
+                default = SettingsDefaults.trackpad.pointerSpeed.toFloat(),
+            ) { scope.launch { repository.setTrackpadPointerSpeed(it.toInt()) } }
+        }
+        item(visible = enabled) {
+            ToggleSetting(
+                R.string.tooldetail_trackpad_pointer_accel_title,
+                stringResource(R.string.tooldetail_trackpad_pointer_accel_subtitle),
+                settings.watch { it.trackpad.pointerAcceleration },
+                default = SettingsDefaults.trackpad.pointerAcceleration,
+            ) { scope.launch { repository.setTrackpadPointerAcceleration(it) } }
+        }
+        item(visible = enabled) {
+            SliderSetting(
+                R.string.tooldetail_trackpad_scroll_speed_title,
+                subtitle = stringResource(R.string.tooldetail_trackpad_scroll_speed_subtitle),
+                value = settings.watch { it.trackpad.scrollSpeed }.toFloat(),
+                range = range,
+                display = { percentFormat.format(it.toInt()) },
+                default = SettingsDefaults.trackpad.scrollSpeed.toFloat(),
+            ) { scope.launch { repository.setTrackpadScrollSpeed(it.toInt()) } }
+        }
+        item(visible = enabled) {
+            ToggleSetting(
+                R.string.tooldetail_trackpad_natural_scroll_title,
+                stringResource(R.string.tooldetail_trackpad_natural_scroll_subtitle),
+                settings.watch { it.trackpad.naturalScroll },
+                default = SettingsDefaults.trackpad.naturalScroll,
+            ) { scope.launch { repository.setTrackpadNaturalScroll(it) } }
+        }
+    }
 }

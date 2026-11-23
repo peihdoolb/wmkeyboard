@@ -2,6 +2,7 @@ package com.wasimaster.wmkeyboard.core.settings
 
 import android.os.Build
 import com.wasimaster.wmkeyboard.config.BuildConfig
+import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 
 // Extracted from SettingsRepository.kt so the low-level modules (icons, tools,
 // media) can reference these types without depending on the settings module —
@@ -223,7 +224,20 @@ enum class ToolbarTool {
     // insert sheet is set to (competitor gap list item 6, HeliBoard's
     // timestamp key). The first Backspace after it takes it back whole.
     TIMESTAMP,
+    // Android's own Back, Home and Recent apps buttons as tools (#1521), the
+    // floating button's system buttons on the toolbar, a key or a gesture.
+    // Pressed through SystemButtonsService like SCREENSHOT; not in the Play build.
+    SYSTEM_BACK,
+    SYSTEM_HOME,
+    SYSTEM_RECENTS,
 }
+
+/** The tools that press one of Android's own buttons (#1521), each with its button. */
+val SystemButtonTools: Map<ToolbarTool, SystemButton> = mapOf(
+    ToolbarTool.SYSTEM_BACK to SystemButton.BACK,
+    ToolbarTool.SYSTEM_HOME to SystemButton.HOME,
+    ToolbarTool.SYSTEM_RECENTS to SystemButton.RECENTS,
+)
 
 /** The cursor tools, in the order they read on the toolbar. */
 val CursorTools: List<ToolbarTool> = listOf(
@@ -342,11 +356,28 @@ fun toolOpensScreen(tool: ToolbarTool): Boolean = when (tool) {
     ToolbarTool.SELECTION_ACTIONS, ToolbarTool.PHONETIC_ENGLISH, ToolbarTool.LANGUAGE,
     ToolbarTool.RECENT_COPIES, ToolbarTool.READ_BACK, ToolbarTool.SCREENSHOT, ToolbarTool.PRIVACY_SHADE,
     ToolbarTool.CLEAR_FIELD, ToolbarTool.TIMESTAMP, ToolbarTool.HOMOPHONES, ToolbarTool.TYPE_CLIPBOARD,
+    ToolbarTool.SYSTEM_BACK, ToolbarTool.SYSTEM_HOME, ToolbarTool.SYSTEM_RECENTS,
     -> false
     // The cursor moves nudge the caret and nothing else, and the clipboard trio
     // acts on the selection in place.
     else -> tool !in CursorTools && tool !in ClipboardTools
 }
+
+/**
+ * Tools that do nothing without a connection, left out of the offline build
+ * entirely ([isSupportedTool]): no tile, no page, no search result, no chip.
+ * Without the internet permission Android refuses every socket, the local
+ * network's too, so the servers on the user's own Wi-Fi (Home Assistant, KDE
+ * Connect, a nearby phone) are as far off as the web.
+ *
+ * Tools with an offline half stay: translate and the dictionary read
+ * imported files, the AI tools run a local model, GIFs read offline packs.
+ */
+val NetworkOnlyTools: Set<ToolbarTool> = setOf(
+    ToolbarTool.WEATHER, ToolbarTool.WEB_SEARCH, ToolbarTool.IMAGE_SEARCH, ToolbarTool.WIKIPEDIA,
+    ToolbarTool.CURRENCY, ToolbarTool.HOME_ASSISTANT, ToolbarTool.KDE_CONNECT, ToolbarTool.SEND_FILES,
+    ToolbarTool.MUSIC_ID, ToolbarTool.SPEED_TEST,
+)
 
 // Handwriting is in every build: where ML Kit's recogniser is not
 // (F-Droid's), zinnia still reads Chinese and Japanese, and the panel says
@@ -354,11 +385,15 @@ fun toolOpensScreen(tool: ToolbarTool): Boolean = when (tool) {
 // zxing-cpp where ML Kit's barcode reader is not, and text scan, which reads
 // with PaddleOCR on MNN where neither ML Kit nor LiteRT is.
 fun isSupportedTool(tool: ToolbarTool): Boolean = when {
+    // Nothing but a connection to offer, so not in the offline build (#292).
+    OfflineBuild.isThisBuild && tool in NetworkOnlyTools -> false
     !BuildConfig.ENABLE_GRAMMAR && tool == ToolbarTool.GRAMMAR -> false
     // An accessibility service's action (#1148): not in the Play build, and
     // Android has no screenshot action to press before 9.
     tool == ToolbarTool.SCREENSHOT ->
         com.wasimaster.wmkeyboard.app.ChannelFeatures.SYSTEM_BUTTONS && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+    // Back, Home and Recent apps (#1521): the same service, which Android has had since 4.1.
+    tool in SystemButtonTools -> com.wasimaster.wmkeyboard.app.ChannelFeatures.SYSTEM_BUTTONS
     // The document scanner is offered everywhere: Google's (an activity
     // inside Play services) where it can run, the built-in OpenCV one
     // everywhere else, F-Droid's build and phones without Play services.
@@ -466,6 +501,7 @@ private val RestOfToolOrder: List<ToolbarTool> = listOf(
     ToolbarTool.EMOJI_MIX, ToolbarTool.MUSIC_ID, ToolbarTool.FILES, ToolbarTool.TIMESTAMP,
     ToolbarTool.QR_SCAN, ToolbarTool.QR_GEN, ToolbarTool.TEXT_REPEAT, ToolbarTool.READ_BACK, ToolbarTool.DOC_SCAN, ToolbarTool.CAMERA,
     ToolbarTool.FLASHLIGHT, ToolbarTool.SCREENSHOT, ToolbarTool.COMPASS, ToolbarTool.LEVEL, ToolbarTool.MOON_PHASE,
+    ToolbarTool.SYSTEM_BACK, ToolbarTool.SYSTEM_HOME, ToolbarTool.SYSTEM_RECENTS,
     // The one-tap cursor moves last: useful, but they would otherwise push
     // every other tool a full row down in the toolbox.
     ToolbarTool.CURSOR_LEFT, ToolbarTool.CURSOR_RIGHT,

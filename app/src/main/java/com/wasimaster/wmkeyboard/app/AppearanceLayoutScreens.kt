@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.app
 
+import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import com.wasimaster.wmkeyboard.core.settings.DefaultToolbarKeys
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -66,6 +67,7 @@ import com.wasimaster.wmkeyboard.core.settings.ToolHeightRange
 import com.wasimaster.wmkeyboard.core.settings.ToolWidthRange
 import com.wasimaster.wmkeyboard.core.settings.ToolbarHeightRange
 import com.wasimaster.wmkeyboard.core.settings.KeepToolsMinutesRange
+import com.wasimaster.wmkeyboard.core.settings.StatusIconSettings
 import com.wasimaster.wmkeyboard.core.settings.ToolbarPaddingRange
 import com.wasimaster.wmkeyboard.core.settings.stripToolboxSwipes
 import com.wasimaster.wmkeyboard.core.addons.AddonType
@@ -87,6 +89,7 @@ import com.wasimaster.wmkeyboard.core.settings.oneHandedLayoutChoices
 import com.wasimaster.wmkeyboard.core.script.NumeralCommitScope
 import com.wasimaster.wmkeyboard.core.settings.DefaultToolbarTools
 import com.wasimaster.wmkeyboard.core.settings.ToolKey
+import com.wasimaster.wmkeyboard.core.settings.ToolHoldAction
 import com.wasimaster.wmkeyboard.core.settings.ToolbarTool
 import com.wasimaster.wmkeyboard.core.settings.key
 import com.wasimaster.wmkeyboard.core.settings.isSupportedTool
@@ -441,6 +444,7 @@ internal fun AppearanceToolbarSettings(
     val stripSwipes = settings.watch { it.stripToolboxSwipes() }
     val labelsOn = settings.watch { it.toolbarLabels }
     val keepTools = settings.watch { it.toolbarBehavior.keepToolsAcrossApps }
+    val alarmIconOn = settings.watch { it.toolbarBehavior.statusIcons.alarm }
     val toolCircleOn = settings.watch { it.toolCircleRadiusDp > 0 }
     val stripShown = settings.watch { it.toolbarBehavior.showStrip }
     val overTheme = settings.watch { it.toolbarBehavior.sizeOverTheme }
@@ -481,6 +485,7 @@ internal fun AppearanceToolbarSettings(
             },
             onDismiss = { toolShapePickerOpen = false },
             title = R.string.appearance_tool_shape_title,
+            offerNone = true,
         )
     }
     if (confirmDisableToolbar) {
@@ -750,6 +755,65 @@ internal fun AppearanceToolbarSettings(
                 info = stringResource(R.string.appearance_toolbar_lock_info),
                 default = SettingsDefaults.toolbarBehavior.hideWhenLocked,
             ) { scope.launch { repository.setToolbarHideWhenLocked(it) } }
+        }
+        // The status icons at the toolbar's far end (#1453).
+        item {
+            ToggleSetting(
+                R.string.appearance_status_alarm_title,
+                stringResource(R.string.appearance_status_alarm_subtitle),
+                settings.watch { it.toolbarBehavior.statusIcons.alarm },
+                info = stringResource(R.string.appearance_status_alarm_info),
+                default = SettingsDefaults.toolbarBehavior.statusIcons.alarm,
+            ) { on -> scope.launch { repository.updateStatusIcons { it.copy(alarm = on) } } }
+        }
+        item(visible = alarmIconOn, level = SettingLevel.ADVANCED) {
+            val minutesFormat = stringResource(R.string.values_minutes)
+            val range = StatusIconSettings.AlarmMinutesRange
+            SliderSetting(
+                R.string.appearance_status_alarm_minutes_title,
+                subtitle = stringResource(R.string.appearance_status_alarm_minutes_subtitle),
+                value = settings.watch { it.toolbarBehavior.statusIcons.alarmMinutes }.toFloat(),
+                range = range.first.toFloat()..range.last.toFloat(),
+                display = { minutesFormat.format(it.roundToInt()) },
+                default = SettingsDefaults.toolbarBehavior.statusIcons.alarmMinutes.toFloat(),
+                info = stringResource(R.string.appearance_status_alarm_minutes_info),
+            ) { v -> scope.launch { repository.updateStatusIcons { it.copy(alarmMinutes = v.roundToInt()) } } }
+        }
+        item {
+            ToggleSetting(
+                R.string.appearance_status_special_days_title,
+                stringResource(R.string.appearance_status_special_days_subtitle),
+                settings.watch { it.toolbarBehavior.statusIcons.specialDays },
+                info = stringResource(R.string.appearance_status_special_days_info),
+                default = SettingsDefaults.toolbarBehavior.statusIcons.specialDays,
+            ) { on -> scope.launch { repository.updateStatusIcons { it.copy(specialDays = on) } } }
+        }
+        item {
+            ToggleSetting(
+                R.string.appearance_status_clock_title,
+                stringResource(R.string.appearance_status_clock_subtitle),
+                settings.watch { it.toolbarBehavior.statusIcons.clock },
+                info = stringResource(R.string.appearance_status_clock_info),
+                default = SettingsDefaults.toolbarBehavior.statusIcons.clock,
+            ) { on -> scope.launch { repository.updateStatusIcons { it.copy(clock = on) } } }
+        }
+        item {
+            ToggleSetting(
+                R.string.appearance_status_todo_title,
+                stringResource(R.string.appearance_status_todo_subtitle),
+                settings.watch { it.toolbarBehavior.statusIcons.todo },
+                info = stringResource(R.string.appearance_status_todo_info),
+                default = SettingsDefaults.toolbarBehavior.statusIcons.todo,
+            ) { on -> scope.launch { repository.updateStatusIcons { it.copy(todo = on) } } }
+        }
+        item(level = SettingLevel.ADVANCED) {
+            ToggleSetting(
+                R.string.appearance_status_chips_title,
+                stringResource(R.string.appearance_status_chips_subtitle),
+                settings.watch { it.toolbarBehavior.statusIcons.chips },
+                info = stringResource(R.string.appearance_status_chips_info),
+                default = SettingsDefaults.toolbarBehavior.statusIcons.chips,
+            ) { on -> scope.launch { repository.updateStatusIcons { it.copy(chips = on) } } }
         }
         item {
             ToggleSetting(
@@ -1080,6 +1144,8 @@ internal fun AppearanceToolbarSettings(
                         is ToolKey.Builtin -> names[tool.tool] ?: tool.token
                         is ToolKey.Plugin -> pluginNames[tool.pluginId] ?: tool.pluginId
                         is ToolKey.Custom -> tool.token
+                        // Never on this row: it holds tools only.
+                        is ToolKey.Folder -> tool.token
                     }
                 },
                 onReorder = { order -> scope.launch { repository.setSecondToolbarTools(order) } },
@@ -1274,6 +1340,18 @@ private fun StripButtonsSettings(repository: SettingsRepository, settings: LiveS
                 info = stringResource(R.string.langemoji_strip_icon_size_info),
             ) { scope.launch { repository.setStripIconSizeDp(it.roundToInt()) } }
         }
+        // The gap around them (#1478), with or without a size of their own.
+        item(visible = buttonsOn, level = SettingLevel.ADVANCED) {
+            SliderSetting(
+                R.string.langemoji_strip_tool_gap_title,
+                subtitle = stringResource(R.string.langemoji_strip_tool_gap_subtitle),
+                value = settings.watch { it.toolbarBehavior.stripToolGapDp }.toFloat(),
+                range = 0f..12f,
+                display = { dpFormat.format(it.roundToInt()) },
+                default = SettingsDefaults.toolbarBehavior.stripToolGapDp.toFloat(),
+                info = stringResource(R.string.langemoji_strip_tool_gap_info),
+            ) { scope.launch { repository.setStripToolGapDp(it.roundToInt()) } }
+        }
     }
 }
 
@@ -1281,8 +1359,26 @@ private fun StripButtonsSettings(repository: SettingsRepository, settings: LiveS
 internal fun AppearanceToolboxSettings(
     repository: SettingsRepository,
     settings: LiveSettings,
+    onNavigate: (String) -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
+    // The grid's tools as a list the screen high (#1475): drag one to move
+    // it, switch one off to leave it out of the grid but on everywhere else.
+    SettingsGroup {
+        item {
+            val pluginNames = rememberPluginToolNames()
+            val counts = settings.watch { s ->
+                val all = arrangeableToolboxTools(s, pluginNames.keys)
+                all.count { it !in s.toolbox.hiddenTools } to all.size
+            }
+            NavRow(
+                R.string.toolbox_arrange_title,
+                stringResource(R.string.toolbox_arrange_subtitle),
+                value = stringResource(R.string.toolbox_arrange_count, counts.first, counts.second),
+                route = TOOLBOX_ARRANGE_ROUTE,
+            ) { onNavigate(TOOLBOX_ARRANGE_ROUTE) }
+        }
+    }
     val spFormat = stringResource(R.string.values_sp)
     val dpFormat = stringResource(R.string.typing_value_dp)
     // What decides which rows the group holds; each row reads its own value.
@@ -1454,6 +1550,7 @@ internal fun AppearanceToolboxSettings(
                 default = SettingsDefaults.toolbox.searchSort,
             ) { scope.launch { repository.setToolboxSearchSort(it) } }
         }
+        item(level = SettingLevel.STANDARD) { ToolboxHoldRow(repository, settings) }
         // Drawn only once something has actually moved, like the group reset on
         // Layout & size. The order of the tools has its own reset above.
         item(visible = toolboxMoved, level = SettingLevel.STANDARD) {
@@ -1466,6 +1563,54 @@ internal fun AppearanceToolboxSettings(
         }
     }
 }
+/**
+ * What a press and hold on the toolbox button does (#1516): the same picker a
+ * tool's "Press and hold on the toolbar" opens, with this page as the default
+ * and "Does nothing" for a hold that should only buzz.
+ */
+@Composable
+private fun ToolboxHoldRow(repository: SettingsRepository, settings: LiveSettings) {
+    val scope = rememberCoroutineScope()
+    var editing by remember { mutableStateOf(false) }
+    val bound = settings.watch { it.toolbox.buttonHold }
+    NavRow(
+        title = R.string.appearance_toolbox_hold_title,
+        subtitle = stringResource(R.string.appearance_toolbox_hold_subtitle),
+        value = when (bound) {
+            null, ToolHoldAction.OpenSettings, ToolHoldAction.Floating ->
+                stringResource(R.string.appearance_toolbox_hold_settings_value)
+            ToolHoldAction.None -> stringResource(R.string.tooldetail_hold_nothing_value)
+            is ToolHoldAction.Run -> stringResource(toolTitle(bound.tool))
+            is ToolHoldAction.RunCustom -> customButtonName(bound.id)
+        },
+    ) { editing = true }
+    if (!editing) return
+    ToolPickerDialog(
+        title = stringResource(R.string.appearance_toolbox_hold_title),
+        current = (bound as? ToolHoldAction.Run)?.tool,
+        options = ToolbarTool.entries.filter(::isSupportedTool),
+        noneTitle = stringResource(R.string.tooldetail_hold_default_title),
+        noneSubtitle = stringResource(R.string.appearance_toolbox_hold_settings_value),
+        nothingSubtitle = stringResource(R.string.tooldetail_hold_nothing_subtitle),
+        nothingSelected = bound == ToolHoldAction.None,
+        onPickNothing = {
+            editing = false
+            scope.launch { repository.setToolboxButtonHold(ToolHoldAction.None) }
+        },
+        onDismiss = { editing = false },
+        onPick = { picked ->
+            editing = false
+            scope.launch { repository.setToolboxButtonHold(picked?.let(ToolHoldAction::Run)) }
+        },
+        customCurrent = (bound as? ToolHoldAction.RunCustom)?.id,
+        onPickCustom = { id ->
+            editing = false
+            scope.launch { repository.setToolboxButtonHold(ToolHoldAction.RunCustom(id)) }
+        },
+        memoryKey = "toolbox-hold",
+    )
+}
+
 /** The orders the toolbox and its search can take. */
 @Composable
 private fun toolboxSortOptions(): List<Pair<ToolboxSort, String>> = listOf(
@@ -1497,9 +1642,6 @@ internal fun LayoutSettings(
     // here and captured. The format also puts the number through the locale,
     // which is what gives Bengali or Arabic digits.
     val dpFormat = stringResource(R.string.typing_value_dp)
-    // What decides which rows the groups hold; each row reads its own value.
-    val numberRow = settings.watch { it.numberRow }
-    val symbolsReturn = settings.watch { it.layoutBehavior.symbolsReturnToLetters }
     // No pinned sketch of the keyboard here any more (issue #769): it took a
     // band of the screen and drew a board that was not the user's, and the
     // keyboard test button on every screen (#412) shows the real one.
@@ -1595,6 +1737,11 @@ internal fun LayoutSettings(
                 }
             }
         }
+    }
+    // The pages and the store in a group of their own (#1318): in the same
+    // card stack as the layouts, under the Your layouts heading, their icons
+    // read as parts of the layout above them rather than rows of the page.
+    SettingsGroup {
         item(level = SettingLevel.STANDARD) {
             NavRow(
                 R.string.langemoji_lang_keymaps_title,
@@ -1624,7 +1771,7 @@ internal fun LayoutSettings(
         // One row for getting one (#1318): the community repository is one of
         // the stores the add-on screen lists, so a second row for it only
         // split the same catalogue in two.
-        item {
+        item(visible = !OfflineBuild.isThisBuild, waitsOnSetting = false) {
             AddonStoreRow(
                 AddonType.Layout,
                 onNavigate,
@@ -1635,6 +1782,95 @@ internal fun LayoutSettings(
     // Bringing a layout in from a file, or sending the ones in use out to one
     // (#1318): beside the layouts they add to, not a screen further in.
     LayoutImportsGroup(repository, settings)
+    // The rest of the screen is doors (#1432): Number row, Arrow keys row,
+    // Symbols layer and Bottom row keys were groups laid out here, a long
+    // scroll of rows under headings beside the arrow rows Size and position
+    // and One-handed already were. Each is now a page of its own, the way
+    // #1318 split Key press and Appearance.
+    val onLabel = stringResource(CommonR.string.common_on)
+    val offLabel = stringResource(CommonR.string.common_off)
+    SettingsGroup {
+        item {
+            NavRow(
+                R.string.layout_size_position_title,
+                stringResource(R.string.layout_size_subtitle),
+                route = "layout/size",
+            ) {
+                onNavigate("layout/size")
+            }
+        }
+        item {
+            NavRow(
+                R.string.layout_one_handed_group_title,
+                stringResource(R.string.layout_one_handed_page_subtitle),
+                route = "layout/onehanded",
+            ) {
+                onNavigate("layout/onehanded")
+            }
+        }
+        item {
+            NavRow(
+                R.string.layout_number_row_title,
+                stringResource(R.string.layout_number_row_page_subtitle),
+                value = if (settings.watch { it.numberRow }) onLabel else offLabel,
+                route = LAYOUT_NUMBER_ROW_ROUTE,
+            ) {
+                onNavigate(LAYOUT_NUMBER_ROW_ROUTE)
+            }
+        }
+        item(level = SettingLevel.STANDARD) {
+            NavRow(
+                R.string.layout_arrow_row_title,
+                stringResource(R.string.layout_arrow_row_page_subtitle),
+                value = if (settings.watch { it.layoutBehavior.arrowRow }) onLabel else offLabel,
+                route = LAYOUT_ARROW_ROW_ROUTE,
+            ) {
+                onNavigate(LAYOUT_ARROW_ROW_ROUTE)
+            }
+        }
+        item {
+            NavRow(
+                R.string.layout_symbols_title,
+                stringResource(R.string.layout_symbols_page_nav_subtitle),
+                route = LAYOUT_SYMBOLS_ROUTE,
+            ) {
+                onNavigate(LAYOUT_SYMBOLS_ROUTE)
+            }
+        }
+        item {
+            NavRow(
+                R.string.layout_bottom_row_keys_title,
+                stringResource(R.string.layout_bottom_row_page_subtitle),
+                value = stringResource(bottomRowPresetLabel(settings.watch { it.bottomRow.preset })),
+                route = LAYOUT_BOTTOM_ROW_ROUTE,
+            ) {
+                onNavigate(LAYOUT_BOTTOM_ROW_ROUTE)
+            }
+        }
+    }
+}
+
+/** Layout & size › Number row (#1432). */
+internal const val LAYOUT_NUMBER_ROW_ROUTE = "layout/numberrow"
+
+/** Layout & size › Arrow keys row (#1432). */
+internal const val LAYOUT_ARROW_ROW_ROUTE = "layout/arrowrow"
+
+/** Layout & size › Symbols layer, with Numerals (#1432). */
+internal const val LAYOUT_SYMBOLS_ROUTE = "layout/symbols"
+
+/** Layout & size › Bottom row keys (#1432). */
+internal const val LAYOUT_BOTTOM_ROW_ROUTE = "layout/bottomrow"
+
+/** Layout & size › Number row: the row of digits over the letters (#1432). */
+@Composable
+internal fun LayoutNumberRowSettings(
+    repository: SettingsRepository,
+    settings: LiveSettings,
+    onNavigate: (String) -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val numberRow = settings.watch { it.numberRow }
     SettingsGroup(stringResource(R.string.layout_number_row_title)) {
         item {
             ToggleSetting(
@@ -1696,6 +1932,16 @@ internal fun LayoutSettings(
             ) { onNavigate(globalRowRoute(GlobalRow.NUMBER)) }
         }
     }
+}
+
+/** Layout & size › Arrow keys row (#1432). */
+@Composable
+internal fun LayoutArrowRowSettings(
+    repository: SettingsRepository,
+    settings: LiveSettings,
+    onNavigate: (String) -> Unit,
+) {
+    val scope = rememberCoroutineScope()
     // Issue #369: the caret keys as a row of their own under the spacebar.
     val arrowRow = settings.watch { it.layoutBehavior.arrowRow }
     val customArrowRow = settings.watch { it.layoutBehavior.customArrowRow != null }
@@ -1757,6 +2003,16 @@ internal fun LayoutSettings(
         }
     }
 
+}
+
+/**
+ * Layout & size › Symbols layer (#1432), with Numerals under it: which digits
+ * the keyboard types is a question about the digits the symbols page offers.
+ */
+@Composable
+internal fun LayoutSymbolsSettings(repository: SettingsRepository, settings: LiveSettings) {
+    val scope = rememberCoroutineScope()
+    val symbolsReturn = settings.watch { it.layoutBehavior.symbolsReturnToLetters }
     // The group was advanced-only until the Symbols page choice joined it;
     // its other rows still are.
     SettingsGroup(stringResource(R.string.layout_symbols_title)) {
@@ -1846,29 +2102,12 @@ internal fun LayoutSettings(
         }
     }
 
-    SettingsGroup {
-        item {
-            NavRow(
-                R.string.layout_size_position_title,
-                stringResource(R.string.layout_size_subtitle),
-                route = "layout/size",
-            ) {
-                onNavigate("layout/size")
-            }
-        }
-        item {
-            NavRow(
-                R.string.layout_one_handed_group_title,
-                stringResource(R.string.layout_one_handed_page_subtitle),
-                route = "layout/onehanded",
-            ) {
-                onNavigate("layout/onehanded")
-            }
-        }
-    }
+}
 
-
-
+/** Layout & size › Bottom row keys (#1432). */
+@Composable
+internal fun LayoutBottomRowSettings(repository: SettingsRepository, settings: LiveSettings) {
+    val scope = rememberCoroutineScope()
     // The rows that act on the 🌐 key go with it: hidden, it has nothing for
     // them to change.
     val globeShown = settings.watch { it.showGlobeKey }

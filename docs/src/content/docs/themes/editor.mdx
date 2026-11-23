@@ -151,7 +151,7 @@ That is a translucent face. For no face at all, pick **None** under [Key shape](
 
 ### Key shapes
 
-The picker lists **None** first, then the twelve shapes in this order. The five simple ones come first, then the seven decorative ones:
+The picker is a grid of every shape drawn at the size of a real key, with its name under it and the one in use on a filled tile. **None** comes first, then the twelve original shapes in this order. The five simple ones come first, then the seven decorative ones:
 
 | Shape | What it looks like | Reads the radius slider? |
 |---|---|---|
@@ -169,6 +169,18 @@ The picker lists **None** first, then the twelve shapes in this order. The five 
 | Ticket | Corners bitten inwards by a circle, like a cinema ticket | No |
 | Circle | A round cap centred in the key, like a typewriter's; wide keys (space, enter) keep a stadium | No |
 
+After those come thirty shapes from the Material 3 Expressive set, none of which reads the radius slider:
+
+| Group | Shapes |
+|---|---|
+| Waves round a circle | Cookie (twelve waves), and the 4-, 6-, 7- and 9-sided cookies |
+| Points and petals | Sun, Very sunny, Flower, Clover, 8-leaf clover, Puffy, Puffy diamond |
+| Stars | Burst and Boom with sharp points, Soft burst and Soft boom with rounded ones |
+| Plain geometry | Oval, Semicircle, Triangle, Arrow, Fan (a quarter circle), Diamond, Clamshell (a wide hexagon), Pentagon, Gem |
+| Pictures | Ghost, Pixel circle, Pixel triangle, Bun, Heart |
+
+Each of them stretches over the whole key rather than sitting in its middle, so the space bar gets one long cookie or heart and a letter key a tall one. They're there for the popups, the tool backgrounds and the chips too, since every shape row in the editor opens this same grid. A shape drawn too small to make out, such as a popup in the first frames of opening, is a plain rectangle until it grows.
+
 The shapes that ignore the slider aren't being lazy about it. Their whole look is a proportion of the key rather than a corner size, so they measure themselves off the key's own width and height. The arch is always half the key's height. The hexagon's points are always a sixth of its width. The scallops count out at roughly the same size whether it's a letter key or a spacebar, up to 64 along a side; a box only a few pixels tall, such as a panel sliding open, is drawn as a plain rectangle until it is big enough for bumps. Wire them to a 0–28dp slider instead and one end of it flattens them into plain rectangles.
 
 Only the drawing changes. Touch targets stay rectangular for every shape, so the gap between two hexagons still belongs to one key or the other, and nothing gets harder to hit.
@@ -185,7 +197,7 @@ Slanted is the one shape that draws slightly outside its key. A parallelogram ke
 
 **Key shadow colour** shows up once there is a shadow. Unset, it's the usual black; pick any colour, and lower its opacity for a soft glow rather than a hard edge. Themes imported from Gboard and FlorisBoard bring their own. Android 8 and older draw every shadow black whatever this says.
 
-Two shapes stay flat however far you push it. Scallop and Ticket are concave, and Android tessellates a concave shadow through a path that pins the render thread hard enough for the system to kill the keyboard, so they keep the shape and lose the shadow. A key you can see through at all stays flat too, even at 90% opacity: the shadow fills the key's whole outline, and through a translucent face it reads as a lighter box inset in every key. That's what keeps a borderless theme looking borderless.
+Some shapes stay flat however far you push it. Scallop and Ticket are concave, and so are most of the Material shapes: the cookies, suns, flowers, clovers, stars, the puffy pair, Arrow, Ghost, the two pixel shapes, Bun and Heart. Android tessellates a concave shadow through a path that pins the render thread hard enough for the system to kill the keyboard, so they keep the shape and lose the shadow. That goes for every raised surface wearing one, not only keys: the popups, the menus, a clip card being dragged, and the Cut, Copy and Paste bar over a selection in a tool, which wears the chip shape. A key you can see through at all stays flat too, even at 90% opacity: the shadow fills the key's whole outline, and through a translucent face it reads as a lighter box inset in every key. That's what keeps a borderless theme looking borderless.
 
 #### No key shape
 
@@ -196,7 +208,7 @@ The keys still answer your finger. A pressed key flashes a rounded shape at your
 **High contrast keys** and **Key outlines** in [Accessibility](/accessibility/overview/) both bring rounded keys back while they're on. Keys without visible edges are exactly what those two settings are there to fix.
 
 :::note
-Only Rounded, Pill, Cut and Squircle shipped with the first version of the format. The other eight, Square among them, came later, and so did None. A theme exported with one of them won't import into a version of the app that predates it: the importer drops a theme whose shape name it doesn't recognise rather than guessing. Stick to Rounded, Pill, Cut, or Squircle in a theme you plan to share widely.
+Only Rounded, Pill, Cut and Squircle shipped with the first version of the format. The other eight, Square among them, came later, and so did None and the thirty Material shapes. A theme exported with one of them won't import into a version of the app that predates it: the importer drops a theme whose shape name it doesn't recognise rather than guessing. Stick to Rounded, Pill, Cut, or Squircle in a theme you plan to share widely.
 :::
 
 ### Key textures
@@ -224,11 +236,15 @@ The key's style opens on the page straight under the preview, which stays pinned
 - **Colors**: its face, its label, its hint, its border, and the two colors of the popup bubble it shows.
 - **Gradient face**: the face as two colors running into each other, with **Gradient start**, **Gradient end** and **Gradient angle** (in steps of 15°). Turned on, it starts from the face the key has and shades it darker. A press still paints the plain pressed color, so you can see the hit. This is how a red-to-crimson Enter key is made.
 - **Glow**: a soft halo of one color round the key, showing in the gaps beside it. **Glow reach** sets how far it spreads, 1 to 16 dp; the color's own opacity sets how strong it is.
+- **Glow while held**: the glow's color while your finger is on the key. Left alone, a held key keeps its resting glow. Set on a key with no glow of its own, the key lights up only while you press it, which works on a letter as well as on Enter or Shift.
+- **Held glow brightness**: how bright that glow is while the key is held, from 0% to 300% of its resting brightness. Under 100% the key dims as you press it; over 100% it flares.
+- **Light on nearby keys**: how much of the glow lands on the keys round this one, 0% to 100%. Each neighbor takes on the glow's color on the side that faces the lit key, strongest at its nearest edge and fading over about one key's width, so an orange Shift tints the near sides of A and Z. The light brightens or dims with the held glow, so pressing the key makes its neighbors flare too. At 0% the light stays in the gaps.
 - **Key image**: a picture for this one key, drawn with the same Crop/Stretch/Tile fit and opacity the board's [key textures](#key-textures) use, so a dressed key still reads as part of the set. It beats the class texture it would otherwise wear, and a key image works on a board with no class textures at all.
 - **Press effect**: the burst this key throws: Stars, Hearts, Sparkle, Confetti, or Emoji with its own field for the emoji. It overrides the board's [key press effect](#key-press-effect) for this key alone, and a board whose only effect is one key's still bursts on that key. The board's Intensity, Colour and the physics sliders shape every burst; a single-key style picks what is thrown, not how. Images aren't offered per key.
 - **Key shape**: this one key's outline. Automatic follows the board's shape; pick one to make a single key round, pill, cut or anything else in the list, including None. The shapes that measure themselves off the key (circle, pill, hexagon and the rest) ignore the corner radius as they always do. This is how a round Enter key on a grid of soft rectangles is made, and it is what carries over from an imported FlorisBoard theme built that way.
 - **Corner radius**: how round this one key's corners are, 0 to 28 dp, for the rounded and cut shapes. Off, the key follows the board's corner radius.
 - **Bold label** and **Label size**: how the label is drawn. Bold is a three-way choice: Automatic follows the board, On and Off answer for this key. Label size replaces the automatic rule rather than scaling it, which is how you get a `?123` drawn at full letter size. A size the *layout* gave the key in the [layout editor](/languages/custom-layouts/#editing-a-key) wins over the theme's, since the layout is the more specific answer.
+- **Font axes for this key**, when the theme's key font is variable: one slider per axis, so Enter can be heavier or the space bar narrower than the rest. An axis you don't move keeps the theme's value, and **Reset to the font defaults** clears the key's own.
 - **Frosted glass**, on a [glass theme](#glass) only: Automatic follows the key's class (the theme's glass may cover letters but not Enter, say), On makes this one key a pane of glass, and Off keeps it solid. It's how a solid accent Enter sits on a glass board.
 
 An armed or locked modifier still shows the accent or pressed face whatever color you gave it, because state has to stay visible. A key image and a press effect travel inside the exported theme the same way the board's do. High-contrast accessibility drops single-key styles with the rest of the decoration, and a press effect never plays under reduce motion or power saving.
@@ -260,7 +276,7 @@ Each rule is a selector and the properties it sets. The selector names the part 
 | ``class=`letter` ``, `modifier`, `enter`, `space` | A whole kind of key. A plain `key` with no brackets is the letters |
 | nothing, then `:pressed` | The same keys while held |
 
-The properties are `background`, `foreground`, `border-color`, `shape` (`circle()`, `rounded-corner(8dp)`, `rectangle()`, `cut-corner(6dp)`), `font-size` in sp and `font-weight`. `@defines` holds variables, used as `var(--name)`, and one body can serve several selectors separated by commas. A later rule wins over an earlier one.
+The properties are `background`, `foreground`, `border-color`, `shape` (`circle()`, `rounded-corner(8dp)`, `rectangle()`, `cut-corner(6dp)`), `font-size` in sp, `font-weight` and `font-variation`. `font-variation` takes variable-font axes in CSS's own form, `"'wght' 700, 'wdth' 80"`: on a key it sets that key's own axes, on `` key[class=`letter`] `` the board's, and on `key-hint` or `key-popup` the hints' or the popups' values. A font without the axis ignores it. `@defines` holds variables, used as `var(--name)`, and one body can serve several selectors separated by commas. A later rule wins over an earlier one.
 
 The sheet is applied each time the theme is drawn and is never saved into the theme's colors, so it always wins over the rows above it, and deleting a line takes its effect away. A key's own style from **Pick on keyboard** keeps whatever the sheet doesn't set. Under the editor, a line says how many rules change the theme, and each rule that does nothing says why: an element other than the three above, a state other than `:pressed`, a code with no key here, or a property that part does not take. **Example** fills an empty sheet with a short one to start from, and **Apply** saves it.
 
@@ -343,11 +359,37 @@ For a theme you plan to share, use the forms that travel. Google Font ids (`goog
 
 A theme's sound is only ever a sound it can actually make. A theme whose sound is missing on this device (never installed, or since deleted) falls back to the global **Key press → Sound style** pick, and so does a theme file whose `soundStyle` is `CUSTOM` or `PACK` with no `soundCustomId` beside it. Those two styles name something installed rather than a waveform of their own, so without a name there is nothing to play, and overriding your own pick with silence-turned-system-click would leave the whole keyboard clicking with nothing on screen to say why.
 
+### Font axes and motion
+
+<SettingsPath path="Appearance / Keyboard themes / (edit a theme) / Font and sound / Font axes and motion" />
+
+A theme on a [variable font](/themes/fonts/#variable-fonts-and-their-axes) can set the font's axes and make the key labels move. The row is greyed out until there's a variable font to work with: the theme's own key font or one of its script fonts, or at least one variable font in your library. A long press on the greyed row says so.
+
+**Font axes** is the same editor as the Fonts screen's, kept in the theme rather than in your settings: sliders per axis, the font's named styles, and separate values for keys, hints, suggestions and popups. Chips at the top switch between the key font and each script font the theme names. A theme with no key font of its own uses the system font, so a theme can tune Roboto's weight on phones where it's variable. If the theme's font is static, the screen says so and lists the variable fonts in your library, any of which becomes the theme's key font with one tap. Values you set for the same font on the Fonts screen win over the theme's, and the screen tells you when that's the case.
+
+**Font motion** moves the key labels while you type. A theme holds up to four motions, and each one moves the axes you add to it from where they rest to the value you set:
+
+- **Lighting pattern** uses one of the [key lighting](#key-lighting) patterns. The idle ones (Wave, Breathe, Sweep, Twinkle, Heartbeat, Steady) run on their own, and the press ones (Pressed key, Ripple, Echo, Splash, Cross, Rain) start from the key you press. A theme with Wave lighting and a Wave motion swells its letters in step with the light.
+- **Finger**: the letters near your finger swell as you press and settle back when you lift. **Reach** sets how far from the finger, **Time to go back** how long they take, and **Bounce** how far past rest they ring on the way.
+- **Glide**: the letters swell as a gliding finger passes over them and settle behind it, so the path shows as a wake.
+- **Shift**: every label eases to the motion's values while Shift or Caps Lock is on, instead of snapping.
+- **Typing speed**: the whole board leans toward the motion's values the faster you type, and settles when you stop.
+
+Each motion moves the letter keys only, unless **Move all key labels** is on, which brings in the words on ?123, Enter and the other function keys. Where two motions move the same axis, the one that moves it further wins at that moment.
+
+**Size** makes the letters grow as they move, ×1.30 being a third bigger at the peak. Growth makes a motion far easier to see than the axes alone, and it works on any font, static ones included. It moves on the same steps as the axes, each under 2% of the letter's size, so a moving letter is only redrawn when its step changes. A new motion starts at ×1.30.
+
+The motion draws at the screen's full frame rate, 30 frames a second while the phone is busy, and only while something is moving: a still keyboard asks for no frames. The axes move in steps rather than continuously, since each step is a separate cut of the font: 24 between rest and the value you set, 12 while the phone is busy. The keyboard cuts every step in the background as the theme loads, so the first presses don't stall while it does. The motion's sliders save when you lift your finger. Reduce motion and power saving stop it, as they stop the lighting and touch bloom, and **Theme effects with Reduce motion** brings it back. High contrast drops it with the rest of the decoration. Corner hints, suggestions and popups keep their own axis values but don't move.
+
+The built-in **Swell** theme shows it off on the system font: letters under the finger swell heavy and a third bigger, a glide leaves a wake of swollen letters behind it, and everything leans heavier while Shift is on.
+
 ### Key icons
 
 A theme can draw its own icon on the keyboard's own keys: delete, shift in its three states, enter in each wording, the globe, the emoji key and the rest of the Keys group on the [Icons](/themes/icon-packs/#what-you-can-replace) screen. Tap a key's row and pick a picture from [Your icons](/themes/icon-packs/#your-icons), or add one there. The theme keeps its own copy of the picture, so the icon goes with the theme when you export it, and deleting the picture from Your icons later leaves the theme alone. **Remove from the theme** takes it off again.
 
-A theme's icon comes last: an icon pack, or an icon you picked for that key on the Icons screen, wins over it. A row whose key is taken that way says so under its name. Themes imported from Gboard fill these rows with the glyphs they brought.
+**Icon set**, the first row, decides who has the last word on these keys. On **Follow settings**, the default, a theme's icon comes last: an icon pack, or an icon you picked for that key on the Icons screen, wins over it, and a row whose key is taken that way says so under its name. Pick **The app's own icons** or one of your installed icon packs instead, and the theme decides its keys itself while it is on. Each key draws the theme's own picture if it has one, and otherwise the icon from the set you picked; the Icons screen's pack and per-key picks no longer reach these keys. That's how a dark theme can wear white outlined glyphs and a light one a filled set, each switching in with its theme. Tool icons and the rest keep following the Icons screen.
+
+The set travels with an exported theme as the pack's id. A phone that has a pack with that id or that name uses it; one that doesn't treats the row as Follow settings, the same way a missing font falls back. Themes imported from Gboard fill the key rows with the glyphs they brought.
 
 ### Accent
 
@@ -359,7 +401,7 @@ A theme's icon comes last: an icon pack, or an icon you picked for that key on t
 The popups have a section of their own: open it from the **Popups** row under [Toolbar, strip and popups](#toolbar-strip-and-popups), or from the **Popups** chip while picking on the keyboard. At its top is a drawing of the two popups in the theme you are editing, the bubble over a pressed key and the press-and-hold alternates with one lit, on a patch of the board's own fill, so a colour, the shape, the outline and the shadow can be judged without holding a key down. The bubble is left out while key popups are off under <SettingsPath path="Key press" />, since the keyboard never draws it then.
 
 - **Popup background** and **Popup text** color the bubble that appears above a key on press, and the press-and-hold alternates with it: the sheet the alternates sit on is Popup background, and every alternate not under your finger is Popup text. Both support Auto fallbacks, deriving from the board and key colors and from Key text respectively. Popup background supports alpha. The highlight that follows your finger across the alternates is **Selected highlight** under [Panels & suggestions](#panels--suggestions), and the character on it is **Selected text**, so the gap between that highlight and the sheet's edge is the alternates' spacing, which is <SettingsPath path="Key press / Alternate keys / Alternate key spacing" /> rather than a theme field. See [What's what](#whats-what) for a drawing of each part.
-- **Popup shape** sets the outline of every popup surface the keyboard draws: the character bubble, the long-press alternates, the language list, the panel menus. It's the same picker and the same twelve shapes as Key shape, drawn at this theme's popup radius. Until you pick one, the theme follows <SettingsPath path="Key press / Key popup / Popup shape" />.
+- **Popup shape** sets the outline of every popup surface the keyboard draws: the character bubble, the long-press alternates, the language list, the panel menus. It's the same picker and the same twelve shapes as Key shape, drawn at this theme's popup radius. The selected highlight inside the alternates, and the chosen layout in the switch strip, take the same shape. Until you pick one, the theme follows <SettingsPath path="Key press / Key popup / Popup shape" />. With <SettingsPath path="Key press / Key popup / Alternates as separate keys" /> on, the alternates drop the shared sheet and each one is drawn as its own small key in this shape, with the popup background, outline and key material, and the selected highlight fills the key under your finger.
 - **Popup placement** decides whether the character bubble grows out of the pressed key (the stock style) or floats detached above it. **Default** leaves the choice to <SettingsPath path="Key press" />. The other two make it part of the theme, so a bubble-popup theme looks right on every phone it lands on.
 - **Popup outline** and its width row draw a border around the bubble, off until you pick a color, exactly like the key border. It draws on every popup surface the keyboard opens: the character bubble, the long-press alternates, the spacebar language picker, the clipboard and emoji menus, and the small pickers inside the tool panels.
 - The popup can also wear an image: the **Key preview popup** row under [Key textures](#key-textures) paints one inside the bubble, clipped to the popup shape, using the same Crop/Stretch/Tile mode and opacity as the key textures.
@@ -373,7 +415,7 @@ The bar above the keys is either the toolbar or the suggestion strip, and each h
 The **Toolbar** section:
 
 - **Toolbar background** fills the bar behind the tools: their own row, when <SettingsPath path="Appearance / Toolbar" /> gives them one, and the suggestion strip while it is showing the tools instead of words. On Auto it matches **Suggestion strip** in the strip's section, which in turn matches the board, so the bars stay one colour until you pull this one apart. Alpha works here, so a half-transparent fill tints the strip's own colour rather than covering it. The strip takes its own colour back the moment words arrive, so a bar that flips between words and tools flips colour with them; if that reads as a flicker, leave the two the same and use the tools' own row instead.
-- **Tool background shape** is the outline of the background behind each toolbar tool, from the same twelve shapes. It follows <SettingsPath path="Appearance / Toolbar / Tool background shape" /> until you pick one here. Nothing draws at all while the tool radius is 0, which is the setting for bare icons.
+- **Tool background shape** is the outline of the background behind each toolbar tool, from the same twelve shapes. It follows <SettingsPath path="Appearance / Toolbar / Tool background shape" /> until you pick one here. None draws no background at all and leaves the icons bare, as a tool radius of 0 does.
 - **Tool icons** sets the toolbar's icon color, Auto by default.
 - **Tool circles** and **Active tool circle** paint the background behind a toolbar icon, at rest and while pressed or active. Both support alpha.
 - **Tool shadow** lifts that background off the bar.
@@ -408,7 +450,7 @@ Chips are the small tappable surfaces inside the tool panels: style pickers, tab
 - **Chip text** and **Selected chip** / **Selected chip text** cover the resting label, plus the fill and label of the chip that's currently active. Auto derives all three from the theme, and the selected fill follows the active tool circle.
 - **Chip outline** and its width row draw a border around every chip, off until you pick a color.
 - **Chip shape** and **Chip corner radius** use the same twelve-shape picker as everywhere else. The default is the 12dp soft rectangle chips have always drawn.
-- **Card shape** governs the bigger surfaces: clipboard and snippet cards, plugin rows, search bars, the converters' displays. They follow the chip shape through the same safety rule as the menu shape, so plain outlines pass through, decorative ones fall back to Rounded, and an explicit pick here overrules both.
+- **Card shape** governs the bigger surfaces: clipboard and snippet cards, plugin rows, the converters' displays, and the search bar of every panel (clipboard, emoji, GIFs and stickers, notes, toolbox, dictionary, snippets, Unicode), so they all have the same corners. They follow the chip shape through the same safety rule as the menu shape, so plain outlines pass through, decorative ones fall back to Rounded, and an explicit pick here overrules both.
 
 Any row left on Auto shows an "Automatic" label under its name instead of a fixed value. Once you've overridden it, that row's color picker gains an **Automatic** button (next to Apply) that clears the override and puts the row back on Auto. On a row that is still on Auto, the picker opens on the colour Auto stands for, and pressing Apply without changing it leaves the row on Auto. A strip or toolbar on Auto paints nothing over the board, so writing the board's own colour over it would draw a lighter band.
 

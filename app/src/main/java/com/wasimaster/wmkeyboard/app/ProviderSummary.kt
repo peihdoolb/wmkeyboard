@@ -176,6 +176,7 @@ private fun problemSummary(row: ResolvedProvider): ProviderSummary? {
         ProviderProblem.NEEDS_PACKS -> R.string.providers_status_needs_packs
         ProviderProblem.UNAVAILABLE -> R.string.providers_status_unavailable
         ProviderProblem.UNKNOWN -> R.string.providers_status_unknown
+        ProviderProblem.PLUGIN_OFF -> R.string.providers_status_plugin_off
     }
     return ProviderSummary(listOf(SummaryPart.Phrase(res)), problem = true)
 }
@@ -196,7 +197,8 @@ private fun kindSummary(row: ResolvedProvider, type: ProviderType, settings: Key
             ),
         )
         ProviderTypes.WHISPER.id, ProviderTypes.WHISTLE.id, ProviderTypes.ASR4ALL.id, ProviderTypes.PARAKEET.id,
-        ProviderTypes.MOONSHINE.id, ProviderTypes.SHERPA.id, ProviderTypes.OMNILINGUAL.id, ProviderTypes.VOSK.id,
+        ProviderTypes.MOONSHINE.id, ProviderTypes.SHERPA.id, ProviderTypes.OMNILINGUAL.id, ProviderTypes.QWEN3.id,
+        ProviderTypes.VOSK.id,
         ProviderTypes.NLLB.id,
         ProviderTypes.ON_DEVICE_AI.id, ProviderTypes.OFFLINE_WIKTIONARY.id, ProviderTypes.OFFLINE_WORDNET.id,
         ProviderTypes.OFFLINE_BENGALI.id, ProviderTypes.OFFLINE_LANGUAGES.id,

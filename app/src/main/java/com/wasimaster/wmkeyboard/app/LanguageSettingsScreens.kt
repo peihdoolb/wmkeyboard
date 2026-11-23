@@ -52,6 +52,7 @@ import com.wasimaster.wmkeyboard.core.layout.resolveLayoutName
 import com.wasimaster.wmkeyboard.core.transliteration.BijoyAnsi
 import com.wasimaster.wmkeyboard.core.transliteration.KhiproSpecs
 import com.wasimaster.wmkeyboard.core.transliteration.LegacyFonts
+import com.wasimaster.wmkeyboard.core.transliteration.Lipi
 import com.wasimaster.wmkeyboard.core.dictionaries.AvroDictionaryDownloads
 import com.wasimaster.wmkeyboard.core.dictionaries.DictionaryCatalog
 import com.wasimaster.wmkeyboard.core.dictionaries.DictionaryEntry
@@ -121,12 +122,14 @@ import com.wasimaster.wmkeyboard.core.settings.KeyboardSettings
 import com.wasimaster.wmkeyboard.core.settings.ReadingOnSwitch
 import com.wasimaster.wmkeyboard.core.settings.SettingsDefaults
 import com.wasimaster.wmkeyboard.core.settings.SettingsRepository
+import com.wasimaster.wmkeyboard.core.settings.SuggestionTextScaleRange
 import com.wasimaster.wmkeyboard.core.settings.TransliterationHintMode
 import com.wasimaster.wmkeyboard.core.xlit.IndicXlitModels
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.Locale
+import kotlin.math.roundToInt
 
 /**
  * The screens that make the [LanguageRegistry] reachable: a searchable list to
@@ -607,8 +610,10 @@ private val AUTO_DOWNLOAD_SIZE = DictionaryCatalog.DictionarySize.LARGE
 private fun orphanedNeuralModel(context: Context, settings: KeyboardSettings, langId: String): File? {
     val neural = settings.suggestionStrip.neuralPhoneticLangs
     if (langId !in neural) return null
-    val othersUsing = settings.enabledLayoutIds
-        .map { resolveLayout(settings.customLayouts, it).language().id }
+    // A language switched off (#1484) still has a use for it: its downloads
+    // are kept for the moment it is back on.
+    val othersUsing = (settings.enabledLayoutIds.map { resolveLayout(settings.customLayouts, it).language().id } +
+        settings.languagesOff.keys)
         .any { it != langId && it in neural }
     if (othersUsing) return null
     // The pack's own directory, which holds nothing else.
@@ -752,6 +757,9 @@ internal suspend fun deleteLanguageData(
     CjkDictCatalog.forLang(langId).forEach { CjkDictDownloadManager.delete(filesDir, it) }
     if (langId == PhoneticSchemes.BENGALI.languageId) AvroDictionaryDownloads.delete(filesDir)
     if (neural) deleteNeuralPhonetic(context, repository, settings)
+    // Nothing kept any more, so nothing for a switched-off entry (#1484) to
+    // bring back: the language is gone, not off.
+    repository.setLanguageOff(langId, null)
 }
 
 /**
@@ -800,14 +808,12 @@ internal suspend fun removeLanguage(
  * Drops [langId] from every language's "Also suggest from". Its switch is only
  * drawn while it is enabled, so a pick left behind could never be turned off.
  */
+@Suppress("UNUSED_PARAMETER")
 internal suspend fun forgetAsSecondary(repository: SettingsRepository, settings: KeyboardSettings, langId: String) {
-    val current = settings.secondaryLanguages
-    if (current.none { (primary, ids) -> primary == langId || langId in ids }) return
-    repository.setSecondaryLanguages(
-        current.filterKeys { it != langId }
-            .mapValues { (_, ids) -> ids - langId }
-            .filterValues { it.isNotEmpty() },
-    )
+    // On the stored map, not on [settings]: that one holds only the picks of
+    // languages that are on, and writing it back lost every pick of a
+    // language switched off (#1484).
+    repository.forgetSecondaryLanguage(langId)
 }
 
 /**
@@ -872,6 +878,30 @@ internal fun shelfLayoutIds(lang: LanguageDef, settings: KeyboardSettings, overf
 }
 
 /**
+ * [ids] with the layouts that were on when the screen opened at the front, each
+ * half in its own order (#1517).
+ *
+ * The user's own layouts come last on the shelf, so switching off a layout made
+ * in the editor meant scrolling past every shipped one to reach it. What is on
+ * is what someone opens the screen to change; the rest is browsing.
+ *
+ * Taken when the screen composes, not live: a card that jumped to the front
+ * the moment it was tapped would leave the reader's finger over a different
+ * card. Coming back to the screen puts whatever is on now first.
+ */
+@Composable
+internal fun rememberOnFirst(ids: List<String>, settings: LiveSettings): List<String> {
+    // Read once without subscribing: a plain read here would recompose the
+    // caller on every settings change, which is what [LiveSettings.watch] is for.
+    val onAtOpen = remember {
+        androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation {
+            settings.value.enabledLayoutIds.toSet()
+        }
+    }
+    return remember(ids, onAtOpen) { ids.sortedBy { it !in onAtOpen } }
+}
+
+/**
  * The Layouts group for one language: the layouts we wrote for it plus whichever
  * converted ones are switched on, as a row of keyboard cards (see
  * [LayoutCarousel]) that ends on a card down to the rest.
@@ -900,8 +930,15 @@ private fun LayoutsGroup(
     val toggle = rememberLayoutToggle(settings, repository, scope) { rulesRefresh++ }
 
     val overflow = settings.watch { overflowLayoutIds(lang, it) }
-    val listed = settings.watch { shelfLayoutIds(lang, it, overflow) }
+    val listed = rememberOnFirst(settings.watch { shelfLayoutIds(lang, it, overflow) }, settings)
     val title = stringResource(R.string.languages_layouts_title)
+    // The whole shelf at once, as a grid the cards fly out to. Only once there
+    // is more than the row shows at a glance.
+    val galleryShown = listed.size + (if (overflow.isEmpty()) 0 else 1) > 2
+    // The More layouts page, whose search box is pinned at its top, straight
+    // from the heading (#1431). Its only other way in is the row's last card,
+    // which on English is twenty-odd cards of sideways scrolling away.
+    val searchShown = overflow.isNotEmpty()
 
     HighlightableRow(title, coarse = true) {
         Column {
@@ -909,16 +946,25 @@ private fun LayoutsGroup(
                 title,
                 info = stringResource(R.string.languages_layouts_info),
                 modifier = Modifier.padding(start = 32.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
-                // The whole shelf at once, as a grid the cards fly out to. Only
-                // once there is more than the row shows at a glance.
-                action = if (listed.size + (if (overflow.isEmpty()) 0 else 1) > 2) {
+                action = if (galleryShown || searchShown) {
                     {
-                        IconButton(onClick = { onNavigate(layoutGalleryRoute(lang.id)) }) {
-                            Icon(
-                                Icons.Outlined.OpenInFull,
-                                contentDescription = stringResource(R.string.languages_layouts_gallery_open),
-                                modifier = Modifier.size(18.dp),
-                            )
+                        if (searchShown) {
+                            IconButton(onClick = { onNavigate(moreLayoutsRoute(lang.id)) }) {
+                                Icon(
+                                    Icons.Outlined.Search,
+                                    contentDescription = stringResource(R.string.languages_layouts_search_open),
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                        }
+                        if (galleryShown) {
+                            IconButton(onClick = { onNavigate(layoutGalleryRoute(lang.id)) }) {
+                                Icon(
+                                    Icons.Outlined.OpenInFull,
+                                    contentDescription = stringResource(R.string.languages_layouts_gallery_open),
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
                         }
                     }
                 } else {
@@ -1164,7 +1210,29 @@ internal fun LanguageDetailScreen(
     // another one: Banglish on English (#473), English on Swedish (#618).
     // Hidden, it stays on and keeps lending them, and the switcher has one
     // stop fewer.
+    // Off without losing the downloads (#1484): out of the switcher and out of
+    // every language's suggestions, as if removed, until it is switched back
+    // on here or on the Languages screen. Not for the last language on.
+    val languageOff = settings.watch { langId in it.languagesOff }
+    val othersOn = settings.watch { s -> s.enabledLanguages.any { it.id != langId } }
     SettingsGroup(stringResource(R.string.languages_picker_hidden_group)) {
+        item(visible = othersOn || languageOff) {
+            ToggleSetting(
+                R.string.languages_off_title,
+                stringResource(R.string.languages_off_subtitle),
+                !languageOff,
+                info = stringResource(R.string.languages_off_info, lang.englishName),
+                default = true,
+            ) { on ->
+                scope.launch {
+                    if (on) {
+                        switchLanguageOn(repository, settings, langId)
+                    } else if (switchLanguageOff(repository, settings, langId)) {
+                        onRemoved()
+                    }
+                }
+            }
+        }
         item(level = SettingLevel.STANDARD) {
             ToggleSetting(
                 R.string.languages_picker_hidden_title,
@@ -1206,6 +1274,35 @@ internal fun LanguageDetailScreen(
                 info = stringResource(R.string.languages_space_after_suggestion_info, lang.englishName),
                 default = langId !in DefaultSpaceAfterSuggestionOffLangs,
             ) { scope.launch { repository.setAutoSpaceAfterSuggestionForLanguage(langId, it) } }
+        }
+    }
+
+    // The strip's text size, per language (#1480): Chinese read through a font
+    // with Pinyin over the characters wants larger candidates than the English
+    // typed beside it. Follows Appearance › Toolbar until moved; the row's
+    // reset puts it back to following.
+    val ownTextScale = settings.watch { it.suggestionStrip.textScaleByLang[langId] }
+    val globalTextScale = settings.watch { it.suggestionStrip.textScale }
+    val textScalePercent = stringResource(R.string.typing_value_percent)
+    val followGlobalTextScale: () -> Unit = {
+        scope.launch { repository.setSuggestionTextScaleForLanguage(langId, null) }
+    }
+    SettingsGroup(stringResource(R.string.languages_suggestion_text_group)) {
+        item(level = SettingLevel.STANDARD) {
+            SliderSetting(
+                R.string.appearance_suggestion_text_size_title,
+                subtitle = if (ownTextScale != null) {
+                    stringResource(R.string.languages_suggestion_text_size_own, lang.englishName)
+                } else {
+                    stringResource(R.string.languages_suggestion_text_size_global)
+                },
+                value = ownTextScale ?: globalTextScale,
+                range = SuggestionTextScaleRange,
+                display = { textScalePercent.format((it * 100).roundToInt()) },
+                info = stringResource(R.string.languages_suggestion_text_size_info, lang.englishName),
+                default = globalTextScale,
+                onReset = if (ownTextScale != null) followGlobalTextScale else null,
+            ) { scope.launch { repository.setSuggestionTextScaleForLanguage(langId, it) } }
         }
     }
 
@@ -1617,10 +1714,43 @@ internal fun LanguageDetailScreen(
                     info = stringResource(R.string.languages_legacy_font_info),
                     options = listOf("" to stringResource(R.string.languages_legacy_font_off)) +
                         legacyFonts.map { font -> font.id to (legacyFontLabel(font)?.let { stringResource(it) } ?: font.title) },
-                    selected = settings.watch { it.suggestionStrip.legacyFonts[langId].orEmpty() },
+                    // A script picked below shares the setting: Off here, then.
+                    selected = settings.watch { s ->
+                        s.suggestionStrip.legacyFonts[langId].orEmpty().takeIf { id -> LegacyFonts.Font.of(id)?.lipi == null }.orEmpty()
+                    },
                     default = "",
-                ) { scope.launch { repository.setLegacyFont(langId, it) } }
+                ) { id ->
+                    // Off, while a script below holds the setting, is already true: leave that script be.
+                    val held = LegacyFonts.Font.of(settings.value.suggestionStrip.legacyFonts[langId])
+                    if (id.isNotEmpty() || held?.lipi == null) scope.launch { repository.setLegacyFont(langId, id) }
+                }
             }
+        }
+    }
+
+    // Sanskrit in IAST, Grantha, Kannada and the rest (vidyut-lipi): the same
+    // output path, strip button and stored choice as the fonts above, so one
+    // of the two is on at a time.
+    val lipiScripts = LegacyFonts.scriptsFor(langId)
+    if (lipiScripts.isNotEmpty() && Lipi.shipped) {
+        SettingsGroup(stringResource(R.string.lipi_output_group), level = SettingLevel.ADVANCED) {
+            item {
+                ChoiceSetting(
+                    R.string.lipi_output_title,
+                    subtitle = stringResource(R.string.lipi_output_subtitle),
+                    info = stringResource(R.string.lipi_output_info),
+                    options = listOf("" to stringResource(R.string.lipi_output_off)) + lipiScripts.map { font -> font.id to font.title },
+                    selected = settings.watch { s ->
+                        s.suggestionStrip.legacyFonts[langId].orEmpty().takeIf { id -> LegacyFonts.Font.of(id)?.lipi != null }.orEmpty()
+                    },
+                    default = "",
+                ) { id ->
+                    // Devanagari, while a legacy font holds the setting, is the same: leave the font be.
+                    val held = LegacyFonts.Font.of(settings.value.suggestionStrip.legacyFonts[langId])
+                    if (id.isNotEmpty() || held == null || held.lipi != null) scope.launch { repository.setLegacyFont(langId, id) }
+                }
+            }
+            item { LipiLibraryRow() }
         }
     }
 
@@ -1674,6 +1804,12 @@ internal fun LanguageDetailScreen(
     // its dictionary and its learning.
     if (langId == "ja") {
         MozcEngineGroup(repository, settings)
+    }
+
+    // Chinese Zhuyin can convert on Chewing (libchewing) instead: the engine
+    // choice, its library, its dictionary and its learning.
+    if (langId == "zh") {
+        ChewingEngineGroup(repository, settings)
     }
 
     // Removing the only language would leave nothing to type in, so it is only

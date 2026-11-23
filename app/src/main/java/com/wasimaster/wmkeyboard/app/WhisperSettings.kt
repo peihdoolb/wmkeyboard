@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.app
 
+import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import com.wasimaster.wmkeyboard.core.netlog.InternetPermission
 import android.content.Context
 import android.text.format.Formatter
@@ -54,7 +55,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.wasimaster.wmkeyboard.R
 import com.wasimaster.wmkeyboard.common.R as CommonR
-import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import com.wasimaster.wmkeyboard.core.script.LanguageDef
 import com.wasimaster.wmkeyboard.core.settings.MeteredDecision
 import com.wasimaster.wmkeyboard.core.settings.SettingsDefaults
@@ -346,6 +346,10 @@ internal fun WhisperModelManager(repository: SettingsRepository, settings: LiveS
                 links = offlineLinks,
                 onImported = { WhisperDownloadManager.refresh(filesDir) },
             )
+        }
+        // A fine-tuned whisper.cpp model straight from its repository (#1437).
+        if (com.wasimaster.wmkeyboard.core.voice.whisper.WhisperCatalog.cppAvailable) item(visible = !OfflineBuild.isThisBuild, waitsOnSetting = false) {
+            HuggingFaceImportRow(HfTarget.WHISPER, settings, onInstalled = { WhisperDownloadManager.refresh(filesDir) })
         }
     }
 
@@ -1086,13 +1090,11 @@ private fun WhisperModuleBanner(module: ModuleState, gateId: String, onDownload:
         // retry would only stop at the same place, so say where to turn it on.
         is ModuleState.Missing if module.consent != null -> NativeConsentBanner(module.consent.orEmpty(), gateId)
         is ModuleState.Missing -> StateBanner(
-            stringResource(
-                if (module.failed) {
-                    OfflineBuild.library(R.string.models_whisper_module_failed_info)
-                } else {
-                    R.string.models_whisper_module_missing_info
-                },
-            ),
+            if (module.failed) {
+                moduleFailedText(module, R.string.models_whisper_module_failed_info)
+            } else {
+                stringResource(R.string.models_whisper_module_missing_info)
+            },
             action = stringResource(
                 if (module.failed) CommonR.string.common_retry else CommonR.string.common_download,
             ),

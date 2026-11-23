@@ -79,6 +79,8 @@ Auto-capitalization arms Shift for you at the start of a sentence, but only when
 
 Some apps never say that a field wants capitals, so sentences there start in lower case. **Capitals in every field**, beside it, gives every text field sentence capitals whether the app asked or not. It is off by default. Email addresses, web addresses, passwords and search filters still keep their lower case.
 
+Other apps go the opposite way and ask for a capital on every word, so Shift comes back on after each space. **Capitals by app**, below the capitals switches, overrules an app you add there. Set to **Sentence capitals only**, the app gets a capital at the start of a sentence and nowhere else, whatever its fields ask for. Set to **No automatic capitals**, Shift never comes on by itself in that app. Tap an app in the list to switch between the two.
+
 Switching language re-checks it too whenever either side has no letter case. On Arabic, Bangla and the like, Shift opens a second set of letters rather than capitals, so a Shift armed or locked on English is dropped when you switch to one of them, and the keyboard opens on its plain letters. Switching back to English at the start of a sentence arms Shift again. Between two languages that both have case, English and Russian say, Shift stays as it was.
 
 <SettingsPath path="Typing / Automatic corrections" />
@@ -137,7 +139,7 @@ There's a second way in that doesn't need the setting at all: in any field where
 
 If you'd rather move the cursor with keys than with a drag on the spacebar, **Arrow keys row** under Layout & size adds a row of ←&nbsp;↑&nbsp;↓&nbsp;→ under the spacebar, in the order you choose. Turn on **Arrow keys on top** to have it above the keys instead. See [Layout & size](/reference/settings/layout/#arrow-keys-row).
 
-<SettingsPath path="Layout & size / Numerals" />
+<SettingsPath path="Layout & size / Symbols layer / Numerals" />
 
 Separately, **numeral system** decides which *glyphs* the number row and keypad show, per language: Arabic can display ٠-٩ while English next to it stays on 0-9. Every language starts on **Auto**, which follows that language's own convention (Arabic and Sorani → Arabic-Indic, Persian/Urdu → Persian, Bangla → Bengali, Devanagari-script languages → Devanagari, everything else → Latin). Override it per language on that language's own screen rather than here (see [Languages](/languages/overview/)).
 
@@ -225,7 +227,7 @@ A handful of related settings live elsewhere:
 - **Automatic capital letters** is on by default, under <SettingsPath path="Typing / Automatic corrections" />.
 - **Autopilot** (<SettingsPath path="Typing / Suggestions / Autopilot" />) and **Shift and Enter type a new line** (<SettingsPath path="Typing / Enter key" />) are both on by default.
 - **Swipe to delete** is on by default, under <SettingsPath path="Key press / Delete keys" />, and starts out deleting a word per step of the swipe.
-- **Number row** (<SettingsPath path="Layout & size / Number row" />) is on, and the numeral commit scope (<SettingsPath path="Layout & size / Numerals" />) starts on "Text fields". Full breakdown at [Layout & size settings](/reference/settings/layout/).
+- **Number row** (<SettingsPath path="Layout & size / Number row" />) is on, and the numeral commit scope (<SettingsPath path="Layout & size / Symbols layer / Numerals" />) starts on "Text fields". Full breakdown at [Layout & size settings](/reference/settings/layout/).
 - **Numeral system per language** starts on Auto, under <SettingsPath path="Languages & layouts / (a language) / Numerals" />. See [Languages](/languages/overview/).
 - **Ignore repeated presses** is off by default, under <SettingsPath path="Accessibility / Touch" />. See also [Accessibility](/accessibility/overview/).
 

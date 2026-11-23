@@ -12,8 +12,8 @@ import Shot from '@components/Shot.astro';
 
 The Layout & size screen collects every physical dimension WM Keyboard's keys can take: a digit row, key and row heights, per-screen-shape overrides, and one-handed, split and floating modes. The groups below appear in the same order they do on screen. This page is the field reference. The linked guides carry the reasoning and walk through each group in more depth.
 
-<PhoneFrame caption="The Layout & size screen, opening on Your layouts and the Number row group.">
-  <Shot id="reference/settings/layout-overview" alt="The Layout & size screen, opening on the Number row and Numerals groups." />
+<PhoneFrame caption="The Layout & size screen, opening on Your layouts.">
+  <Shot id="reference/settings/layout-overview" alt="The Layout & size screen, opening on Your layouts." />
 </PhoneFrame>
 
 You can reach this screen from the home screen's **Layout & size** tile, from Accessibility → Touch → **Key size & spacing**, or from the **Split**, **Floating**, and **One-handed** toolbar tools' own Options panels, each of which has an **All layout & size settings** row.
@@ -22,15 +22,15 @@ You can reach this screen from the home screen's **Layout & size** tile, from Ac
 
 <SettingsPath path="Layout & size" />
 
-Size and position (with the per-screen overrides), One-handed, split and floating, and Panel layouts are pages of their own; Your layouts, Import and export, Number row, Arrow keys row, Symbols layer, Numerals and Bottom-row keys stay on the hub. Key height, key spacing and side padding here apply to every layout. A layout can carry its own, set in its [layout editor](/languages/custom-layouts/), and those win on that layout.
+Your layouts and Import and export are on the hub itself. Under them is one group of rows, each opening a page of its own: Size and position (with the per-screen overrides), One-handed, split and floating, Number row, Arrow keys row, Symbols layer (with Numerals) and Bottom-row keys. Number row and Arrow keys row show whether they are on, and Bottom-row keys shows the bottom row in use. Number row, Arrow keys row, Symbols layer, Numerals and Bottom-row keys used to be laid out on the hub as groups; they moved behind rows like the others so the hub fits on about one screen. Key layouts, Panel layouts and Download more sit in a group of their own under Your layouts. Key height, key spacing and side padding here apply to every layout. A layout can carry its own, set in its [layout editor](/languages/custom-layouts/), and those win on that layout.
 
 ### Your layouts
 
 <SettingsPath path="Layout & size / Your layouts" />
 
-One row per layout you've made or installed yourself, each subtitled with the dictionary it types with, for example "Types with the English · QWERTY dictionary". The switch on a row turns the layout on or off; a tap anywhere else on the row opens it in the [layout editor](/reference/settings/keymaps/#editing-a-layout). A layout installed from an add-on repository is the exception: its row is a switch only, since the next update of the add-on would throw an edit away. It's your own layouts specifically: an edited copy of a shipped layout stays attached to its original language instead of showing here twice, and a secondary layout is left out too, since it can't be switched on at all. Turning one on is gated on it validating; switching one off never is. On a fresh install, with nothing of your own yet, the group has no toggles.
+One row per layout you've made or installed yourself, each subtitled with the dictionary it types with, for example "Types with the English · QWERTY dictionary". The switch on a row turns the layout on or off; a tap anywhere else on the row opens it in the [layout editor](/reference/settings/keymaps/#editing-a-layout). A layout installed from an add-on repository is the exception: its row is a switch only, since the next update of the add-on would throw an edit away. It's your own layouts specifically: an edited copy of a shipped layout stays attached to its original language instead of showing here twice, and a secondary layout is left out too, since it can't be switched on at all. Turning one on is gated on it validating; switching one off never is. On a fresh install, with nothing of your own yet, the group isn't shown.
 
-A **Key layouts** row follows, opening <SettingsPath path="Layout & size / Key layouts" />, documented in full on [Custom layouts & the layout editor](/languages/custom-layouts/). Its subtitle reads "Make your own key grid, or start from a built-in one" before you've built anything, and "Edit, add and delete layouts" after. **Panel layouts** opens <SettingsPath path="Layout & size / Panel layouts" />, the shared grids of the emoji, clipboard, text editing and other panels (see [Panel layouts](/languages/custom-layouts/#panel-layouts)). A **Download more** row closes the group. It opens the add-on screen filtered to layouts, which lists the add-on repositories and the community repository together, so layouts other people shared are found there too.
+Under the group, in a group of its own so the rows don't read as parts of the layout above them, a **Key layouts** row opens <SettingsPath path="Layout & size / Key layouts" />, documented in full on [Custom layouts & the layout editor](/languages/custom-layouts/). Its subtitle reads "Make your own key grid, or start from a built-in one" before you've built anything, and "Edit, add and delete layouts" after. **Panel layouts** opens <SettingsPath path="Layout & size / Panel layouts" />, the shared grids of the emoji, clipboard, text editing and other panels (see [Panel layouts](/languages/custom-layouts/#panel-layouts)). A **Download more** row comes last. It opens the add-on screen filtered to layouts, which lists the add-on repositories and the community repository together, so layouts other people shared are found there too.
 
 :::note[Two "Your layouts" groups]
 The Key layouts screen has its own, differently scoped **Your layouts** section: layouts you've made or edited there, each with its own buttons for export, copy and delete. Layout & size's Your layouts group above is for turning layouts on and opening them, for any custom layout, addon-installed ones included. See [Key layouts](/reference/settings/keymaps/) for the distinction in full.
@@ -40,12 +40,13 @@ The Key layouts screen has its own, differently scoped **Your layouts** section:
 
 <SettingsPath path="Layout & size / Import a layout" />
 
-Four rows under Your layouts bring layouts in from a file or send the ones in use out to one. They used to sit at the foot of Key layouts.
+Two rows under Your layouts bring layouts in from a file or send the ones in use out to one. They used to sit at the foot of Key layouts.
 
-- **Import a layout** opens a `.wmlayout.json` file, or a `.wmlayouts.json` file of several.
+- **Import a layout** ("From a layout file, another keyboard or an input method") opens a sheet with three sources:
+  - **Layout file** opens a `.wmlayout.json` file, or a `.wmlayouts.json` file of several.
+  - **Another keyboard** reads a layout from FlorisBoard, HeliBoard, FUTO, Samsung Keyboard (Keys Cafe), Multiling O, Unexpected Keyboard or a computer's keyboard layout file. See [Importing from other keyboards](/reference/importing-other-keyboards/).
+  - **Input method** reads a `.cin` table, a Rime schema with its dictionaries, an m17n `.mim` file, or a jquery.ime rule file. While a large one is still being read, the row says so and can't be picked again.
 - **Export layouts in use** writes every layout that is on, and every one of your own, to one file.
-- **Import from another keyboard** reads a layout from FlorisBoard, HeliBoard, FUTO, Samsung Keyboard (Keys Cafe), Multiling O, Unexpected Keyboard or a computer's keyboard layout file. See [Importing from other keyboards](/reference/importing-other-keyboards/).
-- **Import an input method** reads a `.cin` table, a Rime schema with its dictionaries, an m17n `.mim` file, or a jquery.ime rule file.
 
 What each import asks before it adds anything is described on [Key layouts](/reference/settings/keymaps/#managing-your-layouts).
 
@@ -96,7 +97,7 @@ See [Number row and numerals](/typing/basics/#number-row-and-numerals) for the f
 | Go back after a space | Toggle | On / Off | Off |
 | Back goes to the letters | Toggle | On / Off | Off |
 
-**Symbols page** picks the page <KeyCap>?123</KeyCap> opens. **Standard** is a row of digits over two rows of symbols. **Number pad** is the arrangement SwiftKey uses: the digits on the right in a phone keypad's 1-2-3 order, and the common symbols in narrow columns to their left. On it, <KeyCap>{&=</KeyCap> opens the second symbols page, which is the same under both choices. The currency key shows your language's or region's currency, as on the standard page, so a phone in Britain gets £. A layout with its own symbols page, written in the [layout editor](/reference/settings/keymaps/) or brought in with an imported file, keeps it; the choice only changes the page every other layout borrows. Editing the symbols layer of such a layout starts from the page you picked here.
+**Symbols page** picks the page <KeyCap>?123</KeyCap> opens. **Standard** is a row of digits over two rows of symbols. **Number pad** is the arrangement SwiftKey uses: the digits on the right in a phone keypad's 1-2-3 order, and the common symbols in narrow columns to their left. On it, <KeyCap>{'{&='}</KeyCap> opens the second symbols page, which is the same under both choices. The currency key shows your language's or region's currency, as on the standard page, so a phone in Britain gets £. A layout with its own symbols page, written in the [layout editor](/reference/settings/keymaps/) or brought in with an imported file, keeps it; the choice only changes the page every other layout borrows. Editing the symbols layer of such a layout starts from the page you picked here.
 
 The number pad page already has every digit, so the number row is not shown over it, and the **1234 key** and **Text editing key** from Bottom-row keys are left off it. The same goes for any symbols page of your own that holds all ten digits below its top row.
 
@@ -114,7 +115,7 @@ Only single-character keys count, so a `.com` key or an emoticon key never trigg
 
 ### Numerals
 
-<SettingsPath path="Layout & size / Numerals" />
+<SettingsPath path="Layout & size / Symbols layer / Numerals" />
 
 | Setting | Control | Options | Default |
 |---|---|---|---|
@@ -232,7 +233,7 @@ Full detail on all three (plus the floating panel's drag pill and resize grip) i
 
 ### Bottom-row keys
 
-<SettingsPath path="Layout & size / Bottom-row keys" />
+<SettingsPath path="Layout & size / Bottom row keys" />
 
 | Setting | Control | Default |
 |---|---|---|

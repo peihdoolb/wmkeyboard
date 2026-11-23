@@ -39,6 +39,8 @@
     <string name="opus_module_title">Voice upload compression</string>
     <string name="executorch_module_title">Offline voice and glide models</string>
     <string name="grammar_module_title">Grammar checker</string>
+    <!-- :feature:numbat, Numbat behind sums with units in the calculator. -->
+    <string name="numbat_module_title">Calculator units</string>
     <string name="plugins_module_title">Plugins</string>
     <string name="spell_module_title">Hunspell spell checker</string>
     <string name="ocr_module_title">Offline text reader</string>
@@ -48,9 +50,15 @@
     <!-- :feature:mozc, Google's Mozc behind the optional Mozc engine for
          Japanese. Mozc is the engine's name and stays in Latin letters. -->
     <string name="mozc_module_title">Mozc Japanese engine</string>
+    <!-- :feature:chewing, libchewing behind the optional Chewing engine for
+         Zhuyin. Chewing is the engine's name and stays in Latin letters. -->
+    <string name="chewing_module_title">Chewing Zhuyin engine</string>
     <string name="bergamot_module_title">Firefox Translations engine</string>
     <string name="ct2_module_title">NLLB translation engine</string>
     <string name="zinnia_module_title">Chinese and Japanese handwriting</string>
+    <!-- :feature:lipi, the converter between Indic scripts and romanisations
+         such as IAST, behind Convert script. -->
+    <string name="lipi_module_title">Indic script converter</string>
     <!-- :feature:llama, llama.cpp behind GGUF models for on-device AI.
          llama.cpp and GGUF stay in Latin letters. -->
     <string name="llama_module_title">llama.cpp for GGUF models</string>
@@ -93,8 +101,11 @@
     <string name="passthrough_service_summary">Keeps WM Keyboard\'s gestures working with a screen reader</string>
     <string name="passthrough_service_description">This service keeps the keyboard gestures available while a screen reader runs. The gestures are the spacebar cursor slide, the backspace word swipe, glide typing and handwriting.\n\nThe service reads nothing. It receives no accessibility events. It cannot see the screen content. Its only action is to mark the keyboard window to pass touches straight through. Every touch outside the keyboard still goes to your screen reader as usual.</string>
     <string name="system_buttons_service_label">WM Keyboard system buttons</string>
-    <string name="system_buttons_service_summary">Lets the Screenshot tool and the floating button take a screenshot, go back, and open recent apps, the app drawer, notifications and quick settings</string>
-    <string name="system_buttons_service_description">When you press WM Keyboard\'s Screenshot tool, or a floating button action set to one of Android\'s system buttons, this service presses that button for you: a screenshot, Back, recent apps, the app drawer, the notification shade or quick settings. They are the same buttons Android\'s own navigation and shade have.\n\nThe service does nothing at any other time. It does not read the screen, does not watch what you type and keeps nothing.</string>
+    <string name="system_buttons_service_summary">Lets the Screenshot tool and the floating button take a screenshot, go back or home, open recent apps, the app drawer, notifications, quick settings and the power menu, and lock the screen</string>
+    <string name="system_buttons_service_description">When you press WM Keyboard\'s Screenshot tool, or a floating button action set to one of Android\'s system buttons, this service presses that button for you: a screenshot, Back, Home, recent apps, the app drawer, the notification shade, quick settings, the power menu or locking the screen. They are the same buttons Android\'s own navigation, shade and power key have.\n\nThe service does nothing at any other time. It does not read the screen, does not watch what you type and keeps nothing.</string>
+    <string name="touch_mouse_service_label">WM Keyboard touch mouse</string>
+    <string name="touch_mouse_service_summary">Lets the Trackpad tool\'s mouse mode click, scroll and drag where its pointer is</string>
+    <string name="touch_mouse_service_description">When the Trackpad tool is in mouse mode and you click, scroll or drag on it, this service touches the screen where the keyboard\'s pointer is: a tap for a click, a long press for a right click, a swipe for a scroll and a held touch for a drag.\n\nThe service does nothing at any other time. It does not read the screen, does not watch what you type and keeps nothing.</string>
     <string name="split_screen_helper_service_label">WM Keyboard split screen</string>
     <string name="split_screen_helper_service_summary">Lets the app launcher open apps in split screen on phones where it otherwise opens them full screen</string>
     <string name="split_screen_helper_service_description">When you open an app in split screen from WM Keyboard\'s app launcher, or open a split screen pair, this service presses Android\'s split screen switch, the same one the Recents menu has. Then the app opens in the free half.\n\nBefore pressing it, the service checks whether split screen is already up, from where the app windows are on screen. While a pair opens, it also waits for the first app\'s window to come up, by its app name alone. It never reads what is in any window. It does nothing at any other time, does not watch what you type and keeps nothing.</string>
@@ -164,6 +175,7 @@
     <string name="offline_import_xlit_ready">Transliteration model is ready</string>
     <string name="offline_import_xlit_waiting">Transliteration model file in place; import the other two files of the model as well</string>
     <string name="offline_import_mozc_subtitle">The Mozc dictionary, fetched on another device</string>
+    <string name="offline_import_chewing_subtitle">The Chewing dictionary, fetched on another device</string>
     <string name="offline_import_futo_subtitle">The two model files, fetched on another device. Agree to FUTO\'s licence above first</string>
     <string name="offline_import_futo_ready">FUTO Swipe glide models are ready</string>
     <string name="offline_import_futo_waiting">FUTO Swipe file in place; import the other model_fp32.pte as well</string>

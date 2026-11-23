@@ -2,9 +2,13 @@ package com.wasimaster.wmkeyboard.ime.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.DropdownMenu
@@ -16,6 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,6 +30,7 @@ import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Settings
 import com.wasimaster.wmkeyboard.core.script.LanguageRegistry
 import com.wasimaster.wmkeyboard.core.theme.FrostSurface
 import com.wasimaster.wmkeyboard.core.voice.VoiceChoice
+import com.wasimaster.wmkeyboard.core.voice.VoiceChoices
 import com.wasimaster.wmkeyboard.ime.KeyboardUiState
 import com.wasimaster.wmkeyboard.ime.R
 import com.wasimaster.wmkeyboard.ime.VoiceBarAction
@@ -56,7 +63,7 @@ internal fun VoiceEngineChip(
     val description = stringResource(R.string.ime_voice_engine_desc)
     Box(modifier = modifier) {
         Text(
-            text = voiceEngineName(engine),
+            text = voiceChoiceName(engine, voice.engineServerName),
             color = if (voice.engineChoice.isEmpty()) kb.secondaryText else kb.toolbarIcon,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
@@ -78,6 +85,7 @@ internal fun VoiceEngineChip(
             VoiceEngineMenu(
                 languageId = voice.engineLanguage,
                 choices = voice.engineChoices,
+                serverName = voice.engineServerName,
                 current = voice.engineChoice,
                 onDismiss = { onMenuOpen(false) },
                 onPick = { key ->
@@ -94,10 +102,87 @@ internal fun VoiceEngineChip(
     }
 }
 
+/**
+ * The engine chip as pills (#1477): every engine that can take the language
+ * being dictated, minus the ones left out in settings, side by side to tap
+ * between, the one in use filled. A tap is the same pick the chip's list
+ * makes. Scrolls sideways when they do not fit.
+ */
+@Composable
+internal fun VoiceEnginePills(
+    state: KeyboardUiState,
+    focused: Boolean,
+    onAction: (VoiceBarAction) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val kb = LocalKbTheme.current
+    val feedback = LocalKeyPressFeedback.current
+    val voice = state.voice
+    val shape = RoundedCornerShape(kb.toolRadiusDp.dp)
+    val choices = voice.engineChoices
+    val current = voice.currentEngineKey()
+    Row(
+        modifier = modifier
+            .horizontalScroll(rememberScrollState())
+            .focusRing(focused, shape)
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        for (choice in choices) {
+            val on = choice.key == current
+            val name = voiceChoiceName(choice.engine, voice.engineServerName)
+            // A second model of the same engine is told apart by its model's name.
+            val label = if (choice.modelLabel != null && choices.count { it.engine == choice.engine } > 1) {
+                "$name · ${choice.modelLabel}"
+            } else {
+                name
+            }
+            Text(
+                text = label,
+                color = if (on) kb.chipActiveText else kb.secondaryText,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                modifier = Modifier
+                    .clip(shape)
+                    .frostGlass(kb, shape, FrostSurface.CHIPS)
+                    .background(if (on) kb.chipActive else kb.chip)
+                    .semantics { selected = on }
+                    .clickable {
+                        if (on) return@clickable
+                        feedback()
+                        onAction(VoiceBarAction.PickEngine(voice.engineLanguage, choice.key))
+                    }
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            )
+        }
+    }
+}
+
+/**
+ * The pill for the engine dictation uses now: the language's own pick when it
+ * has one, else the first choice on the engine it follows from settings.
+ */
+internal fun com.wasimaster.wmkeyboard.ime.VoiceUi.currentEngineKey(): String =
+    engineChoice.ifEmpty {
+        engineChoices.firstOrNull { it.engine == engine }?.key.orEmpty()
+    }
+
+/**
+ * The focus ring's press on the pills: the next engine along, round to the
+ * first after the last, so the keys can walk them as a tap would.
+ */
+internal fun com.wasimaster.wmkeyboard.ime.VoiceUi.nextEngineKey(): String? {
+    if (engineChoices.isEmpty()) return null
+    val at = engineChoices.indexOfFirst { it.key == currentEngineKey() }
+    return engineChoices[(at + 1).mod(engineChoices.size)].key
+}
+
 @Composable
 private fun VoiceEngineMenu(
     languageId: String,
     choices: List<VoiceChoice>,
+    serverName: String,
     current: String,
     onDismiss: () -> Unit,
     onPick: (String) -> Unit,
@@ -120,7 +205,7 @@ private fun VoiceEngineMenu(
         val entries = buildList {
             add("" to stringResource(R.string.ime_voice_engine_default))
             for (choice in choices) {
-                val name = voiceEngineName(choice.engine)
+                val name = voiceChoiceName(choice.engine, serverName)
                 add(choice.key to (choice.modelLabel?.let { "$name · $it" } ?: name))
             }
         }
@@ -145,6 +230,15 @@ private fun VoiceEngineMenu(
     }
 }
 
+/**
+ * What the chip, its list and the pills call [engine]: the name the user gave
+ * the transcription server when it is that and has one (#1477), else
+ * [voiceEngineName].
+ */
+@Composable
+internal fun voiceChoiceName(engine: String, serverName: String): String =
+    if (engine == VoiceChoices.SERVER && serverName.isNotBlank()) serverName.trim() else voiceEngineName(engine)
+
 /** The engine's own short name, as the chip and the menu show it. */
 @Composable
 internal fun voiceEngineName(engine: String): String = stringResource(
@@ -156,6 +250,7 @@ internal fun voiceEngineName(engine: String): String = stringResource(
         "moonshine" -> R.string.ime_voice_engine_moonshine
         "sherpa" -> R.string.ime_voice_engine_sherpa
         "omnilingual" -> R.string.ime_voice_engine_omnilingual
+        "qwen3" -> R.string.ime_voice_engine_qwen3
         "vosk" -> R.string.ime_voice_engine_vosk
         "server" -> R.string.ime_voice_engine_server
         else -> R.string.ime_voice_engine_system

@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
@@ -84,6 +85,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wasimaster.wmkeyboard.core.tools.CalcEngine
+import com.wasimaster.wmkeyboard.core.tools.CalcRouting
+import com.wasimaster.wmkeyboard.core.modules.ModuleState
+import com.wasimaster.wmkeyboard.tools.R as ToolsR
+import com.wasimaster.wmkeyboard.core.tools.Numbat
 import com.wasimaster.wmkeyboard.core.tools.CompoundUnits
 import com.wasimaster.wmkeyboard.core.tools.CryptoCatalog
 import com.wasimaster.wmkeyboard.core.tools.CurrencyClient
@@ -114,6 +119,9 @@ internal fun ToolPanelChip(
     icon: ImageVector? = null,
     // What holding the chip says while it is greyed out; see [IconHint].
     disabledReason: DisabledReason? = null,
+    // A small mark after the words, read out as [markLabel]: a model that reads pictures.
+    mark: ImageVector? = null,
+    markLabel: String? = null,
     onClick: () -> Unit,
 ) {
     val kb = LocalKbTheme.current
@@ -135,6 +143,22 @@ internal fun ToolPanelChip(
             val content = (if (selected) kb.chipActiveText else kb.chipText).dim()
             if (icon != null) {
                 Icon(icon, contentDescription = label, tint = content, modifier = Modifier.size(16.dp))
+            } else if (mark != null) {
+                androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Text(
+                        label,
+                        color = content,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                    )
+                    Icon(
+                        mark,
+                        contentDescription = markLabel,
+                        tint = content,
+                        modifier = Modifier.padding(start = 4.dp).size(12.dp),
+                    )
+                }
             } else {
                 Text(
                     label,
@@ -610,7 +634,8 @@ internal fun RowScope.UnicodeSearchBar(state: KeyboardUiState, onClose: () -> Un
             .weight(1f)
             .padding(horizontal = 6.dp)
             .height(32.dp)
-            .clip(RoundedCornerShape(16.dp))
+            // The theme's search-bar outline, as every panel's search bar (#1501).
+            .clip(kb.cardShape())
             .background(kb.modifierKey)
             .padding(start = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -674,9 +699,41 @@ internal fun CalculatorPanel(
     val expression = state.calcExpression
     val degrees = state.settings.calcDegrees
     val precision = state.settings.calcPrecision
-    val result = remember(expression, degrees, precision) {
-        if (expression.isBlank()) null
-        else runCatching { CalcEngine.format(CalcEngine.evaluate(expression, degrees), precision) }
+    // A sum CalcEngine cannot read but Numbat might ("5 ft + 30 cm -> m")
+    // asks for Numbat's library the first time one is typed, and is answered
+    // off the main thread once it is here. Plain sums never wait for it.
+    val route = remember(expression, degrees) { CalcRouting.route(expression, degrees) }
+    val numbatState by Numbat.gate.state.collectAsState()
+    val rates = (state.currency as? CurrencyUi.Ready)?.rates
+    val numbatOutcome by produceState<Numbat.Outcome?>(null, route, expression, numbatState, rates) {
+        value = null
+        if (route != CalcRouting.Route.NUMBAT) return@produceState
+        if (numbatState != ModuleState.Installed) {
+            Numbat.requestLibrary()
+            return@produceState
+        }
+        value = withContext(Dispatchers.Default) {
+            Numbat.evaluate(CalcRouting.forNumbat(expression), Numbat.DEFAULT_DIGITS, rates)
+        }
+    }
+    val result = remember(expression, degrees, precision, numbatOutcome, numbatState) {
+        if (expression.isBlank()) return@remember null
+        val calc = runCatching { CalcEngine.format(CalcEngine.evaluate(expression, degrees), precision) }
+        if (calc.isSuccess || route != CalcRouting.Route.NUMBAT) return@remember calc
+        when (val outcome = numbatOutcome) {
+            is Numbat.Outcome.Answer -> Result.success(Numbat.format(outcome, precision))
+            is Numbat.Outcome.Failure -> Numbat.error(outcome)?.let { Result.failure(it) } ?: calc
+            null -> when (val module = numbatState) {
+                is ModuleState.Installing -> Result.failure(CalcEngine.CalcException(ToolsR.string.core_tools_calc_error_units_fetching))
+                is ModuleState.Missing -> if (module.failed) {
+                    Result.failure(CalcEngine.CalcException(ToolsR.string.core_tools_calc_error_units_missing))
+                } else {
+                    calc
+                }
+                // Installed, and the answer is on its way.
+                ModuleState.Installed -> calc
+            }
+        }
     }
 
     fun append(text: String) {

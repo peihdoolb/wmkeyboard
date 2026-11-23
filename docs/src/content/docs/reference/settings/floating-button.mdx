@@ -33,6 +33,8 @@ A preview heads the screen: a sketch of a phone with the button on the side it r
 | Press and hold | Action | **Quick menu** |
 | Fixed in place | Toggle | Off |
 | Swipe up, Swipe up and right, Swipe right, Swipe down and right, Swipe down, Swipe down and left, Swipe left, Swipe up and left *(shown only while Fixed in place is on)* | Action each | **Nothing** |
+| Swipe distance *(Advanced; shown only while Fixed in place is on and a swipe has an action)* | Slider, 12 to 96 dp | 28 dp |
+| Swipe up angle, Swipe right angle and so on *(Advanced; one for each swipe that has an action, while Fixed in place is on)* | Slider, 20° to 240° | 135° |
 | Tap while open *(shown only while Show while typing is on)* | Action | **Same as Tap** |
 | Double tap while open *(shown only while Show while typing is on)* | Action | **Same as Double tap** |
 | Quick menu | List of up to 16 actions | Voice, Ask AI about this screen, Clipboard, Emoji, Show keyboard |
@@ -84,13 +86,16 @@ Then **System buttons**, **Phone controls**, **Your buttons**, **Plugins** and *
 
 ### System buttons
 
-**System buttons** press Android's own buttons for you, so the button can stand in for a gesture or a reach to the top of the screen:
+**System buttons** press Android's own buttons for you, so the button can stand in for a gesture or a reach to the top of the screen. Back, Home and Recent apps are also [tools](/tools/instruments/#back-home-and-recent-apps) for the toolbar and the keys:
 
 - **Back** goes back, as Android's back gesture or button does.
 - **Recent apps** opens the recent apps screen.
 - **App drawer** opens your launcher's list of every app. Android 12 and later.
 - **Notifications** pulls down the notification shade.
 - **Quick settings** pulls down quick settings, with the Wi-Fi and Bluetooth tiles.
+- **Home** goes to the home screen.
+- **Lock screen** turns the screen off and locks the phone, as a press of the power key does. Android 9 and later.
+- **Power menu** opens the menu a long press of the power key brings up, with restart and power off.
 
 Android lets another app press these only through an accessibility service, so they need **WM Keyboard system buttons** turned on in Android's accessibility settings, the same service the [Screenshot](/tools/instruments/#screenshot) tool uses. It presses the one button you asked for and reads nothing on screen. Until it's on, the group shows a single **Turn on system buttons** row instead, which explains the service and then opens Android's page for it. If one of these actions is already set and the service is turned off later, pressing it explains the service again, and a row under the switch at the top of this screen says what's missing. Not in the Play Store build.
 
@@ -102,6 +107,7 @@ Android lets another app press these only through an accessibility service, so t
 - **Volume panel** opens Android's volume panel, with a slider for media, calls, the ringer and alarms, the one the settings app opens. On a phone without that panel, and before Android 10, it shows the volume slider a volume key brings up.
 - **Wi-Fi**, **Mobile data** and **Bluetooth** turn their switch on if it's off and off if it's on, then say which.
 - **Hotspot** opens Android's hotspot page.
+- **Play or pause**, **Previous track** and **Next track** press the media key a headset's button would, for whatever app is playing music or video, or played it last. They need no permission.
 
 Android lets an app flip those three switches only in some cases, so each picks the first way that works on your phone, and its row in the list says which it'll be:
 
@@ -129,7 +135,9 @@ With **Double tap** set to anything but **Nothing**, a single tap waits a moment
 
 **Fixed in place** pins the button where it is. A drag no longer moves it; instead, a swipe that starts on the button runs an action of its own for each direction it can go: up, down, left, right and the four diagonals in between. The eight **Swipe** rows set what each direction does, from the same list as the other gestures, and are shown only while the button is fixed. A direction set to **Nothing** does nothing.
 
-You don't have to set all eight. A swipe goes to the nearest direction that has an action, as long as it's within about 67° of it, so with only up, down, left and right set, a swipe up and to the right still counts as up or right, whichever it's closer to. As soon as your finger leaves the button, every direction that has an action shows its icon around the button, placed where its swipe points. The one your finger is pointing at grows and gets a ring, and its name appears in a label above the ring, or below it when you're swiping upward, so your finger never covers it. The button itself shows the same icon, with a light tick each time it changes. Let go to run it. The icons go as soon as you lift your finger. A short swipe, under about 28 dp, doesn't count. Tap, double tap and press and hold still work as before, and pressing and holding still opens the quick menu.
+You don't have to set all eight. A swipe goes to the nearest direction that has an action, as long as it's within about 67° of it, so with only up, down, left and right set, a swipe up and to the right still counts as up or right, whichever it's closer to. As soon as your finger leaves the button, every direction that has an action shows its icon around the button, placed where its swipe points. The one your finger is pointing at grows and gets a ring, and its name appears in a label above the ring, or below it when you're swiping upward, so your finger never covers it. The button itself shows the same icon, with a light tick each time it changes. Let go to run it. The icons go as soon as you lift your finger. A short swipe, under 28 dp, doesn't count; **Swipe distance** changes that, from 12 to 96 dp.
+
+Each direction that has an action answers to a fan of swipes centred on it, 135° wide unless you change it: 67.5° either side. Its **angle** slider, one per direction with an action under the swipe rows, sets that fan from 20° to 240°. A swipe counts for a direction while it's within half its fan on either side, and where two fans overlap, the swipe goes to the one it sits deeper in, so a wider fan takes ground from a narrower neighbour. Set **Swipe up angle** and **Swipe down angle** narrow and **Swipe right angle** wide, for example, and a sideways swipe that drifts up still counts as right, while a narrow fan with nothing beside it simply leaves the swipes outside it doing nothing. Both rows are in Advanced. Tap, double tap and press and hold still work as before, and pressing and holding still opens the quick menu.
 
 A fixed button stays exactly where you put it at all times. While the keyboard is open it floats over the keys, as with **Float over the keyboard** on (that row is hidden while the button is fixed), instead of being lifted clear of them, and when the keyboard grows or shrinks under it, it fades out for a moment and back in at the same spot rather than being seen moving. With **Tuck into the edge** on, a fixed button stays tucked half off its side the whole time, instead of sliding out at a touch and back when it fades, so it's always the same target in the same place. Its swipes and its quick menu work from there.
 
@@ -183,7 +191,7 @@ A category is an action in the quick menu that opens a ring of up to sixteen mor
 
 On the button, tap a category in the open menu and its ring replaces the menu's. The cross where the button was turns into a back arrow: tap it, or press Back, to go back to the quick menu, and tap anywhere else to close it all. When you open the menu with **Press and hold**, slide onto a category and rest there for a moment, and its ring opens under your finger. Keep sliding onto one of its actions and lift your finger to run it. A category with nothing in it says so instead of opening.
 
-**Reset the menu** puts back the five it starts with. It's shown only once the menu differs from them.
+**Reset the menu** puts back the five it starts with. It's shown only once the menu differs from them, sits at the very bottom of the page, and asks before it does anything.
 
 ## Look
 
@@ -222,6 +230,8 @@ With TalkBack, the button's actions menu has its tap, its press and hold, its do
 With screen reading on, the chat comes with the text that was on screen when you pressed: the article, the conversation, the error message. A line above the message box says so. **View** shows exactly that text, and **Delete** drops it. Nothing is sent until you ask something, and the **Explain simply**, **Summarise** and **Hard words** chips put a ready question in the box for you to send or change. Without screen reading the action still opens a chat, just with nothing attached, and a line under the model chips offers to turn it on.
 
 Screen reading is an accessibility service, **WM Keyboard AI screen reading**, which you turn on in Android's accessibility settings. The row **Let the button read the screen** appears under the switch until you do, whenever one of the button's gestures or its quick menu asks the AI or looks up a word, and explains what it reads first. It reads the text of the app in front once per press and at no other time, skips password fields, and keeps nothing. It's separate from the [gestures service](/reference/settings/accessibility/), which reads nothing. The Play Store build doesn't contain it, so there the action always opens a plain chat. Screen reading picks up text, not pictures, so a photo on screen reaches the AI only through its caption or description.
+
+In Chrome, Brave and other browsers built on Chromium, the first read of a page can start the browser's own accessibility engine, and the browser keeps it running in every tab for as long as any accessibility service is on. On a slower phone that can show as lag in pages, and in the keyboard typing into them. Closing the browser from Recents stops it until the next read; see [Accessibility services and browsers](/privacy/permissions/#accessibility-services-and-browsers).
 
 To ask about one piece of text instead, select it in any app and pick **Ask AI** from the selection menu (on some phones it's behind the menu's three dots). The same sheet opens with just that text attached.
 

@@ -9,6 +9,7 @@ import com.wasimaster.wmkeyboard.core.gesture.GlideCase
 import com.wasimaster.wmkeyboard.core.gesture.KeyCenter
 import com.wasimaster.wmkeyboard.core.emoji.EmojiEntry
 import com.wasimaster.wmkeyboard.core.emoji.EmojiVariantIndex
+import com.wasimaster.wmkeyboard.core.layout.CompiledSequenceRules
 import com.wasimaster.wmkeyboard.core.layout.BuiltInLayouts
 import com.wasimaster.wmkeyboard.core.layout.BuiltInPanelLayouts
 import com.wasimaster.wmkeyboard.core.layout.PanelKind
@@ -113,8 +114,14 @@ fun cycleCaseForShift(word: String, shift: ShiftState): String {
     }
 }
 
-/** Whether the strip reads [cycleCaseForShift] rather than [displayCaseForShift] (#1195). */
-fun KeyboardUiState.shiftCyclesCase(): Boolean = wordComposing && shiftPressedByUser && shiftState != ShiftState.OFF
+/**
+ * Whether the strip reads [cycleCaseForShift] rather than [displayCaseForShift]
+ * (#1195): only for a shift pressed after the word's last letter. A word typed
+ * under caps lock already comes back from the engine in capitals, and taking
+ * that for "already UPPER" turned every suggestion lower case (#1422).
+ */
+fun KeyboardUiState.shiftCyclesCase(): Boolean =
+    wordComposing && shiftMidWord && shiftPressedByUser && shiftState != ShiftState.OFF
 
 fun displayCaseForShift(word: String, shift: ShiftState): String {
     if (word.isEmpty() || '@' in word) return word
@@ -437,6 +444,12 @@ data class LayoutSet(
      * [authoredHolds].
      */
     val authoredHolds: Set<Key> = emptySet(),
+    /**
+     * The layout's typing rules (`LayoutSpec.sequenceRules` and the shipped
+     * sets it names, #1493), compiled once with the grids. Null for a layout
+     * with none, which is the test the keypress path makes first.
+     */
+    val sequenceRules: CompiledSequenceRules? = null,
 ) {
     /**
      * Rows the key grid reserves.
@@ -1381,6 +1394,12 @@ data class VoiceUi(
      * chip is switched on: engines and downloaded models that serve it.
      */
     val engineChoices: List<com.wasimaster.wmkeyboard.core.voice.VoiceChoice> = emptyList(),
+    /**
+     * The name the user gave the transcription server [engineLanguage] goes
+     * to, shown in place of "Server" on the chip and pills (#1477); empty
+     * when it has none.
+     */
+    val engineServerName: String = "",
     /** [engineLanguage]'s stored pick (`engine` or `engine:modelId`), empty when it follows the global engine. */
     val engineChoice: String = "",
     /**
@@ -1624,6 +1643,9 @@ sealed interface SizingAction {
 
     /** Leave the inline resize tool without persisting anything. */
     data object ResizeCancel : SizingAction
+
+    /** The inline resize tool's Defaults (#1415): forget its sizes for [variant] and leave. */
+    data class ResizeDefaults(val variant: ScreenVariant) : SizingAction
 }
 
 /** One change made from the password generator panel (all persisted). */
@@ -3024,7 +3046,12 @@ sealed interface SynonymsStatus {
     data object Loading : SynonymsStatus
 
     /** [source] had synonyms; the ones before it in the user's order did not. */
-    data class Found(val groups: List<SynonymGroup>, val source: SynonymSource) : SynonymsStatus
+    data class Found(
+        val groups: List<SynonymGroup>,
+        val source: SynonymSource,
+        /** A plugin row's name, said in place of [source]'s. */
+        val name: String = "",
+    ) : SynonymsStatus
 
     /** Every source asked answered, and none listed synonyms for the word. */
     data object NotFound : SynonymsStatus
@@ -3661,6 +3688,14 @@ data class KeyboardUiState(
      */
     val shiftPressedByUser: Boolean = false,
     /**
+     * The shift now up was pressed after the last letter of the word being
+     * typed, which is when the strip cycles the words' case ([shiftCyclesCase]).
+     * Cleared by the next letter: a shift the word is typed under (caps lock
+     * held through a word) is how the word is written, and the engine's
+     * suggestions already follow it (#1422).
+     */
+    val shiftMidWord: Boolean = false,
+    /**
      * Ctrl/Alt/Meta latches waiting to be folded into the next key event.
      * Session state, never persisted: a Ctrl left locked in one app must not
      * follow the user into the next one and turn their typing into shortcuts.
@@ -4187,6 +4222,8 @@ data class KeyboardUiState(
     val otpSuggestion: NotificationOtp? = null,
     /** A task that has fallen due, waiting on the strip. See [TodoDueChip]. */
     val todoDueChip: TodoDueChip? = null,
+    /** The alarm or special-day chip on the idle strip, and the toolbar's status icons (#1453). */
+    val status: StatusUi = StatusUi(),
     /**
      * The buttons a field of WM Pass's own offers the strip, such as Scan the
      * card, with the token of the WM Pass screen they press them on. Null in
@@ -4739,7 +4776,7 @@ data class KeyboardUiState(
      * gestures that ignored it were the only caret paths that did.
      */
     val caretExtendsSelection: Boolean
-        get() = selectingText || shiftSelectsText
+        get() = selectingText || (shiftSelectsText && settings.textEditing.spaceCursorShiftSelects)
 
     /**
      * The action the Enter key should draw and fire, folding in the
@@ -4773,6 +4810,17 @@ data class KeyboardUiState(
      */
     val allowsTypingIntelligence: Boolean
         get() = !secureField && !nullField && fieldKind == FieldKind.TEXT
+
+    /**
+     * Whether autocorrect may replace a word here: wherever
+     * [allowsTypingIntelligence] says, and in a browser's address bar when
+     * "Autocorrect in web address fields" asks for it (#1483). Only the
+     * correction widens; apostrophe fixes, learning and phonetic composing
+     * keep to [allowsTypingIntelligence].
+     */
+    val correctsWords: Boolean
+        get() = allowsTypingIntelligence ||
+            (!secureField && !nullField && fieldKind == FieldKind.URI && settings.correction.inAddressFields)
 
     /**
      * Whether a glide may be decoded and committed here. Wider than
@@ -4826,7 +4874,11 @@ data class KeyboardUiState(
     val composesWords: Boolean
         get() = !secureField && !nullField && !settings.autoText.commitAsTyped && (
             fieldKind == FieldKind.TEXT && (settings.suggestions || settings.correction.enabledFor(language.id)) ||
-                (fieldKind == FieldKind.URI && settings.suggestions && !fieldNoSuggestions)
+                (fieldKind == FieldKind.URI && settings.suggestions && !fieldNoSuggestions) ||
+                // Autocorrect reads this buffer, so a URL bar it is asked into
+                // composes with the strip hidden too, as a text field does (#1483).
+                (fieldKind == FieldKind.URI && settings.correction.inAddressFields &&
+                    settings.correction.enabledFor(language.id))
             )
 
     /**
@@ -5358,8 +5410,16 @@ data class KeyboardUiState(
         val query = snippetQuery.trim()
         if (query.isNotEmpty()) {
             // Then what only search by meaning found, when it is on.
+            // What was typed first, then other forms of its words.
+            val found = com.wasimaster.wmkeyboard.core.text.StemMatch.literalFirst(
+                snippets,
+                literal = { it.matchesQuery(query) },
+                stemmed = com.wasimaster.wmkeyboard.core.engine.SearchStems.matcher(language.localeTag, query) {
+                    it.searchedText()
+                },
+            )
             return com.wasimaster.wmkeyboard.ime.semantic.MeaningHits.append(
-                snippets.filter { it.matchesQuery(query) },
+                found,
                 snippets,
                 meaning.snippets.forQuery(query),
             ) { it.id.toString() }
@@ -5370,6 +5430,13 @@ data class KeyboardUiState(
             else -> snippets.filter { it.folderId == 0L }
         }
     }
+}
+
+/** The snippet's label, text and triggers, for matching other forms of a query's words. */
+private fun Snippet.searchedText(): String = buildString {
+    append(label).append(' ').append(text)
+    trigger?.let { append(' ').append(it) }
+    for (alias in aliases) append(' ').append(alias)
 }
 
 /** Whether [query] appears in this snippet's label, its text, or any of its triggers. */

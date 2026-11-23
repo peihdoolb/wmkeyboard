@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.app
 
+import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import com.wasimaster.wmkeyboard.app.share.AppShareSheet
 import android.content.Intent
 import android.content.ClipData
@@ -67,6 +68,7 @@ import com.wasimaster.wmkeyboard.R
 import com.wasimaster.wmkeyboard.core.voice.OpusEncoder
 import com.wasimaster.wmkeyboard.core.voice.VoiceDenoise
 import com.wasimaster.wmkeyboard.core.voice.executorch.EtNative
+import com.wasimaster.wmkeyboard.core.input.chewing.ChewingRuntime
 import com.wasimaster.wmkeyboard.core.input.mozc.MozcRuntime
 import com.wasimaster.wmkeyboard.core.input.rime.RimeRuntime
 import com.wasimaster.wmkeyboard.core.voice.sherpa.SherpaNative
@@ -246,6 +248,17 @@ private val bundledAttributions: List<Attribution> = buildList {
             "https://github.com/zxing/zxing",
         ),
     )
+    // Numbering plans only (assets/phone/phone_meta.tsv, tools/phonemeta);
+    // the library itself is the copy inside Android.
+    add(
+        Attribution(
+            "libphonenumber metadata",
+            R.string.about_bundled_libphonenumber_used,
+            "Copyright (C) 2009 The Libphonenumber Authors",
+            "Apache-2.0", "apache-2.0.txt",
+            "https://github.com/google/libphonenumber",
+        ),
+    )
     // The interpreter every plugin runs in (native/wm-python), ported from PyMini.
     add(
         Attribution(
@@ -276,6 +289,17 @@ private val bundledAttributions: List<Attribution> = buildList {
             "Copyright (c) 2005-2007, Taku Kudo",
             "BSD-3-Clause", "bsd-zinnia.txt",
             "https://github.com/taku910/zinnia",
+        ),
+    )
+    // Convert script and Sanskrit in another script: the `lipi` gate, packaged,
+    // pinned for download or a Play split in every build. See native/lipi-jni.
+    add(
+        Attribution(
+            "vidyut-lipi",
+            R.string.about_bundled_lipi_used,
+            "Copyright Arun Prasad, and the respective crate authors",
+            "MIT / Apache-2.0 / others", "lipi-third-party.txt",
+            "https://github.com/ambuda-org/vidyut",
         ),
     )
     // GiellaLT grammar checkers: divvun-runtime with its VISL CG-3 and HFST
@@ -381,6 +405,26 @@ private val bundledAttributions: List<Attribution> = buildList {
             ),
         )
     }
+    // Sums with units in the calculator: the `numbat` gate, packaged,
+    // pinned for download or a Play split in every build. See native/numbat-jni.
+    add(
+        Attribution(
+            "Numbat",
+            R.string.about_bundled_numbat_used,
+            "Copyright David Peter and Numbat contributors",
+            "MIT OR Apache-2.0", "apache-2.0.txt",
+            "https://github.com/sharkdp/numbat",
+        ),
+    )
+    add(
+        Attribution(
+            "Rust crates used by Numbat",
+            R.string.about_bundled_rust_crates_used,
+            "Copyright the respective crate authors",
+            "MIT / Apache-2.0 / others", "numbat-third-party.txt",
+            "https://crates.io",
+        ),
+    )
     // GGUF models for on-device AI, in every build that has the On-device
     // provider: packaged, pinned for download, or a Play split. See
     // native/llamacpp-jni.
@@ -634,6 +678,20 @@ private val bundledAttributions: List<Attribution> = buildList {
             ),
         )
     }
+    if (ChewingRuntime.libraryShipped) {
+        // The optional Chewing engine for Zhuyin: libchewing in a library of
+        // its own (LGPL, so it can be replaced on its own), and the
+        // libchewing-data dictionary it downloads, under the same licence.
+        add(
+            Attribution(
+                "libchewing",
+                R.string.about_bundled_chewing_used,
+                "Copyright libchewing Core Team",
+                "LGPL-2.1-or-later", "lgpl-2.1-chewing.txt",
+                "https://github.com/chewing/libchewing",
+            ),
+        )
+    }
     if (EtNative.shipped) {
         // Offline Asr4All (#289): the runtime built into the app, and the
         // models it downloads, which carry their own restricted-use licence.
@@ -864,6 +922,15 @@ private val bundledAttributions: List<Attribution> = buildList {
         )
         add(
             Attribution(
+                "Qwen3-ASR",
+                R.string.about_bundled_qwen3_asr_used,
+                "Copyright 2026 Alibaba Cloud, the Qwen team",
+                "Apache-2.0", "apache-2.0.txt",
+                "https://github.com/QwenLM/Qwen3-ASR",
+            ),
+        )
+        add(
+            Attribution(
                 "Silero VAD",
                 R.string.about_bundled_silero_used,
                 "Copyright (c) 2020-present Silero Team",
@@ -907,6 +974,26 @@ private val bundledAttributions: List<Attribution> = buildList {
             "Copyright © 2020-2024 Unicode, Inc.",
             "Unicode License v3", "unicode-3.0.txt",
             "https://github.com/unicode-org/icu4x",
+        ),
+    )
+    // The search stemmers in wm-engine (native/wm-engine/src/stem): most are
+    // ports of Lucene's light stemmers, several of those after Savoy's.
+    add(
+        Attribution(
+            "Apache Lucene light stemmers",
+            R.string.about_bundled_lucene_stemmers_used,
+            "Copyright The Apache Software Foundation",
+            "Apache-2.0", "apache-2.0.txt",
+            "https://github.com/apache/lucene",
+        ),
+    )
+    add(
+        Attribution(
+            "UniNE light stemmers",
+            R.string.about_bundled_savoy_stemmers_used,
+            "Copyright (c) 2005, Jacques Savoy",
+            "BSD-3-Clause", "bsd-3-clause-savoy.txt",
+            "http://members.unine.ch/jacques.savoy/clef/",
         ),
     )
     add(
@@ -1791,7 +1878,8 @@ internal fun AboutSettings(
                 onClick = onOpenResources,
             )
         }
-        item(level = SettingLevel.STANDARD) {
+        // What is left with each online service: none to ask in the offline build.
+        item(visible = !OfflineBuild.isThisBuild, level = SettingLevel.STANDARD, waitsOnSetting = false) {
             NavRow(
                 R.string.providers_credits_title,
                 stringResource(R.string.providers_credits_subtitle),

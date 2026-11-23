@@ -32,11 +32,15 @@ Text you send is always plain Unicode, whichever font you pick. The app or phone
 An emoji font converted from a color format usually has no variation-selector table, so ❤️ (U+2764 + the invisible U+FE0F that makes it draw as color) can't resolve in it. WM Keyboard strips that invisible selector before handing the glyph to your chosen font, rather than let it fall back to the system font and look inconsistent with the rest of the row.
 :::
 
-Not every emoji font your phone can open is one it can draw. Android paints colour emoji from bitmap (CBDT) and layered (COLR) fonts, and the newer COLRv1 kind only from Android 13. A font whose pictures are stored as SVG or as Apple's `sbix`, or a COLRv1 font on an older phone, maps every emoji and then draws an empty space for each. WM Keyboard draws one emoji from the font when you pick it, and if nothing comes out it uses your phone's own emoji font instead, so the panel never turns into a grid of blank cells. The preview row shows the phone's emoji in that case: pick a different font file to get a different look.
+Not every emoji font your phone can open is one it can draw. Android paints colour emoji from bitmap (CBDT) and layered (COLR) fonts, and the newer COLRv1 kind only from Android 13. A font whose pictures are stored as SVG or as Apple's `sbix`, or a COLRv1 font on an older phone, maps every emoji and then draws an empty space for each. WM Keyboard draws one emoji from the font when you pick it, and if nothing comes out it uses your phone's own emoji font instead, so the panel never turns into a grid of blank cells. The preview row shows the phone's emoji in that case, with a line under it saying the font can't be drawn: pick a different font file to get a different look.
+
+Skin tones, families, flags and keycaps are sequences of several characters that a font has to join into one picture. Some fonts keep the rules for that in a form Android doesn't read, or have none, and in those a toned wave would come out as a yellow hand followed by a skin-coloured square. WM Keyboard lays out one such sequence from the font when you pick it. If the pieces come out separate, every sequence is drawn in your phone's own emoji font instead and single emoji keep the chosen font. A line under the preview row says when that happens.
 
 ## Fixing emoji that won't display
 
 Older phones and some OEM skins ship an emoji font that predates the newest emoji, and those show up as an empty "tofu" box. There's a one-tap fix for that, plus a toggle for tidying away whatever it can't reach.
+
+When the toggle under [Hiding the ones that are left](#hiding-the-ones-that-are-left) is off and your emoji font is missing some of the keyboard's emoji, a warning at the top of the Emoji screen says how many show as boxes. Its button picks the quickest fix: **Use Noto Color Emoji** when a complete Noto is already in your font library, **Get the newest emoji** to download one, or **Hide them** on a build without internet. The warning goes away once nothing is left to show as a box.
 
 ### Getting a font that has them
 
@@ -58,7 +62,7 @@ This toggle (on by default) checks both your chosen font and the phone's own sys
 
 <SettingsPath path="Emoji / Emoji panel / Added emoji" />
 
-The emoji panel lists the emoji of the Unicode release the app was built with, Emoji 17.0 today. When Unicode publishes a newer one, its emoji can be typed on other phones before an update of WM Keyboard carries them. This screen is the way round that wait. Whatever you add here joins the panel at the end of the tab you pick. Panel search and inline `:word` search find it by its name and keywords, and it can be a favourite and shows up in Recent like any built-in emoji.
+The emoji panel lists the emoji of the Unicode release the app was built with, Emoji 18.0 today. When Unicode publishes a newer one, its emoji can be typed on other phones before an update of WM Keyboard carries them. This screen is the way round that wait. Whatever you add here joins the panel at the end of the tab you pick. Panel search and inline `:word` search find it by its name and keywords, and it can be a favourite and shows up in Recent like any built-in emoji.
 
 There are two ways to add them:
 
@@ -157,9 +161,11 @@ A [keyboard mode](/typing/modes/#keyboard-modes) can set the emoji row its own w
 
 Once the row is showing (anything other than Off), three more settings appear:
 
-- **Emoji row content**: Most used (default), Recent, or Favourites. Whichever you pick, your favourited emoji always sort to the front.
+- **Emoji row content**: Most used (default), Recent, Favourites, or For what you type. The first three always sort your favourited emoji to the front. For what you type (since 0.6.8) fills the row with the emoji predicted for the word you're typing, the same ones the strip offers, and shows your recent emoji while there are none; it needs emoji suggestions on.
 - **Emoji in the row**: a slider from 3 to 16, defaulting to 8. The row splits its width into that many slots and shrinks the emoji to fit, so a higher number packs more emoji in at a smaller size.
 - **Scroll the emoji row**: on by default. Swipe the row sideways for the emoji past the visible slots. Turn it off and the row never moves: it shows exactly that many slots and nothing past the last one, so a sideways swipe can't slide the whole thing out from under your finger.
+
+Long-press an emoji in the row for the popup it has in the panel: favourite, skin tones, send as a sticker, and the [animated version](/emoji/picker/#animated-emoji) when **Animated emoji** is on and the emoji has one.
 
 Before you've used any emoji there's nothing of your own to fill the row with, so it starts on a set of 24 common ones. That's deliberately more than fits across a phone, which is what scrolling is on by default for. They're the only entries the **Default skin tone** setting applies to; everything the row picks up from your own history is already an exact emoji, tone included.
 

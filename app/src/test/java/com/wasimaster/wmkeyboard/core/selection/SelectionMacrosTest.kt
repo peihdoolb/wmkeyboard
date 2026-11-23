@@ -250,7 +250,9 @@ class SelectionMacrosTest {
                 SelectionMacro.ADD_NIKUD +
                 SelectionMacro.ADD_TASHKEEL +
                 SelectionMacro.ADD_FURIGANA +
-                SelectionMacro.RESTORE_YO,
+                SelectionMacro.RESTORE_YO +
+                // vidyut-lipi's library is a download into storage too.
+                SelectionMacro.CONVERT_SCRIPT,
             unsafe,
         )
         assertEquals(
@@ -467,6 +469,128 @@ class SelectionMacrosTest {
             "look: amazon.com/dp/B0ABC.",
             SelectionMacros.stripTrackersInText("look: amazon.com/dp/B0ABC/ref=cm_sw_r."),
         )
+    }
+
+    @Test
+    fun `by default only trackers come off a product page, its other parameters and path stay`() {
+        // Link Cleaner's allow-list is a choice, not the default (it can drop a seller or a size).
+        assertEquals(
+            "https://www.amazon.com/Lamp-Shade/dp/B0ABCDEFGH?th=1&smid=A1",
+            SelectionMacros.stripTrackers("https://www.amazon.com/Lamp-Shade/dp/B0ABCDEFGH/ref=sr_1_3?th=1&smid=A1&tag=x-20&qid=9"),
+        )
+        assertNull(SelectionMacros.stripTrackers("https://www.walmart.com/ip/Desk-Lamp/123456"))
+        assertNull(SelectionMacros.stripTrackers("https://www.youtube.com/watch?v=abc&ab_channel=Z"))
+    }
+
+    @Test
+    fun `a TikTok share link comes back as just the video, by default (#1470)`() {
+        val shared = "https://www.tiktok.com/@someone/video/7123456789012345678?_r=1&u_code=e549&preview_pb=0" +
+            "&sharer_language=en&_d=f2877&share_item_id=77094&source=h5_m&timestamp=1795010922&user_id=7170" +
+            "&sec_user_id=MS4w&social_share_type=0&utm_source=whatsapp&utm_campaign=client_share&share_iid=7707" +
+            "&share_link_id=eeb3&share_app_id=1233&ugbiz_name=MAIN&ug_btm=b2001&sp_root_share_link_id=eeb3" +
+            "&link_reflow_popup_iteration_sharer=%7B%22click_empty_to_play%22%3A1%7D&panel_source_v2=share_panel" +
+            "&share_enter_from=homepage_hot&item_author_type=2&enable_checksum=1&sp_level=1&sp_root_u=e549&sp_root_d=f2877"
+        assertEquals("https://www.tiktok.com/@someone/video/7123456789012345678", SelectionMacros.stripTrackers(shared))
+        // Pages with no parameters of their own keep only what opens them.
+        assertEquals("https://x.com/u/status/1", SelectionMacros.stripTrackers("https://x.com/u/status/1?lang=en&xyz=1"))
+        assertEquals(
+            "https://www.instagram.com/p/AbC/?img_index=2",
+            SelectionMacros.stripTrackers("https://www.instagram.com/p/AbC/?img_index=2&igsh=x&new=1"),
+        )
+        assertEquals(
+            "https://open.spotify.com/episode/1?t=30",
+            SelectionMacros.stripTrackers("https://open.spotify.com/episode/1?si=a&t=30&context=b"),
+        )
+        // Other cleaners' trackers, generic and per site.
+        assertEquals("https://shop.example/p?id=1", SelectionMacros.stripTrackers("https://shop.example/p?id=1&itm_source=hp&elqtrackid=9&ysclid=k"))
+        assertEquals("https://www.temu.com/g-1.html", SelectionMacros.stripTrackers("https://www.temu.com/g-1.html?_x_ads_id=1&refer_page_id=2"))
+        assertEquals(
+            "https://www.amazon.com/s?k=lamp",
+            SelectionMacros.stripTrackers("https://www.amazon.com/s?k=lamp&hvadid=1&hvdev=c&adgrpid=2"),
+        )
+        assertEquals("https://example.com/p", SelectionMacros.stripTrackers("https://www.googleadservices.com/pagead/aclk?sa=L&adurl=https%3A%2F%2Fexample.com%2Fp"))
+    }
+
+    @Test
+    fun `known pages keep only what opens them and products are cut to their number`() {
+        val known = LinkCleaning(rewrites = setOf(LinkRewrite.KNOWN_PAGES))
+        assertEquals(
+            "https://www.amazon.com/dp/B0ABCDEFGH",
+            SelectionMacros.stripTrackers("https://www.amazon.com/Lamp-Shade/dp/B0ABCDEFGH/ref=sr_1_3?th=1&smid=A1&tag=x-20", known),
+        )
+        assertEquals("https://www.amazon.de/dp/B0ABCDEFGH", SelectionMacros.stripTrackers("https://www.amazon.de/gp/product/B0ABCDEFGH?psc=1", known))
+        assertEquals("https://www.walmart.com/ip/123456", SelectionMacros.stripTrackers("https://www.walmart.com/ip/Desk-Lamp/123456?classType=VARIANT", known))
+        assertEquals("https://www.bestbuy.com/site/6505727.p", SelectionMacros.stripTrackers("https://www.bestbuy.com/site/some-tv-65/6505727.p?skuId=6505727", known))
+        assertEquals("https://www.ebay.com/itm/1234567?var=55", SelectionMacros.stripTrackers("https://www.ebay.com/itm/Old-Lamp/1234567?var=55&mkevt=1&abc=2", known))
+        assertEquals("https://www.etsy.com/uk/listing/987", SelectionMacros.stripTrackers("https://www.etsy.com/uk/listing/987/handmade-mug?ls=r", known))
+        assertEquals(
+            "https://www.youtube.com/watch?v=abc&t=42",
+            SelectionMacros.stripTrackers("https://www.youtube.com/watch?v=abc&ab_channel=Z&t=42", known),
+        )
+        assertEquals("https://x.com/u/status/1", SelectionMacros.stripTrackers("https://x.com/u/status/1?lang=en", known))
+        assertEquals(
+            "https://play.google.com/store/apps/details?id=com.a",
+            SelectionMacros.stripTrackers("https://play.google.com/store/apps/details?id=com.a&hl=en&referrer=utm", known),
+        )
+        // Pages it does not fully know keep everything but trackers.
+        assertNull(SelectionMacros.stripTrackers("https://www.amazon.com/s?k=lamp&rh=n", known))
+        assertTrue(SelectionMacros.detectContent("amazon.com/Lamp/dp/B0ABCDEFGH", DetectOptions(links = known)).hasTrackers)
+        assertFalse(SelectionMacros.detectContent("amazon.com/Lamp/dp/B0ABCDEFGH").hasTrackers)
+    }
+
+    @Test
+    fun `strict takes every parameter but the ones that name the page`() {
+        val strict = LinkCleaning(rewrites = setOf(LinkRewrite.STRICT))
+        assertEquals("https://shop.example/a?id=7", SelectionMacros.stripTrackers("https://shop.example/a?id=7&colour=red&x=1", strict))
+        assertEquals("https://example.com/s?q=cats#r", SelectionMacros.stripTrackers("https://example.com/s?q=cats&lang2=x#r", strict))
+        assertEquals(
+            "https://www.webtoons.com/en/x/viewer?title_no=1&episode_no=2",
+            SelectionMacros.stripTrackers("https://www.webtoons.com/en/x/viewer?title_no=1&episode_no=2&webtoon-platform-redirect=true", strict),
+        )
+    }
+
+    @Test
+    fun `more redirect wrappers unwrap, Base64 and relative ones too`() {
+        assertEquals("https://example.com/a?b=1", SelectionMacros.stripTrackers("https://href.li/?https://example.com/a?b=1"))
+        assertEquals("https://example.com/p", SelectionMacros.stripTrackers("https://cts.businesswire.com/ct/CT?id=1&url=https%3A%2F%2Fexample.com%2Fp"))
+        // aHR0cHM6Ly9leGFtcGxlLmNvbS9w is https://example.com/p
+        assertEquals("https://example.com/p", SelectionMacros.stripTrackers("https://www.bing.com/ck/a?!&&p=1&u=a1aHR0cHM6Ly9leGFtcGxlLmNvbS9w&ntb=1"))
+        assertEquals(
+            "https://www.youtube.com/watch?v=abc",
+            SelectionMacros.stripTrackers("https://www.youtube.com/attribution_link?a=x&u=%2Fwatch%3Fv%3Dabc%26feature%3Dshare"),
+        )
+        // A scheme-less link whose query holds another link reads its own host.
+        assertEquals("example.com/a", SelectionMacros.stripTrackers("example.com/a?utm_source=https://other.com"))
+    }
+
+    @Test
+    fun `link rewrites are each the user's choice`() {
+        fun clean(url: String, vararg on: LinkRewrite) = SelectionMacros.stripTrackers(url, LinkCleaning(rewrites = on.toSet()))
+        assertEquals("https://youtu.be/dQw4w9WgXcQ?t=42", clean("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=42&si=Q", LinkRewrite.YOUTUBE_SHORT))
+        assertEquals("youtu.be/dQw4w9WgXcQ", clean("m.youtube.com/shorts/dQw4w9WgXcQ?feature=share", LinkRewrite.YOUTUBE_SHORT))
+        assertEquals("https://www.youtube.com/watch?v=dQw4w9WgXcQ", clean("https://www.youtube.com/shorts/dQw4w9WgXcQ", LinkRewrite.YOUTUBE_SHORTS_AS_VIDEOS))
+        assertEquals("https://www.youtube.com/watch?v=dQw4w9WgXcQ", clean("https://music.youtube.com/watch?v=dQw4w9WgXcQ&si=Q", LinkRewrite.YOUTUBE_MUSIC_AS_YOUTUBE))
+        // Music stays music unless asked, even when shortening.
+        assertEquals("https://music.youtube.com/watch?v=dQw4w9WgXcQ", clean("https://music.youtube.com/watch?v=dQw4w9WgXcQ&si=Q", LinkRewrite.YOUTUBE_SHORT))
+        assertEquals("https://fixupx.com/u/status/1", clean("https://x.com/u/status/1?s=20", LinkRewrite.TWITTER_EMBEDS))
+        assertEquals("https://fxtwitter.com/u/status/1", clean("https://twitter.com/u/status/1", LinkRewrite.TWITTER_EMBEDS))
+        assertNull(clean("https://x.com/", LinkRewrite.TWITTER_EMBEDS))
+        assertEquals(
+            "https://fxbsky.app/profile/a.bsky.social/post/3k",
+            clean("https://bsky.app/profile/a.bsky.social/post/3k", LinkRewrite.BLUESKY_EMBEDS),
+        )
+        assertEquals(
+            "https://ru.wikipedia.org/wiki/Москва",
+            clean("https://ru.wikipedia.org/wiki/%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0", LinkRewrite.READABLE),
+        )
+        // ASCII escapes, spaces and invisible marks stay encoded.
+        assertNull(clean("https://example.com/a%20b%2Fc?q=x%26y", LinkRewrite.READABLE))
+        assertNull(clean("https://example.com/%E2%80%AEevil", LinkRewrite.READABLE))
+        assertEquals(
+            "see https://fixupx.com/u/status/1 now",
+            SelectionMacros.stripTrackersInText("see https://x.com/u/status/1 now", LinkCleaning(rewrites = setOf(LinkRewrite.TWITTER_EMBEDS))),
+        )
+        assertEquals(setOf(LinkRewrite.STRICT, LinkRewrite.READABLE), LinkRewrite.decode(LinkRewrite.encode(setOf(LinkRewrite.READABLE, LinkRewrite.STRICT)) + ",GONE"))
     }
 
     @Test

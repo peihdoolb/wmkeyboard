@@ -38,6 +38,12 @@ The providers that are **off** sit under the list, each folded to its name, a sh
 
 A row with a problem says what it needs in red: an API key, a server address, a model name, an imported GIF pack, or a model to download. Such a row is skipped until it is fixed.
 
+## Providers from plugins
+
+A [plugin](/plugins/overview/) can answer for some lists: web search, translate, the dictionary, synonyms, vocabulary look-ups, currency rates, grammar, GIFs, stickers, online text reading, Music ID and voice typing. Installing one adds nothing. Its providers appear by name at the top of **Add a provider**, and on the plugin's own page under **Providers**, where a press adds one to its list. A plugin row then takes its turn like any other row. Pressing it opens the plugin's page, where its permissions and settings are.
+
+A plugin row sends what the list asks, such as your search, the word or the sound clip, to the plugin, and the plugin may send it on to the websites its page lists. It can only reach the internet once you allow *Connect to the internet* on its page. When the plugin is switched off or removed, the row reads *Its plugin is off or removed* and is skipped until the plugin is back. Plugin authors: see [Answering for a provider list](/plugins/guides/providers/).
+
 ## A provider's own screen
 
 Pressing a row opens a screen for that one provider, with its description and tags at the top:
@@ -132,6 +138,6 @@ Updating the app does not change your lists. Until you edit a list, it is worked
 | [Sticker generator](/emoji/sticker-generator/#engines) | On this phone, Pollinations, AI Horde, OpenAI Images, Gemini Images, Grok Imagine, Stability AI, Black Forest Labs (FLUX), Recraft, Replicate, fal.ai, Together AI, Hugging Face, Cloudflare Workers AI, Automatic1111 / Forge / SD.Next, ComfyUI, an OpenAI-compatible image service; Pollinations and AI Horde start switched off | <SettingsPath path="Tools / Stickers / Sticker packs / Create stickers / Engines" /> |
 | [Internet speed test](/tools/speed-test/#servers) | Cloudflare, LibreSpeed servers (your own, or picked from the public list) | <SettingsPath path="Tools / Internet speed test / Servers" /> |
 | [Grammar check](/smart/grammar/#checkers-harper-and-languagetool) | Harper (on the phone, English), LanguageTool (the public server, a Premium account, or your own server); LanguageTool starts switched off | <SettingsPath path="Tools / Grammar check / Checkers" /> |
-| [Voice typing](/tools/voice/#options) | Phone's recognizer, Whistle, Whisper, Asr4All, Parakeet, Moonshine, Sherpa, Omnilingual, Vosk, transcription servers | <SettingsPath path="Voice typing / Recognition engine" /> |
+| [Voice typing](/tools/voice/#options) | Phone's recognizer, Whistle, Whisper, Asr4All, Parakeet, Moonshine, Sherpa, Omnilingual, Qwen3-ASR, Vosk, transcription servers | <SettingsPath path="Voice typing / Recognition engine" /> |
 | [Smart home](/tools/home-assistant/) | Home Assistant, Google Home, SmartThings, a Philips Hue bridge, openHAB, Smart Life (Tuya), SwitchBot; every home on the list is connected at once, and its sign-in or pairing lives in the row's setup | <SettingsPath path="Tools / Smart home / Homes" /> |
 | [Music ID](/tools/music-id/#recognisers) | AudD, ACRCloud, AudioTag, Shazam via an unofficial RapidAPI listing, your own recognition server; every kind starts switched off until it has your key | <SettingsPath path="Tools / Music ID / Song recognisers" /> |

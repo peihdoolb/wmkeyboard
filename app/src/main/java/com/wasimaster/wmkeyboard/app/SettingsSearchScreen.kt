@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.app
 
+import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.BugReport
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Share
 import com.wasimaster.wmkeyboard.app.share.ShareSheetRoute
@@ -76,6 +77,10 @@ import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Accessibility
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.AspectRatio
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Close
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.ContentPaste
+import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Contrast
+import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Numbers
+import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.OpenWith
+import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Reorder
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Add
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.EmojiEmotions
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Extension
@@ -855,7 +860,9 @@ internal object SettingsRouteIcons {
         "appearance/keys" to { Icons.Outlined.RoundedCorner },
         "appearance/toolbar" to { Icons.Outlined.ViewDay },
         "appearance/toolbox" to { Icons.Outlined.Apps },
+        "appearance/toolbox/arrange" to { Icons.Outlined.Reorder },
         "themes" to { Icons.Outlined.Palette },
+        "themes/modes" to { Icons.Outlined.Contrast },
         "photos" to { Icons.Outlined.Wallpaper },
         "photo_browse" to { Icons.Outlined.PhotoLibrary },
         "photo_library" to { Icons.Outlined.Collections },
@@ -866,6 +873,10 @@ internal object SettingsRouteIcons {
         "layout/size" to { Icons.Outlined.FormatSize },
         "layout/onehanded" to { SymbolIcons.MobileHandLeft },
         "layout/panels" to { Icons.Outlined.Dashboard },
+        "layout/numberrow" to { Icons.Outlined.Numbers },
+        "layout/arrowrow" to { Icons.Outlined.OpenWith },
+        "layout/symbols" to { Icons.Outlined.Tag },
+        "layout/bottomrow" to { Icons.Outlined.SpaceBar },
         "keymaps" to { Icons.Outlined.GridOn },
         "rows" to { Icons.Outlined.ViewAgenda },
         "rows/symbol" to { Icons.Outlined.Tag },
@@ -1059,7 +1070,12 @@ internal fun SettingsSearchScreen(
                 c.index,
                 instances,
                 runnable = { _, type -> ProviderCatalog.runnable(type, env) },
-                listed = { tool, typeId -> current.providerChain(tool, env).entries.any { it.typeId == typeId } },
+                // The offline build hides an online service's row from its list
+                // ([ProvidersGroup]), so having it listed keeps nothing findable.
+                listed = { tool, typeId ->
+                    !(OfflineBuild.isThisBuild && ProviderCatalog.hiddenOffline(ProviderTypes.of(typeId))) &&
+                        current.providerChain(tool, env).entries.any { it.typeId == typeId }
+                },
             )
         }
     }

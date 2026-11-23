@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.app
 
+import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.compose.foundation.layout.Column
@@ -115,6 +116,7 @@ import com.wasimaster.wmkeyboard.core.settings.GlideCommitColor
 import com.wasimaster.wmkeyboard.core.settings.GlideCommitColorScope
 import com.wasimaster.wmkeyboard.core.settings.GlideLookAhead
 import com.wasimaster.wmkeyboard.core.settings.GlideDrawnLetters
+import com.wasimaster.wmkeyboard.core.settings.GlidePauseLetters
 import com.wasimaster.wmkeyboard.core.settings.GlidePreviewSteadiness
 import com.wasimaster.wmkeyboard.core.settings.GlideSandbox
 import com.wasimaster.wmkeyboard.core.settings.GlideVocabulary
@@ -153,6 +155,7 @@ import kotlinx.coroutines.launch
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.Block
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.FiberManualRecord
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.KeyboardTab
+import com.wasimaster.wmkeyboard.core.icons.symbols.automirrored.outlined.Undo
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /** One spacebar-swipe slot (quick or hold+swipe): nothing, language, cursor, … or another action. */
@@ -290,6 +293,15 @@ internal fun TypingSettings(
                 default = SettingsDefaults.layoutBehavior.shiftEnterNewline,
             ) { scope.launch { repository.setShiftEnterNewline(it) } }
         }
+        item {
+            ToggleSetting(
+                R.string.typing_enter_hold_newline_title,
+                stringResource(R.string.typing_enter_hold_newline_subtitle),
+                settings.watch { it.layoutBehavior.enterHoldNewline },
+                info = stringResource(R.string.typing_enter_hold_newline_info),
+                default = SettingsDefaults.layoutBehavior.enterHoldNewline,
+            ) { scope.launch { repository.setEnterHoldNewline(it) } }
+        }
     }
 
     SettingsGroup(stringResource(R.string.typing_group_volume_title), level = SettingLevel.ADVANCED) {
@@ -339,7 +351,9 @@ internal fun TypingCorrectionsSettings(
                 default = SettingsDefaults.correction.enabled,
             ) { scope.launch { repository.setAutocorrect(it) } }
         }
-        if (autocorrectOn) {
+        // Rows that wait on the switch rather than vanish behind it, so Show
+        // switched-off settings can grey them in with autocorrect off (#1112).
+        dependsOn(autocorrectOn) {
             item(level = SettingLevel.ADVANCED) {
                 val valueFormat = stringResource(R.string.typing_value_multiplier_prefix)
                 SliderSetting(
@@ -493,6 +507,15 @@ internal fun TypingCorrectionsSettings(
                     info = stringResource(R.string.typing_autocorrect_on_emoji_info),
                     default = SettingsDefaults.correction.onEmoji,
                 ) { scope.launch { repository.setAutocorrectOnEmoji(it) } }
+            }
+            item(level = SettingLevel.ADVANCED) {
+                ToggleSetting(
+                    R.string.typing_autocorrect_in_address_fields_title,
+                    stringResource(R.string.typing_autocorrect_in_address_fields_subtitle),
+                    settings.watch { it.correction.inAddressFields },
+                    info = stringResource(R.string.typing_autocorrect_in_address_fields_info),
+                    default = SettingsDefaults.correction.inAddressFields,
+                ) { scope.launch { repository.setAutocorrectInAddressFields(it) } }
             }
             item(level = SettingLevel.ADVANCED) {
                 ToggleSetting(
@@ -739,6 +762,15 @@ internal fun TypingCorrectionsSettings(
                 default = SettingsDefaults.autoText.apostrophe,
             ) { scope.launch { repository.setAutoApostrophe(it) } }
         }
+        item(level = SettingLevel.STANDARD) {
+            ToggleSetting(
+                R.string.typing_curly_apostrophe_title,
+                stringResource(R.string.typing_curly_apostrophe_subtitle),
+                settings.watch { it.autoText.curlyApostrophe },
+                info = stringResource(R.string.typing_curly_apostrophe_info),
+                default = SettingsDefaults.autoText.curlyApostrophe,
+            ) { scope.launch { repository.setCurlyApostrophe(it) } }
+        }
     }
     // The other half of what this page used to hold: capitals, the double
     // space, brackets and lists. A page of its own now, reached from here and
@@ -768,7 +800,12 @@ internal fun TypingWritingSettings(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     // What decides which rows the groups hold; each row reads its own value.
-    val doubleSpaceOn = settings.watch { it.autoText.doubleSpacePeriod || it.autoText.doubleSpaceTab }
+    val doubleSpaceOn = settings.watch {
+        it.autoText.doubleSpacePeriod || it.autoText.doubleSpaceTab || it.autoText.doubleSpaceUndo
+    }
+    // Undo on a double space is the choice that most needs the speed row: two
+    // spaces typed on purpose must stay slower than it (#1414).
+    val doubleSpaceUndoOn = settings.watch { it.autoText.doubleSpaceUndo }
     val autoSpaceOn = settings.watch { it.autoText.spaceAfterPunctuation }
     val hugOn = settings.watch { it.autoText.hugPunctuation }
     val closeBracketsOn = settings.watch { it.textEditing.autoCloseBrackets }
@@ -832,10 +869,13 @@ internal fun TypingWritingSettings(
             ) { scope.launch { repository.setShiftRecasesWordAroundCaret(it) } }
         }
     }
+    // Apps whose own capitals are overruled (#1341).
+    if (capitalizeOn) CapitalsAppsGroup(repository, settings)
     SettingsGroup(stringResource(R.string.typing_group_punctuation_title)) {
         item {
             val doubleSpace = settings.watch {
                 when {
+                    it.autoText.doubleSpaceUndo -> DoubleSpaceAction.UNDO
                     it.autoText.doubleSpaceTab -> DoubleSpaceAction.TAB
                     it.autoText.doubleSpacePeriod -> DoubleSpaceAction.PERIOD
                     else -> DoubleSpaceAction.NONE
@@ -853,15 +893,19 @@ internal fun TypingWritingSettings(
                 scope.launch {
                     repository.setDoubleSpacePeriod(action == DoubleSpaceAction.PERIOD)
                     repository.setDoubleSpaceTab(action == DoubleSpaceAction.TAB)
+                    repository.setDoubleSpaceUndo(action == DoubleSpaceAction.UNDO)
                 }
             }
         }
-        item(visible = doubleSpaceOn, level = SettingLevel.ADVANCED) {
+        item(
+            visible = doubleSpaceOn,
+            level = if (doubleSpaceUndoOn) SettingLevel.BASIC else SettingLevel.ADVANCED,
+        ) {
             SliderSetting(
                 R.string.typing_double_space_window_title,
                 subtitle = stringResource(R.string.typing_double_space_window_subtitle),
                 value = settings.watch { it.textEditing.doubleSpaceWindowMs }.toFloat(),
-                range = 200f..800f,
+                range = 50f..800f,
                 display = { context.getString(R.string.keypress_value_ms, it.toInt()) },
                 info = stringResource(R.string.typing_double_space_window_info),
                 default = SettingsDefaults.textEditing.doubleSpaceWindowMs.toFloat(),
@@ -1100,7 +1144,7 @@ internal fun TypingSuggestionsSettings(
         }
         // The strip refresh returns before it reads any of this while
         // suggestions are off, so the chips never get built.
-        if (suggestionsOn) item {
+        item(visible = suggestionsOn) {
             ToggleSetting(
                 R.string.typing_punctuation_suggestions_title,
                 stringResource(R.string.typing_punctuation_suggestions_subtitle),
@@ -1111,7 +1155,7 @@ internal fun TypingSuggestionsSettings(
         }
         // Next-word suggestions: one switch over the empty strip, and how
         // eagerly it guesses (the engine's NextWordReach).
-        if (suggestionsOn) item {
+        item(visible = suggestionsOn) {
             ChoiceSetting(
                 R.string.typing_next_words_title,
                 subtitle = stringResource(R.string.typing_next_words_subtitle),
@@ -1334,7 +1378,7 @@ internal fun TypingSuggestionsSettings(
         }
         // A near miss is only ever offered from the autocorrect branch, so
         // with autocorrect off there is nothing to widen.
-        if (autocorrectOn) item {
+        item(visible = autocorrectOn) {
             ToggleSetting(
                 R.string.typing_offer_near_miss_title,
                 stringResource(R.string.typing_offer_near_miss_subtitle),
@@ -1374,7 +1418,7 @@ internal fun TypingSuggestionsSettings(
                 default = SettingsDefaults.suggestionSources.inAllFields,
             ) { scope.launch { repository.setShowSuggestionsInAllFields(it) } }
         }
-        if (suggestionsOn) item {
+        item(visible = suggestionsOn) {
             ToggleSetting(
                 R.string.typing_suggestions_first_title,
                 stringResource(R.string.typing_suggestions_first_subtitle),
@@ -1488,6 +1532,25 @@ internal fun TypingSuggestionsSettings(
                 info = stringResource(R.string.typing_app_names_info),
                 default = SettingsDefaults.suggestionSources.appNames,
             ) { scope.launch { repository.setAppNameSuggestions(it) } }
+        }
+        // #1453: the words of recent clips and of notes.
+        item(level = SettingLevel.STANDARD) {
+            ToggleSetting(
+                R.string.typing_clipboard_words_title,
+                stringResource(R.string.typing_clipboard_words_subtitle),
+                settings.watch { it.suggestionSources.clipboardWords },
+                info = stringResource(R.string.typing_clipboard_words_info),
+                default = SettingsDefaults.suggestionSources.clipboardWords,
+            ) { scope.launch { repository.setClipboardWordSuggestions(it) } }
+        }
+        item(level = SettingLevel.STANDARD) {
+            ToggleSetting(
+                R.string.typing_notes_words_title,
+                stringResource(R.string.typing_notes_words_subtitle),
+                settings.watch { it.suggestionSources.notesWords },
+                info = stringResource(R.string.typing_notes_words_info),
+                default = SettingsDefaults.suggestionSources.notesWords,
+            ) { scope.launch { repository.setNotesWordSuggestions(it) } }
         }
         item(level = SettingLevel.STANDARD) {
             ToggleSetting(
@@ -2022,7 +2085,7 @@ internal fun TypingSmartChipsSettings(
                 ) { scope.launch { repository.setSmartCalc(it) } }
             }
             chipToolsOffItem(SmartSuggest.Family.CALC, calcOn, usable, repository)
-            item(level = SettingLevel.STANDARD) {
+            item(visible = !OfflineBuild.isThisBuild, level = SettingLevel.STANDARD, waitsOnSetting = false) {
                 ToggleSetting(
                     R.string.typing_smart_currency_title,
                     stringResource(R.string.typing_smart_currency_subtitle, settings.watch { it.currencyTo }),
@@ -2070,7 +2133,7 @@ internal fun TypingSmartChipsSettings(
                 ) { repository.setSmartChipDateFormats(it) }
             }
             chipToolsOffItem(SmartSuggest.Family.DATES, datesOn, usable, repository)
-            item(level = SettingLevel.STANDARD) {
+            item(visible = !OfflineBuild.isThisBuild, level = SettingLevel.STANDARD, waitsOnSetting = false) {
                 ToggleSetting(
                     R.string.typing_smart_weather_title,
                     stringResource(R.string.typing_smart_weather_subtitle),
@@ -2366,8 +2429,10 @@ internal fun TypingCodesSettings(
                 if (on && !hasNotificationAccess(accessContext)) codesAccess()
             }
         }
-        if (otpOn) {
-            item(visible = !notificationCodesGranted) {
+        // Waiting on the switch rather than gone behind it (#1112); the two
+        // notices go for good once access is there, so they never grey in.
+        dependsOn(otpOn) {
+            item(visible = !notificationCodesGranted, waitsOnSetting = false) {
                 val codesAccessRow =
                     rememberDisclosedSpecialAccess(SpecialAccess.NOTIFICATION_CODES)
                 NavRow(
@@ -2376,7 +2441,7 @@ internal fun TypingCodesSettings(
                 ) { codesAccessRow() }
             }
             // Android's own redaction: said here because the chip simply never comes.
-            item(visible = codesRedacted && !codesUnblocked) {
+            item(visible = codesRedacted && !codesUnblocked, waitsOnSetting = false) {
                 RedactedCodesRow(settings) { codesUnblocked = true }
             }
             item(level = SettingLevel.ADVANCED) {
@@ -2568,6 +2633,7 @@ internal fun TypingGlideSettings(
     // back when it is turned off, but say so instead of their usual line.
     val offWithTwoThumb = stringResource(R.string.typing_off_with_two_thumb)
     val pickerOn = settings.watch { it.gesture.ambiguityPicker }
+    val pauseLettersOn = settings.watch { it.gesture.pauseLetters }
     val pickerAsksAtEveryPause =
         settings.watch { it.gesture.pickerSensitivity == GlidePickerSensitivity.EVERY_PAUSE }
     val learnSwipeStyle = settings.watch { it.gesture.learnSwipeStyle }
@@ -2814,6 +2880,10 @@ internal fun TypingGlideSettings(
                             detail = { tier -> ChoiceDetail(stringResource(glidePickerSensitivityDescRes(tier))) },
                         )
                     }
+                }
+                // The hold is shared with the letters a pause offers (#1519),
+                // so it shows while either of them is on.
+                if (pickerOn || pauseLettersOn) {
                     item(level = SettingLevel.ADVANCED) {
                         val msFormat = stringResource(R.string.typing_value_milliseconds)
                         SliderSetting(
@@ -2827,8 +2897,8 @@ internal fun TypingGlideSettings(
                         ) { scope.launch { repository.setGesturePickerDwellMs(it.roundToInt()) } }
                     }
                     // Redundant under "Every pause", which already asks at
-                    // the first hold.
-                    item(visible = !pickerAsksAtEveryPause, level = SettingLevel.ADVANCED) {
+                    // the first hold; the word picker's alone.
+                    item(visible = pickerOn && !pickerAsksAtEveryPause, level = SettingLevel.ADVANCED) {
                         ToggleSetting(
                             R.string.typing_glide_picker_hold_title,
                             if (twoThumb) offWithTwoThumb else stringResource(R.string.typing_glide_picker_hold_subtitle),
@@ -2837,6 +2907,8 @@ internal fun TypingGlideSettings(
                             default = SettingsDefaults.gesture.pickerHoldToAsk,
                         ) { scope.launch { repository.setGesturePickerHoldToAsk(it) } }
                     }
+                }
+                if (pickerOn) {
                     item(level = SettingLevel.ADVANCED) {
                         val numberFormat = stringResource(R.string.values_number)
                         SliderSetting(
@@ -2849,6 +2921,28 @@ internal fun TypingGlideSettings(
                             default = SettingsDefaults.gesture.pickerChoices.toFloat(),
                         ) { scope.launch { repository.setGesturePickerChoices(it.roundToInt()) } }
                     }
+                }
+                // A pause on a key offers its extra letters mid-glide (#1519):
+                // the other thing holding still can ask for.
+                item(level = SettingLevel.STANDARD) {
+                    ToggleSetting(
+                        R.string.typing_glide_pause_letters_title,
+                        if (twoThumb) offWithTwoThumb else stringResource(R.string.typing_glide_pause_letters_subtitle),
+                        pauseLettersOn,
+                        info = stringResource(R.string.typing_glide_pause_letters_info),
+                        default = SettingsDefaults.gesture.pauseLetters,
+                    ) { scope.launch { repository.setGesturePauseLetters(it) } }
+                }
+                item(visible = pauseLettersOn, level = SettingLevel.STANDARD) {
+                    ChoiceSetting(
+                        title = R.string.typing_glide_pause_letter_source_title,
+                        subtitle = if (twoThumb) offWithTwoThumb else stringResource(R.string.typing_glide_pause_letter_source_subtitle),
+                        info = stringResource(R.string.typing_glide_pause_letter_source_info),
+                        options = GlidePauseLetters.entries.map { it to stringResource(it.labelRes) },
+                        selected = settings.watch { it.gesture.pauseLetterSource },
+                        onChange = { scope.launch { repository.setGesturePauseLetterSource(it) } },
+                        default = SettingsDefaults.gesture.pauseLetterSource,
+                    )
                 }
                 item(level = SettingLevel.ADVANCED) {
                     ToggleSetting(
@@ -3218,6 +3312,15 @@ internal fun TypingGlideSettings(
                         default = SettingsDefaults.gesture.stripPreviewOnly,
                     ) { scope.launch { repository.setGestureStripPreviewOnly(it) } }
                 }
+                item(level = SettingLevel.STANDARD) {
+                    ToggleSetting(
+                        R.string.typing_glide_next_words_title,
+                        stringResource(R.string.typing_glide_next_words_subtitle),
+                        settings.watch { it.gesture.nextWordsAfterGlide },
+                        info = stringResource(R.string.typing_glide_next_words_info),
+                        default = SettingsDefaults.gesture.nextWordsAfterGlide,
+                    ) { scope.launch { repository.setGestureNextWordsAfterGlide(it) } }
+                }
             }
         }
     }
@@ -3384,6 +3487,16 @@ internal fun TypingSpacebarSettings(
                     info = stringResource(R.string.typing_space_cursor_direct_info),
                     default = SettingsDefaults.textEditing.spaceCursorDirect,
                 ) { scope.launch { repository.setSpaceCursorDirect(it) } }
+            }
+            // Issue #1421: a shift still up from a capital need not select.
+            item(level = SettingLevel.ADVANCED) {
+                ToggleSetting(
+                    R.string.typing_space_cursor_shift_selects_title,
+                    stringResource(R.string.typing_space_cursor_shift_selects_subtitle),
+                    settings.watch { it.textEditing.spaceCursorShiftSelects },
+                    info = stringResource(R.string.typing_space_cursor_shift_selects_info),
+                    default = SettingsDefaults.textEditing.spaceCursorShiftSelects,
+                ) { scope.launch { repository.setSpaceCursorShiftSelects(it) } }
             }
             // Issue #505: the drag goes on past the end of the spacebar.
             item(level = SettingLevel.ADVANCED) {
@@ -3725,6 +3838,8 @@ internal fun TypingFlicksSettings(
     FingerSwipeSettings(repository, settings)
     // Gap list item 18: pinch and stretch on the keys, split and merge by default.
     PinchSettings(repository, settings)
+    // Issue #1429: shake the phone to run an action, nothing by default.
+    ShakeSettings(repository, settings)
     // Gap list item 44: one finger swiped across the letters, glide off only.
     OneFingerSwipeSettings(repository, settings)
     // Issue #754: hold ?123 still and tap a key to run an action.
@@ -4322,6 +4437,11 @@ private enum class DoubleSpaceAction(
         R.string.typing_double_space_tab_desc,
         Icons.Outlined.KeyboardTab,
     ),
+    UNDO(
+        R.string.typing_double_space_undo_label,
+        R.string.typing_double_space_undo_desc,
+        Icons.AutoMirrored.Outlined.Undo,
+    ),
 }
 
 /**
@@ -4362,6 +4482,7 @@ private enum class TrailStyle(
 private val DefaultTrailStyle = TrailStyle.of(SettingsDefaults.gesture)
 
 private val DefaultDoubleSpace = when {
+    SettingsDefaults.autoText.doubleSpaceUndo -> DoubleSpaceAction.UNDO
     SettingsDefaults.autoText.doubleSpaceTab -> DoubleSpaceAction.TAB
     SettingsDefaults.autoText.doubleSpacePeriod -> DoubleSpaceAction.PERIOD
     else -> DoubleSpaceAction.NONE

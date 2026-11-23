@@ -582,6 +582,36 @@ object ProviderTypes {
     )
 
     /**
+     * A provider a plugin offers ([PluginProviders]): one row per provider,
+     * keyed by its `plugin:<id>/<tool>/<provider>` credential id, named by
+     * the plugin. Never added on its own: the add sheet offers each plugin's
+     * rows by name, since a row sends the request to the plugin's hosts.
+     */
+    val PLUGIN = ProviderType(
+        "plugin",
+        setOf(
+            ProviderTool.SEARCH, ProviderTool.TRANSLATE, ProviderTool.DICTIONARY, ProviderTool.SYNONYMS,
+            ProviderTool.VOCAB_AUTOFILL, ProviderTool.CURRENCY_FIAT, ProviderTool.CURRENCY_CRYPTO, ProviderTool.GRAMMAR,
+            ProviderTool.GIF, ProviderTool.STICKER,
+            ProviderTool.OCR, ProviderTool.MUSIC, ProviderTool.VOICE,
+        ),
+        R.string.core_tools_provider_plugin, R.string.core_tools_provider_plugin_desc,
+        multiInstance = true,
+    )
+
+    /**
+     * The keyboard's own metasearch: Mwmbl, Marginalia, Wikipedia and Wiby
+     * asked at once and merged on the phone, Commons for pictures. Nothing
+     * to set up, so it is the search list's last row from the start, and
+     * the row a list saved before it existed gains.
+     */
+    val METASEARCH = ProviderType(
+        "metasearch", setOf(ProviderTool.SEARCH),
+        R.string.core_tools_provider_metasearch, R.string.core_tools_provider_metasearch_desc,
+        freeSoftware = true,
+    )
+
+    /**
      * The phone's browser (#1383): the query is handed to the default
      * browser's own search and the keyboard does nothing more. Never asked
      * by the AI's search tools, which need results back.
@@ -789,6 +819,12 @@ object ProviderTypes {
     )
     val OMNILINGUAL = ProviderType(
         "omnilingual", VOICE, R.string.core_tools_provider_omnilingual, R.string.core_tools_provider_omnilingual_desc,
+        onDevice = true, freeSoftware = true,
+    )
+
+    /** Alibaba's Qwen3-ASR (#1437): 30 languages and 22 Chinese dialects in one model, punctuated. */
+    val QWEN3 = ProviderType(
+        "qwen3", VOICE, R.string.core_tools_provider_qwen3, R.string.core_tools_provider_qwen3_desc,
         onDevice = true, freeSoftware = true,
     )
 
@@ -1002,8 +1038,13 @@ object ProviderTypes {
             MOONSHINE.id to "moonshine",
             SHERPA.id to "sherpa",
             OMNILINGUAL.id to "omnilingual",
+            QWEN3.id to "qwen3",
             VOSK.id to "vosk",
             TRANSCRIPTION_SERVER.id to ENGINE_SERVER,
+            // A plugin's voice row is asked the way a server is: the clip,
+            // whole, after the user stops ([TranscriptionClient]). After the
+            // server, so the server is what "server" means to voiceType.
+            PLUGIN.id to ENGINE_SERVER,
         )
     }
 
@@ -1020,18 +1061,20 @@ object ProviderTypes {
         VOCAB_PACKS, WIKTIONARY, WIKTIONARY_REST, DICTIONARY_API, OFFLINE_WIKTIONARY, OFFLINE_WORDNET, OFFLINE_BENGALI, OFFLINE_LANGUAGES,
         IMPORTED_DICTIONARIES, URBAN_DICTIONARY,
         DATAMUSE, SIMILAR_WORDS,
-        SEARXNG, TAVILY, BRAVE, MWMBL, WIBY, MARGINALIA, WIKIPEDIA_SEARCH, BROWSER,
+        SEARXNG, TAVILY, BRAVE, MWMBL, WIBY, MARGINALIA, WIKIPEDIA_SEARCH, METASEARCH, BROWSER,
         UNSPLASH, PEXELS,
         ER_API, FRANKFURTER, ALLRATESTODAY, COINBASE, CURRENCY_API, COINGECKO,
         HOME_ASSISTANT, GOOGLE_HOME, SMARTTHINGS, HUE, OPENHAB, TUYA, SWITCHBOT,
         OCR_ON_DEVICE, OCR_ML_KIT, OCR_TESSERACT, VISION_OCR, RENS,
         ANTHROPIC, OPENAI, GEMINI, XAI, DEEPSEEK, BRAVE_ANSWERS, PRIVATEMODE, OLLAMA, LM_STUDIO, OPENAI_COMPATIBLE, ON_DEVICE_AI,
-        SYSTEM_RECOGNIZER, WHISTLE, WHISPER, ASR4ALL, PARAKEET, MOONSHINE, SHERPA, OMNILINGUAL, VOSK, TRANSCRIPTION_SERVER,
+        SYSTEM_RECOGNIZER, WHISTLE, WHISPER, ASR4ALL, PARAKEET, MOONSHINE, SHERPA, OMNILINGUAL, QWEN3, VOSK,
+        TRANSCRIPTION_SERVER,
         HARPER, LANGUAGETOOL,
         ON_DEVICE_IMAGE, POLLINATIONS, AI_HORDE, OPENAI_IMAGE, GEMINI_IMAGE, XAI_IMAGE, STABILITY, BFL, RECRAFT,
         REPLICATE, FAL, TOGETHER, HUGGING_FACE, CLOUDFLARE_AI, AUTOMATIC1111, COMFYUI, OPENAI_COMPATIBLE_IMAGE,
         AUDD, ACRCLOUD, AUDIOTAG, RAPID_SHAZAM, MUSIC_SERVER,
         CLOUDFLARE_SPEED, LIBRESPEED,
+        PLUGIN,
     )
 
     private val byId: Map<String, ProviderType> = all.associateBy { it.id }
@@ -1157,6 +1200,7 @@ data class ProviderChain(
     fun withNewTypes(tool: ProviderTool): ProviderChain {
         if (known.isEmpty()) return this
         if (tool == ProviderTool.TRANSLATE) return withNewDeviceEngines()
+        if (tool == ProviderTool.SEARCH) return withNewMetasearch()
         if (tool !in APPENDING) return this
         val added = ProviderTypes.serving(tool)
             .filter { it.id !in known && it.credential.none && !it.multiInstance }
@@ -1171,6 +1215,19 @@ data class ProviderChain(
      * at the end of the list Automatic would never reach it. Text sent to
      * the phone goes nowhere, so this cannot break a "my server only" list.
      */
+    /**
+     * A search list saved before the keyboard had its own metasearch gains
+     * it at the end, on: a backup behind whatever the user set up, so a key
+     * that runs out or a server that is down no longer leaves search with
+     * nothing. Only that row; the single engines it asks stay for the user
+     * to add.
+     */
+    private fun withNewMetasearch(): ProviderChain {
+        val type = ProviderTypes.METASEARCH
+        if (type.id in known || entries.any { it.typeId == type.id }) return this
+        return copy(entries = entries + ProviderEntry(type.id))
+    }
+
     private fun withNewDeviceEngines(): ProviderChain {
         val added = ProviderTypes.serving(ProviderTool.TRANSLATE)
             .filter { it.onDevice && it.id !in known }

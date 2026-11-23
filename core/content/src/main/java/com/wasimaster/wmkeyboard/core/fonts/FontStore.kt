@@ -35,6 +35,13 @@ data class InstalledFont(
      * anyone means to make.
      */
     val emoji: Boolean = false,
+    /**
+     * The font's variation axes, read from its `fvar` table at import. Null
+     * means not read yet (a font imported before axes existed), which
+     * [FontStore.backfillVariations] fills in; a static font reads as
+     * [FontVariations.STATIC], so it is never read twice.
+     */
+    val variations: FontVariations? = null,
 )
 
 /**
@@ -113,6 +120,18 @@ class FontStore(private var baseDir: File?) {
         const val MAX_BYTES = 64L * 1024 * 1024
 
         /**
+         * The cap for an emoji font, larger than [MAX_BYTES]. Bitmap emoji
+         * fonts grow with their picture size: Noto's 3D set is 148 MB at 128 px,
+         * and Fluent Emoji's untrimmed build is 87 MB. Neither costs memory to
+         * use, since the platform maps the file and decodes only the glyphs it
+         * draws, so the cap only guards the disk and the download.
+         */
+        const val MAX_EMOJI_BYTES = 256L * 1024 * 1024
+
+        /** The size cap for a font, by whether it is an emoji font. */
+        fun maxBytes(emoji: Boolean): Long = if (emoji) MAX_EMOJI_BYTES else MAX_BYTES
+
+        /**
          * Prefix marking a font id in the settings' font-id string, alongside
          * `google:` and the fixed `custom` ids. Resolved by `KeyboardFonts`.
          */
@@ -146,6 +165,42 @@ class FontStore(private var baseDir: File?) {
 
     @Synchronized
     fun font(id: String?): InstalledFont? = fonts.firstOrNull { it.id == id }
+
+    /**
+     * Whether any text face in the library is a variable font: what lets the
+     * axis rows in the theme editor show for a theme whose own font is static.
+     */
+    @Synchronized
+    fun hasVariableFont(): Boolean = fonts.any { !it.emoji && it.variations?.isVariable == true }
+
+    /** The installed font's axes, or null when it has none or is not in the library. */
+    @Synchronized
+    fun variationsOf(id: String): FontVariations? = font(id)?.variations?.takeIf { it.isVariable }
+
+    /**
+     * Reads the axes of every font imported before they were recorded. Blocking
+     * file reads, a few kilobytes each, so it is called off the main thread.
+     * Returns whether anything changed.
+     */
+    fun backfillVariations(read: (File) -> FontVariations? = FontAxesReader::read): Boolean {
+        val pending = synchronized(this) { fonts.filter { it.variations == null }.map { it.id } }
+        if (pending.isEmpty()) return false
+        val found = pending.associateWith { id ->
+            existingFileFor(id)?.let(read) ?: FontVariations.STATIC
+        }
+        synchronized(this) {
+            var changed = false
+            for (i in fonts.indices) {
+                val v = found[fonts[i].id] ?: continue
+                if (fonts[i].variations == null) {
+                    fonts[i] = fonts[i].copy(variations = v)
+                    changed = true
+                }
+            }
+            if (changed) save()
+            return changed
+        }
+    }
 
     /** The file backing [id], whether or not it exists. */
     fun fileFor(id: String): File? = baseDir?.let { File(it, fileNameFor(id)) }

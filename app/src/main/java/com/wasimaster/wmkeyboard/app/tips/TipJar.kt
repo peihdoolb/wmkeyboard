@@ -52,7 +52,8 @@ internal interface TipJar {
  * The products to create in Play Console › Monetize › In-app products, all
  * consumable so the same tier can be bought again. The id is what the code
  * and the server match on; the price is whatever Console says, localised by
- * Play, and [usd] is only the default it was created at.
+ * Play, and [usd] is only the middle band's price. High- and low-income
+ * countries are priced on their own ladders in Console (see play-tip.ts).
  */
 internal enum class TipTier(
     val productId: String,

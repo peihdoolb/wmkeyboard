@@ -456,6 +456,12 @@
     <string name="ime_tool_resize">Resize</string>
     <string name="ime_resize_reset">Reset</string>
     <string name="ime_resize_done">Done</string>
+    <plurals name="ime_selection_count">
+        <item quantity="one">%1$d character</item>
+        <item quantity="other">%1$d characters</item>
+    </plurals>
+    <string name="ime_resize_defaults">Back to defaults</string>
+    <string name="ime_resize_defaults_confirm">Tap again to reset</string>
     <string name="ime_resize_full_width_bars">Full-width toolbar</string>
     <string name="ime_resize_height_handle_desc">Drag to change the keyboard height</string>
     <string name="ime_resize_bottom_handle_desc">Drag to move the bottom edge of the keyboard</string>
@@ -468,6 +474,9 @@
     <string name="ime_tool_settings">Settings</string>
     <string name="ime_tool_flashlight">Flashlight</string>
     <string name="ime_tool_screenshot">Screenshot</string>
+    <string name="ime_tool_system_back">Go back</string>
+    <string name="ime_tool_system_home">Home screen</string>
+    <string name="ime_tool_system_recents">Recent apps</string>
     <string name="ime_tool_privacy_shade">Privacy shade</string>
     <!-- A search shortcut's chip (#1242). %1$s is the tool, %2$s the words typed after the shortcut. -->
     <string name="ime_smart_search_offer"><xliff:g id="tool" example="GIF">%1$s</xliff:g>: \u201C<xliff:g id="query" example="cats">%2$s</xliff:g>\u201D</string>
@@ -817,6 +826,7 @@
     <string name="ime_search_attribution_brave">via Brave</string>
     <string name="ime_search_attribution_mwmbl">via Mwmbl</string>
     <string name="ime_search_attribution_wiby">via Wiby</string>
+    <string name="ime_search_attribution_metasearch">via Mwmbl, Marginalia, Wikipedia and Wiby</string>
     <string name="ime_search_attribution_marginalia">via Marginalia</string>
     <string name="ime_search_attribution_wikipedia">via Wikipedia</string>
     <!-- The search list's "Search in the browser" row is on, but no app would open the search (#1383). -->
@@ -1164,6 +1174,7 @@
     <string name="ime_clip_select_cancel_desc">Stop selecting</string>
     <string name="ime_clip_select_all_desc">Select all, or none</string>
     <string name="ime_clip_share_desc">Share the picked clips</string>
+    <string name="ime_clip_insert_pictures_desc">Insert the picked pictures</string>
     <plurals name="ime_clip_selected_count">
         <item quantity="one">%1$d selected</item>
         <item quantity="other">%1$d selected</item>
@@ -1200,6 +1211,9 @@
     <string name="ime_clip_reorder">Reorder</string>
     <!-- #970: a held clip's button that puts it first in its group without pasting it. -->
     <string name="ime_clip_move_top">Move to top</string>
+    <!-- #612: a held clip's button that keeps its whole text on its card, and the one that takes it back to a preview. -->
+    <string name="ime_clip_expand">Show it all on the card</string>
+    <string name="ime_clip_collapse">Show less on the card</string>
     <!-- #1354: what stands where a clip was deleted until the clipboard closes. -->
     <string name="ime_clip_deleted_slot">Deleted</string>
     <!-- #612: the round buttons over the clipboard history. -->
@@ -1382,5 +1396,18 @@
     <string name="ime_find_searching">Searching</string>
     <!-- The network activity dot on the toolbar. %1$s is a server name. -->
     <string name="ime_netlog_dot_desc">The keyboard is contacting <xliff:g id="host" example="translate.googleapis.com">%1$s</xliff:g></string>
+    <!-- #1453: the alarm and special-day chip on the idle strip, and the status icons at the toolbar's far end. %1$s is a time such as 7:00. -->
+    <string name="ime_status_alarm_chip">Alarm at <xliff:g id="time" example="7:00">%1$s</xliff:g></string>
+    <!-- %1$s is the alarm's label, %2$s its time. -->
+    <string name="ime_status_alarm_chip_label"><xliff:g id="label" example="Gym">%1$s</xliff:g> at <xliff:g id="time" example="7:00">%2$s</xliff:g></string>
+    <string name="ime_status_alarm_stop">Stop</string>
+    <!-- %1$s is the line of a note that names the birthday, or a countdown's title. -->
+    <string name="ime_status_special_day_chip">Today: <xliff:g id="what" example="Anna birthday">%1$s</xliff:g></string>
+    <string name="ime_status_chip_close_desc">Close, and keep it as an icon on the toolbar</string>
+    <string name="ime_status_timer_desc">A timer is running</string>
+    <string name="ime_status_pomodoro_desc">A Pomodoro is running</string>
+    <string name="ime_status_stopwatch_desc">The stopwatch is running</string>
+    <!-- %1$s is the task's words. -->
+    <string name="ime_status_todo_desc">Due: <xliff:g id="task" example="Read Laxmikant">%1$s</xliff:g></string>
 
 </resources>

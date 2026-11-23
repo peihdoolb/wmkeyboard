@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.app
 
+import com.wasimaster.wmkeyboard.core.netlog.OfflineBuild
 import androidx.activity.compose.rememberLauncherForActivityResult
 import com.wasimaster.wmkeyboard.core.providers.ProviderTool
 import androidx.activity.result.PickVisualMediaRequest
@@ -349,7 +350,7 @@ fun PhotoRotationScreen(
                         info = stringResource(R.string.photo_rotation_metered_info),
                     ) { scope.launch { repository.setPhotoFetchOnMetered(it) } }
                 }
-                item(visible = saverStops, level = SettingLevel.STANDARD) {
+                item(visible = saverStops && !OfflineBuild.isThisBuild, level = SettingLevel.STANDARD) {
                     NavRow(
                         title = R.string.home_datasaver_title,
                         subtitle = stringResource(R.string.photo_rotation_metered_saver_nav_subtitle),
@@ -357,7 +358,8 @@ fun PhotoRotationScreen(
                         onClick = { onNavigate("datasaver") },
                     )
                 }
-                item(level = SettingLevel.STANDARD) {
+                // Every photo service is online, so the offline build has none.
+                item(visible = !OfflineBuild.isThisBuild, level = SettingLevel.STANDARD, waitsOnSetting = false) {
                     NavRow(
                         title = R.string.photo_services_title,
                         subtitle = stringResource(R.string.photo_services_subtitle),

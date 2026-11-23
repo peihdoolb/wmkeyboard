@@ -40,6 +40,8 @@ fun KeyboardSettings.restrictedToDirectBoot(): KeyboardSettings {
         // the system face rather than to no glyphs at all.
         keyFontId = "default",
         scriptFontIds = emptyMap(),
+        // Only the system face is left to draw with, so only its tuning stays.
+        fontAxes = fontAxes.filterKeys { it == "default" },
         emojiFont = EmojiFontChoice.SYSTEM,
         // An installed key sound is a file under filesDir too, and a sound pack
         // is a whole directory of them. Unlike the fonts there is no per-glyph
@@ -102,8 +104,8 @@ fun KeyboardSettings.restrictedToDirectBoot(): KeyboardSettings {
         // RIME's schemas and the user dictionary it learns into are under
         // filesDir, so Chinese types through the built-in engine until unlock
         // (whose own downloaded dictionaries are behind the lock as well).
-        // Mozc's dictionary and what it learns are there too.
-        cjk = cjk.copy(rimeLanguages = emptySet(), mozcJapanese = false),
+        // Mozc's and Chewing's dictionaries and what they learn are there too.
+        cjk = cjk.copy(rimeLanguages = emptySet(), mozcJapanese = false, chewingZhuyin = false),
         // Emoji mixes read each source's index and pack from filesDir. Loaded
         // here they came up empty, and the keyboard kept that empty load for
         // the same list of sources after the unlock: mixes stayed gone after

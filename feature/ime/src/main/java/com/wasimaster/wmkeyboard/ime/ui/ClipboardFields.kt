@@ -1,5 +1,6 @@
 package com.wasimaster.wmkeyboard.ime.ui
 
+import com.wasimaster.wmkeyboard.core.text.StemMatch
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
@@ -91,6 +92,8 @@ import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.GridView
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.PushPin
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.ViewAgenda
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.ExpandMore
+import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.UnfoldLess
+import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.UnfoldMore
 import com.wasimaster.wmkeyboard.core.icons.symbols.outlined.KeyboardArrowUp
 import com.wasimaster.wmkeyboard.core.icons.symbols.automirrored.outlined.ArrowForward
 import androidx.compose.material3.Icon
@@ -271,6 +274,10 @@ data class ClipboardPanelActions(
     val onTidy: (List<Long>) -> Unit = {},
     /** The selection bar's Zawgyi: these clips' Burmese between Zawgyi and Unicode. */
     val onZawgyi: (List<Long>) -> Unit = {},
+    /** The selection bar's Share (#1494): the picked text and pictures to the share sheet in one go. */
+    val onShareMany: (List<Long>) -> Unit = {},
+    /** The selection bar's Insert (#1494): the picked pictures into the field, one after another. */
+    val onInsertImages: (List<Long>) -> Unit = {},
     /** The hold popup's Tags: the editor opens on this clip's tags (#612). */
     val onTags: (ClipItem) -> Unit = {},
     /** A tag already in the history, pressed under the tags editor (#612). */
@@ -299,6 +306,8 @@ data class ClipboardPanelActions(
     val onPatternUse: (String) -> Unit = {},
     /** Move to top, from a clip's hold (#970): first in its group, nothing pasted. */
     val onMoveTop: (ClipItem) -> Unit = {},
+    /** A clip's whole text kept on its card (true), or its preview again (#612). */
+    val onExpand: (ClipItem, Boolean) -> Unit = { _, _ -> },
     /** A clip's tags dragged into a new order on its card (#612). */
     val onTagsReorder: (ClipItem, List<String>) -> Unit = { _, _ -> },
     /** The tag chips dragged into a new order, in the filter row or under the tags editor (#612). */
@@ -836,6 +845,11 @@ internal fun rememberClipboardPanelSession(state: KeyboardUiState): ClipboardPan
     // Match the whole clip (#612): a pattern must match all of a clip's text.
     val regexWhole = state.settings.clipboard.regexWhole
     val matcher = remember(query, regexSearch, regexWhole) { clipQueryMatcher(query, regexSearch, regexWhole) }
+    // Then the clips holding another form of the query's words.
+    val clipLanguage = state.language.localeTag
+    val stemMatcher = remember(query, regexSearch, clipLanguage) {
+        com.wasimaster.wmkeyboard.core.clipboard.clipStemMatcher(query, regexSearch, clipLanguage)
+    }
     val filters = remember { mutableStateOf(ClipPanelMemory.filters) }
     val oldest = remember { mutableStateOf(ClipPanelMemory.oldest) }
     val tagOrder = state.settings.clipboard.tagOrder
@@ -890,10 +904,11 @@ internal fun rememberClipboardPanelSession(state: KeyboardUiState): ClipboardPan
     // Then the clips only search by meaning found, best first; only from
     // [ordered], so the tab, tag and kind filters still hold.
     val meaningIds = state.meaning.clips.forQuery(query)
+    val found = if (query.isEmpty()) ordered else StemMatch.literalFirst(ordered, matcher, stemMatcher)
     val matched = when {
         query.isEmpty() -> ordered
-        meaningIds.isEmpty() -> ordered.filter(matcher)
-        else -> com.wasimaster.wmkeyboard.ime.semantic.MeaningHits.append(ordered.filter(matcher), ordered, meaningIds) { it.id.toString() }
+        meaningIds.isEmpty() -> found
+        else -> com.wasimaster.wmkeyboard.ime.semantic.MeaningHits.append(found, ordered, meaningIds) { it.id.toString() }
     }
     val shownItems = if (oldest.value) {
         remember(matched, searching) { if (searching) matched.reversed() else oldestFirst(matched) }
@@ -1339,7 +1354,7 @@ private fun ClipPatternsMenu(
 ) {
     val kb = LocalKbTheme.current
     ClipPopupRegistration(onDismiss)
-    Popup(popupPositionProvider = rememberAboveAnchorPopup(), onDismissRequest = onDismiss) {
+    Popup(popupPositionProvider = rememberAboveAnchorPopup(flipBelow = true), onDismissRequest = onDismiss) {
         GlassPopupBackdrop(kb, FrostSurface.MENUS)
         Surface(
             shape = kb.menuShape(),
@@ -1660,7 +1675,6 @@ private fun ClipboardListField(
         )
     }
     val deleteAsked = session.deleteAsking.value
-    val clipContext = androidx.compose.ui.platform.LocalContext.current
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             when {
@@ -1687,8 +1701,16 @@ private fun ClipboardListField(
                     },
                     onShare = {
                         session.selection.value = null
-                        shareClips(clipContext, selection, state.clipboardItems)
+                        callbacks.actions.onShareMany(selection)
                     },
+                    // Only where the field takes pictures at all (#1494): in
+                    // any other the insert could only end at the clipboard.
+                    onInsertImages = if (state.acceptsRichMedia) {
+                        {
+                            session.selection.value = null
+                            callbacks.actions.onInsertImages(selection)
+                        }
+                    } else null,
                     onTidy = if (session.tidy) {
                         {
                             session.selection.value = null
@@ -1870,8 +1892,10 @@ private fun ClipSelectionBar(
     onSelectAll: () -> Unit,
     onCombine: () -> Unit,
     onDelete: () -> Unit,
-    /** Hands the picked text clips to another app through the share sheet: the clipboard's export. */
+    /** Hands the picked text clips and pictures to another app through the share sheet in one go (#1494). */
     onShare: (() -> Unit)? = null,
+    /** Puts the picked pictures into the field one after another (#1494); null where the field takes none. */
+    onInsertImages: (() -> Unit)? = null,
     /** Runs the copy rules over the picked clips (#612); none without rules. */
     onTidy: (() -> Unit)? = null,
     /** Converts the picked clips between Zawgyi and Unicode; shown while one holds Burmese. */
@@ -1885,6 +1909,16 @@ private fun ClipSelectionBar(
     val burmese = remember(picked, items) {
         val byId = items.associateBy { it.id }
         picked.any { id -> byId[id]?.takeIf { it.kind.isTextual && !it.sensitive }?.let { Zawgyi.hasMyanmar(it.text) } == true }
+    }
+    // What Share and Insert can send (#1494): text that is not marked
+    // sensitive, and pictures.
+    val shareable = remember(picked, items) {
+        val byId = items.associateBy { it.id }
+        picked.count { id -> byId[id]?.let { !it.sensitive && (it.kind.isTextual || it.kind == ClipKind.IMAGE) } == true }
+    }
+    val pictures = remember(picked, items) {
+        val byId = items.associateBy { it.id }
+        picked.count { id -> byId[id]?.let { !it.sensitive && it.kind == ClipKind.IMAGE } == true }
     }
     Row(
         modifier = Modifier
@@ -1950,13 +1984,26 @@ private fun ClipSelectionBar(
                 Text(stringResource(R.string.ime_clip_combine))
             }
         }
+        if (onInsertImages != null && pictures >= 1) {
+            val insert = stringResource(R.string.ime_clip_insert_pictures_desc)
+            IconHint(insert) {
+                IconButton(onClick = onInsertImages, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        Icons.Outlined.ContentPaste,
+                        contentDescription = insert,
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
         if (onShare != null) {
             val share = stringResource(R.string.ime_clip_share_desc)
             IconHint(
                 share,
-                disabledReason = DisabledReason(stringResource(R.string.ime_disabled_clip_share)).takeIf { textual < 1 },
+                disabledReason = DisabledReason(stringResource(R.string.ime_disabled_clip_share)).takeIf { shareable < 1 },
             ) {
-                IconButton(onClick = onShare, enabled = textual >= 1, modifier = Modifier.size(36.dp)) {
+                IconButton(onClick = onShare, enabled = shareable >= 1, modifier = Modifier.size(36.dp)) {
                     Icon(
                         Icons.Outlined.Share,
                         contentDescription = share,
@@ -2621,7 +2668,8 @@ private fun ClipboardHistory(
                     }
                 } else null,
                 shortcut = shortcut,
-                holdActions = clipboard.holdActions,
+                // The ones the user turned off leave the row (#970).
+                holdActions = clipboard.holdActions.filterNot { it in clipboard.holdHidden },
                 holdPaste = clipboard.holdPaste,
                 onTagTap = { tag -> session.filters.value = session.active.tappedTag(tag) },
             )
@@ -3144,6 +3192,10 @@ private fun ClipHoldPopup(
             plainLinks = hold.plainLinks,
             actions = ClipTextActions(
                 onInfo = { fullText = false },
+                // The whole text on the card from now on, or the preview again (#612).
+                onExpand = if (hold.picked == null) {
+                    { onDismiss(); callbacks.actions.onExpand(item, !item.expanded) }
+                } else null,
                 onPasteNext = pasteNext,
                 onCollect = collect,
                 onSendToBoard = sendToBoard,
@@ -3241,6 +3293,8 @@ private fun ClipHoldPopup(
 @Immutable
 private class ClipTextActions(
     val onInfo: () -> Unit,
+    /** The clip's whole text on its card, or its preview again (#612). */
+    val onExpand: (() -> Unit)? = null,
     /** What pastes next, the history left as it is (#1178). */
     val onPasteNext: (() -> Unit)? = null,
     /** New copies go into this clip (#1312). */
@@ -3303,7 +3357,7 @@ private fun ClipFullTextPopup(
     var formatted by remember(item.id) { mutableStateOf(true) }
     val renderMarkdown = shape == CodeSniff.Markdown && length <= ClipMarkdownRenderMax
     Popup(
-        popupPositionProvider = rememberAboveAnchorPopup(),
+        popupPositionProvider = rememberAboveAnchorPopup(flipBelow = true),
         onDismissRequest = onDismiss,
     ) {
         IconHintHost {
@@ -3457,6 +3511,14 @@ private fun ClipTextActionButton(action: ClipHoldAction, item: ClipItem, actions
     when (action) {
         ClipHoldAction.DETAILS ->
             ClipTextActionIcon(Icons.Outlined.Info, stringResource(R.string.ime_clip_details_desc), tint, actions.onInfo)
+        ClipHoldAction.EXPAND -> actions.onExpand?.let {
+            ClipTextActionIcon(
+                if (item.expanded) Icons.Outlined.UnfoldLess else Icons.Outlined.UnfoldMore,
+                stringResource(if (item.expanded) R.string.ime_clip_collapse else R.string.ime_clip_expand),
+                tint,
+                it,
+            )
+        }
         ClipHoldAction.PASTE_NEXT -> actions.onPasteNext?.let {
             ClipTextActionIcon(Icons.Outlined.ContentPaste, stringResource(R.string.ime_clip_paste_next), tint, it)
         }
@@ -3864,7 +3926,7 @@ private fun ClipCard(
                 .padding(if (item.kind == ClipKind.IMAGE || item.kind == ClipKind.VIDEO) 5.dp else 10.dp),
         ) {
             if (showInfo) ClipHoldPopup(item, hold, callbacks) { showInfo = false }
-            ClipBody(item, maxLines = lines, hold = hold)
+            ClipBody(item, maxLines = clipShownLines(item, lines), hold = hold)
             if (item.tags.isNotEmpty()) ClipTagsLine(item, hold, callbacks, Modifier.padding(top = 4.dp))
             val icons = hold.icons && hold.entities.isNotEmpty()
             val tag = item.kind == ClipKind.HTML && hold.typeTag
@@ -3904,6 +3966,16 @@ private fun ClipCard(
         hold.picked?.let { ClipPickMark(it, Modifier.align(Alignment.TopEnd).padding(5.dp)) }
     }
 }
+
+/**
+ * The lines [item]'s card or row shows: [lines], the preview setting's, or
+ * its whole text when the user asked for that from its hold popup (#612).
+ * Whole still means up to [CLIP_PREVIEW_CHAR_CAP] characters, cut before
+ * layout as every preview is; the hold popup reads on past that. Not for a
+ * secret's text, which is masked whatever the clip asks.
+ */
+private fun clipShownLines(item: ClipItem, lines: Int): Int =
+    if (item.expanded && item.kind.isTextual && !item.sensitive) Int.MAX_VALUE else lines
 
 /** The source app's icon, small, at the head of a card's or a row's footer (#970). */
 @Composable
@@ -3979,7 +4051,7 @@ internal fun clipEntityIcon(kind: ClipEntityKind): ImageVector = when (kind) {
 private fun ClipExtractPopup(entities: List<ClipEntity>, onPick: (ClipEntity) -> Unit, onDismiss: () -> Unit) {
     val kb = LocalKbTheme.current
     Popup(
-        popupPositionProvider = rememberAboveAnchorPopup(),
+        popupPositionProvider = rememberAboveAnchorPopup(flipBelow = true),
         onDismissRequest = onDismiss,
     ) {
         GlassPopupBackdrop(kb, FrostSurface.MENUS)
@@ -4027,7 +4099,7 @@ private fun ClipExtractPopup(entities: List<ClipEntity>, onPick: (ClipEntity) ->
                             )
                             Spacer(Modifier.width(10.dp))
                             Text(
-                                entity.value,
+                                entity.display,
                                 fontSize = 14.sp,
                                 color = kb.popupText,
                                 maxLines = 2,
@@ -4107,7 +4179,7 @@ private fun ClipRow(
             }
         } else {
             Column(modifier = Modifier.weight(1f)) {
-                ClipBody(item, maxLines = lines, hold = hold)
+                ClipBody(item, maxLines = clipShownLines(item, lines), hold = hold)
                 if (item.tags.isNotEmpty()) ClipTagsLine(item, hold, callbacks, Modifier.padding(top = 2.dp))
                 if (item.kind == ClipKind.HTML && hold.typeTag) {
                     Text(
@@ -4206,7 +4278,7 @@ private fun clipTimeText(item: ClipItem, label: ClipTimeLabel, clipboard: Clipbo
             } else {
                 0L
             }
-            item.expiresAt(clipboard.expiryHours * 60 * MinuteMs, sensitiveLeash)?.let { at ->
+            item.expiresAt(clipboard.expiryMinutes * MinuteMs, sensitiveLeash)?.let { at ->
                 val minutes = ((at - now).coerceAtLeast(0L) + MinuteMs - 1) / MinuteMs
                 when {
                     minutes < 60 -> minutes.coerceAtLeast(1L).toInt().let {
@@ -4741,7 +4813,14 @@ private fun ClipReorderList(
                 modifier = Modifier
                     .zIndex(if (dragging) 1f else 0f)
                     .graphicsLayer { translationY = if (dragging) dragOffset else shown }
-                    .then(if (dragging) Modifier.shadow(6.dp, LocalKbTheme.current.cardShape()) else Modifier)
+                    // A theme may name a concave card shape; it lifts with no shadow (#1327).
+                    .then(
+                        if (dragging) {
+                            Modifier.shadow(elevationFor(LocalKbTheme.current.cardShapeKind, 6.dp), LocalKbTheme.current.cardShape())
+                        } else {
+                            Modifier
+                        },
+                    )
                     // The whole row after a hold (#612): a handle alone was a
                     // small target for a finger aiming at one clip of many.
                     .pointerInput(item.id) {
@@ -5215,26 +5294,5 @@ private fun ClipCombineBox(
                 )
             }
         }
-    }
-}
-
-/**
- * The picked text clips, in the order they were picked, one after another
- * with a blank line between, handed to the share sheet: how a batch of clips
- * leaves the keyboard for a file, a note app or a chat. Clips marked
- * sensitive (passwords, codes) stay out, as they do from every other export.
- */
-private fun shareClips(context: android.content.Context, picked: List<Long>, items: List<ClipItem>) {
-    val byId = items.associateBy { it.id }
-    val text = picked.mapNotNull { id -> byId[id]?.takeIf { it.kind.isTextual && !it.sensitive }?.text }
-        .joinToString("\n\n")
-    if (text.isEmpty()) return
-    val send = android.content.Intent(android.content.Intent.ACTION_SEND)
-        .setType("text/plain")
-        .putExtra(android.content.Intent.EXTRA_TEXT, text)
-    runCatching {
-        context.startActivity(
-            android.content.Intent.createChooser(send, null).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
-        )
     }
 }
