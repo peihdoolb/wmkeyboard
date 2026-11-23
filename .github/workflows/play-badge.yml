@@ -22,6 +22,7 @@ permissions:
 
 jobs:
   badge:
+    if: github.repository == 'wasi-master/wmkeyboard'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

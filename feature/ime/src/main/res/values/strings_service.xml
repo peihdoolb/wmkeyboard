@@ -395,7 +395,4 @@
     <string name="ime_two_thumb_retype_refused">Couldn\'t retype: the word before the caret couldn\'t be read back, so Backspace deleted a character</string>
     <string name="ime_retype_last_finished_unavailable">Can\'t find the last finished word right before this one. Move the cursor to the end of the word to retype it.</string>
     <string name="ime_two_thumb_undo_changed">The word changed after it was typed, so Backspace deleted a character instead of undoing a gesture</string>
-    <!-- Voice last resort error options when the phone's recognizer will not start -->
-    <string name="ime_voice_last_resort_keyboard">Use %1$s voice typing</string>
-    <string name="ime_voice_last_resort_window">Open the phone\'s voice window</string>
 </resources>
