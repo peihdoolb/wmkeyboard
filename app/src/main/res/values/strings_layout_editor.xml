@@ -168,6 +168,19 @@
     <!-- Height of one row, as a multiple of the standard key height.
          %1$.2f is the multiple, for example 1.25. -->
     <string name="layout_editor_row_height_label">Row height ×<xliff:g id="multiple" example="1.25">%1$.2f</xliff:g></string>
+    <!-- Layout editor, selected row: extra pages a swipe across the row brings in, in the row's place. -->
+    <string name="layout_editor_row_pages_title">Row pages</string>
+    <string name="layout_editor_row_pages_subtitle">Swipe across this row on the keyboard to show another set of keys in its place. Swipe back to return. With glide typing on, swipe fast and straight across the row.</string>
+    <string name="layout_editor_row_pages_add">Add a page</string>
+    <!-- Content description of the button that removes one page from the row's list. -->
+    <string name="layout_editor_row_pages_remove_desc">Remove page <xliff:g id="number" example="2">%1$d</xliff:g></string>
+    <string name="layout_editor_row_pages_picker_title">Add a page to row <xliff:g id="row" example="1">%1$d</xliff:g></string>
+    <string name="layout_editor_row_page_emoji">The emoji you use most</string>
+    <string name="layout_editor_row_page_digits">Digits 1 to 0</string>
+    <!-- A page filled from one of the symbol row's sets, such as "Math symbols". -->
+    <string name="layout_editor_row_page_symbols"><xliff:g id="set" example="Math">%1$s</xliff:g> symbols</string>
+    <string name="layout_editor_row_page_keys">Keys you type</string>
+    <string name="layout_editor_row_page_keys_hint">Characters, with a space between keys</string>
     <!-- Name of the field you type an exact row height into. -->
     <string name="layout_editor_height_field_label">Height</string>
     <!-- Buttons that change the height of the row by a small step. -->
@@ -548,10 +561,10 @@
     <string name="layout_editor_action_double_consonant_title">Double consonant (쌍자음)</string>
     <!-- The Korean letters are examples and stay as they are. -->
     <string name="layout_editor_action_double_consonant_detail">Changes the last Korean consonant you typed to its double form and back: ㄱ to ㄲ, ㅂ to ㅃ</string>
-    <!-- A key action for Chinese T9 pinyin pads: a scrolling list in place of the key (issue #635). -->
-    <string name="layout_editor_action_reading_column_title">Pinyin syllable list</string>
+    <!-- A key action: a scrolling list of characters in place of the key, such as math symbols down the side of the number pad or the syllables of a T9 pinyin pad (issues #635, #1526). -->
+    <string name="layout_editor_action_scroll_list_title">Scrolling list</string>
     <!-- Detail line for the action above. -->
-    <string name="layout_editor_action_reading_column_detail">A scrolling list in place of the key. While you type on a T9 pinyin pad it lists the syllables your keys could spell, to pick one; otherwise it lists the key\'s long-press characters</string>
+    <string name="layout_editor_action_scroll_list_detail">A list in place of the key that you scroll, then tap a character to type it. The list is the key\'s long-press characters. Make the key cover a few rows to show more of it. On a T9 pinyin pad, it lists the syllables your keys could spell while you type</string>
     <!-- A key action that flips Chinese candidates between Simplified and Traditional characters (issue #962). -->
     <string name="layout_editor_action_han_script_title">Simplified / Traditional Chinese</string>
     <!-- Detail line for the action above. -->

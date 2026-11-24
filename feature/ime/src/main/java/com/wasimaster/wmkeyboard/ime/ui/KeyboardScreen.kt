@@ -674,6 +674,7 @@ import com.wasimaster.wmkeyboard.core.layout.hasHoldAction
 import com.wasimaster.wmkeyboard.core.layout.holdActionKey
 import com.wasimaster.wmkeyboard.core.layout.hasFlicks
 import com.wasimaster.wmkeyboard.core.layout.SymbolChord
+import com.wasimaster.wmkeyboard.core.layout.rowPageCount
 import com.wasimaster.wmkeyboard.core.layout.withSwipeArms
 import com.wasimaster.wmkeyboard.core.layout.withHoldActions
 import com.wasimaster.wmkeyboard.core.layout.owns
@@ -21388,9 +21389,13 @@ private fun KeyRows(
     // as they were, and nothing under the finger moves except the key faces.
     val layerPeek = rememberLayerPeek()
     val peeked = layerPeek.mode
-    val layout = rememberCurrentLayout(
+    val baseLayout = rememberCurrentLayout(
         if (peeked == null) state else state.withLayoutMode(peeked),
     )
+    // Rows with more pages (#1526's follow-up): a swipe across one slides its
+    // next page in. Every layout without them draws [baseLayout] unchanged.
+    val rowPager = remember(state.layoutId) { RowPager() }
+    val layout = rememberPagedLayout(baseLayout, rowPager, state)
     // Issue #345: a drag off shift draws the letters as the capitals a lift
     // would type, and lights the key under the finger. Like the peek, this is
     // the drawn grid only — the board's shift latch never moves, and the layout
@@ -21872,6 +21877,13 @@ private fun KeyRows(
         !state.typingTestActive && !state.layouts.handwriting && state.layoutMode == LayoutMode.LETTERS &&
         (state.panel == PanelMode.NONE || keysInBox || state.captureHandedToApp)
     val oneFingerMap = rememberUpdatedState(gesture.oneFingerBindings)
+    // Row pages: on whenever the grid has a row with more of them, outside a
+    // typing test, whose taps are the score. With glide in any form on, a row
+    // swipe has to be a fling no word looks like.
+    val rowPagesOn = baseLayout.rowPages.isNotEmpty() && !state.typingTestActive
+    val rowSwipeStrict = rememberUpdatedState(state.settings.gestureTyping || gestureEnabled)
+    val liveLayout = rememberUpdatedState(layout)
+    val liveRowsByKey = rememberUpdatedState(remember(layout) { rowsByKey(layout) })
     val splitNow = rememberUpdatedState(state.settings.splitKeyboard)
     val boxSelection = rememberUpdatedState(
         if (keysInBox) LocalCaptureCaret.current.onSelectionAction else null,
@@ -22191,6 +22203,23 @@ private fun KeyRows(
                     } else {
                         stampedOnKey(Key(label = binding.label, action = binding.action))
                     }
+                }
+            }
+            // A row with more pages: a swipe across it moves that row a page
+            // along. Ahead of the one-finger swipe, which it beats on such a
+            // row by claiming sooner; with glide on only a fast straight
+            // fling across the row counts (see [RowFlingTracker]).
+            .pointerInput(rowPagesOn, rowPager) {
+                if (!rowPagesOn) return@pointerInput
+                detectRowSwipes(
+                    strict = { rowSwipeStrict.value },
+                    rowAt = { at -> rowHitAt(at, boxOrigin, liveLayout.value, liveRowsByKey.value, liveRects.value) },
+                    gate = fingerGate,
+                    alternatesGate = alternatesGate,
+                ) { row, step ->
+                    if (hapticOn.value) pickerHaptic()
+                    val grid = liveLayout.value
+                    rowPager.flip(grid.name, row, step, grid.rowPageCount(row))
                 }
             }
             // Gap list item 44: one finger swiped across the letters runs the
@@ -23940,6 +23969,7 @@ private fun KeyRows(
                     onHandwritingUndo = onHandwritingUndo,
                     onHandwritingDownload = onHandwritingDownload,
                     keyRects = keyRects,
+                    rowSlide = rowPager.slide,
                 )
             }
         }
@@ -24200,6 +24230,8 @@ private fun KeyGridRows(
     onHandwritingDownload: () -> Unit,
     /** The cell table, told which keys draw as hexagons; see [KeyRects.faceShapes]. */
     keyRects: KeyRects? = null,
+    /** The last row page flip, which that row slides in with; see [RowPager]. */
+    rowSlide: RowSlide? = null,
 ) {
     // Layers shorter than the reserved span (the symbols pages under a
     // six-row alphabet, a keypad under a five-row board) fill it the way
@@ -24291,6 +24323,8 @@ private fun KeyGridRows(
     }
     KeyGridBlocks(
         bodyBlocks = bodyBlocks,
+        pagedRows = layout.rowPages.keys,
+        rowSlide = rowSlide,
         arrowRow = arrowRow && !arrowOnTop,
         touchBelow = touchBelow,
         lane = lane,
@@ -24334,6 +24368,9 @@ private fun KeyGridRows(
 @Composable
 private fun KeyGridBlocks(
     bodyBlocks: List<KeyGridBlock>,
+    /** Rows with more pages, by index: each draws inside a [RowPageSlideBox]. */
+    pagedRows: Set<Int>,
+    rowSlide: RowSlide?,
     arrowRow: Boolean,
     touchBelow: Dp,
     lane: Dp,
@@ -24351,7 +24388,14 @@ private fun KeyGridBlocks(
     smartResolve: (Key, PointerId) -> Key,
     onBurst: ((Rect, String?) -> Unit)?,
 ) {
+    val animate = LocalKbTheme.current.motion.any
+    var rowIndex = 0
     for ((blockIndex, block) in bodyBlocks.withIndex()) {
+        val firstRow = rowIndex
+        rowIndex += when (block) {
+            is KeyGridBlock.Row -> 1
+            is KeyGridBlock.Band -> block.band.rowHeights.size
+        }
         val blockBelow = if (!arrowRow && blockIndex == bodyBlocks.lastIndex) touchBelow else 0.dp
         // A band lays a lane above each of its own rows (#1384): stacked
         // here, all of them sat over its first row, a honeycomb's letters
@@ -24361,23 +24405,45 @@ private fun KeyGridBlocks(
             Spacer(modifier = Modifier.height(lane))
         }
         when (block) {
-            is KeyGridBlock.Row -> KeyRow(
-                row = block.row,
-                settings = settings,
-                split = split,
-                numericField = numericField,
-                layoutId = layoutId,
-                keyPreview = keyPreview,
-                onKey = onKey,
-                onText = onText,
-                onCursorMove = onCursorMove,
-                onLayoutSelect = onLayoutSelect,
-                onKeyPositioned = onKeyPositioned,
-                onSpacePositioned = onSpacePositioned,
-                smartResolve = smartResolve,
-                onBurst = onBurst,
-                touchBelow = blockBelow,
-            )
+            is KeyGridBlock.Row -> if (rowSlide != null && firstRow in pagedRows) {
+                RowPageSlideBox(rowSlide, firstRow, animate) {
+                    KeyRow(
+                        row = block.row,
+                        settings = settings,
+                        split = split,
+                        numericField = numericField,
+                        layoutId = layoutId,
+                        keyPreview = keyPreview,
+                        onKey = onKey,
+                        onText = onText,
+                        onCursorMove = onCursorMove,
+                        onLayoutSelect = onLayoutSelect,
+                        onKeyPositioned = onKeyPositioned,
+                        onSpacePositioned = onSpacePositioned,
+                        smartResolve = smartResolve,
+                        onBurst = onBurst,
+                        touchBelow = blockBelow,
+                    )
+                }
+            } else {
+                KeyRow(
+                    row = block.row,
+                    settings = settings,
+                    split = split,
+                    numericField = numericField,
+                    layoutId = layoutId,
+                    keyPreview = keyPreview,
+                    onKey = onKey,
+                    onText = onText,
+                    onCursorMove = onCursorMove,
+                    onLayoutSelect = onLayoutSelect,
+                    onKeyPositioned = onKeyPositioned,
+                    onSpacePositioned = onSpacePositioned,
+                    smartResolve = smartResolve,
+                    onBurst = onBurst,
+                    touchBelow = blockBelow,
+                )
+            }
 
             is KeyGridBlock.Band -> KeyBand(
                 band = block.band,
@@ -25556,19 +25622,24 @@ private fun KeyCell(
  * Painted as a key face so it sits in the grid like one, and taller than one
  * row as a rule ([Key.rowSpan]); each entry is three quarters of a row, so a
  * three-row column shows four and says by the cut-off fifth that there are more.
+ *
+ * A panel grid draws it too (issue #1526), with [readings] off: no reading is
+ * composed there, so it is only ever the key's own list, the Numpad's column of
+ * operators, say.
  */
 @Composable
-private fun ReadingColumnKey(
+internal fun ReadingColumnKey(
     visual: KeyVisual,
     settings: KeyboardSettings,
     modifier: Modifier,
     keyHeightDp: Int,
     onKey: (Key) -> Unit,
+    readings: Boolean = true,
 ) {
     val key = visual.key
-    val readings = LocalConversionReadings.current.value
-    val picking = readings.isNotEmpty()
-    val entries = if (picking) readings else key.longPress
+    val composing = LocalConversionReadings.current.value
+    val picking = readings && composing.isNotEmpty()
+    val entries = if (picking) composing else key.longPress
     val kb = LocalKbTheme.current
     val keyShape = kb.keyShape(bleedDp = keyGapH(settings).value, kind = visual.shapeKind, radiusDp = visual.cornerRadiusDp)
     val onPress = LocalKeyRoleFeedback.current
